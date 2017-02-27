@@ -51,10 +51,20 @@ def main_data_readout(gui):
 
     return df_allocated, movie, final_stack
 
-if __name__ == '__main__':
+def run():
+    """ Run the entire script.
+    :return: df_after - dataframe with data
+    :return: movie - the Movie object that contains the frames
+    :return: final_stack - data of images
+    """
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
     df_after, movie, final_stack = main_data_readout(gui)
+    return df_after, movie, final_stack
+
+if __name__ == '__main__':
+    df_after, movie, final_stack = run()
+
 
 
