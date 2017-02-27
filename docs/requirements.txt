@@ -1,3 +1,9 @@
 sphinx>=1.3
 sphinx-py3doc-enhanced-theme
 -e .
+numpy
+numba
+matplotlib
+pandas
+attrs>=1.6
+cython

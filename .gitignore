@@ -1,5 +1,10 @@
 *.py[cod]
 
+/.idea
+*.mp4
+*.tif
+*.mat
+
 # C extensions
 *.so
 
