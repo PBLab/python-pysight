@@ -2,7 +2,7 @@
 """
 Created on Thu Oct 13 09:37:02 2016
 
-@author: Hagai
+__author__: Hagai
 """
 from pysight.tkinter_gui_multiscaler import GUIApp
 from pysight.tkinter_gui_multiscaler import verify_gui_input
