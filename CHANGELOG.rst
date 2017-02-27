@@ -6,3 +6,14 @@ Changelog
 -----------------------------------------
 
 * First release on PyPI.
+
+0.1.1 (2017-02-27)
+-----------------------------------------
+
+* Bug fixes during installation of Numba.
+* Added the ``run()`` method for ``main_multiscaler_readout``.
+
+0.1.2 (2017-02-27)
+-----------------------------------------
+
+* Includes ``tifffile`` and minor improvements.

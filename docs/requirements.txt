@@ -3,6 +3,7 @@ sphinx-py3doc-enhanced-theme
 numba
 matplotlib
 pandas
+numpy
 attrs>=1.6
 cython
 tifffile
