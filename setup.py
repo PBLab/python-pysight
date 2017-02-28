@@ -78,7 +78,12 @@ setup(
         'multiscaler', 'photon counting'
     ],
     install_requires=[
-
+        'numba',
+        'matplotlib',
+        'pandas',
+        'attrs >= 1.6',
+        'cython',
+        'tifffile'
     ],
     extras_require={
         # eg:

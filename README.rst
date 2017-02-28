@@ -13,8 +13,8 @@ Overview
       - | |travis| |appveyor| |requires|
         | |codecov|
     * - package
-      - | |version| |downloads| |wheel| |supported-versions| |supported-implementations|
-        | |commits-since|
+      - | |version| |downloads| |wheel| |supported_versions| |supported_implementations|
+        | |commits_since|
 
 .. |docs| image:: https://readthedocs.org/projects/python-pysight/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pysight
@@ -40,7 +40,7 @@ Overview
     :alt: PyPI Package latest release
     :target: https://pypi.python.org/pypi/pysight
 
-.. |commits-since| image:: https://img.shields.io/github/commits-since/HagaiHargil/python-pysight/v0.1.3.svg
+.. |commits_since| image:: https://img.shields.io/github/commits-since/HagaiHargil/python-pysight/v0.1.3.svg
     :alt: Commits since latest release
     :target: https://github.com/HagaiHargil/python-pysight/compare/v0.1.3...master
 
@@ -52,11 +52,11 @@ Overview
     :alt: PyPI Wheel
     :target: https://pypi.python.org/pypi/pysight
 
-.. |supported-versions| image:: https://img.shields.io/pypi/pyversions/pysight.svg
+.. |supported_versions| image:: https://img.shields.io/pypi/pyversions/pysight.svg
     :alt: Supported versions
     :target: https://pypi.python.org/pypi/pysight
 
-.. |supported-implementations| image:: https://img.shields.io/pypi/implementation/pysight.svg
+.. |supported_implementations| image:: https://img.shields.io/pypi/implementation/pysight.svg
     :alt: Supported implementations
     :target: https://pypi.python.org/pypi/pysight
 
