@@ -78,13 +78,13 @@ setup(
 
     ],
     install_requires=[
-        # 'numba',
-        # 'matplotlib',
-        # 'pandas',
-        # 'numpy',
-        # 'attrs >= 1.6',
-        # 'cython',
-        # 'tifffile'
+        'numba',
+        'matplotlib',
+        'pandas',
+        'numpy',
+        'attrs >= 1.6',
+        'cython',
+        'tifffile'
     ],
     extras_require={
         # eg:
