@@ -9,6 +9,5 @@ matplotlib
 pandas
 attrs>=1.6
 cython
-tifffile
 coveralls
 codecov
