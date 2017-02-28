@@ -91,8 +91,9 @@ setup(
         #   ':python_version=="2.6"': ['argparse'],
     },
     setup_requires=[
+        'numpy',
         'cython',
-    ] if Cython else [],
+    ] if Cython else ['numpy'],
     ext_modules=[
         Extension(
             splitext(relpath(path, 'src').replace(os.sep, '.'))[0],
