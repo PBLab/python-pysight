@@ -46,10 +46,10 @@ def main_data_readout(gui):
     movie = class_defs.Movie(data=df_allocated, num_of_cols=int(gui.x_pixels.get()),
                              num_of_rows=int(gui.y_pixels.get()), reprate=float(gui.reprate.get()),
                              name=gui.filename.get(), binwidth=float(gui.binwidth.get()))
-    final_stack = movie.play()
+    movie.create_tif()
     print('Tiff stack created with name {}.'.format(gui.filename.get()))
 
-    return df_allocated, movie, final_stack
+    return df_allocated, movie
 
 def run():
     """ Run the entire script.
@@ -60,11 +60,11 @@ def run():
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
-    df_after, movie, final_stack = main_data_readout(gui)
-    return df_after, movie, final_stack
+    df_after, movie = main_data_readout(gui)
+    return df_after, movie
 
 if __name__ == '__main__':
-    df_after, movie, final_stack = run()
+    df_after, movie = run()
 
 
 

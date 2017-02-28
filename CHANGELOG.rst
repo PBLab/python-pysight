@@ -17,3 +17,12 @@ Changelog
 -----------------------------------------
 
 * Includes ``tifffile`` and minor improvements.
+
+0.1.3 (2017-02-28)
+-----------------------------------------
+
+* Changed IO from ``.read()`` to ``.readlines()`` for better Linux compatibility.
+* ``.tif`` is now saved frame-by-frame to save memory, and the method was renamed to ``create_tif()``.
+
+
+

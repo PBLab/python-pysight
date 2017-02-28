@@ -149,10 +149,9 @@ def read_lst_file(filename: str = '', start_of_data_pos: int = 0) -> pd.DataFram
 
     with open(filename, 'r') as f:
         f.seek(start_of_data_pos)
-        file_as_one_block = f.read()
-        file_separated = file_as_one_block.splitlines()  # was found to be the fastest Python method
+        file_separated = [line.rstrip() for line in f]  # TODO: SciLuigi?
 
-    df = pd.DataFrame(file_separated, columns=['raw'])
+    df = pd.DataFrame(file_separated, columns=['raw'], dtype=str)
 
     assert df.shape[0] > 0
     return df

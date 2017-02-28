@@ -81,10 +81,10 @@ class Movie(object):
                                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx])))
         return deque_of_frames
 
-    def play(self):
+    def create_tif(self):
         """ Create all frames, frame-by-frame, save them as tiff and return the stack. """
 
-        from tifffile import imsave
+        from tifffile import TiffWriter
         from collections import namedtuple
 
 
@@ -93,17 +93,11 @@ class Movie(object):
         deque = self.deque_of_frames
         Frame = namedtuple('Frame', ('hist', 'x', 'y'))
         single_frame = Frame
-        movie_to_save = np.zeros((self.num_of_rows, self.num_of_cols, len(deque)))
-
-        for idx, cur_frame in enumerate(deque):
-            single_frame.hist, single_frame.x, single_frame.y = cur_frame.create_hist()
-            frames.append(single_frame)
-            movie_to_save[:, :, idx] = single_frame.hist
-
-        imsave('{}.tif'.format(self.name), np.reshape(movie_to_save.astype(np.uint16),
-                                                      (len(deque), 512, 512)))
-
-        return movie_to_save
+        with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=True) as tif:
+            for idx, cur_frame in enumerate(deque):
+                single_frame.hist, single_frame.x, single_frame.y = cur_frame.create_hist()
+                frames.append(single_frame)
+                tif.save(single_frame.hist)
 
 
 @attr.s(slots=True)  # slots should speed up display
