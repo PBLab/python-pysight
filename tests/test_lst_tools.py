@@ -39,9 +39,12 @@ class TddLstTools(unittest.TestCase):
 
         self.assertEqual(self.list_of_real_start_loc, list_of_returned_locs)
 
-    def test_first_line_of_input(self):
+    def test_complete_workflow(self):
         from pysight.lst_tools import read_lst_file
         from pysight.lst_tools import timepatch_sort
+        from pysight.lst_tools import determine_data_channels
+        from pysight.lst_tools import allocate_photons  # TODO: Split this test
+        import pandas as pd
 
         list_of_first_event = ['0100000060d9']
         list_of_first_times = ['1549']
@@ -54,11 +57,22 @@ class TddLstTools(unittest.TestCase):
             first_event = df['raw'][0]
             list_of_returned_events.append(first_event)
             dict_of_inputs = {'PMT1': '001', 'Frames': '110', 'Lines': '010'}
-            list_of_returned_times.append(timepatch_sort(df, self.list_of_real_time_patch[idx],
-                                                         self.list_of_real_range[idx], dict_of_inputs)['abs_time'][0])
+            df_sorted = timepatch_sort(df, self.list_of_real_time_patch[idx],
+                                    self.list_of_real_range[idx], dict_of_inputs)
+            list_of_returned_times.append(df_sorted['abs_time'][0])
 
         self.assertEqual(list_of_first_event, list_of_returned_events)
         self.assertEqual(list_of_first_times, list_of_first_times)
+
+        dict_of_data = determine_data_channels(df=df_sorted, dict_of_inputs=dict_of_inputs,
+                                               num_of_frames=512,
+                                               num_of_rows=512)
+        df_allocated = allocate_photons(dict_of_data=dict_of_data)
+
+        hdf_loc = 'tests_data' + sep + 'hdf_for_tests.h5'
+        data_to_check_allocation = pd.read_hdf(hdf_loc)
+
+        self.assertTrue(data_to_check_allocation.iloc[0].equals(df_allocated.iloc[0]))
 
     def test_create_frame_array_normal_input(self):
         import numpy as np

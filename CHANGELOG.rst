@@ -35,3 +35,11 @@ Changelog
 
 * Single-lined frames are now supported.
 
+
+0.1.6 (2017-02-28)
+-----------------------------------------
+
+* More tests coverage.
+
+* Enforced a few types checks.
+

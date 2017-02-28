@@ -11,3 +11,4 @@ pandas
 tifffile
 attrs >= 1.6
 cython
+tables

@@ -190,6 +190,7 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     # Start going through the df and extract the bits
     df_after_timepatch = timepatch_manager.ChoiceManager().process(timepatch, data_range, df)
     df_after_timepatch.drop(['raw'], axis=1, inplace=True)
+    df_after_timepatch['abs_time'] = df_after_timepatch['abs_time'].astype(int)
     if list(df_after_timepatch.columns) != ['channel', 'edge', 'abs_time', 'sweep', 'tag', 'lost']:
         raise ValueError('Wrong dataframe created.')
 
@@ -261,21 +262,20 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
 
     dict_of_data = {}
     for key in dict_of_inputs:
-        dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
-
+        dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True).astype(int)
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_rows,
                                        num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time')
+        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=int)
 
     if 'Frames' not in dict_of_data.keys():  # A 'Frames' channel has to exist to create frames
         spacing_between_lines = np.abs(dict_of_data['Lines'].diff()).mean()
         last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # Assuming only data from PMT1 is relevant here
         frame_array = create_frame_array(last_event_time=last_event_time, num_of_frames=num_of_frames)
-        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time')
+        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=int)
     else:  # Add 0 to the first entry of the series
-        dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True)
+        dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True).astype(int)
 
     # Validations
     assert {'PMT1', 'Lines', 'Frames'} <= set(dict_of_data.keys())  # A is subset of B
@@ -303,14 +303,13 @@ def allocate_photons(dict_of_data=None) -> pd.DataFrame:
     relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
 
     df_photons = dict_of_data['PMT1']  # Currently supports only one input channel
-    df_photons = pd.DataFrame(df_photons)  # before this change it's a series with a name, not column head
+    df_photons = pd.DataFrame(df_photons, dtype=int)  # before this change it's a series with a name, not column head
     column_heads = {'Lines': 'time_rel_line', 'Frames': 'time_rel_frames',
                     'Laser': 'time_rel_pulse', 'TAG Lens': 'time_rel_tag'}
 
     # Main loop - Sort lines and frames for all photons and calculate relative time
     for key in relevant_keys:
         sorted_indices = numba_search_sorted(dict_of_data[key].values, dict_of_data['PMT1'].values) - 1
-        # sorted_indices = dict_of_data[key].searchsorted(dict_of_data['PMT1']) - 1
         df_photons[key] = dict_of_data[key].loc[sorted_indices].values.copy()
         df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
         #                                                                       accordance to the line\frame\laser pulse
