@@ -24,5 +24,10 @@ Changelog
 * Changed IO from ``.read()`` to ``.readlines()`` for better Linux compatibility.
 * ``.tif`` is now saved frame-by-frame to save memory, and the method was renamed to ``create_tif()``.
 
+0.1.4 (2017-02-28)
+-----------------------------------------
+
+* Frames are now generated with a generator.
+* Fix to installation problems of previous version.
 
 

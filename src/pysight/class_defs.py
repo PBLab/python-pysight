@@ -59,27 +59,23 @@ class Movie(object):
         frame_times.append(frame_times[-1] + diff_between_frames)
         return frame_times
 
-    @property
-    def deque_of_frames(self):
+    def gen_of_frames(self):
         """ Populate the deque containing the frames. """
-        from collections import deque
 
-        deque_of_frames = deque()
         list_of_frames = self.list_of_frame_times
 
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(current_time, level='Frames')
             if not cur_data.empty:
-                deque_of_frames.append(Frame(data=cur_data, num_of_lines=self.num_of_cols,
-                                             num_of_rows=self.num_of_rows, number=idx,
-                                             reprate=self.reprate, binwidth=self.binwidth, empty=False,
-                                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx])))
+                yield Frame(data=cur_data, num_of_lines=self.num_of_cols,
+                            num_of_rows=self.num_of_rows, number=idx,
+                            reprate=self.reprate, binwidth=self.binwidth, empty=False,
+                            end_time=(list_of_frames[idx + 1] - list_of_frames[idx]))
             else:
-                deque_of_frames.append(Frame(data=cur_data, num_of_lines=self.num_of_cols,
-                                             num_of_rows=self.num_of_rows, number=idx,
-                                             reprate=self.reprate, binwidth=self.binwidth, empty=True,
-                                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx])))
-        return deque_of_frames
+                yield Frame(data=cur_data, num_of_lines=self.num_of_cols,
+                            num_of_rows=self.num_of_rows, number=idx,
+                            reprate=self.reprate, binwidth=self.binwidth, empty=True,
+                            end_time=(list_of_frames[idx + 1] - list_of_frames[idx]))
 
     def create_tif(self):
         """ Create all frames, frame-by-frame, save them as tiff and return the stack. """
@@ -87,17 +83,24 @@ class Movie(object):
         from tifffile import TiffWriter
         from collections import namedtuple
 
-
         # Create a list containing the frames before showing them
-        frames = []
-        deque = self.deque_of_frames
+        frame_generator = self.gen_of_frames()
         Frame = namedtuple('Frame', ('hist', 'x', 'y'))
-        single_frame = Frame
+        data_of_frame = Frame
+
+        try:
+            cur_frame = next(frame_generator)
+        except StopIteration:
+            raise ValueError('No frames generated.')
+
         with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=True) as tif:
-            for idx, cur_frame in enumerate(deque):
-                single_frame.hist, single_frame.x, single_frame.y = cur_frame.create_hist()
-                frames.append(single_frame)
-                tif.save(single_frame.hist)
+            while True:
+                data_of_frame.hist, data_of_frame.x, data_of_frame.y = cur_frame.create_hist()
+                tif.save(data_of_frame.hist)
+                try:
+                    cur_frame = next(frame_generator)
+                except StopIteration:
+                    break
 
 
 @attr.s(slots=True)  # slots should speed up display
@@ -150,7 +153,7 @@ class Frame(object):
         # Laser pulses metadata
         try:
             laser_start = 0
-            laser_end =  1/self.reprate * self.binwidth  # 800 ps resolution
+            laser_end = 1 / self.reprate * self.binwidth  # 800 ps resolution
             metadata['Laser'] = Struct(start=laser_start, end=laser_end)
         except ValueError:
             pass

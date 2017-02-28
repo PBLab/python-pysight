@@ -47,7 +47,7 @@ def main_data_readout(gui):
                              num_of_rows=int(gui.y_pixels.get()), reprate=float(gui.reprate.get()),
                              name=gui.filename.get(), binwidth=float(gui.binwidth.get()))
     movie.create_tif()
-    print('Tiff stack created with name {}.'.format(gui.filename.get()))
+    print('Tiff stack created with name {}.tif'.format(gui.filename.get()[:-4]))
 
     return df_allocated, movie
 
