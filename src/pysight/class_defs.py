@@ -18,7 +18,7 @@ def validate_number_larger_than_zero(instance, attribute, value: int=0):
         raise ValueError("{} has to be larger than 0.".format(attribute))
 
 
-@jit((float64[:](int64, int64, int32)), nopython=True, cache=True)
+@jit((float64[:](int64, int64, int64)), nopython=True, cache=True)
 def create_linspace(start, stop, num):
     linspaces = np.linspace(start, stop, num)
     assert np.all(np.diff(linspaces) > 0)
@@ -136,14 +136,18 @@ class Frame(object):
         # Lines metadata
         lines_start = 0
         unique_indices = np.unique(self.data.index.get_level_values('Lines'))
-        diffs = np.diff(unique_indices)
-        diffs_max = diffs.max()
+        if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
+            diffs = np.diff(unique_indices)
+            diffs_max = diffs.max()
+        else:
+            diffs = unique_indices
+            diffs_max = unique_indices
 
         try:
             if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
                 lines_end = np.mean(diffs) * (1 + jitter)
             else:
-                lines_end = diffs_max
+                lines_end = int(diffs_max)
         except ValueError:
             lines_end = 0
             self.empty = True

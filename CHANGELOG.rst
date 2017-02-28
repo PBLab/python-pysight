@@ -30,4 +30,8 @@ Changelog
 * Frames are now generated with a generator.
 * Fix to installation problems of previous version.
 
+0.1.5 (2017-02-28)
+-----------------------------------------
+
+* Single-lined frames are now supported.
 

@@ -78,10 +78,11 @@ setup(
         'multiscaler', 'photon counting'
     ],
     install_requires=[
-        'tifffile',
+        'llvmlite',
         'numba',
         'matplotlib',
         'pandas',
+        'tifffile',
         'attrs >= 1.6',
         'cython',
     ],
