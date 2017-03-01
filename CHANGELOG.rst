@@ -43,3 +43,10 @@ Changelog
 
 * Enforced a few types checks.
 
+0.1.7 (2017-03-01)
+-----------------------------------------
+
+* Potential fix to ``pip install`` issues.
+
+* Start of TAG lens interpolation support.
+

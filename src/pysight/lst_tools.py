@@ -291,6 +291,16 @@ def numba_search_sorted(input_sorted, input_values):
     return np.searchsorted(input_sorted, input_values)
 
 
+def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.DataFrame:
+    """
+    If a TAG channel was defined determine each photon's phase and insert it into the main DataFrame.
+    :param df_photons: DataFrame to be changed - TAG phase will be added as index
+    :param tag_data: Time of TAG pulses
+    :return: Original datframe with an added index corresponding to each photon's phase
+    """
+    pass
+
+
 def allocate_photons(dict_of_data=None) -> pd.DataFrame:
     """
     Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
@@ -299,13 +309,12 @@ def allocate_photons(dict_of_data=None) -> pd.DataFrame:
     """
 
     # Preparations
-    irrelevant_keys = {'PMT1', 'PMT2'}
+    irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
     relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
 
-    df_photons = dict_of_data['PMT1']  # Currently supports only one input channel
+    df_photons = dict_of_data['PMT1']  # TODO: Support more than one data channel
     df_photons = pd.DataFrame(df_photons, dtype=int)  # before this change it's a series with a name, not column head
-    column_heads = {'Lines': 'time_rel_line', 'Frames': 'time_rel_frames',
-                    'Laser': 'time_rel_pulse', 'TAG Lens': 'time_rel_tag'}
+    column_heads = {'Lines': 'time_rel_line', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
 
     # Main loop - Sort lines and frames for all photons and calculate relative time
     for key in relevant_keys:
@@ -317,9 +326,21 @@ def allocate_photons(dict_of_data=None) -> pd.DataFrame:
         df_photons[key] = df_photons[key].astype('category')
         df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
+
     # Closure
     df_photons.dropna(axis=0, how='any', inplace=True)  # NaNs are the result of photons not allocated to
     #                                                     a 'secondary' signal, like a line or laser pulse
+
+    # Deal with TAG lens interpolation
+    try:
+        tag = dict_of_data['Tag Lens']
+    except KeyError:
+        pass
+    else:
+        print('Interpolating TAG lens data')
+        df_photons = interpolate_tag(df_photons=df_photons, tag_data=tag)
+        print('TAG lens interpolation finished.')
+
     df_photons.drop(['abs_time'], axis=1, inplace=True)
 
     return df_photons
