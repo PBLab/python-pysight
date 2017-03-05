@@ -188,12 +188,13 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
                               "Recorded channels are {}.".format(actual_data_channels))
 
     # Start going through the df and extract the bits
+    df['abs_time'] = np.uint64(0)
     df_after_timepatch = timepatch_manager.ChoiceManager().process(timepatch, data_range, df)
-    df_after_timepatch.drop(['raw'], axis=1, inplace=True)
-    df_after_timepatch['abs_time'] = df_after_timepatch['abs_time'].astype(int)
+    df_after_timepatch.drop(['raw', 'abs_time_as_str'], axis=1, inplace=True)
     if list(df_after_timepatch.columns) != ['channel', 'edge', 'abs_time', 'sweep', 'tag', 'lost']:
         raise ValueError('Wrong dataframe created.')
 
+    assert np.all(df_after_timepatch['abs_time'].values >= 0)
     return df_after_timepatch
 
 
@@ -262,20 +263,20 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
 
     dict_of_data = {}
     for key in dict_of_inputs:
-        dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True).astype(int)
+        dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_rows,
                                        num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=int)
+        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=np.uint64)
 
     if 'Frames' not in dict_of_data.keys():  # A 'Frames' channel has to exist to create frames
         spacing_between_lines = np.abs(dict_of_data['Lines'].diff()).mean()
         last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # Assuming only data from PMT1 is relevant here
         frame_array = create_frame_array(last_event_time=last_event_time, num_of_frames=num_of_frames)
-        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=int)
+        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=np.uint64)
     else:  # Add 0 to the first entry of the series
-        dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True).astype(int)
+        dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True)
 
     # Validations
     assert {'PMT1', 'Lines', 'Frames'} <= set(dict_of_data.keys())  # A is subset of B
@@ -288,57 +289,48 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
 @jit(nopython=True, cache=True)
 def numba_search_sorted(input_sorted, input_values):
     """ Numba-powered searchsorted function. """
-    return np.searchsorted(input_sorted, input_values)
+    return np.searchsorted(input_sorted, input_values) - 1
 
 
-def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.DataFrame:
-    """
-    If a TAG channel was defined determine each photon's phase and insert it into the main DataFrame.
-    :param df_photons: DataFrame to be changed - TAG phase will be added as index
-    :param tag_data: Time of TAG pulses
-    :return: Original datframe with an added index corresponding to each photon's phase
-    """
-    pass
-
-
-def allocate_photons(dict_of_data=None) -> pd.DataFrame:
+def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     """
     Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
     :param dict_of_data: All events data, distributed to its input channel
     :return: pandas.DataFrame
     """
+    from pysight.tag_tools import interpolate_tag
+
 
     # Preparations
     irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
     relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
 
     df_photons = dict_of_data['PMT1']  # TODO: Support more than one data channel
-    df_photons = pd.DataFrame(df_photons, dtype=int)  # before this change it's a series with a name, not column head
+    df_photons = pd.DataFrame(df_photons, dtype=np.uint64)  # before this change it's a series with a name, not column head
     column_heads = {'Lines': 'time_rel_line', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
 
     # Main loop - Sort lines and frames for all photons and calculate relative time
     for key in relevant_keys:
-        sorted_indices = numba_search_sorted(dict_of_data[key].values, dict_of_data['PMT1'].values) - 1
-        df_photons[key] = dict_of_data[key].loc[sorted_indices].values.copy()
+        sorted_indices = numba_search_sorted(dict_of_data[key].values, df_photons['abs_time'].values)
+        df_photons[key] = dict_of_data[key].loc[sorted_indices].values
+        df_photons.dropna(how='any', inplace=True)
+        df_photons[key] = df_photons[key].astype(np.uint64)
         df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
-        #                                                                       accordance to the line\frame\laser pulse
-        assert df_photons[key].any() >= 0
+        #  accordance to the line\frame\laser pulse
         df_photons[key] = df_photons[key].astype('category')
         df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
 
     # Closure
-    df_photons.dropna(axis=0, how='any', inplace=True)  # NaNs are the result of photons not allocated to
-    #                                                     a 'secondary' signal, like a line or laser pulse
-
+    assert np.all(df_photons.values >= 0)  # finds NaNs as well
     # Deal with TAG lens interpolation
     try:
-        tag = dict_of_data['Tag Lens']
+        tag = dict_of_data['TAG Lens']
     except KeyError:
         pass
     else:
-        print('Interpolating TAG lens data')
-        df_photons = interpolate_tag(df_photons=df_photons, tag_data=tag)
+        print('Interpolating TAG lens data...')
+        df_photons = interpolate_tag(df_photons=df_photons, tag_data=tag, gui=gui)
         print('TAG lens interpolation finished.')
 
     df_photons.drop(['abs_time'], axis=1, inplace=True)

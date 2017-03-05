@@ -50,3 +50,10 @@ Changelog
 
 * Start of TAG lens interpolation support.
 
+
+0.2.0 (2017-03-XX)
+-----------------------------------------
+
+* Support for TAG lens added.
+
+* ``pip`` installation fixed by requiring Numba as a prerequisite.

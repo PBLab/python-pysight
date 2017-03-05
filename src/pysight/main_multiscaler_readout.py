@@ -39,7 +39,7 @@ def main_data_readout(gui):
                                                      num_of_rows=int(gui.y_pixels.get()))
     print('Channels of events found. Allocating photons to their frames and lines...')
 
-    df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data)
+    df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data, gui=gui)
     print('Relative times calculated. Creating Movie object...')
 
     # Create a movie object

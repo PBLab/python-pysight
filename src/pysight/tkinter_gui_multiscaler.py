@@ -121,11 +121,18 @@ class GUIApp(object):
         reprate_entry.grid(column=5, row=4, sticky='ns')
 
         # Binwidth of Multiscaler (for FLIM)
-        binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler')
+        binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
         binwidth_label.grid(column=5, row=5, sticky='ns')
         self.binwidth = StringVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth)
         binwidth_entry.grid(column=5, row=6, sticky='ns')
+
+        # TAG nominal frequency
+        tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
+        tag_label.grid(column=5, row=7, sticky='ns')
+        self.tag_freq = StringVar(value=0.1899e6)
+        tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq)
+        tag_label_entry.grid(column=5, row=8, sticky='ns')
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
