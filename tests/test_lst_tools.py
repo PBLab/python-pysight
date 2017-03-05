@@ -2,7 +2,7 @@ import unittest
 from os import sep
 
 
-class TddLstTools(unittest.TestCase):
+class TestLstTools(unittest.TestCase):
     """
     Tests for new multiscaler readout functions
     """

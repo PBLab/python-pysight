@@ -35,7 +35,6 @@ Changelog
 
 * Single-lined frames are now supported.
 
-
 0.1.6 (2017-02-28)
 -----------------------------------------
 
@@ -50,10 +49,14 @@ Changelog
 
 * Start of TAG lens interpolation support.
 
-
-0.2.0 (2017-03-XX)
+0.2.0 (2017-03-05)
 -----------------------------------------
 
-* Support for TAG lens added.
+* Support for TAG lens added - phase interpolation and image display. Note: The algorithm currently assumes that the
+pulse is triggered at the zero-phase of the TAG lens.
 
 * ``pip`` installation fixed by requiring Numba as a prerequisite.
+
+* Number of pixels in the "Frame" direction (x) supersedes the number of frames as listed by the user.
+
+* Due to massive changes, one test is currently broken.

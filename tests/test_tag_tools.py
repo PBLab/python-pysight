@@ -5,7 +5,7 @@ __author__ = Hagai Hargil
 import unittest
 import numpy as np
 
-class TddLstTools(unittest.TestCase):
+class TAGTools(unittest.TestCase):
     """
     Tests for TAG analysis functions
     """
@@ -24,3 +24,6 @@ class TddLstTools(unittest.TestCase):
         from pysight.tag_tools import verify_periodicity
 
         pass
+
+    if __name__ == '__main__':
+        unittest.main()

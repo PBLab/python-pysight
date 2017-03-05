@@ -90,9 +90,7 @@ def define_phase(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.
     df_photons.dropna(how='any', inplace=True)
 
     assert df_photons['Phase'].any() >= 0
-    assert df_photons['Phase'].any() <= 2 * np.pi
-
-    df_photons.set_index(keys=['Phase'], inplace=True, append=True, drop=True)
+    assert df_photons['Phase'].any() < 2 * np.pi
 
     return df_photons
 

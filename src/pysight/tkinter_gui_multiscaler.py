@@ -77,6 +77,7 @@ class GUIApp(object):
         mb3.grid(column=3, row=3, sticky='we')
         mb3.set('Lines')
         mb3['values'] = self.tuple_of_data_sources
+
         # Labels
         input_channel_1 = ttk.Label(main_frame, text='START')
         input_channel_1.grid(column=0, row=1, sticky='ns')
@@ -85,7 +86,7 @@ class GUIApp(object):
         input_channel_3 = ttk.Label(main_frame, text='STOP2')
         input_channel_3.grid(column=0, row=3, sticky='ns')
 
-        # Number of frames in the dat
+        # Number of frames in the data
         frame_label = ttk.Label(main_frame, text='Number of frames')
         frame_label.grid(column=0, row=4, sticky='ns')
 
@@ -100,15 +101,20 @@ class GUIApp(object):
         x_size_label = ttk.Label(main_frame, text='X')
         x_size_label.grid(column=4, row=1, sticky='ns')
         y_size_label = ttk.Label(main_frame, text='Y')
-        y_size_label.grid(column=6, row=1, sticky='ns')
+        y_size_label.grid(column=5, row=1, sticky='ns')
+        z_size_label = ttk.Label(main_frame, text='Z')
+        z_size_label.grid(column=6, row=1, sticky='ns')
 
-        self.x_pixels = StringVar(value=512)
+        self.x_pixels = StringVar(value=256)
         self.y_pixels = StringVar(value=512)
+        self.z_pixels = StringVar(value=100)
 
         x_pixels_entry = ttk.Entry(main_frame, textvariable=self.x_pixels)
         x_pixels_entry.grid(column=4, row=2, sticky='ns')
         y_pixels_entry = ttk.Entry(main_frame, textvariable=self.y_pixels)
-        y_pixels_entry.grid(column=6, row=2, sticky='ns')
+        y_pixels_entry.grid(column=5, row=2, sticky='ns')
+        z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels)
+        z_pixels_entry.grid(column=6, row=2, sticky='ns')
 
         # Laser repetition rate
         laser1_label = ttk.Label(main_frame, text='Laser nominal rep. rate (FLIM)')
@@ -116,7 +122,7 @@ class GUIApp(object):
         laser2_label = ttk.Label(main_frame, text='Pulses per second')
         laser2_label.grid(column=6, row=4, sticky='ns')
 
-        self.reprate = StringVar(value=80e6)
+        self.reprate = StringVar(value=0)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate)
         reprate_entry.grid(column=5, row=4, sticky='ns')
 
@@ -130,7 +136,7 @@ class GUIApp(object):
         # TAG nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
         tag_label.grid(column=5, row=7, sticky='ns')
-        self.tag_freq = StringVar(value=0.1899e6)
+        self.tag_freq = StringVar(value=0.1897e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq)
         tag_label_entry.grid(column=5, row=8, sticky='ns')
 

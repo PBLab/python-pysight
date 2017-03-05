@@ -31,7 +31,7 @@ class ChoiceManager:
         }
 
     def timepatch_0(self, data_range, df):
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time'] = np.uint64(df['abs_time'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
         df['tag'] = 0
@@ -40,21 +40,20 @@ class ChoiceManager:
 
 
     def timepatch_5(self, data_range, df):
-
-        df['abs_time'] = df['raw'].str[2:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[2:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = df['raw'].str[0:2]
-        df['sweep'] = df['sweep'].apply(b16)
-        df['abs_time'] += (df['sweep'] - 1) * data_range
+        df['sweep_as_str'] = df['sweep'].apply(b16, convert_dtype=False)
+        df['abs_time'] += (df['sweep_as_str'] - 1) * data_range
 
         df['tag'] = 0
         df['lost'] = 0
         return df
 
     def timepatch_1(self, data_range, df):
-        df['abs_time'] = df['raw'].str[0:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[0:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
         df['tag'] = 0
@@ -62,11 +61,11 @@ class ChoiceManager:
         return df
 
     def timepatch_1a(self, data_range, df):
-        df['abs_time'] = df['raw'].str[4:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[4:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
-        df['sweep'] = df['raw'].str[0:4]
-        df['sweep'] = np.uint64(df['sweep'].apply(b16))
+        df['sweep_as_str'] = df['raw'].str[0:4]
+        df['sweep'] = np.uint64(df['sweep_as_str'].apply(b16, convert_dtype=False))
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
         df['tag'] = 0
@@ -74,43 +73,44 @@ class ChoiceManager:
         return df
 
     def timepatch_2a(self, data_range, df):
-        df['abs_time'] = df['raw'].str[4:-1]
-        df['abs_time'] = df['abs_time'].apply(b16)
+        df['abs_time_as_str'] = df['raw'].str[4:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
-        df['sweep'] = df['raw'].str[2:4]
-        df['sweep'] = df['sweep'].apply(b16)
+        df['sweep_as_str'] = df['raw'].str[2:4]
+        df['sweep'] = df['sweep_as_str'].apply(b16, convert_dtype=False)
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
-        df['tag'] = df['raw'].str[0:2]
-        df['tag'] = df['tag'].apply(b16)
+        df['tag_as_str'] = df['raw'].str[0:2]
+        df['tag'] = df['tag_as_str'].apply(b16, convert_dtype=False)
 
         df['lost'] = 0
         return df
 
     def timepatch_22(self, data_range, df):
-        df['abs_time'] = df['raw'].str[2:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[2:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
 
-        df['tag'] = df['raw'].str[0:2]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['raw'].str[0:2]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = 0
         return df
 
     def timepatch_32(self, data_range, df):
-        df['abs_time'] = np.uint64(df['raw'].str[2:-1].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[2:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['bin'] = df['raw'].str[0:2].apply(hextobin)
-        df['sweep'] = np.uint64(df['bin'].str[1:].apply(b22))
+        df['sweep_as_str'] = df['bin'].str[1:]
+        df['sweep'] = np.uint64(df['sweep_as_str'].apply(b22, convert_dtype=False))
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
         df['tag'] = 0
 
         df['lost'] = df['bin'].str[0].astype('category')
 
-        df.drop(['bin'], axis=1, inplace=True)
         return df
 
     def timepatch_2(self, data_range, df):
@@ -124,52 +124,49 @@ class ChoiceManager:
         return df
 
     def timepatch_5b(self, data_range, df):
+        df['abs_time_as_str'] = df['raw'].str[8:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16), convert_dtype=False)
 
-        df['abs_time'] = df['raw'].str[8:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
-
-        df['sweep'] = df['raw'].str[4:8]
-        df['sweep'] = np.uint64(df['sweep'].apply(b16))
+        df['sweep_as_str'] = df['raw'].str[4:8]
+        df['sweep'] = np.uint64(df['sweep_as_str'].apply(b16, convert_dtype=False))
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
         df['bin'] = df['raw'].str[0:4]
         df['bin'] = df['bin'].apply(hextobin)
-        df['tag'] = df['bin'].str[3:18]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['bin'].str[3:18]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = df['bin'].str[2].astype('category')
 
-        df.drop(['bin'], axis=1, inplace=True)
         return df
 
     def timepatch_Db(self, data_range, df):
+        df['abs_time_as_str'] = df['raw'].str[8:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
-        df['abs_time'] = df['raw'].str[8:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
-
-        df['sweep'] = df['raw'].str[4:8]
-        df['sweep'] = np.uint64(df['sweep'].apply(b16))
+        df['sweep_as_str'] = df['raw'].str[4:8]
+        df['sweep'] = np.uint64(df['sweep_as_str'].apply(b16, convert_dtype=False))
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
-        df['tag'] = df['raw'].str[0:4]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['raw'].str[0:4]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = 0
         return df
 
     def timepatch_f3(self, data_range, df):
 
-        df['abs_time'] = df['raw'].str[6:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[6:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['bin'] = df['raw'].str[4:6]
         df['bin'] = df['bin'].apply(hextobin)
-        df['sweep'] = df['bin'].str[3:10]
-        df['sweep'] = np.uint64(df['sweep'].apply(b16))
+        df['sweep_as_str'] = df['bin'].str[3:10]
+        df['sweep'] = np.uint64(df['sweep_as_str'].apply(b16, convert_dtype=False))
         df['abs_time'] += (df['sweep'] - 1) * data_range
 
-        df['tag'] = df['raw'].str[0:4]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['raw'].str[0:4]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = df['bin'].str[2].astype('category')
 
@@ -178,50 +175,45 @@ class ChoiceManager:
 
     def timepatch_43(self, data_range, df):
 
-        df['abs_time'] = df['raw'].str[4:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[4:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
 
         df['bin'] = df['raw'].str[0:4]
         df['bin'] = df['bin'].apply(hextobin)
-        df['tag'] = df['bin'].str[3:10]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['bin'].str[3:10]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = df['bin'].str[2].astype('category')
-
-        df.drop(['bin'], axis=1, inplace=True)
         return df
 
     def timepatch_c3(self, data_range, df):
-
-        df['abs_time'] = df['raw'].str[4:-1]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['raw'].str[4:-1]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
 
-        df['tag'] = df['raw'].str[0:4]
-        df['tag'] = df['bin'].apply(b16)
+        df['tag_as_str'] = df['raw'].str[0:4]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = 0
         return df
 
     def timepatch_3(self, data_range, df):
-
         df['bin'] = df['raw'].str[0:-1]
         df['bin'] = df['raw'].apply(hextobin)
 
-        df['abs_time'] = df['bin'].str[8:62]
-        df['abs_time'] = np.uint64(df['abs_time'].apply(b16))
+        df['abs_time_as_str'] = df['bin'].str[8:62]
+        df['abs_time'] = np.uint64(df['abs_time_as_str'].apply(b16, convert_dtype=False))
 
         df['sweep'] = 0
 
-        df['tag'] = df['bin'].str[3:8]
-        df['tag'] = np.uint64(df['tag'].apply(b16))
+        df['tag_as_str'] = df['bin'].str[3:8]
+        df['tag'] = np.uint64(df['tag_as_str'].apply(b16, convert_dtype=False))
 
         df['lost'] = df['bin'].str[2].astype('category')
 
-        df.drop(['bin'], axis=1, inplace=True)
         return df
 
     def process(self, case, data_range, df):

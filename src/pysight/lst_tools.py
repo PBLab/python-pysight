@@ -179,7 +179,6 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     df['bin'] = df['raw'].str[-1].map(hex_to_bin)
     df['channel'] = df['bin'].str[-3:].astype(dtype='category')
     df['edge'] = df['bin'].str[-4].astype(dtype='category')
-    df.drop(['bin'], axis=1, inplace=True)
 
     # Before sorting all photons make sure that no input is missing from the user.
     actual_data_channels = set(df['channel'].cat.categories.values)
@@ -190,7 +189,17 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     # Start going through the df and extract the bits
     df['abs_time'] = np.uint64(0)
     df_after_timepatch = timepatch_manager.ChoiceManager().process(timepatch, data_range, df)
-    df_after_timepatch.drop(['raw', 'abs_time_as_str'], axis=1, inplace=True)
+
+    df_after_timepatch.drop(['bin', 'raw', 'abs_time_as_str'], axis=1, inplace=True)
+    try:
+        df_after_timepatch.drop(['tag_as_str'], axis=1, inplace=True)
+    except ValueError:
+        pass
+    try:
+        df_after_timepatch.drop(['sweep_as_str'], axis=1, inplace=True)
+    except ValueError:
+        pass
+
     if list(df_after_timepatch.columns) != ['channel', 'edge', 'abs_time', 'sweep', 'tag', 'lost']:
         raise ValueError('Wrong dataframe created.')
 
@@ -198,16 +207,25 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     return df_after_timepatch
 
 
-def create_frame_array(last_event_time: int=None, num_of_frames=None) -> np.ndarray:
+def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
+                       pixels: int=None, spacing_between_lines: int=None) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
 
-    if (last_event_time == None) or (num_of_frames == None):
+    if (last_event_time == None) or (pixels == None) or (lines.empty):
         raise ValueError('Wrong input detected.')
 
     if last_event_time <= 0:
         raise ValueError('Last event time is zero or negative.')
 
-    array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(num_of_frames), endpoint=False)
+    num_of_recorded_lines = lines.shape[0]
+    actual_num_of_frames = num_of_recorded_lines // pixels
+    unnecess_lines = actual_num_of_frames % pixels
+    if unnecess_lines == 0:
+        array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
+    else:
+        last_event_time = lines[num_of_recorded_lines - unnecess_lines] + spacing_between_lines
+        array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
+
     return array_of_frames
 
 
@@ -255,7 +273,7 @@ def create_inputs_dict(gui=None) -> Dict:
 
 
 def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
-                            num_of_frames: int=-1, num_of_rows: int=-1) -> Dict:
+                            num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1) -> Dict:
     """ Create a dictionary that contains the data in its ordered form."""
 
     if df.empty:
@@ -266,14 +284,15 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
-        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_rows,
+        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=y_pixels,
                                        num_of_frames=num_of_frames)
         dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=np.uint64)
 
     if 'Frames' not in dict_of_data.keys():  # A 'Frames' channel has to exist to create frames
         spacing_between_lines = np.abs(dict_of_data['Lines'].diff()).mean()
         last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # Assuming only data from PMT1 is relevant here
-        frame_array = create_frame_array(last_event_time=last_event_time, num_of_frames=num_of_frames)
+        frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
+                                         pixels=x_pixels, spacing_between_lines=spacing_between_lines)
         dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=np.uint64)
     else:  # Add 0 to the first entry of the series
         dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True)
