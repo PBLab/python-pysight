@@ -6,7 +6,7 @@ import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import Dict, List
+from typing import List
 from numba import jit, float64, uint64
 from collections import OrderedDict
 
@@ -136,7 +136,7 @@ class Movie(object):
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]))
 
     def create_tif(self):
-        """ Create all frames, frame-by-frame, save them as tiff and return the stack. """
+        """ Create all frames or volumes, one-by-one, and save them as tiff. """
 
         from tifffile import TiffWriter
         from collections import namedtuple
@@ -159,6 +159,32 @@ class Movie(object):
                     cur_frame = next(relevant_generator)
                 except StopIteration:
                     break
+
+    def create_array(self):
+        """ Create all frames or volumes, one-by-one, and return the array of data that holds them. """
+        from collections import namedtuple, deque
+
+        # Create a deque and a namedtuple for the frames before showing them
+        relevant_generator = self.choose_generator()
+        FrameTuple = namedtuple('Frame', ('hist', 'edges'))
+        data_of_frame = FrameTuple
+        deque_of_frames = deque()
+
+        try:
+            cur_frame = next(relevant_generator)
+        except StopIteration:
+            raise ValueError('No frames generated.')
+
+        while True:
+            data_of_frame.hist, data_of_frame.edges = cur_frame.create_hist()
+            deque_of_frames.append(data_of_frame)
+            try:
+                cur_frame = next(relevant_generator)
+            except StopIteration:
+                break
+
+        assert len(deque_of_frames) == len(self.list_of_frame_times) - 1
+        return deque_of_frames
 
 
 @attr.s(slots=True)  # slots should speed up display
