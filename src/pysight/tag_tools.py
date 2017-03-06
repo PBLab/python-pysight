@@ -15,26 +15,29 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
     # if not tag_freq
 
     period = np.ceil(1 / tag_freq / binwidth).astype(np.int32)  # Period of TAG lens in bins
-    jitter = 0.02
+    jitter = 0.05
     allowed_noise = np.ceil(jitter * period).astype(np.uint64)
 
+    # Iteration #0 of while loop:
+    tags_diff = np.abs(tag_data.diff() - period)
+    tags_diff.loc[tags_diff < allowed_noise] = 0
+    missing_ticks = np.where(tags_diff != 0)[0][1:]  # returns a tuple
+    changed_ticks = missing_ticks.shape[0]
+
+    if changed_ticks > 0.2 * tag_data.shape[0]:  # Corrupted data
+        warnings.warn('TAG Lens data was corrupted. Stack will be created without it.')
+        return -1
+
     # Iterate until TAG pulses are completely periodic
-    changed_ticks = 2
-    while changed_ticks != 1:
+    while changed_ticks != 0:
+        new_ticks = np.take(tag_data.values, missing_ticks - 1) + period
+        tag_data = tag_data.append(pd.Series(new_ticks, dtype=np.uint64), ignore_index=True)
+        tag_data.sort_values(inplace=True)
+
         tags_diff = np.abs(tag_data.diff() - period)
         tags_diff.loc[tags_diff < allowed_noise] = 0
-        missing_ticks = np.where(tags_diff != 0)[0]  # returns a tuple
-
-        if missing_ticks.shape[0] > 0.2 * tag_data.shape[0]:  # Corrupted data
-            warnings.warn('TAG Lens data was corrupted. Stack will be created without it.')
-
+        missing_ticks = np.where(tags_diff != 0)[0][1:] # returns a tuple
         changed_ticks = missing_ticks.shape[0]
-        if changed_ticks == 1:  # first bin is NaN
-            pass
-        else:
-            new_ticks = np.take(tag_data['TAG Lens'], missing_ticks[1:]) + period
-            tag_data.append(new_ticks)
-            tag_data.sort_values(inplace=True)
 
     # Add pulses that didn't exist to make sure all photons indeed have a phase
     last_pulse = tag_data.iat[-1]
@@ -110,7 +113,8 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, gui
 
     tag_data = verify_periodicity(tag_data=tag_data, tag_freq=float(gui.tag_freq.get()),
                                   binwidth=float(gui.binwidth.get()))
-    df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
+    if isinstance(tag_data, pd.Series):
+        df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
 
     return df_photons
 

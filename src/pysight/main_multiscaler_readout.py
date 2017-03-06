@@ -21,7 +21,7 @@ def main_data_readout(gui):
     dict_of_input_channels = lst_tools.create_inputs_dict(gui=gui)
 
     # Read the file into a variable
-    print('Reading file...')
+    print('Reading file {}'.format(gui.filename.get()))
     df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
     print('File read. Sorting the file according to timepatch...')
 

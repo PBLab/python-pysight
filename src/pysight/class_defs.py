@@ -159,6 +159,7 @@ class Movie(object):
                     cur_frame = next(relevant_generator)
                 except StopIteration:
                     break
+            # TODO: Add a volume max projection
 
     def create_array(self):
         """ Create all frames or volumes, one-by-one, and return the array of data that holds them. """
@@ -278,7 +279,7 @@ class Volume(object):
     """
     With a TAG lens, a movie is a sequence of volumes, rather than frames. Each volume contains frames in a plane.
     """
-    # TODO: Refactor it with a Frame object in mind.
+    # TODO: Refactor it with inheritance from Frame object in mind.
 
     x_pixels = attr.ib()
     y_pixels = attr.ib()
