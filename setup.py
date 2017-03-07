@@ -76,7 +76,6 @@ setup(
         'numpy',
         'matplotlib',
         'pandas >= 0.19',
-        'tifffile',
         'attrs >= 1.6',
         'cython',
         'tables'
