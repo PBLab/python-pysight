@@ -75,7 +75,7 @@ setup(
     install_requires=[
         'numpy',
         'matplotlib',
-        'pandas',
+        'pandas >= 0.19',
         'tifffile',
         'attrs >= 1.6',
         'cython',
