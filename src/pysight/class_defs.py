@@ -154,12 +154,11 @@ class Movie(object):
         with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff) as tif:
             while True:
                 data_of_frame.hist, data_of_frame.edges = cur_frame.create_hist()
-                tif.save(data_of_frame.hist.astype(np.uint16), tile=(self.z_pixels, self.x_pixels, self.y_pixels))
+                tif.save(data_of_frame.hist.astype(np.uint16))
                 try:
                     cur_frame = next(relevant_generator)
                 except StopIteration:
                     break
-            # TODO: Add a volume max projection
 
     def create_array(self):
         """ Create all frames or volumes, one-by-one, and return the array of data that holds them. """

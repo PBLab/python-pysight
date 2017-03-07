@@ -111,9 +111,9 @@ class GUIApp(object):
         image_size_label = ttk.Label(main_frame, text='Image sizes')
         image_size_label.grid(column=6, row=0, sticky='ns')
         x_size_label = ttk.Label(main_frame, text='X')
-        x_size_label.grid(column=7, row=1, sticky='ns')
+        x_size_label.grid(column=5, row=1, sticky='ns')
         y_size_label = ttk.Label(main_frame, text='Y')
-        y_size_label.grid(column=8, row=1, sticky='ns')
+        y_size_label.grid(column=6, row=1, sticky='ns')
         z_size_label = ttk.Label(main_frame, text='Z')
         z_size_label.grid(column=7, row=1, sticky='ns')
 
