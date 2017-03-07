@@ -4,10 +4,9 @@ sphinx-py3doc-enhanced-theme
 
 -e .
 
-llvmlite
-numba
+numpy
 matplotlib
-pandas
+pandas >= 0.19
 tifffile
 attrs >= 1.6
 cython
