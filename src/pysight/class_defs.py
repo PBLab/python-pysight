@@ -93,8 +93,8 @@ class Movie(object):
 
     def choose_generator(self):
         """ Determine which generator to use - volumes or frames. """
-        if 'Phase' in self.data.columns:
-            self.big_tiff = False
+        if 'Phase' in self.data.columns or 'time_rel_pulse' in self.data.columns:
+            # self.big_tiff = False  # TODO: Not sure of the implication of BigTiffs on 4-5D data
             return self.gen_of_volumes()
         else:
             self.z_pixels = 1
@@ -187,6 +187,30 @@ class Movie(object):
         assert len(deque_of_frames) == len(self.list_of_frame_times) - 1
         return deque_of_frames
 
+    def create_single_volume(self, vols) -> np.array:
+        """ Aggregate the frames\volumes that vols mark to a single frame\volume.
+        :vols Volumes to aggregate. 'all' is all of them.
+        :return np.array of histogram
+        """
+
+        deque_of_frames = self.create_array()
+
+        if vols == 'all':
+            summed = np.zeros_like(deque_of_frames[0].hist, dtype=np.int32)
+            for frame in deque_of_frames:
+                summed += frame.hist
+            return summed
+
+        if isinstance(vols, int):
+            return deque_of_frames[vols]
+
+        try:
+            summed = np.array([0], dtype=np.int32)
+            for idx in vols:
+                summed += deque_of_frames[vols[idx]]
+        except TypeError:
+            raise TypeError('vols parameter should be "all", integer or list of volumes.')
+
 
 @attr.s(slots=True)  # slots should speed up display
 class Frame(object):
@@ -221,14 +245,6 @@ class Frame(object):
         lines_start, lines_end, self.empty = metadata_ydata(data=self.data, jitter=jitter)
         metadata['Lines'] = Struct(start=lines_start, end=lines_end, num=self.num_of_lines + 1)
 
-        # Laser pulses metadata
-        try:
-            laser_start = 0
-            laser_end = 1 / self.reprate * self.binwidth  # 800 ps resolution
-            metadata['Laser'] = Struct(start=laser_start, end=laser_end)
-        except ZeroDivisionError:
-            pass
-
         return metadata
 
     def __create_hist_edges(self):
@@ -239,7 +255,7 @@ class Frame(object):
         metadata = self.__metadata
         list_of_edges = []
 
-        if self.empty is not True:
+        if self.empty is not True:  # not an empty volume
             for key in metadata:
                 list_of_edges.append(create_linspace(start=metadata[key].start,
                                                      stop=metadata[key].end,
@@ -261,9 +277,9 @@ class Frame(object):
 
             hist, x, y = np.histogram2d(col_data_as_array, row_data_as_array, bins=(xedges, yedges))
         else:
-            return np.zeros(self.num_of_lines, self.num_of_rows), 0, 0
+            return np.zeros((self.num_of_lines, self.num_of_rows), dtype=np.int32), 0, 0
 
-        return hist, (x, y)
+        return hist.astype(np.int32), (x, y)
 
     def show(self):
         """ Show the frame. Mainly for debugging purposes, as the Movie object doesn't use it. """
@@ -319,8 +335,8 @@ class Volume(object):
         # Laser pulses metadata
         try:
             laser_start = 0
-            laser_end = 1 / self.reprate * self.binwidth  # 800 ps resolution
-            metadata['Laser'] = Struct(start=laser_start, end=laser_end)
+            laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(int)
+            metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end)
         except ZeroDivisionError:
             pass
 
@@ -342,30 +358,48 @@ class Volume(object):
 
             return list_of_edges
         else:
-            return 1, 1, 1
+            return list(np.ones(len(metadata)))
 
     def create_hist(self):
         """
         Create the histogram of data using calculated edges.
         :return: np.ndarray of shape [num_of_cols, num_of_rows] with the histogram data, and edges
         """
+
+        photon_identifiers = OrderedDict()
+
         if not self.empty:
             list_of_edges = self.__create_hist_edges()
-            col_data_as_array = self.data["time_rel_line"].values
-            row_data_as_array = self.data["time_rel_frames"].values
-            z_data_as_array = self.data["Phase"].values
+            photon_identifiers['time_rel_frames'] = self.data['time_rel_frames'].values
+            photon_identifiers['time_rel_line'] = self.data['time_rel_line'].values
+            try:
+                photon_identifiers['Phase'] = self.data['Phase'].values
+            except KeyError:
+                pass
+            try:
+                photon_identifiers['time_rel_pulse'] = self.data['time_rel_pulse'].values
+            except KeyError:
+                pass
 
-            data_to_be_hist = np.reshape((col_data_as_array, row_data_as_array, z_data_as_array),
-                                         (3, self.data.shape[0])).T
+        # if not self.empty:
+        #     list_of_edges = self.__create_hist_edges()
+        #     col_data_as_array = self.data["time_rel_line"].values
+        #     row_data_as_array = self.data["time_rel_frames"].values
+        #     z_data_as_array = self.data["Phase"].values
+
+            list_of_data_columns = [x for x in photon_identifiers.values()]
+
+            data_to_be_hist = np.reshape(list_of_data_columns, (len(list_of_data_columns),
+                                                                self.data.shape[0])).T
 
             assert data_to_be_hist.shape[0] == self.data.shape[0]
-            assert 3 == data_to_be_hist.shape[1]
+            assert len(photon_identifiers) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
         else:
-            return np.zeros(self.x_pixels, self.y_pixels, self.z_pixels), 0, 0, 0
+            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), 0, 0, 0
 
-        return hist, edges
+        return hist.astype(np.int32), edges
 
     def show(self):
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """

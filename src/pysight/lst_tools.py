@@ -163,10 +163,9 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     :param df: Input DF.
     :param timepatch: Key by which we sort.
     :param data_range: Data range of file.
-    :parm input_channels: dictionary of actual input channels
+    :param input_channels: dictionary of actual input channels
     """
     from pysight import timepatch_manager
-
 
     # Verify inputs
     if df.shape[0] == 0 or timepatch == '' or data_range == 0 or input_channels is None:
@@ -184,7 +183,7 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     actual_data_channels = set(df['channel'].cat.categories.values)
     if actual_data_channels != set(input_channels.values()):
         raise UserWarning("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                              "Recorded channels are {}.".format(actual_data_channels))
+                          "Recorded channels are {}.".format(actual_data_channels))
 
     # Start going through the df and extract the bits
     df['abs_time'] = np.uint64(0)
@@ -211,7 +210,7 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
                        pixels: int=None, spacing_between_lines: int=None) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
 
-    if (last_event_time == None) or (pixels == None) or (lines.empty):
+    if last_event_time is None or pixels is None or lines.empty:
         raise ValueError('Wrong input detected.')
 
     if last_event_time <= 0:
@@ -282,6 +281,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
     dict_of_data = {}
     for key in dict_of_inputs:
         dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
+
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=y_pixels,
@@ -315,6 +315,7 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     """
     Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
     :param dict_of_data: All events data, distributed to its input channel
+    :param gui: Input GUI
     :return: pandas.DataFrame
     """
     from pysight.tag_tools import interpolate_tag
@@ -335,10 +336,9 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
         df_photons.dropna(how='any', inplace=True)
         df_photons[key] = df_photons[key].astype(np.uint64)
         df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
-        #  accordance to the line\frame\laser pulse
+        # accordance to the line\frame\laser pulse
         df_photons[key] = df_photons[key].astype('category')
         df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
-
 
     # Closure
     assert np.all(df_photons.values >= 0)  # finds NaNs as well

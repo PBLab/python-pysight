@@ -40,6 +40,10 @@ def verify_gui_input(gui):
         if [x for x in list_of_keys if x != 'Empty'] != list(set_of_keys.difference({'Empty'})):
             raise KeyError('Input consisted of two or more similar names which are not "Empty".')
 
+    list_of_outputs = re.sub(r'\s', '', gui.outputs.get()).split(',')
+    if not set(list_of_outputs).issubset({'tiff', 'tif', 'array', 'single'}):
+        raise UserWarning('Wrong input detected.')
+
 
 class GUIApp(object):
     """Main GUI for the multiscaler code"""
@@ -64,7 +68,7 @@ class GUIApp(object):
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
-        self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # No PMT2 currently
+        self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start)
         mb1.grid(column=3, row=1, sticky='we')
         mb1.set('Frames')
@@ -95,50 +99,58 @@ class GUIApp(object):
         num_frames_entry.grid(column=0, row=5, sticky='ns')
         num_frames_entry.focus()
 
+        # Wanted outputs
+        outputs_label = ttk.Label(main_frame, text='Outputs ["tiff", "array", "single"]')
+        outputs_label.grid(column=0, row=6, sticky='ns')
+
+        self.outputs = StringVar(value='single')
+        outputs_entry = ttk.Entry(main_frame, textvariable=self.outputs)
+        outputs_entry.grid(column=0, row=7, sticky='ns')
+
         # Define image sizes
         image_size_label = ttk.Label(main_frame, text='Image sizes')
-        image_size_label.grid(column=5, row=0, sticky='ns')
+        image_size_label.grid(column=6, row=0, sticky='ns')
         x_size_label = ttk.Label(main_frame, text='X')
-        x_size_label.grid(column=4, row=1, sticky='ns')
+        x_size_label.grid(column=7, row=1, sticky='ns')
         y_size_label = ttk.Label(main_frame, text='Y')
-        y_size_label.grid(column=5, row=1, sticky='ns')
+        y_size_label.grid(column=8, row=1, sticky='ns')
         z_size_label = ttk.Label(main_frame, text='Z')
-        z_size_label.grid(column=6, row=1, sticky='ns')
+        z_size_label.grid(column=7, row=1, sticky='ns')
 
         self.x_pixels = StringVar(value=256)
         self.y_pixels = StringVar(value=512)
         self.z_pixels = StringVar(value=100)
 
         x_pixels_entry = ttk.Entry(main_frame, textvariable=self.x_pixels)
-        x_pixels_entry.grid(column=4, row=2, sticky='ns')
+        x_pixels_entry.grid(column=5, row=2, sticky='ns')
         y_pixels_entry = ttk.Entry(main_frame, textvariable=self.y_pixels)
-        y_pixels_entry.grid(column=5, row=2, sticky='ns')
+        y_pixels_entry.grid(column=6, row=2, sticky='ns')
         z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels)
-        z_pixels_entry.grid(column=6, row=2, sticky='ns')
+        z_pixels_entry.grid(column=7, row=2, sticky='ns')
 
         # Laser repetition rate
         laser1_label = ttk.Label(main_frame, text='Laser nominal rep. rate (FLIM)')
-        laser1_label.grid(column=5, row=3, sticky='ns')
+        laser1_label.grid(column=6, row=3, sticky='ns')
         laser2_label = ttk.Label(main_frame, text='Pulses per second')
-        laser2_label.grid(column=6, row=4, sticky='ns')
+        laser2_label.grid(column=7, row=4, sticky='ns')
 
         self.reprate = StringVar(value=0)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate)
-        reprate_entry.grid(column=5, row=4, sticky='ns')
+        reprate_entry.grid(column=6, row=4, sticky='ns')
 
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
-        binwidth_label.grid(column=5, row=5, sticky='ns')
+        binwidth_label.grid(column=6, row=5, sticky='ns')
         self.binwidth = StringVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth)
-        binwidth_entry.grid(column=5, row=6, sticky='ns')
+        binwidth_entry.grid(column=6, row=6, sticky='ns')
 
         # TAG nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
-        tag_label.grid(column=5, row=7, sticky='ns')
+        tag_label.grid(column=6, row=7, sticky='ns')
         self.tag_freq = StringVar(value=0.1897e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq)
-        tag_label_entry.grid(column=5, row=8, sticky='ns')
+        tag_label_entry.grid(column=6, row=8, sticky='ns')
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)

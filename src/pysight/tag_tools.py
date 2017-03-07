@@ -89,7 +89,7 @@ def define_phase(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.
     first_relevant_photon_idx = photons.shape[0] - relevant_photons.shape[0]
     photons[first_relevant_photon_idx:] = phase_vec
 
-    df_photons['Phase'] = phase_vec
+    df_photons['Phase'] = photons
     df_photons.dropna(how='any', inplace=True)
 
     assert df_photons['Phase'].any() >= 0

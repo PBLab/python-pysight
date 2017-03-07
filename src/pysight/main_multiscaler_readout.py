@@ -5,6 +5,7 @@ __author__: Hagai
 """
 from pysight.tkinter_gui_multiscaler import GUIApp
 from pysight.tkinter_gui_multiscaler import verify_gui_input
+from pysight.output_tools import generate_output_list
 
 
 def main_data_readout(gui):
@@ -22,11 +23,11 @@ def main_data_readout(gui):
 
     # Read the file into a variable
     print('Reading file {}'.format(gui.filename.get()))
-    df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
+    prelim_df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
     print('File read. Sorting the file according to timepatch...')
 
     # Create a dataframe with all needed columns
-    df_after_timepatch = lst_tools.timepatch_sort(df=df, timepatch=timepatch, data_range=data_range,
+    df_after_timepatch = lst_tools.timepatch_sort(df=prelim_df, timepatch=timepatch, data_range=data_range,
                                                   input_channels=dict_of_input_channels)
     print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 
@@ -42,29 +43,31 @@ def main_data_readout(gui):
     print('Relative times calculated. Creating Movie object...')
 
     # Create a movie object
-    movie = class_defs.Movie(data=df_allocated, x_pixels=int(gui.x_pixels.get()),
-                             y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
-                             reprate=float(gui.reprate.get()), name=gui.filename.get(),
-                             binwidth=float(gui.binwidth.get()))
-    movie.create_tif()
-    print('Tiff stack created with name {}.tif'.format(gui.filename.get()[:-4]))
+    final_movie = class_defs.Movie(data=df_allocated, x_pixels=int(gui.x_pixels.get()),
+                                   y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
+                                   reprate=float(gui.reprate.get()), name=gui.filename.get(),
+                                   binwidth=float(gui.binwidth.get()))
 
-    return df_allocated, movie
+    # Find out what the user wanted and output it
+
+    print('======================================================= \nOutputs:\n--------')
+    output_list = generate_output_list(final_movie, gui)
+
+    return df_allocated, final_movie, output_list
+
 
 def run():
-    """ Run the entire script.
-    :return: df_after - dataframe with data
-    :return: movie - the Movie object that contains the frames
-    :return: final_stack - data of images
+    """
+    Run the entire script.
     """
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
-    df_after, movie = main_data_readout(gui)
-    return df_after, movie
+    df_after, movie_after, list_of_outputs = main_data_readout(gui)
+    return df_after, movie_after, list_of_outputs
 
 if __name__ == '__main__':
-    df_after, movie = run()
+    df, movie, outputs = run()
 
 
 
