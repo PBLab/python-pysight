@@ -4,6 +4,7 @@
 *.mp4
 *.tif
 *.mat
+*.lst
 
 # C extensions
 *.so

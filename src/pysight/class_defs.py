@@ -9,6 +9,7 @@ import pandas as pd
 from typing import List
 from numba import jit, float64, uint64
 from collections import OrderedDict
+import warnings
 
 
 def validate_number_larger_than_zero(instance, attribute, value: int=0):
@@ -327,17 +328,22 @@ class Volume(object):
         metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
-        z_start = 0
-        z_end = 2 * np.pi
-        metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
+        if 'Phase' in self.data.columns:
+            z_start = 0
+            z_end = 2 * np.pi
+            metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
 
         # Laser pulses metadata
-        try:
-            laser_start = 0
-            laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(int)
-            metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end)
-        except ZeroDivisionError:
-            pass
+        if 'time_rel_pulse' in self.data.columns:
+            try:
+                laser_start = 0
+                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(int)
+                metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end)
+            except ZeroDivisionError:
+                laser_start = 0
+                warnings.warn('No laser reprate provided. Assuming 80 MHz.')
+                laser_end = np.ceil(1 / (80e6 * self.binwidth)).astype(int)
+                metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end)
 
         return metadata
 
@@ -380,12 +386,6 @@ class Volume(object):
             except KeyError:
                 pass
 
-        # if not self.empty:
-        #     list_of_edges = self.__create_hist_edges()
-        #     col_data_as_array = self.data["time_rel_line"].values
-        #     row_data_as_array = self.data["time_rel_frames"].values
-        #     z_data_as_array = self.data["Phase"].values
-
             list_of_data_columns = [x for x in photon_identifiers.values()]
 
             data_to_be_hist = np.reshape(list_of_data_columns, (len(list_of_data_columns),
@@ -402,6 +402,7 @@ class Volume(object):
 
     def show(self):
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """
+
         hist, edges = self.create_hist()
         plt.figure()
         # plt.imshow(hist, cmap='gray')

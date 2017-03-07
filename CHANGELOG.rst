@@ -81,3 +81,9 @@ Changelog
 * Tiffs are now saved untiled. Depth axis is x-axis.
 
 * Installation should run smoothly if following the instructions.
+
+0.3.2 (2017-03-07)
+------------------
+* Added verifications on the FLIM input.
+
+* Bug fixes in FLIM implementation.

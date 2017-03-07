@@ -2,4 +2,4 @@
 Authors
 =======
 
-* Hagai Hargil, Lior Golgher - http://pblab.tau.ac.il/en/
+* Hagai Hargil - http://pblab.tau.ac.il/en/

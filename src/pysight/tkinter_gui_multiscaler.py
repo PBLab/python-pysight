@@ -97,7 +97,6 @@ class GUIApp(object):
         self.num_of_frames = StringVar(value=1)
         num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames)
         num_frames_entry.grid(column=0, row=5, sticky='ns')
-        num_frames_entry.focus()
 
         # Wanted outputs
         outputs_label = ttk.Label(main_frame, text='Outputs ["tiff", "array", "single"]')
@@ -155,7 +154,8 @@ class GUIApp(object):
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
         quit_button.grid()
-        self.root.bind('<Return>', quit_button)
+
+        # self.root.bind('<Return>', quit_button)
         for child in main_frame.winfo_children():
             child.grid_configure(padx=2, pady=2)
         self.root.wait_window()

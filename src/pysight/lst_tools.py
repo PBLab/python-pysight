@@ -270,6 +270,35 @@ def create_inputs_dict(gui=None) -> Dict:
 
     return dict_of_inputs
 
+def validate_created_data_channels(dict_of_data: Dict):
+    """
+    Make sure that the dictionary that contains all data channels makes sense.
+    """
+    assert {'PMT1', 'Lines', 'Frames'} <= set(dict_of_data.keys())  # A is subset of B
+
+    if dict_of_data['Frames'].shape[0] > dict_of_data['Lines'].shape[0]:  # more frames than lines
+        raise UserWarning('More frames than lines, replace the two.')
+
+    try:
+        if dict_of_data['TAG Lens'].shape[0] < dict_of_data['Lines'].shape[0]:
+            raise UserWarning('More lines than TAG pulses, replace the two.')
+    except KeyError:
+        pass
+
+    try:
+        if dict_of_data['Laser'].shape[0] < dict_of_data['Lines'].shape[0] or \
+           dict_of_data['Laser'].shape[0] < dict_of_data['Frames'].shape[0]:
+            raise UserWarning('Laser pulses channel contained less ticks than the Lines or Frames channel.')
+    except KeyError:
+        pass
+
+    try:
+        if dict_of_data['Laser'].shape[0] < dict_of_data['TAG Lens'].shape[0]:
+            raise UserWarning('Laser pulses channel contained less ticks than the TAG lens channel.')
+    except KeyError:
+        pass
+
+
 
 def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
                             num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1) -> Dict:
@@ -298,9 +327,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         dict_of_data['Frames'] = pd.Series([0], name='abs_time').append(dict_of_data['Frames'], ignore_index=True)
 
     # Validations
-    assert {'PMT1', 'Lines', 'Frames'} <= set(dict_of_data.keys())  # A is subset of B
-    if dict_of_data['Frames'].shape[0] > dict_of_data['Lines'].shape[0]:  # more frames than lines
-        raise UserWarning('More frames than lines, replace the two.')
+    validate_created_data_channels(dict_of_data)
 
     return dict_of_data
 
@@ -337,7 +364,8 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
         df_photons[key] = df_photons[key].astype(np.uint64)
         df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
         # accordance to the line\frame\laser pulse
-        df_photons[key] = df_photons[key].astype('category')
+        if key != 'Laser':
+            df_photons[key] = df_photons[key].astype('category')
         df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
     # Closure
