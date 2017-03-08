@@ -9,7 +9,7 @@ from pysight.apply_df_funcs import b16, b22, hextobin
 import numpy as np
 
 
-class ChoiceManager:
+class ChoiceManager:  # TODO: Single function with parameters...
 
     def __init__(self):
         self.__choice_table = \

@@ -127,6 +127,12 @@ class GUIApp(object):
         z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels)
         z_pixels_entry.grid(column=7, row=2, sticky='ns')
 
+        # Read batch for debugging
+        self.debug = IntVar()
+        debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
+        debug_check.grid(column=5, row=4, sticky='ns')
+
+
         # Laser repetition rate
         laser1_label = ttk.Label(main_frame, text='Laser nominal rep. rate (FLIM)')
         laser1_label.grid(column=6, row=3, sticky='ns')

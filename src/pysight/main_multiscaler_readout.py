@@ -22,9 +22,15 @@ def main_data_readout(gui):
     dict_of_input_channels = lst_tools.create_inputs_dict(gui=gui)
 
     # Read the file into a variable
-    print('Reading file {}'.format(gui.filename.get()))
-    prelim_df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
+    if gui.debug.get() == 0:
+        print('Reading file {}'.format(gui.filename.get()))
+        prelim_df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
+    elif gui.debug.get() == 1:
+        print('[DEBUG] Reading file {}'.format(gui.filename.get()))
+        prelim_df = lst_tools.read_lst_file_debug(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
+                                            num_of_lines=1e6)
     print('File read. Sorting the file according to timepatch...')
+
 
     # Create a dataframe with all needed columns
     df_after_timepatch = lst_tools.timepatch_sort(df=prelim_df, timepatch=timepatch, data_range=data_range,

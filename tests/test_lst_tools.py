@@ -45,6 +45,7 @@ class TestLstTools(unittest.TestCase):
         from pysight.lst_tools import determine_data_channels
         from pysight.lst_tools import allocate_photons  # TODO: Split this test
         import pandas as pd
+        import numpy as np
 
         list_of_first_event = ['0100000060d9']
         list_of_first_times = ['1549']
@@ -68,10 +69,12 @@ class TestLstTools(unittest.TestCase):
                                                num_of_frames=2, x_pixels=512, y_pixels=512)
         df_allocated = allocate_photons(dict_of_data=dict_of_data)
 
-        hdf_loc = 'tests_data' + sep + 'hdf_for_tests.h5'
-        data_to_check_allocation = pd.read_hdf(hdf_loc)
+        data_to_check_allocation = np.array([59, 678024], dtype=np.uint64)
+        index_data = df_allocated.index.values[0]
+        real_data = (2557, 677965, 0)
 
-        self.assertTrue(data_to_check_allocation.iloc[0].equals(df_allocated.iloc[0]))
+        self.assertTrue(np.array_equal(data_to_check_allocation, df_allocated.iloc[0].values))
+        self.assertEqual(real_data, index_data)
 
     # def test_create_frame_array_normal_input(self):  # TODO: Fix this test
     #     import numpy as np

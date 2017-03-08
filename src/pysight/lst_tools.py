@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict
 from numba import jit
+import warnings
 
 
 def hex_to_bin_dict():
@@ -127,6 +128,30 @@ def get_start_pos(filename: str = '') -> int:
                 return pos_in_file  # to have the [DATA] as header
 
 
+def read_lst_file_debug(filename: str='', start_of_data_pos: int=0, num_of_lines=0) -> pd.DataFrame:
+    """
+    Read the list file into a dataframe.
+    :param filename: Name of list file.
+    :param start_of_data_pos: The place in chars in the file that the data starts at.
+    :return: Dataframe with all events registered.
+    """
+    from itertools import islice
+
+    if filename is '' or start_of_data_pos == 0:
+        return ValueError('Wrong input detected.')
+
+    with open(filename, 'r') as f:
+        f.seek(start_of_data_pos)
+        n_lines = list(islice(f, int(num_of_lines)))
+        if not n_lines:
+            pass
+        file_separated = [st.rstrip() for st in n_lines]
+    df = pd.DataFrame(file_separated, columns=['raw'], dtype=str)
+
+    assert df.shape[0] > 0
+    return df
+
+
 def read_lst_file(filename: str = '', start_of_data_pos: int = 0) -> pd.DataFrame:
     """
     Read the list file into a dataframe.
@@ -150,7 +175,16 @@ def read_lst_file(filename: str = '', start_of_data_pos: int = 0) -> pd.DataFram
     with open(filename, 'r') as f:
         f.seek(start_of_data_pos)
         file_separated = [line.rstrip() for line in f]  # TODO: SciLuigi?
-
+        # TODO: f = io.open(r'C:\Users\Hagai\Documents\GitHub\python-pysight\multiscalerAsPreampMicrogliaMouseFLIM035.lst', 'rb')
+        # f.seek(1590)
+        # numread = 0
+        #
+        # for i in itertools.count():
+        #     numread = f.readinto(b)
+        #     lista.append(b.decode())
+        #     if not numread:
+        #         break
+        # array.array can also work, with fromfile()
     df = pd.DataFrame(file_separated, columns=['raw'], dtype=str)
 
     assert df.shape[0] > 0
@@ -310,7 +344,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
     dict_of_data = {}
     for key in dict_of_inputs:
         dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
-
+        # TODO: GroupBy the line above?
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=y_pixels,
@@ -359,7 +393,11 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     # Main loop - Sort lines and frames for all photons and calculate relative time
     for key in relevant_keys:
         sorted_indices = numba_search_sorted(dict_of_data[key].values, df_photons['abs_time'].values)
-        df_photons[key] = dict_of_data[key].loc[sorted_indices].values
+        try:
+            df_photons[key] = dict_of_data[key].loc[sorted_indices].values
+        except KeyError:
+            warnings.warn('All computed sorted_indices were "-1" for key {}. Trying to resume...'.format(key))
+
         df_photons.dropna(how='any', inplace=True)
         df_photons[key] = df_photons[key].astype(np.uint64)
         df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
