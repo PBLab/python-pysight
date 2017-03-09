@@ -251,12 +251,16 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
         raise ValueError('Last event time is zero or negative.')
 
     num_of_recorded_lines = lines.shape[0]
-    actual_num_of_frames = num_of_recorded_lines // pixels
-    unnecess_lines = actual_num_of_frames % pixels
-    if unnecess_lines == 0:
+    actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
+    if num_of_recorded_lines < pixels:
+        unnecess_lines = 0
+    else:
+        unnecess_lines = actual_num_of_frames % pixels
+
+    if unnecess_lines == 0:  # either less lines than pixels or a integer multiple of pixels
         array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
     else:
-        last_event_time = lines[num_of_recorded_lines - unnecess_lines] + spacing_between_lines
+        last_event_time = int(lines.iloc[num_of_recorded_lines - unnecess_lines] + spacing_between_lines)
         array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
 
     return array_of_frames
@@ -333,6 +337,15 @@ def validate_created_data_channels(dict_of_data: Dict):
         pass
 
 
+@jit(nopython=True, cache=True)
+def numba_sorted(arr: np.array) -> np.array:
+    """
+    Sort an array with Numba. CURRENTLY NOT WORKING
+    """
+
+    arr.sort()
+    return arr.astype(np.uint64)
+
 
 def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
                             num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1) -> Dict:
@@ -343,8 +356,13 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
 
     dict_of_data = {}
     for key in dict_of_inputs:
-        dict_of_data[key] = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time'].reset_index(drop=True)
-        # TODO: GroupBy the line above?
+        relevant_values = df.loc[df['channel'] == dict_of_inputs[key], 'abs_time']
+        # NUMBA SORT NOT WORKING:
+        # sorted_vals = numba_sorted(relevant_values.values)
+        # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
+        dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
+        # TODO: GroupBy the lines above?
+
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
         last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=y_pixels,

@@ -84,12 +84,14 @@ Changelog
 
 0.3.2 (2017-03-07)
 ------------------
+
 * Added verifications on the FLIM input.
 
 * Bug fixes in FLIM implementation.
 
 0.3.3 (2017-03-08)
 ------------------
+
 * Code can take care of the the infamous [-1, ..., -1] index list.
 
 * Added ``debug`` mode in which the algorithm reads only a limited amount of lines from a file.
@@ -97,4 +99,12 @@ Changelog
 * Fixed minor bug in ``__create_hist``.
 
 * Decreased size of package by removing excess lines of data for tests.
+
+0.3.4 (2017-03-09)
+------------------
+
+* More fixes to the [-1] vector problem.
+
+* Added a ``sort`` function before handling the data, because of irregularities.
+
 

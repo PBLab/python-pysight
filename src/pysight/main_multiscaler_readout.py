@@ -19,7 +19,9 @@ def main_data_readout(gui):
     data_range = lst_tools.get_range(gui.filename.get())
     timepatch = lst_tools.get_timepatch(gui.filename.get())
     start_of_data_pos = lst_tools.get_start_pos(gui.filename.get())
-    dict_of_input_channels = lst_tools.create_inputs_dict(gui=gui)
+    dict_of_input_channels = lst_tools.create_inputs_dict(gui=gui)  # TODO: Separate module for these functions, with
+    # preemptive detection of relevant channels and size of data vector. This should help me test whether processing
+    # the list of events with Python operations on array.arrays can be faster.
 
     # Read the file into a variable
     if gui.debug.get() == 0:
