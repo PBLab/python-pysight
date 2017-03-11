@@ -3,44 +3,14 @@ from os import sep
 
 
 class TestLstTools(unittest.TestCase):
-    """
-    Tests for new multiscaler readout functions
-    """
-    list_of_file_names = ['tests_data' + sep + 'data_for_tests.lst']
 
+    list_of_file_names = ['tests_data' + sep + 'data_for_tests.lst']
     list_of_real_start_loc = [1749]
     list_of_real_time_patch = ['32']
     list_of_real_range = [80000000 * 2 ** 4]
 
-    def test_check_range_extraction(self):
-        from pysight.lst_tools import get_range
-
-        list_of_returned_range = []
-        for fname in self.list_of_file_names:
-            list_of_returned_range.append(get_range(fname))
-
-        self.assertEqual(self.list_of_real_range, list_of_returned_range)
-
-    def test_check_time_patch_extraction(self):
-        from pysight.lst_tools import get_timepatch
-
-        list_of_returned_time_patch = []
-        for fname in self.list_of_file_names:
-            list_of_returned_time_patch.append(get_timepatch(fname))
-
-        self.assertEqual(self.list_of_real_time_patch, list_of_returned_time_patch)
-
-    def test_check_start_of_data_value(self):
-        from pysight.lst_tools import get_start_pos
-
-        list_of_returned_locs = []
-        for fname in self.list_of_file_names:
-            list_of_returned_locs.append(get_start_pos(fname))
-
-        self.assertEqual(self.list_of_real_start_loc, list_of_returned_locs)
-
     def test_complete_workflow(self):
-        from pysight.lst_tools import read_lst_file
+        from pysight.fileIO_tools import read_lst_file
         from pysight.lst_tools import timepatch_sort
         from pysight.lst_tools import determine_data_channels
         from pysight.lst_tools import allocate_photons  # TODO: Split this test
@@ -68,12 +38,12 @@ class TestLstTools(unittest.TestCase):
         dict_of_data = determine_data_channels(df=df_sorted, dict_of_inputs=dict_of_inputs,
                                                num_of_frames=2, x_pixels=512, y_pixels=512)
         df_allocated = allocate_photons(dict_of_data=dict_of_data)
+        calculated_data = set(df_allocated.iloc[0].values)
+        data_to_check_allocation = {59, 678024}
+        index_data = set(df_allocated.index.values[0])
+        real_data = {2557, 677965, 0}
 
-        data_to_check_allocation = np.array([59, 678024], dtype=np.uint64)
-        index_data = df_allocated.index.values[0]
-        real_data = (2557, 677965, 0)
-
-        self.assertTrue(np.array_equal(data_to_check_allocation, df_allocated.iloc[0].values))
+        self.assertTrue(np.array_equal(data_to_check_allocation, calculated_data))
         self.assertEqual(real_data, index_data)
 
     # def test_create_frame_array_normal_input(self):  # TODO: Fix this test
@@ -140,7 +110,7 @@ class TestLstTools(unittest.TestCase):
 
 
     def test_create_inputs_dict_empty_gui(self):
-        from pysight.lst_tools import create_inputs_dict
+        from pysight.fileIO_tools import create_inputs_dict
 
         trial_gui = None
 

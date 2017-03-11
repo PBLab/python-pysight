@@ -12,24 +12,29 @@ def main_data_readout(gui):
     """
     Main function that reads the lst file and processes its data.
     """
+    from pysight import fileIO_tools
     from pysight import lst_tools
     from pysight import class_defs
 
     # Open file and find the needed parameters
-    data_range = lst_tools.get_range(gui.filename.get())
-    timepatch = lst_tools.get_timepatch(gui.filename.get())
-    start_of_data_pos = lst_tools.get_start_pos(gui.filename.get())
-    dict_of_input_channels = lst_tools.create_inputs_dict(gui=gui)  # TODO: Separate module for these functions, with
+    data_range = fileIO_tools.get_range(gui.filename.get())
+    timepatch = fileIO_tools.get_timepatch(gui.filename.get())
+    start_of_data_pos = fileIO_tools.get_start_pos(gui.filename.get())
+    dict_of_input_channels = fileIO_tools.create_inputs_dict(gui=gui)
+    list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get())
+    fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)
+
+    # TODO: Separate module for these functions, with
     # preemptive detection of relevant channels and size of data vector. This should help me test whether processing
     # the list of events with Python operations on array.arrays can be faster.
 
     # Read the file into a variable
     if gui.debug.get() == 0:
         print('Reading file {}'.format(gui.filename.get()))
-        prelim_df = lst_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
+        prelim_df = fileIO_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
     elif gui.debug.get() == 1:
         print('[DEBUG] Reading file {}'.format(gui.filename.get()))
-        prelim_df = lst_tools.read_lst_file_debug(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
+        prelim_df = fileIO_tools.read_lst_file_debug(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
                                             num_of_lines=1e6)
     print('File read. Sorting the file according to timepatch...')
 

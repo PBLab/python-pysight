@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from typing import List
-from numba import jit, float64, uint64
+from numba import jit, float64, uint64, int64
 from collections import OrderedDict
 import warnings
 
@@ -21,7 +21,7 @@ def validate_number_larger_than_zero(instance, attribute, value: int=0):
         raise ValueError("{} has to be larger than 0.".format(attribute))
 
 
-@jit((float64[:](uint64, uint64, uint64)), nopython=True, cache=True)
+@jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)
 def create_linspace(start, stop, num):
     linspaces = np.linspace(start, stop, num)
     assert np.all(np.diff(linspaces) > 0)
@@ -329,8 +329,8 @@ class Volume(object):
 
         # z-axis metadata
         if 'Phase' in self.data.columns:
-            z_start = 0
-            z_end = 2 * np.pi
+            z_start = -1
+            z_end = 1
             metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
 
         # Laser pulses metadata

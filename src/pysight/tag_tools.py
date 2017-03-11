@@ -69,7 +69,8 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np
 
     for idx, bin in enumerate(bins) :  # values of indices that changed
         phase_vec[idx] = (photons[idx] - raw_tag[bin - 1])/tag_diff[bin - 1]
-        phase_vec[idx] *= 2 * np.pi
+
+    phase_vec = np.sin(phase_vec * 2 * np.pi)
 
     return phase_vec
 
@@ -92,8 +93,8 @@ def define_phase(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.
     df_photons['Phase'] = photons
     df_photons.dropna(how='any', inplace=True)
 
-    assert df_photons['Phase'].any() >= 0
-    assert df_photons['Phase'].any() < 2 * np.pi
+    assert df_photons['Phase'].any() >= -1
+    assert df_photons['Phase'].any() <= 1
 
     return df_photons
 
@@ -105,7 +106,6 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, gui
     :param tag_data: Time of TAG pulses
     :return: Original dataframe with an added index corresponding to each photon's phase
     """
-
 
     # TODO: Input verification
     # TODO: Get rid of assumption that the TAG pulse comes at a phase of 0

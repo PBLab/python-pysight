@@ -108,3 +108,18 @@ Changelog
 * Added a ``sort`` function before handling the data, because of irregularities.
 
 
+0.3.5 (2017-03-11)
+------------------
+
+* Added sinusoidal interpolation to TAG phase.
+
+* Sorting is now only done for TAG lens input.
+
+* Added ``fileIO_tools.py`` module for increased simplicity.
+
+* Added more verifications to user inputs from GUI that pop up sooner.
+
+* Increased file IO speed with a new ``np.fromfile`` method.
+
+
+
