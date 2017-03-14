@@ -24,10 +24,6 @@ def main_data_readout(gui):
     list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get())
     fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)
 
-    # TODO: Separate module for these functions, with
-    # preemptive detection of relevant channels and size of data vector. This should help me test whether processing
-    # the list of events with Python operations on array.arrays can be faster.
-
     # Read the file into a variable
     if gui.debug.get() == 0:
         print('Reading file {}'.format(gui.filename.get()))
@@ -37,7 +33,6 @@ def main_data_readout(gui):
         prelim_df = fileIO_tools.read_lst_file_debug(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
                                             num_of_lines=1e6)
     print('File read. Sorting the file according to timepatch...')
-
 
     # Create a dataframe with all needed columns
     df_after_timepatch = lst_tools.timepatch_sort(df=prelim_df, timepatch=timepatch, data_range=data_range,

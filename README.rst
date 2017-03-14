@@ -40,9 +40,9 @@ Overview
     :alt: PyPI Package latest release
     :target: https://pypi.python.org/pypi/pysight
 
-.. |commits_since| image:: https://img.shields.io/github/commits-since/HagaiHargil/python-pysight/v0.3.5.svg
+.. |commits_since| image:: https://img.shields.io/github/commits-since/HagaiHargil/python-pysight/v0.3.6.svg
     :alt: Commits since latest release
-    :target: https://github.com/HagaiHargil/python-pysight/compare/v0.3.5...master
+    :target: https://github.com/HagaiHargil/python-pysight/compare/v0.3.6...master
 
 .. |downloads| image:: https://img.shields.io/pypi/dm/pysight.svg
     :alt: PyPI Package monthly downloads

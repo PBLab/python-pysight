@@ -117,9 +117,18 @@ Changelog
 
 * Added ``fileIO_tools.py`` module for increased simplicity.
 
-* Added more verifications to user inputs from GUI that pop up sooner.
+* Added more verifications to user inputs from GUI that pop up sooner, before heavy computation is made.
 
 * Increased file IO speed with a new ``np.fromfile`` method.
 
+
+0.3.6 (2017-03-14)
+------------------
+
+* Basic support for TAG bits - no actual interpolation yet.
+
+* GUI additions and changes.
+
+* Minor performance upgrades.
 
 

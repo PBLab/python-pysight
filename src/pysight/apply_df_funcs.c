@@ -797,9 +797,9 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 
 /* Module declarations from 'pysight.apply_df_funcs' */
-static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *, int __pyx_skip_dispatch); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *, int __pyx_skip_dispatch); /*proto*/
-static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *, int __pyx_skip_dispatch); /*proto*/
+static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *, int __pyx_skip_dispatch); /*proto*/
+static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *, int __pyx_skip_dispatch); /*proto*/
+static CYTHON_INLINE PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *, int __pyx_skip_dispatch); /*proto*/
 #define __Pyx_MODULE_NAME "pysight.apply_df_funcs"
 int __pyx_module_is_main_pysight__apply_df_funcs = 0;
 
@@ -820,14 +820,16 @@ static PyObject *__pyx_int_2;
 static PyObject *__pyx_int_16;
 static PyObject *__pyx_slice_;
 
-/* "pysight/apply_df_funcs.pyx":1
- * cpdef unsigned long long b22(str x) except? -2:             # <<<<<<<<<<<<<<
+/* "pysight/apply_df_funcs.pyx":3
+ * # encoding: utf-8
+ * 
+ * cpdef inline unsigned long long b22(str x) except? -2:             # <<<<<<<<<<<<<<
  *     return int(x, 2)
  * 
  */
 
 static PyObject *__pyx_pw_7pysight_14apply_df_funcs_1b22(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *__pyx_v_x, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *__pyx_v_x, CYTHON_UNUSED int __pyx_skip_dispatch) {
   unsigned PY_LONG_LONG __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -835,13 +837,14 @@ static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *__p
   unsigned PY_LONG_LONG __pyx_t_3;
   __Pyx_RefNannySetupContext("b22", 0);
 
-  /* "pysight/apply_df_funcs.pyx":2
- * cpdef unsigned long long b22(str x) except? -2:
+  /* "pysight/apply_df_funcs.pyx":4
+ * 
+ * cpdef inline unsigned long long b22(str x) except? -2:
  *     return int(x, 2)             # <<<<<<<<<<<<<<
  * 
- * cpdef unsigned long long b16(str x) except? -2:
+ * cpdef inline unsigned long long b16(str x) except? -2:
  */
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 2, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_x);
   __Pyx_GIVEREF(__pyx_v_x);
@@ -849,16 +852,18 @@ static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b22(PyObject *__p
   __Pyx_INCREF(__pyx_int_2);
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_int_2);
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 2, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_3 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 2, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_3 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_3;
   goto __pyx_L0;
 
-  /* "pysight/apply_df_funcs.pyx":1
- * cpdef unsigned long long b22(str x) except? -2:             # <<<<<<<<<<<<<<
+  /* "pysight/apply_df_funcs.pyx":3
+ * # encoding: utf-8
+ * 
+ * cpdef inline unsigned long long b22(str x) except? -2:             # <<<<<<<<<<<<<<
  *     return int(x, 2)
  * 
  */
@@ -880,7 +885,7 @@ static PyObject *__pyx_pw_7pysight_14apply_df_funcs_1b22(PyObject *__pyx_self, P
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("b22 (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), (&PyString_Type), 1, "x", 1))) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), (&PyString_Type), 1, "x", 1))) __PYX_ERR(0, 3, __pyx_L1_error)
   __pyx_r = __pyx_pf_7pysight_14apply_df_funcs_b22(__pyx_self, ((PyObject*)__pyx_v_x));
 
   /* function exit code */
@@ -899,8 +904,8 @@ static PyObject *__pyx_pf_7pysight_14apply_df_funcs_b22(CYTHON_UNUSED PyObject *
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("b22", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_b22(__pyx_v_x, 0); if (unlikely(__pyx_t_1 == -2LL && PyErr_Occurred())) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_b22(__pyx_v_x, 0); if (unlikely(__pyx_t_1 == -2LL && PyErr_Occurred())) __PYX_ERR(0, 3, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 3, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -917,16 +922,16 @@ static PyObject *__pyx_pf_7pysight_14apply_df_funcs_b22(CYTHON_UNUSED PyObject *
   return __pyx_r;
 }
 
-/* "pysight/apply_df_funcs.pyx":4
+/* "pysight/apply_df_funcs.pyx":6
  *     return int(x, 2)
  * 
- * cpdef unsigned long long b16(str x) except? -2:             # <<<<<<<<<<<<<<
+ * cpdef inline unsigned long long b16(str x) except? -2:             # <<<<<<<<<<<<<<
  *     return int(x, 16)
  * 
  */
 
 static PyObject *__pyx_pw_7pysight_14apply_df_funcs_3b16(PyObject *__pyx_self, PyObject *__pyx_v_x); /*proto*/
-static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *__pyx_v_x, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static CYTHON_INLINE unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *__pyx_v_x, CYTHON_UNUSED int __pyx_skip_dispatch) {
   unsigned PY_LONG_LONG __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -934,14 +939,14 @@ static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *__p
   unsigned PY_LONG_LONG __pyx_t_3;
   __Pyx_RefNannySetupContext("b16", 0);
 
-  /* "pysight/apply_df_funcs.pyx":5
+  /* "pysight/apply_df_funcs.pyx":7
  * 
- * cpdef unsigned long long b16(str x) except? -2:
+ * cpdef inline unsigned long long b16(str x) except? -2:
  *     return int(x, 16)             # <<<<<<<<<<<<<<
  * 
- * cpdef str hextobin(str h):
+ * cpdef inline str hextobin(str h):
  */
-  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_v_x);
   __Pyx_GIVEREF(__pyx_v_x);
@@ -949,18 +954,18 @@ static unsigned PY_LONG_LONG __pyx_f_7pysight_14apply_df_funcs_b16(PyObject *__p
   __Pyx_INCREF(__pyx_int_16);
   __Pyx_GIVEREF(__pyx_int_16);
   PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_int_16);
-  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 5, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_1, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_3 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_3 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 5, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_unsigned_PY_LONG_LONG(__pyx_t_2); if (unlikely((__pyx_t_3 == (unsigned PY_LONG_LONG)-1) && PyErr_Occurred())) __PYX_ERR(0, 7, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_3;
   goto __pyx_L0;
 
-  /* "pysight/apply_df_funcs.pyx":4
+  /* "pysight/apply_df_funcs.pyx":6
  *     return int(x, 2)
  * 
- * cpdef unsigned long long b16(str x) except? -2:             # <<<<<<<<<<<<<<
+ * cpdef inline unsigned long long b16(str x) except? -2:             # <<<<<<<<<<<<<<
  *     return int(x, 16)
  * 
  */
@@ -982,7 +987,7 @@ static PyObject *__pyx_pw_7pysight_14apply_df_funcs_3b16(PyObject *__pyx_self, P
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("b16 (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), (&PyString_Type), 1, "x", 1))) __PYX_ERR(0, 4, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x), (&PyString_Type), 1, "x", 1))) __PYX_ERR(0, 6, __pyx_L1_error)
   __pyx_r = __pyx_pf_7pysight_14apply_df_funcs_2b16(__pyx_self, ((PyObject*)__pyx_v_x));
 
   /* function exit code */
@@ -1001,8 +1006,8 @@ static PyObject *__pyx_pf_7pysight_14apply_df_funcs_2b16(CYTHON_UNUSED PyObject 
   PyObject *__pyx_t_2 = NULL;
   __Pyx_RefNannySetupContext("b16", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_b16(__pyx_v_x, 0); if (unlikely(__pyx_t_1 == -2LL && PyErr_Occurred())) __PYX_ERR(0, 4, __pyx_L1_error)
-  __pyx_t_2 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 4, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_b16(__pyx_v_x, 0); if (unlikely(__pyx_t_1 == -2LL && PyErr_Occurred())) __PYX_ERR(0, 6, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_unsigned_PY_LONG_LONG(__pyx_t_1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 6, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -1019,15 +1024,15 @@ static PyObject *__pyx_pf_7pysight_14apply_df_funcs_2b16(CYTHON_UNUSED PyObject 
   return __pyx_r;
 }
 
-/* "pysight/apply_df_funcs.pyx":7
+/* "pysight/apply_df_funcs.pyx":9
  *     return int(x, 16)
  * 
- * cpdef str hextobin(str h):             # <<<<<<<<<<<<<<
+ * cpdef inline str hextobin(str h):             # <<<<<<<<<<<<<<
  *     return bin(int(h, 16))[2:].zfill(len(h) * 4)
  */
 
 static PyObject *__pyx_pw_7pysight_14apply_df_funcs_5hextobin(PyObject *__pyx_self, PyObject *__pyx_v_h); /*proto*/
-static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h, CYTHON_UNUSED int __pyx_skip_dispatch) {
+static CYTHON_INLINE PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h, CYTHON_UNUSED int __pyx_skip_dispatch) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1038,13 +1043,13 @@ static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h,
   PyObject *__pyx_t_6 = NULL;
   __Pyx_RefNannySetupContext("hextobin", 0);
 
-  /* "pysight/apply_df_funcs.pyx":8
+  /* "pysight/apply_df_funcs.pyx":10
  * 
- * cpdef str hextobin(str h):
+ * cpdef inline str hextobin(str h):
  *     return bin(int(h, 16))[2:].zfill(len(h) * 4)             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_INCREF(__pyx_v_h);
   __Pyx_GIVEREF(__pyx_v_h);
@@ -1052,25 +1057,25 @@ static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h,
   __Pyx_INCREF(__pyx_int_16);
   __Pyx_GIVEREF(__pyx_int_16);
   PyTuple_SET_ITEM(__pyx_t_2, 1, __pyx_int_16);
-  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(((PyObject *)(&PyInt_Type)), __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_2 = PyTuple_New(1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_bin, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_bin, __pyx_t_2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 2, 0, NULL, NULL, &__pyx_slice_, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetSlice(__pyx_t_3, 2, 0, NULL, NULL, &__pyx_slice_, 1, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zfill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_zfill); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = PyObject_Length(__pyx_v_h); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 8, __pyx_L1_error)
-  __pyx_t_2 = PyInt_FromSsize_t((__pyx_t_4 * 4)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_4 = PyObject_Length(__pyx_v_h); if (unlikely(__pyx_t_4 == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_2 = PyInt_FromSsize_t((__pyx_t_4 * 4)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_3))) {
@@ -1083,14 +1088,14 @@ static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h,
     }
   }
   if (!__pyx_t_5) {
-    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_GOTREF(__pyx_t_1);
   } else {
     #if CYTHON_FAST_PYCALL
     if (PyFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -1099,34 +1104,34 @@ static PyObject *__pyx_f_7pysight_14apply_df_funcs_hextobin(PyObject *__pyx_v_h,
     #if CYTHON_FAST_PYCCALL
     if (__Pyx_PyFastCFunction_Check(__pyx_t_3)) {
       PyObject *__pyx_temp[2] = {__pyx_t_5, __pyx_t_2};
-      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyCFunction_FastCall(__pyx_t_3, __pyx_temp+1-1, 1+1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     } else
     #endif
     {
-      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 8, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(1+1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 10, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GIVEREF(__pyx_t_5); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __pyx_t_5 = NULL;
       __Pyx_GIVEREF(__pyx_t_2);
       PyTuple_SET_ITEM(__pyx_t_6, 0+1, __pyx_t_2);
       __pyx_t_2 = 0;
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
   }
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 8, __pyx_L1_error)
+  if (!(likely(PyString_CheckExact(__pyx_t_1))||((__pyx_t_1) == Py_None)||(PyErr_Format(PyExc_TypeError, "Expected %.16s, got %.200s", "str", Py_TYPE(__pyx_t_1)->tp_name), 0))) __PYX_ERR(0, 10, __pyx_L1_error)
   __pyx_r = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "pysight/apply_df_funcs.pyx":7
+  /* "pysight/apply_df_funcs.pyx":9
  *     return int(x, 16)
  * 
- * cpdef str hextobin(str h):             # <<<<<<<<<<<<<<
+ * cpdef inline str hextobin(str h):             # <<<<<<<<<<<<<<
  *     return bin(int(h, 16))[2:].zfill(len(h) * 4)
  */
 
@@ -1151,7 +1156,7 @@ static PyObject *__pyx_pw_7pysight_14apply_df_funcs_5hextobin(PyObject *__pyx_se
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("hextobin (wrapper)", 0);
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_h), (&PyString_Type), 1, "h", 1))) __PYX_ERR(0, 7, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_h), (&PyString_Type), 1, "h", 1))) __PYX_ERR(0, 9, __pyx_L1_error)
   __pyx_r = __pyx_pf_7pysight_14apply_df_funcs_4hextobin(__pyx_self, ((PyObject*)__pyx_v_h));
 
   /* function exit code */
@@ -1169,7 +1174,7 @@ static PyObject *__pyx_pf_7pysight_14apply_df_funcs_4hextobin(CYTHON_UNUSED PyOb
   PyObject *__pyx_t_1 = NULL;
   __Pyx_RefNannySetupContext("hextobin", 0);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_hextobin(__pyx_v_h, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 7, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_7pysight_14apply_df_funcs_hextobin(__pyx_v_h, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -1219,7 +1224,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_bin = __Pyx_GetBuiltinName(__pyx_n_s_bin); if (!__pyx_builtin_bin) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_builtin_bin = __Pyx_GetBuiltinName(__pyx_n_s_bin); if (!__pyx_builtin_bin) __PYX_ERR(0, 10, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -1229,12 +1234,12 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "pysight/apply_df_funcs.pyx":8
+  /* "pysight/apply_df_funcs.pyx":10
  * 
- * cpdef str hextobin(str h):
+ * cpdef inline str hextobin(str h):
  *     return bin(int(h, 16))[2:].zfill(len(h) * 4)             # <<<<<<<<<<<<<<
  */
-  __pyx_slice_ = PySlice_New(__pyx_int_2, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_slice_ = PySlice_New(__pyx_int_2, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 10, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_slice_);
   __Pyx_GIVEREF(__pyx_slice_);
   __Pyx_RefNannyFinishContext();
@@ -1346,9 +1351,9 @@ PyMODINIT_FUNC PyInit_apply_df_funcs(void)
   #endif
 
   /* "pysight/apply_df_funcs.pyx":1
- * cpdef unsigned long long b22(str x) except? -2:             # <<<<<<<<<<<<<<
- *     return int(x, 2)
+ * # encoding: utf-8             # <<<<<<<<<<<<<<
  * 
+ * cpdef inline unsigned long long b22(str x) except? -2:
  */
   __pyx_t_1 = PyDict_New(); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);

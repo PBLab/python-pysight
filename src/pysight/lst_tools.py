@@ -50,9 +50,9 @@ def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dic
     hex_to_bin = hex_to_bin_dict()
 
     # %% Analyze channel and edge information
-    df['bin'] = df['raw'].str[-1].map(hex_to_bin)
-    df['channel'] = df['bin'].str[-3:].astype(dtype='category')
-    df['edge'] = df['bin'].str[-4].astype(dtype='category')
+    df['bin'] = df['raw'].apply(lambda x: hex_to_bin[x[-1]], convert_dtype=False)
+    df['channel'] = df['bin'].apply(lambda x: x[-3:]).astype(dtype='category')
+    df['edge'] = df['bin'].apply(lambda x: x[-4]).astype(dtype='category')
 
     # Before sorting all photons make sure that no input is missing from the user.
     actual_data_channels = set(df['channel'].cat.categories.values)
