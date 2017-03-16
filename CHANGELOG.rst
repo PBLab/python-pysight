@@ -132,3 +132,15 @@ Changelog
 * Minor performance upgrades.
 
 
+0.4.0 (2017-03-16)
+------------------
+
+* Changes file IO completely. Performance should be higher.
+
+* TAG lens bug fixes.
+
+* Updated docs.
+
+* Updated tests.
+
+

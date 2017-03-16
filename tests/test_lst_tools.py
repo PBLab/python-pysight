@@ -10,30 +10,30 @@ class TestLstTools(unittest.TestCase):
     list_of_real_range = [80000000 * 2 ** 4]
 
     def test_complete_workflow(self):
-        from pysight.fileIO_tools import read_lst_file
-        from pysight.lst_tools import timepatch_sort
+        from pysight.fileIO_tools import read_lst
+        from pysight.lst_tools import tabulate_input
         from pysight.lst_tools import determine_data_channels
         from pysight.lst_tools import allocate_photons  # TODO: Split this test
-        import pandas as pd
+        from pysight.timepatch_switch import ChoiceManager
         import numpy as np
 
         list_of_first_event = ['0100000060d9']
-        list_of_first_times = ['1549']
+        list_of_first_times = [1549]
 
         list_of_returned_events = []
         list_of_returned_times = []
 
         for idx, fname in enumerate(self.list_of_file_names):
-            df = read_lst_file(fname, self.list_of_real_start_loc[idx])
-            first_event = df['raw'][0]
+            arr = read_lst(fname, self.list_of_real_start_loc[idx], timepatch=self.list_of_real_time_patch[idx])
+            first_event = arr[0]
+            dict_of_slices = ChoiceManager().process(self.list_of_real_time_patch[idx])
             list_of_returned_events.append(first_event)
             dict_of_inputs = {'PMT1': '001', 'Frames': '110', 'Lines': '010'}
-            df_sorted = timepatch_sort(df, self.list_of_real_time_patch[idx],
-                                    self.list_of_real_range[idx], dict_of_inputs)
+            df_sorted = tabulate_input(arr, dict_of_slices, self.list_of_real_range[idx], dict_of_inputs)
             list_of_returned_times.append(df_sorted['abs_time'][0])
 
-        self.assertEqual(list_of_first_event, list_of_returned_events)
-        self.assertEqual(list_of_first_times, list_of_first_times)
+        self.assertEqual(list_of_first_event[0], list_of_returned_events[0][:-2])
+        self.assertEqual(list_of_first_times, list_of_returned_times)
 
         dict_of_data = determine_data_channels(df=df_sorted, dict_of_inputs=dict_of_inputs,
                                                num_of_frames=2, x_pixels=512, y_pixels=512)

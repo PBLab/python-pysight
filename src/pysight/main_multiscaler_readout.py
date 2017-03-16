@@ -15,28 +15,35 @@ def main_data_readout(gui):
     from pysight import fileIO_tools
     from pysight import lst_tools
     from pysight import class_defs
+    from pysight import timepatch_switch
 
     # Open file and find the needed parameters
     data_range = fileIO_tools.get_range(gui.filename.get())
     timepatch = fileIO_tools.get_timepatch(gui.filename.get())
+    if timepatch == '3':
+        raise NotImplementedError('Timepatch value "3" is currently not supported. Please message package owner.')
+
     start_of_data_pos = fileIO_tools.get_start_pos(gui.filename.get())
     dict_of_input_channels = fileIO_tools.create_inputs_dict(gui=gui)
     list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get())
     fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)
 
     # Read the file into a variable
-    if gui.debug.get() == 0:
-        print('Reading file {}'.format(gui.filename.get()))
-        prelim_df = fileIO_tools.read_lst_file(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos)
-    elif gui.debug.get() == 1:
-        print('[DEBUG] Reading file {}'.format(gui.filename.get()))
-        prelim_df = fileIO_tools.read_lst_file_debug(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
-                                            num_of_lines=1e6)
-    print('File read. Sorting the file according to timepatch...')
+    print('Reading file {}'.format(gui.filename.get()))
+    dict_of_slices = timepatch_switch.ChoiceManager().process(timepatch)
+    data = fileIO_tools.read_lst(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
+                                 timepatch=timepatch)
 
-    # Create a dataframe with all needed columns
-    df_after_timepatch = lst_tools.timepatch_sort(df=prelim_df, timepatch=timepatch, data_range=data_range,
-                                                  input_channels=dict_of_input_channels)
+    if gui.debug.get() == 0:
+        print('File read. Sorting the file according to timepatch...')
+        df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
+                                                      input_channels=dict_of_input_channels)
+
+    elif gui.debug.get() == 1:
+        print('[DEBUG] File read. Sorting the file according to timepatch...')
+        df_after_timepatch = lst_tools.tabulate_input(data=data[:1e6], dict_of_slices=dict_of_slices,
+                                                      data_range=data_range, input_channels=dict_of_input_channels)
+
     print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 
     # Assign the proper channels to their data and function
@@ -57,7 +64,6 @@ def main_data_readout(gui):
                                    binwidth=float(gui.binwidth.get()))
 
     # Find out what the user wanted and output it
-
     print('======================================================= \nOutputs:\n--------')
     output_list = generate_output_list(final_movie, gui)
 

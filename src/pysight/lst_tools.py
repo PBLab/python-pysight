@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 from typing import Dict
+from collections import OrderedDict
 from numba import jit, int64, uint64
 import warnings
+from pysight.apply_df_funcs import get_lost_bit_np, iter_string_hex_to_bin, convert_hex_to_int
 
 
 def hex_to_bin_dict():
@@ -30,55 +32,6 @@ def hex_to_bin_dict():
             'f': '1111',
         }
     return diction
-
-
-def timepatch_sort(df, timepatch: str='', data_range: int=0, input_channels: Dict=None) -> pd.DataFrame:
-    """
-    Takes a raw dataframe and sorts it to columns according to its timepatch value.
-    :param df: Input DF.
-    :param timepatch: Key by which we sort.
-    :param data_range: Data range of file.
-    :param input_channels: dictionary of actual input channels
-    """
-    from pysight import timepatch_manager
-
-    # Verify inputs
-    if df.shape[0] == 0 or timepatch == '' or data_range == 0 or input_channels is None:
-        raise ValueError("Wrong inputs inserted.")
-
-    # Create dictionary for hex to bin conversion
-    hex_to_bin = hex_to_bin_dict()
-
-    # %% Analyze channel and edge information
-    df['bin'] = df['raw'].apply(lambda x: hex_to_bin[x[-1]], convert_dtype=False)
-    df['channel'] = df['bin'].apply(lambda x: x[-3:]).astype(dtype='category')
-    df['edge'] = df['bin'].apply(lambda x: x[-4]).astype(dtype='category')
-
-    # Before sorting all photons make sure that no input is missing from the user.
-    actual_data_channels = set(df['channel'].cat.categories.values)
-    if actual_data_channels != set(input_channels.values()):
-        raise UserWarning("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                          "Recorded channels are {}.".format(actual_data_channels))
-
-    # Start going through the df and extract the bits
-    df['abs_time'] = np.uint64(0)
-    df_after_timepatch = timepatch_manager.ChoiceManager().process(timepatch, data_range, df)
-
-    df_after_timepatch.drop(['bin', 'raw', 'abs_time_as_str'], axis=1, inplace=True)
-    try:
-        df_after_timepatch.drop(['tag_as_str'], axis=1, inplace=True)
-    except ValueError:
-        pass
-    try:
-        df_after_timepatch.drop(['sweep_as_str'], axis=1, inplace=True)
-    except ValueError:
-        pass
-
-    if list(df_after_timepatch.columns) != ['channel', 'edge', 'abs_time', 'sweep', 'tag', 'lost']:
-        raise ValueError('Wrong dataframe created.')
-
-    assert np.all(df_after_timepatch['abs_time'].values >= 0)
-    return df_after_timepatch
 
 
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
@@ -176,7 +129,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         # NUMBA SORT NOT WORKING:
         # sorted_vals = numba_sorted(relevant_values.values)
         # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
-        if 'Tag Lens' == key:
+        if 'TAG Lens' == key:
             dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
         else:
             dict_of_data[key] = relevant_values.reset_index(drop=True)
@@ -219,7 +172,6 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     """
     from pysight.tag_tools import interpolate_tag
 
-
     # Preparations
     irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
     relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
@@ -259,3 +211,83 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     df_photons.drop(['abs_time'], axis=1, inplace=True)
 
     return df_photons
+
+
+def process_chan_edge(struct_of_data):
+    """
+    Simple processing scheme for the channel and edge data.
+    """
+    bin_array = np.array(iter_string_hex_to_bin("".join(struct_of_data.data)))
+    edge = slice_string_arrays(bin_array, start=0, end=1)
+    channel = slice_string_arrays(bin_array, start=1, end=4)
+
+    return edge, channel
+
+
+def tabulate_input(data: np.array, dict_of_slices: OrderedDict, data_range: int, input_channels: Dict) -> pd.DataFrame:
+    """
+    Reformat the read data into a dataframe.
+    """
+
+    for key in list(dict_of_slices.keys())[1:]:
+        dict_of_slices[key].data = slice_string_arrays(data, dict_of_slices[key].start,
+                                                       dict_of_slices[key].end)
+
+    # Channel and edge information
+    edge, channel = process_chan_edge(dict_of_slices.pop('chan_edge'))
+    # TODO: Timepatch == '3' is not supported because of this loop.
+
+    if dict_of_slices['lost'] is True:
+        for key in list(dict_of_slices.keys())[1:]:
+            if dict_of_slices[key].needs_bits:
+                list_with_lost = iter_string_hex_to_bin("".join(dict_of_slices[key].data))
+                step_size = dict_of_slices[key].end - dict_of_slices[key].start
+                list_of_losts, dict_of_slices[key].processed = get_lost_bit_np(list_with_lost, step_size, len(data))
+            else:
+                dict_of_slices[key].processed = convert_hex_to_int(dict_of_slices[key].data)
+    else:
+        for key in list(dict_of_slices.keys())[1:]:
+            dict_of_slices[key].processed = convert_hex_to_int(dict_of_slices[key].data)
+
+    # Reformat data
+    df = pd.DataFrame(channel, columns=['channel'], dtype='category')
+    df['edge'] = edge
+    df['edge'] = df['edge'].astype('category')
+
+    try:
+        df['tag'] = dict_of_slices['tag'].processed
+    except KeyError:
+        pass
+
+    try:
+        df['lost'] = list_of_losts  # TODO: Currently the LOST bit is meaningless
+        df['lost'] = df['lost'].astype('category')
+    except NameError:
+        pass
+
+    df['abs_time'] = np.uint64(0)
+
+    if 'sweep' in dict_of_slices:
+        df['abs_time'] = dict_of_slices['abs_time'].processed + (dict_of_slices['sweep'].processed - 1) * data_range
+    else:
+        df['abs_time'] = dict_of_slices['abs_time'].processed
+
+    # Before sorting all photons make sure that no input is missing from the user.
+    actual_data_channels = set(df['channel'].cat.categories.values)
+    if actual_data_channels != set(input_channels.values()):
+        raise UserWarning("Channels that were inserted in GUI don't match actual data channels recorded. \n"
+                          "Recorded channels are {}.".format(actual_data_channels))
+
+    assert np.all(df['abs_time'].values >= 0)
+
+    return df
+
+
+def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
+    """
+    Slice an array of strings efficiently.
+    Based on http://stackoverflow.com/questions/39042214/how-can-i-slice-each-element-of-a-numpy-array-of-strings
+    with modifications for Python 3.
+    """
+    b = arr.view('U1').reshape(len(arr), -1)[:, start:end]
+    return np.fromstring(b.tostring(), dtype='U' + str(end - start))

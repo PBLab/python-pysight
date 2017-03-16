@@ -6,6 +6,7 @@ from typing import Dict, List
 import numpy as np
 
 
+
 def create_data_length_dict():
     """
     CURRENTLY DEPRECATED
@@ -27,7 +28,35 @@ def create_data_length_dict():
             "c3": 64,
             "3": 64
         }
+
     return dict_of_data_length
+
+
+def hex_to_bin_dict():
+    """
+    Create a simple dictionary that maps a hex input into a 4 letter binary output.
+    :return: dict
+    """
+    diction = \
+        {
+            '0': '0000',
+            '1': '0001',
+            '2': '0010',
+            '3': '0011',
+            '4': '0100',
+            '5': '0101',
+            '6': '0110',
+            '7': '0111',
+            '8': '1000',
+            '9': '1001',
+            'a': '1010',
+            'b': '1011',
+            'c': '1100',
+            'd': '1101',
+            'e': '1110',
+            'f': '1111',
+        }
+    return diction
 
 
 def get_range(filename: str = '') -> int:
@@ -125,64 +154,23 @@ def get_start_pos(filename: str = '') -> int:
                 return pos_in_file  # to have the [DATA] as header
 
 
-def read_lst_file_debug(filename: str='', start_of_data_pos: int=0, num_of_lines=0) -> pd.DataFrame:
+def read_lst(filename: str = '', start_of_data_pos: int = 0, timepatch: str = '') -> pd.DataFrame:
     """
-    Read the list file into a dataframe.
-    :param filename: Name of list file.
-    :param start_of_data_pos: The place in chars in the file that the data starts at.
-    :return: Dataframe with all events registered.
+    Updated version of LST readout using array slicing (and not Pandas slicing).
+    :param filename:
+    :param start_of_data_pos:
+    :return:
     """
-    from itertools import islice
-
-    if filename is '' or start_of_data_pos == 0:
+    if filename is '' or start_of_data_pos == 0 or timepatch == '':
         return ValueError('Wrong input detected.')
 
-    with open(filename, 'r') as f:
-        f.seek(start_of_data_pos)
-        n_lines = list(islice(f, int(num_of_lines)))
-        if not n_lines:
-            pass
-        file_separated = [st.rstrip() for st in n_lines]
-    df = pd.DataFrame(file_separated, columns=['raw'], dtype=str)
-
-    assert df.shape[0] > 0
-    return df
-
-
-def read_lst_file(filename: str = '', start_of_data_pos: int = 0) -> pd.DataFrame:
-    """
-    Read the list file into a dataframe.
-    :param filename: Name of list file.
-    :param start_of_data_pos: The place in chars in the file that the data starts at.
-    :return: Dataframe with all events registered.
-    """
-    # TRIAL VERSION, DEPRECATED. TRY TO RAISE FROM DEAD ONLY IF CURRENT VERSION IS SLOW ###############
-    # def binarize(str1):
-    #     return "{0:0{1}b}".format(int(str1, 16), data_length)
-    #
-    # with open(filename, 'r') as f:
-    #     dict_bin = dict([('bin', binarize)])
-    #     f.seek(start_of_data_pos)
-    #     df = pd.read_csv(f, header=0, converters=dict_bin, dtype=str, names=['bin'])
-    ######################################################################################################
-
-    if filename is '' or start_of_data_pos == 0:
-        return ValueError('Wrong input detected.')
-
-    # with open(filename, 'r') as f:
-    #     f.seek(start_of_data_pos)
-    #     file_separated = [line.rstrip() for line in f]  # TODO: SciLuigi?
-    # df = pd.DataFrame(file_separated, columns=['raw'], dtype=str)
-
+    data_length_dict = create_data_length_dict()
+    data_length = data_length_dict[timepatch] // 4 + 2
     with open(filename, "rb") as f:
         f.seek(start_of_data_pos)
-        arr = np.fromfile(f, dtype='14S').astype('14U')
-        arr1 = np.core.defchararray.rstrip(arr, "\r\n")
+        arr = np.fromfile(f, dtype='{}S'.format(data_length)).astype('{}U'.format(data_length))
 
-    df = pd.DataFrame(arr1, columns=['raw'], dtype=str)
-
-    assert df.shape[0] > 0
-    return df
+    return arr
 
 
 def create_inputs_dict(gui=None) -> Dict:

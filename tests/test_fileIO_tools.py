@@ -41,3 +41,18 @@ class TestFileIOTools(unittest.TestCase):
             list_of_returned_locs.append(get_start_pos(fname))
 
         self.assertEqual(self.list_of_real_start_loc, list_of_returned_locs)
+
+
+    def test_find_active_channels(self):
+        from pysight.fileIO_tools import find_active_channels
+
+        real_list_of_active_channels = [[True, True, True, False, False, False]]
+        returned_list_of_active_channels = []
+
+        for fname in self.list_of_file_names:
+            returned_list_of_active_channels.append(find_active_channels(fname))
+
+        self.assertEqual(returned_list_of_active_channels, real_list_of_active_channels)
+
+
+        assert list
