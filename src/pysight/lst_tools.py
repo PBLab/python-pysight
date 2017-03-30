@@ -115,9 +115,27 @@ def numba_sorted(arr: np.array) -> np.array:
     arr.sort()
     return arr.astype(np.uint64)
 
+def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Series:
+    """
+    Create an orderly laser pulse train.
+    :param pulses:
+    :param laser_freq:
+    :return:
+    """
+    import warnings
+
+
+    diffs = pulses.diff()
+    pulses_final = pulses[(diffs < np.ceil((1 / (laser_freq * binwidth)))) & (diffs >= 0)].reset_index(drop=True)
+    if len(pulses_final) < 0.9 * len(pulses):
+        warnings.warn("More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine.")
+
+    return pulses_final
+
 
 def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
-                            num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1) -> Dict:
+                            num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1,
+                            laser_freq: float=80e6, binwidth: float=800e-12) -> Dict:
     """ Create a dictionary that contains the data in its ordered form."""
 
     if df.empty:
@@ -129,7 +147,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         # NUMBA SORT NOT WORKING:
         # sorted_vals = numba_sorted(relevant_values.values)
         # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
-        if 'TAG Lens' == key:
+        if 'TAG Lens' == key or 'Laser' == key:
             dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
         else:
             dict_of_data[key] = relevant_values.reset_index(drop=True)
@@ -152,6 +170,10 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
                                                                                          ignore_index=True)
 
     # Validations
+    try:
+        dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=laser_freq, binwidth=binwidth)
+    except KeyError:
+        pass
     validate_created_data_channels(dict_of_data)
 
     return dict_of_data

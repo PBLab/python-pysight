@@ -42,7 +42,7 @@ def verify_gui_input(gui):
 
     list_of_outputs = re.sub(r'\s', '', gui.outputs.get()).split(',')
     if not set(list_of_outputs).issubset({'tiff', 'tif', 'array', 'single'}):
-        raise UserWarning('Wrong input detected.')
+        raise UserWarning('Wrong output request detected.')
 
     # TAG bits input verification
     set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
@@ -97,33 +97,39 @@ class GUIApp(object):
         self.input_stop2 = StringVar()
         self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
-        mb1.grid(column=2, row=1, sticky='e')
+        mb1.grid(column=2, row=1, sticky='w')
         mb1.set('Frames')
         mb1['values'] = self.tuple_of_data_sources
         mb2 = ttk.Combobox(main_frame, textvariable=self.input_stop1, width=10)
-        mb2.grid(column=2, row=2, sticky='e')
+        mb2.grid(column=2, row=2, sticky='w')
         mb2.set('PMT1')
         mb2['values'] = self.tuple_of_data_sources
         mb3 = ttk.Combobox(main_frame, textvariable=self.input_stop2, width=10)
-        mb3.grid(column=2, row=3, sticky='e')
+        mb3.grid(column=2, row=3, sticky='w')
         mb3.set('Lines')
         mb3['values'] = self.tuple_of_data_sources
 
         # Labels
         input_channel_1 = ttk.Label(main_frame, text='START')
-        input_channel_1.grid(column=1, row=1, sticky='e')
+        input_channel_1.grid(column=1, row=1, sticky='ns')
         input_channel_2 = ttk.Label(main_frame, text='STOP1')
-        input_channel_2.grid(column=1, row=2, sticky='e')
+        input_channel_2.grid(column=1, row=2, sticky='ns')
         input_channel_3 = ttk.Label(main_frame, text='STOP2')
-        input_channel_3.grid(column=1, row=3, sticky='e')
+        input_channel_3.grid(column=1, row=3, sticky='ns')
 
         # Number of frames in the data
         frame_label = ttk.Label(main_frame, text='Number of frames')
         frame_label.grid(column=0, row=1, sticky='ns')
 
         self.num_of_frames = StringVar(value=1)
-        num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames, width=3)
-        num_frames_entry.grid(column=0, row=2, sticky='ns')
+        self.num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames, width=3)
+        self.num_frames_entry.grid(column=0, row=2, sticky='ns')
+        self.num_frames_entry.config(state='disabled')
+
+        # Disable number of frames unless all inputs but one are empty
+        self.input_start.trace('w', self.__check_if_empty)
+        self.input_stop1.trace('w', self.__check_if_empty)
+        self.input_stop2.trace('w', self.__check_if_empty)
 
         # Wanted outputs
         outputs_label = ttk.Label(main_frame, text='Outputs ["single", "tiff", "array"]')
@@ -160,34 +166,34 @@ class GUIApp(object):
         debug_check.grid(column=0, row=8, sticky='w')
 
         # Laser repetition rate
-        laser1_label = ttk.Label(main_frame, text='Laser nominal rep. rate (FLIM)')
-        laser1_label.grid(column=6, row=3, sticky='ns')
+        laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
+        laser1_label.grid(column=6, row=4, sticky='ns')
 
-        self.reprate = StringVar(value=0)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
+        self.reprate = StringVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
-        reprate_entry.grid(column=6, row=4, sticky='ns')
+        reprate_entry.grid(column=6, row=5, sticky='ns')
 
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
-        binwidth_label.grid(column=6, row=5, sticky='ns')
+        binwidth_label.grid(column=6, row=6, sticky='ns')
         self.binwidth = StringVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
-        binwidth_entry.grid(column=6, row=6, sticky='ns')
+        binwidth_entry.grid(column=6, row=7, sticky='ns')
 
         # TAG lens nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
-        tag_label.grid(column=6, row=7, sticky='ns')
+        tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
-        tag_label_entry.grid(column=6, row=8, sticky='ns')
+        tag_label_entry.grid(column=6, row=9, sticky='ns')
 
         # TAG bits
         tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation')
-        tag_bits_label.grid(column=2, row=5, sticky='W')
+        tag_bits_label.grid(column=1, row=5, sticky='ns')
 
         self.tag_bits = IntVar(value=0)
         tag_bit_check = ttk.Checkbutton(main_frame, text='Use?', variable=self.tag_bits)
-        tag_bit_check.grid(column=3, row=5, sticky='ns')
+        tag_bit_check.grid(column=2, row=5, sticky='ns')
 
         slow_axis_label = ttk.Label(main_frame, text='Slow Axis:')
         slow_axis_label.grid(column=0, row=6, sticky='e')
@@ -204,44 +210,51 @@ class GUIApp(object):
         self.z_bit_end = IntVar(value=16)
 
         slow_start = ttk.Label(main_frame, text='Start')
-        slow_start.grid(column=1, row=6)
+        slow_start.grid(column=1, row=6, sticky='w')
         slow_start_ent = ttk.Entry(main_frame, textvariable=self.slow_bit_start, width=3)
-        slow_start_ent.grid(column=2, row=6)
+        slow_start_ent.grid(column=1, row=6, sticky='ns')
         slow_end = ttk.Label(main_frame, text='End')
-        slow_end.grid(column=3, row=6, sticky='w')
+        slow_end.grid(column=1, row=6, sticky='e')
         slow_end_ent = ttk.Entry(main_frame, textvariable=self.slow_bit_end, width=3)
-        slow_end_ent.grid(column=3, row=6, sticky='e')
+        slow_end_ent.grid(column=2, row=6, sticky='w')
 
         fast_start = ttk.Label(main_frame, text='Start')
-        fast_start.grid(column=1, row=7)
+        fast_start.grid(column=1, row=7, sticky='w')
         fast_start_ent = ttk.Entry(main_frame, textvariable=self.fast_bit_start, width=3)
-        fast_start_ent.grid(column=2, row=7)
+        fast_start_ent.grid(column=1, row=7, sticky='ns')
         fast_end = ttk.Label(main_frame, text='End')
-        fast_end.grid(column=3, row=7, sticky='w')
+        fast_end.grid(column=1, row=7, sticky='e')
         fast_end_ent = ttk.Entry(main_frame, textvariable=self.fast_bit_end, width=3)
-        fast_end_ent.grid(column=3, row=7, sticky='e')
+        fast_end_ent.grid(column=2, row=7, sticky='w')
 
         z_start = ttk.Label(main_frame, text='Start')
-        z_start.grid(column=1, row=8)
+        z_start.grid(column=1, row=8, sticky='w')
         z_start_ent = ttk.Entry(main_frame, textvariable=self.z_bit_start, width=3)
-        z_start_ent.grid(column=2, row=8)
+        z_start_ent.grid(column=1, row=8, sticky='ns')
         z_end = ttk.Label(main_frame, text='End')
-        z_end.grid(column=3, row=8, sticky='w')
+        z_end.grid(column=1, row=8, sticky='e')
         z_end_ent = ttk.Entry(main_frame, textvariable=self.z_bit_end, width=3)
-        z_end_ent.grid(column=3, row=8, sticky='e')
+        z_end_ent.grid(column=2, row=8, sticky='w')
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
         quit_button.grid()
 
-        # self.root.bind('<Return>', quit_button)
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
         self.root.wait_window()
 
 
     def __browsefunc(self):
-        self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file'))
+        self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
+                                                     initialdir='.'))
+    def __check_if_empty(self, *args):
+        list_of_values = [self.input_start.get(), self.input_stop1.get(), self.input_stop2.get()]
+        if 2 == list_of_values.count('Empty'):
+            if 'PMT1' in list_of_values or 'PMT2' in list_of_values:
+                self.num_frames_entry.config(state='normal')
+            else:
+                self.num_frames_entry.config(state='disabled')
 
 if __name__ == '__main__':
     app = GUIApp()

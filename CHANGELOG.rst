@@ -143,4 +143,13 @@ Changelog
 
 * Updated tests.
 
+0.4.1 (2017-03-30)
+------------------
+
+* Updates to setup.py to allow docs to build successfully.
+
+* Small updates to docs.
+
+* GUI improvements.
+
 

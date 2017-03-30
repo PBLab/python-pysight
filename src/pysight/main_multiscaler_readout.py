@@ -51,7 +51,9 @@ def main_data_readout(gui):
                                                      dict_of_inputs=dict_of_input_channels,
                                                      num_of_frames=int(gui.num_of_frames.get()),
                                                      x_pixels=int(gui.x_pixels.get()),
-                                                     y_pixels=int(gui.y_pixels.get()))
+                                                     y_pixels=int(gui.y_pixels.get()),
+                                                     laser_freq=float(gui.reprate.get()),
+                                                     binwidth=float(gui.binwidth.get()))
     print('Channels of events found. Allocating photons to their frames and lines...')
 
     df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data, gui=gui)

@@ -5,6 +5,7 @@
 *.tif
 *.mat
 *.lst
+get_raw_data_to_workspace.py
 
 # C extensions
 *.so

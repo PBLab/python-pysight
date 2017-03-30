@@ -16,7 +16,7 @@ def create_data_length_dict():
             "0": 16,
             "5": 32,
             "1": 32,
-            "1a": 44,
+            "1a": 48,
             "2a": 48,
             "22": 48,
             "32": 48,
@@ -216,4 +216,7 @@ def compare_recorded_and_input_channels(user_inputs: Dict, lst_input: List):
     }
 
     for key in user_inputs:
-        assert lst_input[help_dict[user_inputs[key]]] is True
+        if not lst_input[help_dict[user_inputs[key]]]:
+            print('Wrong channel specification - the key {} is on an empty channel (number {}).'.\
+                  format(key, user_inputs[key]))
+
