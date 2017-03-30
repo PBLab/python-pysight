@@ -152,4 +152,7 @@ Changelog
 
 * GUI improvements.
 
+0.4.2 (2017-03-30)
+------------------
 
+* Added Dask `delayed` interface.

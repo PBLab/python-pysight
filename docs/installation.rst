@@ -12,7 +12,7 @@ At the command line:
 ::
 
     conda install numba
-    conda install tifffile -c conda-forge
+    conda install tifffile, dask -c conda-forge
     pip install pysight
 
 
