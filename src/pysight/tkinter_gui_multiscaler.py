@@ -40,10 +40,6 @@ def verify_gui_input(gui):
         if [x for x in list_of_keys if x != 'Empty'] != list(set_of_keys.difference({'Empty'})):
             raise KeyError('Input consisted of two or more similar names which are not "Empty".')
 
-    list_of_outputs = re.sub(r'\s', '', gui.outputs.get()).split(',')
-    if not set(list_of_outputs).issubset({'tiff', 'tif', 'array', 'single'}):
-        raise UserWarning('Wrong output request detected.')
-
     # TAG bits input verification
     set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
                    gui.fast_bit_start.get(), gui.fast_bit_end.get(),
@@ -132,12 +128,18 @@ class GUIApp(object):
         self.input_stop2.trace('w', self.__check_if_empty)
 
         # Wanted outputs
-        outputs_label = ttk.Label(main_frame, text='Outputs ["single", "tiff", "array"]')
-        outputs_label.grid(column=0, row=3, sticky='ns')
+        outputs_label = ttk.Label(main_frame, text='Outputs:')
+        outputs_label.grid(column=0, row=3, sticky='w')
 
-        self.outputs = StringVar(value='single')
-        outputs_entry = ttk.Entry(main_frame, textvariable=self.outputs)
-        outputs_entry.grid(column=0, row=4, sticky='ns')
+        self.summed = IntVar()
+        summed_array = ttk.Checkbutton(main_frame, text='Summed array', variable=self.summed)
+        summed_array.grid(column=0, row=4, sticky='w')
+        self.full = IntVar()
+        full_array = ttk.Checkbutton(main_frame, text='Full array', variable=self.full)
+        full_array.grid(column=1, row=4, sticky='ns')
+        self.tif = IntVar()
+        tif = ttk.Checkbutton(main_frame, text='Tiff', variable=self.tif)
+        tif.grid(column=2, row=4, sticky='ns')
 
         # Define image sizes
         image_size_label = ttk.Label(main_frame, text='Image Size')
@@ -163,7 +165,7 @@ class GUIApp(object):
         # Read batch for debugging
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
-        debug_check.grid(column=0, row=8, sticky='w')
+        debug_check.grid(column=0, row=9, sticky='w')
 
         # Laser repetition rate
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')

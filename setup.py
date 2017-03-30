@@ -92,8 +92,7 @@ setup(
         'pandas >= 0.19',
         'attrs >= 1.6',
         'cython',
-        'tables',
-        'dask'
+        'tables'
     ],
     extras_require={
     },

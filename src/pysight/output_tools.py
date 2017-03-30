@@ -11,13 +11,16 @@ def generate_output_list(movie, gui):
     :return List containing outputs.
     """
 
-    list_of_wanted_outputs = re.sub(r'\s', '', gui.outputs.get()).split(',')
-
-    dict_of_outputs = inst_outputs()
     output_list = []
-    for idx ,output in enumerate(list_of_wanted_outputs, 1):
-        output_list.append(dict_of_outputs[output](movie, gui))
-        print('{} of {} wanted outputs created.'.format(idx, len(list_of_wanted_outputs)))
+
+    if 1 == gui.summed.get():
+        output_list.append(gen_single(movie=movie, gui=gui))
+
+    if 1 == gui.full.get():
+        output_list.append(gen_array(movie=movie, gui=gui))
+
+    if 1 == gui.tif.get():
+        output_list.append(gen_tiff(movie=movie, gui=gui))
 
     return output_list
 
@@ -48,17 +51,3 @@ def gen_single(movie, gui):
     print(r'A summed array of all volumes\frames was created.')
     return single_volume
 
-
-def inst_outputs() -> Dict:
-    """
-    Create the dict of possible outputs.
-    :return:
-    """
-    dict_of_outputs = {
-        'tiff': gen_tiff,
-        'tif': gen_tiff,
-        'array': gen_array,
-        'single': gen_single
-    }
-
-    return dict_of_outputs

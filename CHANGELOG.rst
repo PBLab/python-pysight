@@ -155,4 +155,11 @@ Changelog
 0.4.2 (2017-03-30)
 ------------------
 
-* Added Dask `delayed` interface.
+* Added Dask ``delayed`` interface.
+
+0.4.3 (2017-03-XX)
+------------------
+
+* Removed Dask.
+
+* Refactored class structure, remove the ``Frame`` class.
