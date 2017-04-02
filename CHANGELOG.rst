@@ -157,9 +157,11 @@ Changelog
 
 * Added Dask ``delayed`` interface.
 
-0.4.3 (2017-03-XX)
+0.4.3 (2017-04-02)
 ------------------
 
 * Removed Dask.
 
 * Refactored class structure, remove the ``Frame`` class.
+
+* Refactored GUI code.

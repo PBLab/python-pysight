@@ -66,6 +66,7 @@ def verify_gui_input(gui):
     if gui.z_bit_start.get() > gui.z_bit_end.get():
         raise UserWarning('Z bit end is smaller than its start.')
 
+
 class GUIApp(object):
     """Main GUI for the multiscaler code"""
     def __init__(self):
@@ -79,19 +80,51 @@ class GUIApp(object):
         main_frame.grid(column=0, row=0)
         main_frame['borderwidth'] = 2
 
+        self.__browse_file(main_frame)
+
+        self.__input_channels(main_frame)
+
+        self.__num_of_frames(main_frame)
+
+        self.__outputs(main_frame)
+
+        self.__image_size(main_frame)
+
+        self.__debug(main_frame)
+
+        self.__reprate(main_frame)
+
+        self.__binwidth(main_frame)
+
+        self.__tag_lens(main_frame)
+
+        self.__tag_bits(main_frame)
+
+        # Define the last quit button and wrap up GUI
+        quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
+        quit_button.grid()
+
+        for child in main_frame.winfo_children():
+            child.grid_configure(padx=3, pady=2)
+        self.root.wait_window()
+
+    def __browse_file(self, main_frame):
+
         self.filename = StringVar()
 
         browse_button = ttk.Button(main_frame, text="Browse", command=self.__browsefunc)
         browse_button.grid(column=0, row=0, sticky='ns')
 
-        # Part containing the data about input channels
+    def __input_channels(self, main_frame):
+
         # Conboboxes
         input_channels_label = ttk.Label(main_frame, text='Input Channels')
         input_channels_label.grid(columns=3, row=0, sticky='se')
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
-        self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
+        self.tuple_of_data_sources = (
+        'PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=2, row=1, sticky='w')
         mb1.set('Frames')
@@ -113,6 +146,8 @@ class GUIApp(object):
         input_channel_3 = ttk.Label(main_frame, text='STOP2')
         input_channel_3.grid(column=1, row=3, sticky='ns')
 
+    def __num_of_frames(self, main_frame):
+
         # Number of frames in the data
         frame_label = ttk.Label(main_frame, text='Number of frames')
         frame_label.grid(column=0, row=1, sticky='ns')
@@ -127,6 +162,8 @@ class GUIApp(object):
         self.input_stop1.trace('w', self.__check_if_empty)
         self.input_stop2.trace('w', self.__check_if_empty)
 
+    def __outputs(self, main_frame):
+
         # Wanted outputs
         outputs_label = ttk.Label(main_frame, text='Outputs:')
         outputs_label.grid(column=0, row=3, sticky='w')
@@ -140,6 +177,8 @@ class GUIApp(object):
         self.tif = IntVar()
         tif = ttk.Checkbutton(main_frame, text='Tiff', variable=self.tif)
         tif.grid(column=2, row=4, sticky='ns')
+
+    def __image_size(self, main_frame):
 
         # Define image sizes
         image_size_label = ttk.Label(main_frame, text='Image Size')
@@ -162,10 +201,14 @@ class GUIApp(object):
         z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels, width=5)
         z_pixels_entry.grid(column=6, row=2, sticky='e')
 
+    def __debug(self, main_frame):
+
         # Read batch for debugging
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
         debug_check.grid(column=0, row=9, sticky='w')
+
+    def __reprate(self, main_frame):
 
         # Laser repetition rate
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
@@ -175,6 +218,8 @@ class GUIApp(object):
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
         reprate_entry.grid(column=6, row=5, sticky='ns')
 
+    def __binwidth(self, main_frame):
+
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
         binwidth_label.grid(column=6, row=6, sticky='ns')
@@ -182,12 +227,16 @@ class GUIApp(object):
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
         binwidth_entry.grid(column=6, row=7, sticky='ns')
 
+    def __tag_lens(self, main_frame):
+
         # TAG lens nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
         tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
         tag_label_entry.grid(column=6, row=9, sticky='ns')
+
+    def __tag_bits(self, main_frame):
 
         # TAG bits
         tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation')
@@ -237,15 +286,6 @@ class GUIApp(object):
         z_end.grid(column=1, row=8, sticky='e')
         z_end_ent = ttk.Entry(main_frame, textvariable=self.z_bit_end, width=3)
         z_end_ent.grid(column=2, row=8, sticky='w')
-
-        # Define the last quit button and wrap up GUI
-        quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
-        quit_button.grid()
-
-        for child in main_frame.winfo_children():
-            child.grid_configure(padx=3, pady=2)
-        self.root.wait_window()
-
 
     def __browsefunc(self):
         self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',

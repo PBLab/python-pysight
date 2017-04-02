@@ -8,14 +8,10 @@ Download and install Anaconda_ for Python 3.6.
 
 .. _Anaconda: https://www.continuum.io/downloads
 
-At the command line:
+It's usually good habit to create a new environment for new projects. At the command line:
 ::
-
-    conda install numba
-    conda install tifffile -c conda-forge
+    conda create --name py36 python=3.6 numba tifffile -c conda-forge
     pip install pysight
 
-
-```tifffile``` is only necessary if you wish to save the data to a `.tif` file.
 
 The "Usage" tab provides more details about actual usage of PySight.
