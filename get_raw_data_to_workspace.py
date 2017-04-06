@@ -32,3 +32,9 @@ print('Input tabulated.')
 #                                                  y_pixels=int(gui.y_pixels.get()),
 #                                                  laser_freq=float(gui.reprate.get()),
 #                                                  binwidth=float(gui.binwidth.get()))
+
+# To time the conversion from strings to hex - write in IPython:
+# %%timeit
+# dict_of_slices = timepatch_switch.ChoiceManager().process(timepatch)
+# df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
+#                                               input_channels=dict_of_input_channels)

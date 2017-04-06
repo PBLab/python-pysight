@@ -165,3 +165,14 @@ Changelog
 * Refactored class structure, remove the ``Frame`` class.
 
 * Refactored GUI code.
+
+0.4.4 (2017-04-XX)
+------------------
+
+* Changes to file I\O.
+
+* Number of requested frames should actually matter now.
+
+* GUI improvements.
+
+*

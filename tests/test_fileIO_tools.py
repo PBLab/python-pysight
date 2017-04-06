@@ -13,7 +13,7 @@ class TestFileIOTools(unittest.TestCase):
 
     list_of_real_start_loc = [1749]
     list_of_real_time_patch = ['32']
-    list_of_real_range = [80000000 * 2 ** 4]
+    list_of_real_range = [80000000]
 
     def test_check_range_extraction(self):
         from pysight.fileIO_tools import get_range

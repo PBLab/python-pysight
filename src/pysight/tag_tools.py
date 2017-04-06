@@ -7,14 +7,15 @@ import warnings
 from numba import jit
 
 
-def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: float = 0) -> pd.Series:
+def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: float = 0,
+                       tag_pulses: int = 1) -> pd.Series:
     """
     Verify the integrity of the TAG lens pulses periodicity.
     :return: Sorted Series with the new pulses in the right place
     """
     # if not tag_freq
 
-    period = np.ceil(1 / tag_freq / binwidth).astype(np.int32)  # Period of TAG lens in bins
+    period = np.ceil(1 / (tag_freq * binwidth * tag_pulses)).astype(np.int32)  # Period of TAG lens in bins
     jitter = 0.05
     allowed_noise = np.ceil(jitter * period).astype(np.uint64)
 
@@ -112,7 +113,7 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, gui
     # TODO: Still only a single channel of data
 
     tag_data = verify_periodicity(tag_data=tag_data, tag_freq=float(gui.tag_freq.get()),
-                                  binwidth=float(gui.binwidth.get()))
+                                  binwidth=float(gui.binwidth.get()), tag_pulses=gui.tag_pulses.get())
     if isinstance(tag_data, pd.Series):
         df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
 

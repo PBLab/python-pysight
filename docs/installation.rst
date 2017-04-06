@@ -14,4 +14,4 @@ It's usually good habit to create a new environment for new projects. At the com
     pip install pysight
 
 
-The "Usage" tab provides more details about actual usage of PySight.
+The "Usage" tab provides more details on the operation of PySight.

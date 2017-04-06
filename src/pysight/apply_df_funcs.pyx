@@ -49,8 +49,9 @@ cpdef list iter_string_hex_to_bin(str long_str):
 cpdef np.ndarray convert_hex_to_int(np.ndarray arr):
     cdef np.ndarray[np.uint64_t, ndim=1] result = np.zeros((len(arr),), dtype=np.uint64)
     cdef unsigned long long idx
+    cdef unsigned long long length = len(arr)
 
-    for idx in range(len(arr)):
+    for idx in range(length):
         result[idx] = int(arr[idx], 16)
 
     return result

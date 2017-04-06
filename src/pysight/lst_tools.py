@@ -147,23 +147,23 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         # NUMBA SORT NOT WORKING:
         # sorted_vals = numba_sorted(relevant_values.values)
         # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
-        if 'TAG Lens' == key or 'Laser' == key:
-            dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
-        else:
+        if 'PMT1' == key or 'PMT2' == key:
             dict_of_data[key] = relevant_values.reset_index(drop=True)
+        else:
+            dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
         # TODO: GroupBy the lines above?
 
     if 'Lines' not in dict_of_data.keys():  # A 'Lines' channel has to exist to create frames
-        last_event_time = dict_of_data['PMT1'].max()  # Assuming only data from PMT1 is relevant here
+        last_event_time = dict_of_data['PMT1'].max()  # TODO: Assuming only data from PMT1 is relevant here
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=y_pixels,
                                        num_of_frames=num_of_frames)
         dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=np.uint64)
 
     if 'Frames' not in dict_of_data.keys():  # A 'Frames' channel has to exist to create frames
         spacing_between_lines = np.abs(dict_of_data['Lines'].diff()).mean()
-        last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # Assuming only data from PMT1 is relevant here
+        last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # TODO: Assuming only data from PMT1 is relevant here
         frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
-                                         pixels=x_pixels, spacing_between_lines=spacing_between_lines)
+                                         pixels=y_pixels, spacing_between_lines=spacing_between_lines)
         dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=np.uint64)
     else:  # Add 0 to the first entry of the series
         dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype=np.uint64).append(dict_of_data['Frames'],

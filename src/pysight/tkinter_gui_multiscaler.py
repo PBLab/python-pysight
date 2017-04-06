@@ -66,6 +66,9 @@ def verify_gui_input(gui):
     if gui.z_bit_start.get() > gui.z_bit_end.get():
         raise UserWarning('Z bit end is smaller than its start.')
 
+    if 0 == gui.summed and 0 == gui.tif and 0 == gui.full:
+        raise UserWarning('No outputs chosen. Please check at least one.')
+
 
 class GUIApp(object):
     """Main GUI for the multiscaler code"""
@@ -159,8 +162,11 @@ class GUIApp(object):
 
         # Disable number of frames unless all inputs but one are empty
         self.input_start.trace('w', self.__check_if_empty)
+        self.input_start.trace('w', self.__check_if_tag_lens_exists)
         self.input_stop1.trace('w', self.__check_if_empty)
+        self.input_stop1.trace('w', self.__check_if_tag_lens_exists)
         self.input_stop2.trace('w', self.__check_if_empty)
+        self.input_stop2.trace('w', self.__check_if_tag_lens_exists)
 
     def __outputs(self, main_frame):
 
@@ -198,8 +204,9 @@ class GUIApp(object):
         x_pixels_entry.grid(column=6, row=2, sticky='w')
         y_pixels_entry = ttk.Entry(main_frame, textvariable=self.y_pixels, width=5)
         y_pixels_entry.grid(column=6, row=2, sticky='ns')
-        z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels, width=5)
-        z_pixels_entry.grid(column=6, row=2, sticky='e')
+        self.z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels, width=5)
+        self.z_pixels_entry.grid(column=6, row=2, sticky='e')
+        self.z_pixels_entry.config(state='disabled')
 
     def __debug(self, main_frame):
 
@@ -230,11 +237,16 @@ class GUIApp(object):
     def __tag_lens(self, main_frame):
 
         # TAG lens nominal frequency
-        tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]')
+        tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
         tag_label_entry.grid(column=6, row=9, sticky='ns')
+
+        self.tag_pulses = IntVar(value=1)
+        tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
+        tag_pulses_entry.grid(column=6, row=9, sticky='e')
+        tag_pulses_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
 
@@ -297,6 +309,13 @@ class GUIApp(object):
                 self.num_frames_entry.config(state='normal')
             else:
                 self.num_frames_entry.config(state='disabled')
+
+    def __check_if_tag_lens_exists(self, *args):
+        list_of_values = [self.input_start.get(), self.input_stop1.get(), self.input_stop2.get()]
+        if 'TAG Lens' in list_of_values:
+            self.z_pixels_entry.config(state='normal')
+        else:
+            self.z_pixels_entry.config(state='disabled')
 
 if __name__ == '__main__':
     app = GUIApp()

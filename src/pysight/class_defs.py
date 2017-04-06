@@ -121,27 +121,31 @@ class Movie(object):
         VolTuple = namedtuple('Volume', ('hist', 'edges'))
         data_of_vol = VolTuple
         volumes_in_movie = self.gen_of_volumes()
-
         try:
             cur_vol = next(volumes_in_movie)
         except StopIteration:
-            raise ValueError('No frames generated.')
+            raise UserWarning('No frames were generated.')
+        data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
 
-        with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff) as tif:
-            while True:
-                data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-                tif.save(data_of_vol.hist.astype(np.uint16))
-                try:
-                    cur_vol = next(volumes_in_movie)
-                except StopIteration:
-                    break
+        try:
+            with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff,
+                            imagej=True) as tif:
+                while True:
+                    tif.save(data_of_vol.hist.astype(np.uint16))
+                    try:
+                        cur_vol = next(volumes_in_movie)
+                        data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
+                    except StopIteration:
+                        break
+        except:
+            warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
     def create_array(self):
         """ Create all volumes, one-by-one, and return the array of data that holds them. """
         from collections import namedtuple, deque
 
         # Create a deque and a namedtuple for the frames before showing them
-        VolTuple = namedtuple('Frame', ('hist', 'edges'))
+        VolTuple = namedtuple('Volume', ('hist', 'edges'))
         data_of_vol = VolTuple
         deque_of_vols = deque()
         volumes_in_movie = self.gen_of_volumes()

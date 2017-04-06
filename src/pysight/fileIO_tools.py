@@ -73,14 +73,9 @@ def get_range(filename: str = '') -> int:
     with open(filename, 'r') as f:
         cur_str = f.read(500)
 
-    range_before_bit_depth = int(re.search(format_range, cur_str).group(1))
-    format_bit_depth = re.compile(r'bitshift=(\w+)')
-    bit_depth_wrong_base = re.search(format_bit_depth, cur_str).group(1)
-    bit_depth_as_hex = bit_depth_wrong_base[-2:]  # last 2 numbers count
-    range_after_bit_depth = range_before_bit_depth * 2 ** int(bit_depth_as_hex, 16)
+    range = int(re.search(format_range, cur_str).group(1))
 
-    assert isinstance(range_after_bit_depth, int)
-    return range_after_bit_depth
+    return range
 
 
 def get_timepatch(filename: str = '') -> str:
@@ -206,7 +201,7 @@ def compare_recorded_and_input_channels(user_inputs: Dict, lst_input: List):
     :param lst_input: Actual recorded data from multiscaler
     """
     if lst_input.count(True) != len(user_inputs):
-        raise UserWarning('Wrong number of user inputs ({}) compared to number of actual inputs ({}).'.
+        raise UserWarning('Wrong number of user inputs ({}) compared to number of actual inputs ({}) to the multiscaler.'.
                           format(len(user_inputs), lst_input.count(True)))
 
     help_dict = {
