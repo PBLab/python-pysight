@@ -166,7 +166,7 @@ Changelog
 
 * Refactored GUI code.
 
-0.4.4 (2017-04-XX)
+0.4.4 (2017-04-08)
 ------------------
 
 * Changes to file I\O.
@@ -175,4 +175,4 @@ Changelog
 
 * GUI improvements.
 
-*
+* This version is the last one supporting ASCII list files. Next one will only use binary files as input.

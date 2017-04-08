@@ -47,8 +47,6 @@ htmlcov
 .mr.developer.cfg
 .project
 .pydevproject
-.idea
-*.iml
 *.komodoproject
 
 # Complexity
