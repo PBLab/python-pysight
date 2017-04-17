@@ -175,4 +175,9 @@ Changelog
 
 * GUI improvements.
 
-* This version is the last one supporting ASCII list files. Next one will only use binary files as input.
+0.4.5 (2017-04-17)
+------------------
+
+* Bug fixes and improvements to TAG lens interpolation.
+
+* Probably the last version to support ASCII files.

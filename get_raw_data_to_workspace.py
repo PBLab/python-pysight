@@ -22,9 +22,9 @@ dict_of_slices = timepatch_switch.ChoiceManager().process(timepatch)
 data = fileIO_tools.read_lst(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
                              timepatch=timepatch)
 
-df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
-                                              input_channels=dict_of_input_channels)
-print('Input tabulated.')
+# df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
+#                                               input_channels=dict_of_input_channels)
+# print('Input tabulated.')
 # dict_of_data = lst_tools.determine_data_channels(df=df_after_timepatch,
 #                                                  dict_of_inputs=dict_of_input_channels,
 #                                                  num_of_frames=int(gui.num_of_frames.get()),

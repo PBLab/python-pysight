@@ -5,7 +5,6 @@
 *.tif
 *.mat
 *.lst
-get_raw_data_to_workspace.py
 
 # C extensions
 *.so
@@ -67,3 +66,4 @@ docs/_build
 .bootstrap
 .appveyor.token
 *.bak
+src/pysight/__pycache__/

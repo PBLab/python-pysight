@@ -26,7 +26,7 @@ project = 'PySight'
 year = '2017'
 author = 'Hagai Hargil'
 copyright = '{0}, {1}'.format(year, author)
-version = release = '0.4.4'
+version = release = '0.4.5'
 autodoc = True
 
 pygments_style = 'trac'
