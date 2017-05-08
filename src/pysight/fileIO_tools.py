@@ -149,11 +149,14 @@ def get_start_pos(filename: str = '') -> int:
                 return pos_in_file  # to have the [DATA] as header
 
 
-def read_lst(filename: str = '', start_of_data_pos: int = 0, timepatch: str = '') -> pd.DataFrame:
+def read_lst(filename: str = '', start_of_data_pos: int = 0, timepatch: str = '',
+             num_of_items=-1) -> np.array:
     """
     Updated version of LST readout using array slicing (and not Pandas slicing).
-    :param filename:
-    :param start_of_data_pos:
+    :param filename: File to read.
+    :param start_of_data_pos: Index of first data word.
+    :param timepatch:
+    :param num_of_items: Number of lines to read. -1 is all file.
     :return:
     """
     if filename is '' or start_of_data_pos == 0 or timepatch == '':
@@ -163,7 +166,8 @@ def read_lst(filename: str = '', start_of_data_pos: int = 0, timepatch: str = ''
     data_length = data_length_dict[timepatch] // 4 + 2
     with open(filename, "rb") as f:
         f.seek(start_of_data_pos)
-        arr = np.fromfile(f, dtype='{}S'.format(data_length)).astype('{}U'.format(data_length))
+        arr = np.fromfile(f, dtype='{}S'.format(data_length),
+                          count=int(num_of_items * data_length)).astype('{}U'.format(data_length))
 
     return arr
 
@@ -212,6 +216,6 @@ def compare_recorded_and_input_channels(user_inputs: Dict, lst_input: List):
 
     for key in user_inputs:
         if not lst_input[help_dict[user_inputs[key]]]:
-            print('Wrong channel specification - the key {} is on an empty channel (number {}).'.\
+            raise UserWarning('Wrong channel specification - the key {} is on an empty channel (number {}).'.\
                   format(key, user_inputs[key]))
 

@@ -180,7 +180,7 @@ class GUIApp(object):
         self.full = IntVar()
         full_array = ttk.Checkbutton(main_frame, text='Full array', variable=self.full)
         full_array.grid(column=1, row=4, sticky='ns')
-        self.tif = IntVar()
+        self.tif = IntVar(value=1)
         tif = ttk.Checkbutton(main_frame, text='Tiff', variable=self.tif)
         tif.grid(column=2, row=4, sticky='ns')
 
@@ -196,7 +196,7 @@ class GUIApp(object):
         z_size_label = ttk.Label(main_frame, text='Z')
         z_size_label.grid(column=6, row=1, sticky='e')
 
-        self.x_pixels = StringVar(value=256)
+        self.x_pixels = StringVar(value=512)
         self.y_pixels = StringVar(value=512)
         self.z_pixels = StringVar(value=100)
 

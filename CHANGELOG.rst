@@ -181,3 +181,10 @@ Changelog
 * Bug fixes and improvements to TAG lens interpolation.
 
 * Probably the last version to support ASCII files.
+
+0.4.6 (2017-05-XX)
+------------------
+
+* Added a `number_of_lines` parameter for the file I\O process. Keep at `-1` to read everything.
+
+* Changed defaults in GUI.

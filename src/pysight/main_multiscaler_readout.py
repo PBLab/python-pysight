@@ -1,7 +1,7 @@
 """
 Created on Thu Oct 13 09:37:02 2016
 
-__author__: Hagai
+__author__: Hagai Hargil
 """
 from pysight.tkinter_gui_multiscaler import GUIApp
 from pysight.tkinter_gui_multiscaler import verify_gui_input
@@ -29,20 +29,21 @@ def main_data_readout(gui):
     fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)
 
     # Read the file into a variable
-    print('Reading file {}'.format(gui.filename.get()))
+    if gui.debug.get() == 0:
+        num_of_items = -1
+        read_string = 'Reading file "{}"...'.format(gui.filename.get())
+    else:
+        num_of_items = 1e6
+        read_string = '[DEBUG] Reading file "{}"...'.format(gui.filename.get())
+
+    print(read_string)
     dict_of_slices = timepatch_switch.ChoiceManager().process(timepatch)
     data = fileIO_tools.read_lst(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
-                                 timepatch=timepatch)
+                                 timepatch=timepatch, num_of_items=num_of_items)
 
-    if gui.debug.get() == 0:
-        print('File read. Sorting the file according to timepatch...')
-        df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
-                                                      input_channels=dict_of_input_channels)
-
-    elif gui.debug.get() == 1:
-        print('[DEBUG] File read. Sorting the file according to timepatch...')
-        df_after_timepatch = lst_tools.tabulate_input(data=data[:1e6], dict_of_slices=dict_of_slices,
-                                                      data_range=data_range, input_channels=dict_of_input_channels)
+    print('File read. Sorting the file according to timepatch...')
+    df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
+                                                  input_channels=dict_of_input_channels)
 
     print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 

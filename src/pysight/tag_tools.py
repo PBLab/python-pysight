@@ -22,12 +22,14 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
     # Iteration #0 of while loop:
 
     # Eliminate returns on the line:
-    tag_diffs = tag_data.diff() > allowed_noise
+    tag_diffs_full = tag_data.diff()
+    print('The mean frequency of TAG events is {} Hz.'.format(1 / (np.mean(tag_diffs_full) * binwidth)))
+    tag_diffs = tag_diffs_full > allowed_noise
     tag_diffs[0] = True
     tag_data = tag_data.loc[tag_diffs]
 
     # Creation of missing pulses
-    tags_diff = np.abs(tag_data.diff() - period)
+    tags_diff = np.abs(tag_diffs_full - period)
     tags_diff.loc[tags_diff < allowed_noise] = 0
     missing_ticks = np.where(tags_diff != 0)[0][1:]  # returns a tuple
     changed_ticks = missing_ticks.shape[0]
