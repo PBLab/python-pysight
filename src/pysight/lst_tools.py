@@ -35,7 +35,8 @@ def hex_to_bin_dict():
 
 
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
-                       pixels: int=None, spacing_between_lines: int=None) -> np.ndarray:
+                       pixels: int=None, spacing_between_lines: int=None,
+                       flyback: float=0.001, binwidth: float=800e-12) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
 
     if last_event_time is None or pixels is None or lines.empty:
@@ -56,6 +57,10 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     else:
         last_event_time = int(lines.iloc[num_of_recorded_lines - unnecess_lines] + spacing_between_lines)
         array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
+
+    # Add flyback consideration
+    for idx, frame_start in enumerate(array_of_frames[1:], 1):
+        array_of_frames[idx] = frame_start - (flyback * idx) / (binwidth)
 
     return array_of_frames
 
@@ -135,7 +140,8 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Serie
 
 def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
                             num_of_frames: int=-1, x_pixels: int=-1, y_pixels: int=-1,
-                            laser_freq: float=80e6, binwidth: float=800e-12) -> Dict:
+                            laser_freq: float=80e6, binwidth: float=800e-12,
+                            flyback: float=0.001) -> Dict:
     """ Create a dictionary that contains the data in its ordered form."""
 
     if df.empty:
@@ -163,7 +169,8 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         spacing_between_lines = np.abs(dict_of_data['Lines'].diff()).mean()
         last_event_time = int(dict_of_data['PMT1'].max() + spacing_between_lines)  # TODO: Assuming only data from PMT1 is relevant here
         frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
-                                         pixels=y_pixels, spacing_between_lines=spacing_between_lines)
+                                         pixels=y_pixels, spacing_between_lines=spacing_between_lines,
+                                         flyback=flyback, binwidth=binwidth)
         dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=np.uint64)
     else:  # Add 0 to the first entry of the series
         dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype=np.uint64).append(dict_of_data['Frames'],
@@ -246,9 +253,9 @@ def process_chan_edge(struct_of_data):
     return edge, channel
 
 
-def tabulate_input(data: np.array, dict_of_slices: OrderedDict, data_range: int, input_channels: Dict) -> pd.DataFrame:
+def tabulate_input_hex(data: np.array, dict_of_slices: OrderedDict, data_range: int, input_channels: Dict) -> pd.DataFrame:
     """
-    Reformat the read data into a dataframe.
+    Reformat the read hex data into a dataframe.
     """
 
     for key in list(dict_of_slices.keys())[1:]:
@@ -294,11 +301,12 @@ def tabulate_input(data: np.array, dict_of_slices: OrderedDict, data_range: int,
     else:
         df['abs_time'] = dict_of_slices['abs_time'].processed
 
-    # Before sorting all photons make sure that no input is missing from the user.
+    # Before sorting all photons make sure that no input is missing from the user. If it's missing
+    # the code will ignore this channel, but not raise an exception
     actual_data_channels = set(df['channel'].cat.categories.values)
     if actual_data_channels != set(input_channels.values()):
-        raise UserWarning("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                          "Recorded channels are {}.".format(actual_data_channels))
+        warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
+                      "The list files contains data in the following channels: {}.".format(actual_data_channels))
 
     assert np.all(df['abs_time'].values >= 0)
 
@@ -313,3 +321,19 @@ def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
     """
     b = arr.view('U1').reshape(len(arr), -1)[:, start:end]
     return np.fromstring(b.tostring(), dtype='U' + str(end - start))
+
+
+def tabulate_input_binary(data: np.array, dict_of_slices: OrderedDict, data_range: int, input_channels: Dict) -> pd.DataFrame:
+    """
+    Reformat the read binary data into a dataframe.
+    """
+    num_of_lines = data.shape[0]
+
+    for key in dict_of_slices:
+        cur_data = data[:, dict_of_slices[key].start:dict_of_slices[key].end]
+        try:
+            zero_arr = np.zeros(num_of_lines, dict_of_slices[key].cols)
+
+        except AttributeError:  # No cols field since number of bits is a multiple of 8
+            dict_of_slices[key].data_as_
+

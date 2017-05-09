@@ -95,6 +95,8 @@ class GUIApp(object):
 
         self.__debug(main_frame)
 
+        self.__flyback(main_frame)
+
         self.__reprate(main_frame)
 
         self.__binwidth(main_frame)
@@ -102,6 +104,8 @@ class GUIApp(object):
         self.__tag_lens(main_frame)
 
         self.__tag_bits(main_frame)
+
+        self.__bi_dir(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -209,43 +213,51 @@ class GUIApp(object):
         self.z_pixels_entry.config(state='disabled')
 
     def __debug(self, main_frame):
-
-        # Read batch for debugging
+        """ Read a smaller portion of data for debugging """
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
         debug_check.grid(column=0, row=9, sticky='w')
 
-    def __reprate(self, main_frame):
+    def __flyback(self, main_frame):
+        """ Dead time between frames """
 
-        # Laser repetition rate
+        self.flyback = DoubleVar(value=0.001)  # seconds
+        flyback_text = ttk.Label(main_frame, text='Frame flyback [s]: ')
+        flyback_text.grid(column=6, row=4, sticky='w')
+        flyback_entry = ttk.Entry(main_frame, textvariable=self.flyback, width=5)
+        flyback_entry.grid(column=6, row=4, sticky='e')
+
+    def __reprate(self, main_frame):
+        """ Laser repetition rate"""
+
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
-        laser1_label.grid(column=6, row=4, sticky='ns')
+        laser1_label.grid(column=6, row=5, sticky='ns')
 
         self.reprate = StringVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
-        reprate_entry.grid(column=6, row=5, sticky='ns')
+        reprate_entry.grid(column=6, row=6, sticky='ns')
 
     def __binwidth(self, main_frame):
 
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
-        binwidth_label.grid(column=6, row=6, sticky='ns')
+        binwidth_label.grid(column=6, row=7, sticky='ns')
         self.binwidth = StringVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
-        binwidth_entry.grid(column=6, row=7, sticky='ns')
+        binwidth_entry.grid(column=6, row=8, sticky='ns')
 
     def __tag_lens(self, main_frame):
 
         # TAG lens nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
-        tag_label.grid(column=6, row=8, sticky='ns')
+        tag_label.grid(column=6, row=9, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
-        tag_label_entry.grid(column=6, row=9, sticky='ns')
+        tag_label_entry.grid(column=6, row=10, sticky='ns')
 
         self.tag_pulses = IntVar(value=1)
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
-        tag_pulses_entry.grid(column=6, row=9, sticky='e')
+        tag_pulses_entry.grid(column=6, row=10, sticky='e')
         tag_pulses_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
@@ -316,6 +328,14 @@ class GUIApp(object):
             self.z_pixels_entry.config(state='normal')
         else:
             self.z_pixels_entry.config(state='disabled')
+
+    def __bi_dir(self, main_frame):
+        """ Checkbox for bi-directional scan """
+
+        self.bidir = IntVar(value=1)
+        bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
+        bidir_check.grid(column=6, row=3, sticky='ns')
+
 
 if __name__ == '__main__':
     app = GUIApp()

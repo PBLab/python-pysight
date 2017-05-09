@@ -18,15 +18,16 @@ def main_data_readout(gui):
     from pysight import timepatch_switch
 
     # Open file and find the needed parameters
-    timepatch = fileIO_tools.get_timepatch(gui.filename.get())
-    if timepatch == '3':
-        raise NotImplementedError('Timepatch value "3" is currently not supported. Please message the package owner.')
-    data_range = fileIO_tools.get_range(gui.filename.get())
+    is_binary = fileIO_tools.determine_binary(gui.filename.get())
+    timepatch = fileIO_tools.get_timepatch(gui.filename.get(), is_binary)
+    if timepatch == '3' and not is_binary:
+        raise NotImplementedError('Timepatch value "3" is currently not supported for hex files. Please message the package owner.')
+    data_range = fileIO_tools.get_range(gui.filename.get(), is_binary)
 
-    start_of_data_pos = fileIO_tools.get_start_pos(gui.filename.get())
+    start_of_data_pos = fileIO_tools.get_start_pos(gui.filename.get(), is_binary)
     dict_of_input_channels = fileIO_tools.create_inputs_dict(gui=gui)
-    list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get())
-    fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)
+    list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get(), is_binary)
+    fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)  # TODO: Warn about Empty channels
 
     # Read the file into a variable
     if gui.debug.get() == 0:
@@ -37,13 +38,20 @@ def main_data_readout(gui):
         read_string = '[DEBUG] Reading file "{}"...'.format(gui.filename.get())
 
     print(read_string)
-    dict_of_slices = timepatch_switch.ChoiceManager().process(timepatch)
     data = fileIO_tools.read_lst(filename=gui.filename.get(), start_of_data_pos=start_of_data_pos,
-                                 timepatch=timepatch, num_of_items=num_of_items)
+                                 timepatch=timepatch, num_of_items=num_of_items, is_binary=is_binary)
 
     print('File read. Sorting the file according to timepatch...')
-    df_after_timepatch = lst_tools.tabulate_input(data=data, dict_of_slices=dict_of_slices, data_range=data_range,
-                                                  input_channels=dict_of_input_channels)
+    if is_binary:
+        dict_of_slices = timepatch_switch.ChoiceManagerBinary().process(timepatch)
+        df_after_timepatch = lst_tools.tabulate_input_binary(data=data, dict_of_slices=dict_of_slices,
+                                                             data_range=data_range,
+                                                             input_channels=dict_of_input_channels)
+    else:
+        dict_of_slices = timepatch_switch.ChoiceManagerHex().process(timepatch)
+        df_after_timepatch = lst_tools.tabulate_input_hex(data=data, dict_of_slices=dict_of_slices,
+                                                          data_range=data_range,
+                                                          input_channels=dict_of_input_channels)
 
     print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 
@@ -54,7 +62,8 @@ def main_data_readout(gui):
                                                      x_pixels=int(gui.x_pixels.get()),
                                                      y_pixels=int(gui.y_pixels.get()),
                                                      laser_freq=float(gui.reprate.get()),
-                                                     binwidth=float(gui.binwidth.get()))
+                                                     binwidth=float(gui.binwidth.get()),
+                                                     flyback=gui.flyback.get())
     print('Channels of events found. Allocating photons to their frames and lines...')
 
     df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data, gui=gui)
@@ -64,7 +73,7 @@ def main_data_readout(gui):
     final_movie = class_defs.Movie(data=df_allocated, x_pixels=int(gui.x_pixels.get()),
                                    y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                                    reprate=float(gui.reprate.get()), name=gui.filename.get(),
-                                   binwidth=float(gui.binwidth.get()))
+                                   binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get())
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

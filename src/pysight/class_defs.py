@@ -69,7 +69,6 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-
     data = attr.ib()
     reprate = attr.ib(validator=attr.validators.instance_of(float))
     x_pixels = attr.ib(validator=attr.validators.instance_of(int))
@@ -78,6 +77,7 @@ class Movie(object):
     name = attr.ib(validator=attr.validators.instance_of(str))
     binwidth = attr.ib(validator=attr.validators.instance_of(float))
     big_tiff = attr.ib(default=True)
+    bidir = attr.ib(default=True)
 
     @property
     def list_of_volume_times(self) -> List:
@@ -93,7 +93,6 @@ class Movie(object):
         volume_times.append(volume_times[-1] + diff_between_frames)
         return volume_times
 
-
     def gen_of_volumes(self):
         """ Populate the deque containing the volumes as a generator. """
 
@@ -104,12 +103,14 @@ class Movie(object):
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
-                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]))
+                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
+                             bidir=self.bidir)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
-                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]))
+                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
+                             bidir=self.bidir)
 
     def create_tif(self):
         """ Create all volumes, one-by-one, and save them as tiff. """
@@ -123,9 +124,9 @@ class Movie(object):
         volumes_in_movie = self.gen_of_volumes()
         try:
             cur_vol = next(volumes_in_movie)
+            data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
         except StopIteration:
             raise UserWarning('No frames were generated.')
-        data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
 
         try:
             with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff,
@@ -166,7 +167,6 @@ class Movie(object):
         assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
         return deque_of_vols
 
-
     def create_single_volume(self, vols) -> np.array:
         """ Aggregate the frames\volumes that vols mark to a single frame\volume.
         :vols Volumes to aggregate. 'all' is all of them.
@@ -191,10 +191,11 @@ class Movie(object):
         except TypeError:
             raise TypeError('vols parameter should be "all", integer or list of volumes.')
 
+
 @attr.s(slots=True)
 class Volume(object):
     """
-    With a TAG lens, a movie is a sequence of volumes, rather than frames. Each volume contains frames in a plane.
+    A Movie() is a sequence of volumes. Each volume contains frames in a plane.
     """
     # TODO: Refactor it with inheritance from Frame object in mind.
 
@@ -206,6 +207,7 @@ class Volume(object):
     reprate = attr.ib()  # laser repetition rate, relevant for FLIM
     end_time = attr.ib()
     binwidth = attr.ib()
+    bidir = attr.ib()  # Bi-derictional scanning
     empty = attr.ib(default=False, validator=attr.validators.instance_of(bool))
 
     @property
@@ -293,10 +295,13 @@ class Volume(object):
             assert len(list_of_data_columns) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
+            if self.bidir:
+                # hist[1::2, ...] = np.fliplr(hist[1::2, ...])
+                return hist.astype(np.int32), edges
+            else:
+                return hist.astype(np.int32), edges
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), 0, 0, 0
-
-        return hist.astype(np.int32), edges
 
     def show(self):
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """
