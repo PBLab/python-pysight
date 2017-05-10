@@ -197,7 +197,6 @@ class Volume(object):
     """
     A Movie() is a sequence of volumes. Each volume contains frames in a plane.
     """
-    # TODO: Refactor it with inheritance from Frame object in mind.
 
     x_pixels = attr.ib()
     y_pixels = attr.ib()
@@ -296,7 +295,7 @@ class Volume(object):
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
             if self.bidir:
-                # hist[1::2, ...] = np.fliplr(hist[1::2, ...])
+                hist[1::2, ...] = np.fliplr(hist[1::2, ...])
                 return hist.astype(np.int32), edges
             else:
                 return hist.astype(np.int32), edges
