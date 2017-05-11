@@ -27,7 +27,8 @@ def main_data_readout(gui):
     start_of_data_pos = fileIO_tools.get_start_pos(gui.filename.get(), is_binary)
     dict_of_input_channels = fileIO_tools.create_inputs_dict(gui=gui)
     list_of_recorded_data_channels = fileIO_tools.find_active_channels(gui.filename.get(), is_binary)
-    fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels, list_of_recorded_data_channels)  # TODO: Warn about Empty channels
+    fileIO_tools.compare_recorded_and_input_channels(dict_of_input_channels,
+                                                     list_of_recorded_data_channels)  # TODO: Warn about Empty channels
 
     # Read the file into a variable
     if gui.debug.get() == 0:
@@ -56,17 +57,17 @@ def main_data_readout(gui):
     print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 
     # Assign the proper channels to their data and function
-    dict_of_data = lst_tools.determine_data_channels(df=df_after_timepatch,
-                                                     dict_of_inputs=dict_of_input_channels,
-                                                     num_of_frames=int(gui.num_of_frames.get()),
-                                                     x_pixels=int(gui.x_pixels.get()),
-                                                     y_pixels=int(gui.y_pixels.get()),
-                                                     laser_freq=float(gui.reprate.get()),
-                                                     binwidth=float(gui.binwidth.get()),
-                                                     flyback=gui.flyback.get())
+    dict_of_data, line_delta = lst_tools.determine_data_channels(df=df_after_timepatch,
+                                                                 dict_of_inputs=dict_of_input_channels,
+                                                                 num_of_frames=int(gui.num_of_frames.get()),
+                                                                 x_pixels=int(gui.x_pixels.get()),
+                                                                 y_pixels=int(gui.y_pixels.get()),
+                                                                 laser_freq=float(gui.reprate.get()),
+                                                                 binwidth=float(gui.binwidth.get()),
+                                                                 flyback=gui.flyback.get())
     print('Channels of events found. Allocating photons to their frames and lines...')
 
-    df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data, gui=gui)
+    df_allocated = lst_tools.allocate_photons(dict_of_data=dict_of_data, gui=gui, line_delta=line_delta)
     print('Relative times calculated. Creating Movie object...')
 
     # Create a movie object

@@ -31,14 +31,19 @@ def validate_line_input(dict_of_data: Dict, num_of_lines: int = -1, num_of_frame
             # Create a new line array
             line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                            num_of_frames=num_of_frames)
-            dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=np.uint64)
+            dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
         else:
+            # Data is valid. Check whether we need a 0-time line event
             line_delta = median_of_lines
+            zeroth_line_delta = np.abs(dict_of_data['Lines'][0] - line_delta)/line_delta
+            if zeroth_line_delta < 0.05:
+                dict_of_data['Lines'] = pd.Series([0], name='Lines', dtype='uint64') \
+                    .append(dict_of_data['Lines'], ignore_index=True)
 
     else:  # create our own line array
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                        num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype=np.uint64)
+        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
         line_delta = dict_of_data['Lines'].diff().mean()
 
     return dict_of_data, line_delta
@@ -53,14 +58,14 @@ def validate_frame_input(dict_of_data: Dict, flyback: float = 0.001, binwidth: f
         raise ValueError('No number of lines received.')
 
     if 'Frames' in dict_of_data.keys():
-        dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype=np.uint64)\
+        dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype='uint64')\
             .append(dict_of_data['Frames'], ignore_index=True)
     else:
         last_event_time = int(dict_of_data['Lines'].max() + line_delta)
         frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
                                          pixels=num_of_lines, spacing_between_lines=line_delta,
                                          flyback=flyback, binwidth=binwidth)
-        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype=np.uint64)
+        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype='uint64')
 
     return dict_of_data
 
@@ -89,10 +94,6 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
         last_event_time = int(lines.iloc[num_of_recorded_lines - unnecess_lines] + spacing_between_lines)
         array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
 
-    # Add flyback consideration
-    # for idx, frame_start in enumerate(array_of_frames[1:], 1):
-    #     array_of_frames[idx] = frame_start + ((flyback * idx) / binwidth)
-
     return array_of_frames
 
 
@@ -120,11 +121,11 @@ def validate_created_data_channels(dict_of_data: Dict):
     assert {'PMT1', 'Lines', 'Frames'} <= set(dict_of_data.keys())  # A is subset of B
 
     if dict_of_data['Frames'].shape[0] > dict_of_data['Lines'].shape[0]:  # more frames than lines
-        raise UserWarning('More frames than lines, replace the two.')
+        raise UserWarning('More frames than lines, consider replacing the two.')
 
     try:
         if dict_of_data['TAG Lens'].shape[0] < dict_of_data['Lines'].shape[0]:
-            raise UserWarning('More lines than TAG pulses, replace the two.')
+            raise UserWarning('More lines than TAG pulses, consider replacing the two.')
     except KeyError:
         pass
 
@@ -158,3 +159,22 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Serie
         warnings.warn("More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine.")
 
     return pulses_final
+
+
+def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array,
+                                    lines: pd.Series, bidir: bool = True):
+    """
+    "Deal" with photons in uneven lines. Unidir - currently throws them away.
+    Bidir = flips them over.
+    """
+    uneven_lines = np.remainder(sorted_indices, 2)
+    # Reverse the relative time of the photons belonging to the uneven lines,
+    # by subtracting their relative time from the start time of the next line
+    df['time_rel_line'].loc[uneven_lines] = lines.loc[sorted_indices[uneven_lines] + 1]\
+                                            - df['time_rel_line_pre_drop'].loc[uneven_lines]
+    if not bidir:  # Unify the excess rows and photons in them into the previous row
+        sorted_indices[uneven_lines] -= 1
+        df['Lines'] = lines.loc[sorted_indices].values
+
+    df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
+    return df

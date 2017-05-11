@@ -6,7 +6,7 @@ from numba import jit, int64, uint64
 import warnings
 from pysight.apply_df_funcs import get_lost_bit_np, iter_string_hex_to_bin, convert_hex_to_int
 from pysight.validation_tools import validate_line_input, validate_frame_input, \
-    validate_laser_input, validate_created_data_channels
+    validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines
 
 
 def hex_to_bin_dict():
@@ -77,7 +77,7 @@ def determine_data_channels(df: pd.DataFrame=None, dict_of_inputs: Dict=None,
         pass
 
     validate_created_data_channels(dict_of_data)
-    return dict_of_data
+    return dict_of_data, line_delta
 
 
 @jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
@@ -86,7 +86,7 @@ def numba_search_sorted(input_sorted, input_values):
     return np.searchsorted(input_sorted, input_values) - 1
 
 
-def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
+def allocate_photons(dict_of_data=None, gui=None, line_delta: float = -1) -> pd.DataFrame:
     """
     Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
     :param dict_of_data: All events data, distributed to its input channel
@@ -100,8 +100,12 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
     relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
 
     df_photons = dict_of_data['PMT1']  # TODO: Support more than one data channel
-    df_photons = pd.DataFrame(df_photons, dtype=np.uint64)  # before this change it's a series with a name, not column head
-    column_heads = {'Lines': 'time_rel_line', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
+    df_photons = pd.DataFrame(df_photons, dtype='uint64')  # before this change it's a series with a name, not column head
+    column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
+
+    # Unidirectional scan - create fake lines
+    if not gui.bidir.get():
+        dict_of_data = add_unidirectional_lines(dict_of_data=dict_of_data, line_delta=line_delta)
 
     # Main loop - Sort lines and frames for all photons and calculate relative time
     for key in relevant_keys:
@@ -113,10 +117,14 @@ def allocate_photons(dict_of_data=None, gui=None) -> pd.DataFrame:
 
         df_photons.dropna(how='any', inplace=True)
         df_photons[key] = df_photons[key].astype(np.uint64)
-        df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]  # relative time of each photon in
-        # accordance to the line\frame\laser pulse
-        # TODO: Remove photons that are detected during the "turn-around" of the resonant mirror
-        if key != 'Laser':
+        df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key] # relative time of each photon in
+        #                                                                          accordance to the line\frame\laser pulse
+        if 'Lines' == key:
+            df_photons = rectify_photons_in_uneven_lines(df=df_photons,
+                                                         sorted_indices=sorted_indices[sorted_indices >= 0],
+                                                         lines=dict_of_data['Lines'], bidir=gui.bidir.get())
+
+        if 'Laser' != key:
             df_photons[key] = df_photons[key].astype('category')
         df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
@@ -142,8 +150,8 @@ def process_chan_edge(struct_of_data):
     Simple processing scheme for the channel and edge data.
     """
     bin_array = np.array(iter_string_hex_to_bin("".join(struct_of_data.data)))
-    edge = slice_string_arrays(bin_array, start=0, end=1)
-    channel = slice_string_arrays(bin_array, start=1, end=4)
+    edge      = slice_string_arrays(bin_array, start=0, end=1)
+    channel   = slice_string_arrays(bin_array, start=1, end=4)
 
     return edge, channel
 
@@ -231,4 +239,24 @@ def tabulate_input_binary(data: np.array, dict_of_slices: OrderedDict, data_rang
 
         except AttributeError:  # No cols field since number of bits is a multiple of 8
             dict_of_slices[key].data_as_
+
+
+def add_unidirectional_lines(dict_of_data: Dict, line_delta: float = -1):
+    """
+    For unidirectional scans fake line signals have to be inserted.
+    :param dict_of_data: All data
+    :param line_delta: difference between lines
+    :return: 
+    """
+
+    if line_delta == -1:
+        raise ValueError('Line delta variable was miscalculated.')
+
+    length_of_lines       = dict_of_data['Lines'].shape[0]
+    new_line_arr          = np.zeros(length_of_lines * 2 - 1)
+    new_line_arr[::2]     = dict_of_data['Lines'].values
+    new_line_arr[1::2]    = dict_of_data['Lines'].rolling(window=2).mean()[1:]
+
+    dict_of_data['Lines'] = pd.Series(new_line_arr, name='Lines', dtype='uint64')
+    return dict_of_data
 

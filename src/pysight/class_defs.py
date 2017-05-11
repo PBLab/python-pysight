@@ -28,26 +28,30 @@ def create_linspace(start, stop, num):
     return linspaces
 
 
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02):
+def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = False):
     """
     Create the metadata for the y-axis.
     """
     lines_start = 0
     empty = False
+    if not bidir:
+        bidir_factor = 0.5
+    else:
+        bidir_factor = 1
 
     unique_indices = np.unique(data.index.get_level_values('Lines'))
     if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
         diffs = np.diff(unique_indices)
-        diffs_max = diffs.max()
+        diffs_max = diffs.max() * bidir_factor
     else:
         diffs = unique_indices
-        diffs_max = unique_indices
+        diffs_max = unique_indices * bidir_factor
 
     try:
         if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
-            lines_end = np.mean(diffs) * (1 + jitter)
+            lines_end = np.mean(diffs) * (1 + jitter) * bidir_factor
         else:
-            lines_end = int(diffs_max)
+            lines_end = int(diffs_max * bidir_factor)
     except ValueError:
         lines_end = 0
         empty = True
@@ -69,15 +73,15 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-    data = attr.ib()
-    reprate = attr.ib(validator=attr.validators.instance_of(float))
+    data     = attr.ib()
+    reprate  = attr.ib(validator=attr.validators.instance_of(float))
     x_pixels = attr.ib(validator=attr.validators.instance_of(int))
     y_pixels = attr.ib(validator=attr.validators.instance_of(int))
     z_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    name = attr.ib(validator=attr.validators.instance_of(str))
+    name     = attr.ib(validator=attr.validators.instance_of(str))
     binwidth = attr.ib(validator=attr.validators.instance_of(float))
     big_tiff = attr.ib(default=True)
-    bidir = attr.ib(default=True)
+    bidir    = attr.ib(default=True)
 
     @property
     def list_of_volume_times(self) -> List:
@@ -201,13 +205,13 @@ class Volume(object):
     x_pixels = attr.ib()
     y_pixels = attr.ib()
     z_pixels = attr.ib()
-    number = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
-    data = attr.ib()
-    reprate = attr.ib()  # laser repetition rate, relevant for FLIM
+    number   = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
+    data     = attr.ib()
+    reprate  = attr.ib()  # laser repetition rate, relevant for FLIM
     end_time = attr.ib()
     binwidth = attr.ib()
-    bidir = attr.ib()  # Bi-derictional scanning
-    empty = attr.ib(default=False, validator=attr.validators.instance_of(bool))
+    bidir    = attr.ib()  # Bi-derictional scanning
+    empty    = attr.ib(default=False, validator=attr.validators.instance_of(bool))
 
     @property
     def __metadata(self) -> OrderedDict:
@@ -226,7 +230,7 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
 
         # y-axis metadata
-        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter)
+        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir)
         metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
@@ -294,11 +298,7 @@ class Volume(object):
             assert len(list_of_data_columns) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
-            if self.bidir:
-                hist[1::2, ...] = np.fliplr(hist[1::2, ...])
-                return hist.astype(np.int32), edges
-            else:
-                return hist.astype(np.int32), edges
+            return hist.astype(np.int32), edges
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), 0, 0, 0
 

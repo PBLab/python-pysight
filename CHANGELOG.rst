@@ -180,17 +180,15 @@ Changelog
 
 * Bug fixes and improvements to TAG lens interpolation.
 
-* Probably the last version to support ASCII files.
-
 0.4.6 (2017-05-XX)
 ------------------
 
-* Added a `number_of_lines` parameter for the file I\O process. Keep at `-1` to read everything. Controlled via the "Debug?" field in the GUI.
+* Added a `number_of_lines` parameter for the file I\O process. Keep at `-1` to read everything. Controlled via the "Debug?" field in the GUI. Basically `DEBUG` will only read a small portion of large files.
 
 * Changed defaults in GUI.
 
 * Allows acquisition in bi-directional scanning mode.
 
-* Back-end changes for possible future support of binary files.
+* Backend changes for possible future support of binary files.
 
-* The code allows to dismiss unwanted input channels by specifying them as "Empty". If you fail to
+* The code allows to dismiss unwanted input channels by specifying them as "Empty". If you mark a channel as containing data while it's inactive, an error will terminate execution.
