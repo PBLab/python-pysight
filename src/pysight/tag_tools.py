@@ -11,9 +11,11 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
                        tag_pulses: int = 1) -> pd.Series:
     """
     Verify the integrity of the TAG lens pulses periodicity.
+    tag_freq - Operation frequency of TAG lens.
+    binwidth - Of multiscaler.
+    tag_pulses - How many pulses per period the drives generates.
     :return: Sorted Series with the new pulses in the right place
     """
-    # if not tag_freq
 
     period = np.ceil(1 / (tag_freq * binwidth * tag_pulses)).astype(np.int32)  # Period of TAG lens in bins
     jitter = 0.05
@@ -119,7 +121,8 @@ def define_phase(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.
     return df_photons
 
 
-def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, gui=None) -> pd.DataFrame:
+def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, tag_freq: float=None,
+                    binwidth: float=None, tag_pulses: int=None) -> pd.DataFrame:
     """
     If a TAG channel was defined determine each photon's phase and insert it into the main DataFrame.
     :param df_photons: DataFrame to be changed - TAG phase will be added as index
@@ -131,8 +134,7 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, gui
     # TODO: Get rid of assumption that the TAG pulse comes at a phase of 0
     # TODO: Still only a single channel of data
 
-    tag_data = verify_periodicity(tag_data=tag_data, tag_freq=float(gui.tag_freq.get()),
-                                  binwidth=float(gui.binwidth.get()), tag_pulses=gui.tag_pulses.get())
+    tag_data = verify_periodicity(tag_data=tag_data, tag_freq=tag_freq, binwidth=binwidth, tag_pulses=tag_pulses)
     if isinstance(tag_data, pd.Series):
         df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
 

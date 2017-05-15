@@ -168,12 +168,16 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array,
     Bidir = flips them over.
     """
     uneven_lines = np.remainder(sorted_indices, 2)
+    df['time_rel_line'] = pd.Series(range(df.shape[0]), dtype='uint64')
+    df.loc[np.logical_not(uneven_lines), 'time_rel_line'] = df.loc[np.logical_not(uneven_lines), 'time_rel_line_pre_drop']
     # Reverse the relative time of the photons belonging to the uneven lines,
     # by subtracting their relative time from the start time of the next line
-    df['time_rel_line'].loc[uneven_lines] = lines.loc[sorted_indices[uneven_lines] + 1]\
-                                            - df['time_rel_line_pre_drop'].loc[uneven_lines]
+    lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].reset_index(drop=True)
+    events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'time_rel_line_pre_drop'].reset_index(drop=True)
+    df.loc[np.logical_and(uneven_lines, 1), 'time_rel_line'] = lines_to_subtract_from - events_to_subtract
+
     if not bidir:  # Unify the excess rows and photons in them into the previous row
-        sorted_indices[uneven_lines] -= 1
+        sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
         df['Lines'] = lines.loc[sorted_indices].values
 
     df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)

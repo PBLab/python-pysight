@@ -192,3 +192,5 @@ Changelog
 * Backend changes for possible future support of binary files.
 
 * The code allows to dismiss unwanted input channels by specifying them as "Empty". If you mark a channel as containing data while it's inactive, an error will terminate execution.
+
+* Massive refactoring of pipeline.
