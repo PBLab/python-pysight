@@ -6,70 +6,6 @@ from tkinter import ttk
 from tkinter import filedialog
 
 
-def verify_gui_input(gui):
-    """Validate all GUI inputs"""
-    data_sources = set(gui.tuple_of_data_sources)
-    channel_inputs = {gui.input_start.get(), gui.input_stop1.get(), gui.input_stop2.get()}
-
-    if gui.input_start.get() != 'PMT1':
-        if gui.input_stop1.get() != 'PMT1':
-            if gui.input_stop2.get() != 'PMT1':
-                raise BrokenPipeError('PMT1 value has to be entered in inputs.')
-
-    if gui.num_of_frames.get() == '':
-        if 'Frames' not in data_sources:
-            raise BrokenPipeError('You must either enter a frame channel or number of frames.')
-    else:
-        if float(gui.num_of_frames.get()) != int(float(gui.num_of_frames.get())):
-            raise ValueError('Please enter an integer number of frames.')
-
-    if int(gui.num_of_frames.get()) < 0:
-        raise ValueError('Number of frames has to be a positive number.')
-
-    filename = gui.filename.get()
-    if not filename.endswith('.lst'):
-        raise BrokenPipeError('Please choose a list (*.lst) file for analysis.')
-
-    if channel_inputs > data_sources:
-        raise ValueError('Wrong inputs in channels. Please choose a value from the list.')
-
-    list_of_keys = [gui.input_start.get(), gui.input_stop1.get(), gui.input_stop2.get()]
-    set_of_keys = set(list_of_keys)
-
-    if len(list_of_keys) != len(set_of_keys):  # making sure only a single option was chosen in the GUI
-        if [x for x in list_of_keys if x != 'Empty'] != list(set_of_keys.difference({'Empty'})):
-            raise KeyError('Input consisted of two or more similar names which are not "Empty".')
-
-    # TAG bits input verification
-    set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
-                   gui.fast_bit_start.get(), gui.fast_bit_end.get(),
-                   gui.z_bit_start.get(), gui.z_bit_end.get()}
-
-    for num in set_of_tags:
-        assert isinstance(num, int), 'TAG bit has to be an integer.'
-
-    if len(set_of_tags) != 6:
-        raise UserWarning('Conflicting starts and ends of TAG bits. Take note that bits are inclusive on both ends.')
-
-    if max(set_of_tags) > 16:
-        raise UserWarning('Maximal TAG bit is 16.')
-
-    if min(set_of_tags) < 1:
-        raise UserWarning('Minimal TAG bit is 1.')
-
-    if gui.slow_bit_start.get() > gui.slow_bit_end.get():
-        raise UserWarning('Slow bit end is smaller than its start.')
-
-    if gui.fast_bit_start.get() > gui.fast_bit_end.get():
-        raise UserWarning('Fast bit end is smaller than its start.')
-
-    if gui.z_bit_start.get() > gui.z_bit_end.get():
-        raise UserWarning('Z bit end is smaller than its start.')
-
-    if 0 == gui.summed and 0 == gui.tif and 0 == gui.full:
-        raise UserWarning('No outputs chosen. Please check at least one.')
-
-
 class GUIApp(object):
     """Main GUI for the multiscaler code"""
     def __init__(self):
@@ -96,6 +32,8 @@ class GUIApp(object):
         self.__debug(main_frame)
 
         self.__flyback(main_frame)
+
+        self.__mirror_phase(main_frame)
 
         self.__reprate(main_frame)
 
@@ -130,8 +68,7 @@ class GUIApp(object):
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
-        self.tuple_of_data_sources = (
-        'PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
+        self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=2, row=1, sticky='w')
         mb1.set('Frames')
@@ -216,16 +153,23 @@ class GUIApp(object):
         """ Read a smaller portion of data for debugging """
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
-        debug_check.grid(column=0, row=9, sticky='w')
+        debug_check.grid(column=1, row=9, sticky='e')
 
     def __flyback(self, main_frame):
         """ Dead time between frames """
 
         self.flyback = DoubleVar(value=0.001)  # seconds
         flyback_text = ttk.Label(main_frame, text='Frame flyback [s]: ')
-        flyback_text.grid(column=6, row=4, sticky='w')
+        flyback_text.grid(column=0, row=10, sticky='w')
         flyback_entry = ttk.Entry(main_frame, textvariable=self.flyback, width=5)
-        flyback_entry.grid(column=6, row=4, sticky='e')
+        flyback_entry.grid(column=0, row=10, sticky='e')
+
+    def __mirror_phase(self, main_frame):
+        self.phase = DoubleVar(value=-2.6)
+        phase_text = ttk.Label(main_frame, text='Scanner phase delay [rad]: ')
+        phase_text.grid(column=0, row=9, sticky='e')
+        phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
+        phase_entry.grid(column=1, row=9, sticky='w')
 
     def __reprate(self, main_frame):
         """ Laser repetition rate"""
@@ -314,6 +258,7 @@ class GUIApp(object):
     def __browsefunc(self):
         self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
                                                      initialdir='.'))
+
     def __check_if_empty(self, *args):
         list_of_values = [self.input_start.get(), self.input_stop1.get(), self.input_stop2.get()]
         if 2 == list_of_values.count('Empty'):
@@ -335,6 +280,79 @@ class GUIApp(object):
         self.bidir = IntVar(value=1)
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
         bidir_check.grid(column=6, row=3, sticky='ns')
+
+
+def verify_gui_input(gui):
+    """Validate all GUI inputs"""
+    data_sources = set(gui.tuple_of_data_sources)
+    channel_inputs = {gui.input_start.get(), gui.input_stop1.get(), gui.input_stop2.get()}
+
+    if gui.input_start.get() != 'PMT1':
+        if gui.input_stop1.get() != 'PMT1':
+            if gui.input_stop2.get() != 'PMT1':
+                raise BrokenPipeError('PMT1 value has to be entered in inputs.')
+
+    if gui.num_of_frames.get() == '':
+        if 'Frames' not in data_sources:
+            raise BrokenPipeError('You must either enter a frame channel or number of frames.')
+    else:
+        if float(gui.num_of_frames.get()) != int(float(gui.num_of_frames.get())):
+            raise ValueError('Please enter an integer number of frames.')
+
+    if int(gui.num_of_frames.get()) < 0:
+        raise ValueError('Number of frames has to be a positive number.')
+
+    filename = gui.filename.get()
+    if not filename.endswith('.lst'):
+        raise BrokenPipeError('Please choose a list (*.lst) file for analysis.')
+
+    if channel_inputs > data_sources:
+        raise ValueError('Wrong inputs in channels. Please choose a value from the list.')
+
+    list_of_keys = [gui.input_start.get(), gui.input_stop1.get(), gui.input_stop2.get()]
+    set_of_keys = set(list_of_keys)
+
+    if len(list_of_keys) != len(set_of_keys):  # making sure only a single option was chosen in the GUI
+        if [x for x in list_of_keys if x != 'Empty'] != list(set_of_keys.difference({'Empty'})):
+            raise KeyError('Input consisted of two or more similar names which are not "Empty".')
+
+    # TAG bits input verification
+    set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
+                   gui.fast_bit_start.get(), gui.fast_bit_end.get(),
+                   gui.z_bit_start.get(), gui.z_bit_end.get()}
+
+    for num in set_of_tags:
+        assert isinstance(num, int), 'TAG bit has to be an integer.'
+
+    if len(set_of_tags) != 6:
+        raise UserWarning('Conflicting starts and ends of TAG bits. Take note that bits are inclusive on both ends.')
+
+    if max(set_of_tags) > 16:
+        raise UserWarning('Maximal TAG bit is 16.')
+
+    if min(set_of_tags) < 1:
+        raise UserWarning('Minimal TAG bit is 1.')
+
+    if gui.slow_bit_start.get() > gui.slow_bit_end.get():
+        raise UserWarning('Slow bit end is smaller than its start.')
+
+    if gui.fast_bit_start.get() > gui.fast_bit_end.get():
+        raise UserWarning('Fast bit end is smaller than its start.')
+
+    if gui.z_bit_start.get() > gui.z_bit_end.get():
+        raise UserWarning('Z bit end is smaller than its start.')
+
+    if 0 == gui.summed and 0 == gui.tif and 0 == gui.full:
+        raise UserWarning('No outputs chosen. Please check at least one.')
+
+    if gui.flyback.get() < 0:
+        raise UserWarning('Flyback time must be a positive number.')
+
+    if not isinstance(gui.flyback.get(), float) and not isinstance(gui.flyback.get(), int):
+        raise UserWarning('Flyback time must be a number.')
+
+    if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
+        raise UserWarning('Mirror phase must be a number.')
 
 
 if __name__ == '__main__':

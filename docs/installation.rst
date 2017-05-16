@@ -13,5 +13,4 @@ It's usually good habit to create a new environment for new projects. At the com
     conda create --name py36 python=3.6 numba tifffile -c conda-forge
     pip install pysight
 
-
 The "Usage" tab provides more details on the operation of PySight.

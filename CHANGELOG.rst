@@ -183,14 +183,15 @@ Changelog
 0.4.6 (2017-05-XX)
 ------------------
 
-* Added a `number_of_lines` parameter for the file I\O process. Keep at `-1` to read everything. Controlled via the "Debug?" field in the GUI. Basically `DEBUG` will only read a small portion of large files.
+* Use `Debug?` to read a small portion of an `.lst` file.
 
 * Changed defaults in GUI.
 
-* Allows acquisition in bi-directional scanning mode.
+* Allows acquisition in bi-directional scanning mode. This is enabled with the `Mirror phase` and `Flyback` parameters in the GUI.
 
 * Backend changes for possible future support of binary files.
 
-* The code allows to dismiss unwanted input channels by specifying them as "Empty". If you mark a channel as containing data while it's inactive, an error will terminate execution.
+* The code allows to dismiss unwanted input channels by specifying them as "Empty".
+    * If you mark a channel as containing data while it's inactive, an error will terminate execution.
 
 * Massive refactoring of pipeline.

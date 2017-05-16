@@ -12,62 +12,6 @@ from collections import OrderedDict
 import warnings
 
 
-def validate_number_larger_than_zero(instance, attribute, value: int=0):
-    """
-    Validator for attrs module - makes sure line numbers and row numbers are larger than 0.
-    """
-
-    if value >= instance.attribute:
-        raise ValueError("{} has to be larger than 0.".format(attribute))
-
-
-@jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)
-def create_linspace(start, stop, num):
-    linspaces = np.linspace(start, stop, num)
-    assert np.all(np.diff(linspaces) > 0)
-    return linspaces
-
-
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = False):
-    """
-    Create the metadata for the y-axis.
-    """
-    lines_start = 0
-    empty = False
-    if not bidir:
-        bidir_factor = 0.5
-    else:
-        bidir_factor = 1
-
-    unique_indices = np.unique(data.index.get_level_values('Lines'))
-    if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
-        diffs = np.diff(unique_indices)
-        diffs_max = diffs.max() * bidir_factor
-    else:
-        diffs = unique_indices
-        diffs_max = unique_indices * bidir_factor
-
-    try:
-        if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
-            lines_end = np.mean(diffs) * (1 + jitter) * bidir_factor
-        else:
-            lines_end = int(diffs_max * bidir_factor)
-    except ValueError:
-        lines_end = 0
-        empty = True
-
-    return lines_start, lines_end, empty
-
-
-@attr.s
-class Struct(object):
-    """ Basic struct-like object for data keeping. """
-
-    start = attr.ib()
-    end = attr.ib()
-    num = attr.ib(default=None)
-
-
 @attr.s
 class Movie(object):
     """
@@ -230,7 +174,7 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
 
         # y-axis metadata
-        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir)
+        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter)
         metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
@@ -310,3 +254,55 @@ class Volume(object):
         # plt.imshow(hist, cmap='gray')
         plt.title('Volume number {}'.format(self.number))
         plt.axis('off')
+
+
+def validate_number_larger_than_zero(instance, attribute, value: int=0):
+    """
+    Validator for attrs module - makes sure line numbers and row numbers are larger than 0.
+    """
+
+    if value >= instance.attribute:
+        raise ValueError("{} has to be larger than 0.".format(attribute))
+
+
+@jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)
+def create_linspace(start, stop, num):
+    linspaces = np.linspace(start, stop, num)
+    assert np.all(np.diff(linspaces) > 0)
+    return linspaces
+
+
+def metadata_ydata(data: pd.DataFrame, jitter: float=0.02):
+    """
+    Create the metadata for the y-axis.
+    """
+    lines_start = 0
+    empty = False
+
+    unique_indices = np.unique(data.index.get_level_values('Lines'))
+    if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
+        diffs = np.diff(unique_indices)
+        diffs_max = diffs.max()
+    else:
+        diffs = unique_indices
+        diffs_max = unique_indices
+
+    try:
+        if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
+            lines_end = np.mean(diffs) * (1 + jitter)
+        else:
+            lines_end = int(diffs_max)
+    except ValueError:
+        lines_end = 0
+        empty = True
+
+    return lines_start, lines_end, empty
+
+
+@attr.s
+class Struct(object):
+    """ Basic struct-like object for data keeping. """
+
+    start = attr.ib()
+    end = attr.ib()
+    num = attr.ib(default=None)

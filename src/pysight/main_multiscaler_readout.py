@@ -31,7 +31,7 @@ def main_data_readout(gui):
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                flyback=gui.flyback.get(), dict_of_slices_hex=dict_of_slices_hex,
                                dict_of_slices_bin=None, bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
-                               tag_pulses=int(gui.tag_pulses.get()))
+                               tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get())
     analyzed_struct.run()
 
     # Create a movie object

@@ -32,6 +32,7 @@ class Analysis(object):
     bidir = attr.ib()
     tag_freq = attr.ib()
     tag_pulses = attr.ib()
+    phase = attr.ib()
     df_allocated = attr.ib(init=False)
 
     def run(self):
@@ -144,7 +145,8 @@ class Analysis(object):
             if 'Lines' == key:
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
                                                              sorted_indices=sorted_indices[sorted_indices >= 0],
-                                                             lines=dict_of_data['Lines'], bidir=self.bidir)
+                                                             lines=dict_of_data['Lines'], bidir=self.bidir,
+                                                             phase=self.phase)
 
             if 'Laser' != key:
                 df_photons[key] = df_photons[key].astype('category')
@@ -264,7 +266,7 @@ class Analysis(object):
                 pass
 
     @staticmethod
-    def add_unidirectional_lines(self, dict_of_data: Dict, line_delta: float = -1):
+    def add_unidirectional_lines(dict_of_data: Dict, line_delta: float = -1):
         """
         For unidirectional scans fake line signals have to be inserted.
         :param dict_of_data: All data
