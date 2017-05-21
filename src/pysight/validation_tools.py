@@ -166,23 +166,38 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Serie
 
 
 def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool = True,
-                                    phase: float = 0):
+                                    phase: float = 0, keep_unidir: bool = False):
     """
     "Deal" with photons in uneven lines. Unidir - currently throws them away.
     Bidir = flips them over.
     """
-    uneven_lines = np.remainder(sorted_indices, 2)
-    time_rel_line = pd.Series(range(df.shape[0]), dtype='int64', name='time_rel_line')
-    time_rel_line.loc[uneven_lines == 0] = df.loc[uneven_lines == 0, 'time_rel_line_pre_drop'].values
-    # Reverse the relative time of the photons belonging to the uneven lines,
-    # by subtracting their relative time from the start time of the next line
-    lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].values
-    events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'abs_time'].values
-    time_rel_line.iloc[uneven_lines.nonzero()[0]] = lines_to_subtract_from - events_to_subtract \
-        + (np.sin(phase) * lines[1])  # introduce phase delay between lines
-    df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
+    if bidir:
+        uneven_lines = np.remainder(sorted_indices, 2)
+        time_rel_line = pd.Series(range(df.shape[0]), dtype='int64', name='time_rel_line')
+        time_rel_line.loc[uneven_lines == 0] = df.loc[uneven_lines == 0, 'time_rel_line_pre_drop'].values
+        # Reverse the relative time of the photons belonging to the uneven lines,
+        # by subtracting their relative time from the start time of the next line
+        lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].values
+        events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'abs_time'].values
+        time_rel_line.iloc[uneven_lines.nonzero()[0]] = lines_to_subtract_from - events_to_subtract \
+            + (np.sin(phase) * lines[1])  # introduce phase delay between lines
+        df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
 
-    if not bidir:  # Unify the excess rows and photons in them into the previous row
+    if not bidir and keep_unidir:
+        uneven_lines = np.remainder(sorted_indices, 2)
+        time_rel_line = pd.Series(range(df.shape[0]), dtype='int64', name='time_rel_line')
+        time_rel_line.loc[uneven_lines == 0] = df.loc[uneven_lines == 0, 'time_rel_line_pre_drop'].values
+        # Reverse the relative time of the photons belonging to the uneven lines,
+        # by subtracting their relative time from the start time of the next line
+        lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].values
+        events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'abs_time'].values
+        time_rel_line.iloc[uneven_lines.nonzero()[0]] = lines_to_subtract_from - events_to_subtract \
+            + (np.sin(phase) * lines[1])  # introduce phase delay between lines
+        updated_lines = lines.loc[sorted_indices[uneven_lines.astype(bool)] - 1].values
+        df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
+        df['Lines'] = updated_lines
+
+    if not bidir and not keep_unidir:  # Unify the excess rows and photons in them into the previous row
         sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
         df['Lines'] = lines.loc[sorted_indices].values
 

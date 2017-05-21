@@ -4,9 +4,9 @@ sphinx-py3doc-enhanced-theme
 
 -e .
 
-numpy
-matplotlib
-pandas >= 0.19
+numpy >= 1.12
+matplotlib >= 2.0
+pandas >= 0.20
 attrs >= 1.6
-cython
+cython >= 0.24
 tables

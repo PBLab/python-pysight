@@ -45,6 +45,8 @@ class GUIApp(object):
 
         self.__bi_dir(main_frame)
 
+        self.__keep_unidir_events(main_frame)
+
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
         quit_button.grid()
@@ -110,8 +112,7 @@ class GUIApp(object):
         self.input_stop2.trace('w', self.__check_if_tag_lens_exists)
 
     def __outputs(self, main_frame):
-
-        # Wanted outputs
+        """ Wanted outputs """
         outputs_label = ttk.Label(main_frame, text='Outputs:')
         outputs_label.grid(column=0, row=3, sticky='w')
 
@@ -280,6 +281,18 @@ class GUIApp(object):
         self.bidir = IntVar(value=1)
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
         bidir_check.grid(column=6, row=3, sticky='ns')
+        self.bidir.trace('w', self.__check_if_bidir)
+
+    def __check_if_bidir(self, *args):
+        if self.bidir:
+            self.keep_unidir_check.config(state='normal')
+
+    def __keep_unidir_events(self, main_frame):
+        """ Checkbox to see if events taken in the returning phase of a resonant mirror should be kept. """
+        self.keep_unidir = IntVar(value=0)
+        self.keep_unidir_check = ttk.Checkbutton(main_frame, text='Keep unidirectional?', variable=self.keep_unidir)
+        self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
+        self.keep_unidir_check.config(state='disabled')
 
 
 def verify_gui_input(gui):

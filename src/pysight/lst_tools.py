@@ -33,7 +33,9 @@ class Analysis(object):
     tag_freq = attr.ib()
     tag_pulses = attr.ib()
     phase = attr.ib()
+    keep_unidir = attr.ib(default=False)
     df_allocated = attr.ib(init=False)
+
 
     def run(self):
 
@@ -146,7 +148,7 @@ class Analysis(object):
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
                                                              sorted_indices=sorted_indices[sorted_indices >= 0],
                                                              lines=dict_of_data['Lines'], bidir=self.bidir,
-                                                             phase=self.phase)
+                                                             phase=self.phase, keep_unidir=self.keep_unidir)
 
             if 'Laser' != key:
                 df_photons[key] = df_photons[key].astype('category')

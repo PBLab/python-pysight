@@ -87,11 +87,11 @@ setup(
     ],
     cmdclass = {'build_ext': CustomBuildExtCommand},
     install_requires=[
-        'numpy',
-        'matplotlib',
-        'pandas >= 0.19',
+        'numpy >= 1.12',
+        'matplotlib >= 2.0',
+        'pandas >= 0.20',
         'attrs >= 16.3',
-        'cython',
+        'cython >= 0.24',
         'tables'
     ],
     extras_require={

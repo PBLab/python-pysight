@@ -180,14 +180,14 @@ Changelog
 
 * Bug fixes and improvements to TAG lens interpolation.
 
-0.4.6 (2017-05-XX)
+0.4.6 (2017-05-16)
 ------------------
 
-* Use `Debug?` to read a small portion of an `.lst` file.
+* Use ``Debug?`` to read a small portion of an ``.lst`` file.
 
 * Changed defaults in GUI.
 
-* Allows acquisition in bi-directional scanning mode. This is enabled with the `Mirror phase` and `Flyback` parameters in the GUI.
+* Allows acquisition in bi-directional scanning mode. This is enabled with the ``Mirror phase`` and ``Flyback`` parameters in the GUI.
 
 * Backend changes for possible future support of binary files.
 
@@ -195,3 +195,10 @@ Changelog
     * If you mark a channel as containing data while it's inactive, an error will terminate execution.
 
 * Massive refactoring of pipeline.
+
+0.4.7 (2017-05-XX)
+------------------
+
+* Fixed tests.
+
+* Added

@@ -3,7 +3,6 @@ Created on Thu Oct 13 09:37:02 2016
 
 __author__: Hagai Hargil
 """
-
 def main_data_readout(gui):
     """
     Main function that reads the lst file and processes its data.
@@ -31,7 +30,8 @@ def main_data_readout(gui):
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                flyback=gui.flyback.get(), dict_of_slices_hex=dict_of_slices_hex,
                                dict_of_slices_bin=None, bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
-                               tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get())
+                               tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
+                               keep_unidir=gui.keep_unidir.get())
     analyzed_struct.run()
 
     # Create a movie object
