@@ -25,7 +25,7 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
 
     # Eliminate returns on the line:
     tag_diffs_full = tag_data.diff()
-    print('The mean frequency of TAG events is {} Hz.'.format(1 / (np.mean(tag_diffs_full) * binwidth)))
+    print('The mean frequency of TAG events is {:0.2f} Hz.'.format(1 / (np.mean(tag_diffs_full) * binwidth)))
     tag_diffs = tag_diffs_full > allowed_noise
     tag_diffs[0] = True
     tag_data = tag_data.loc[tag_diffs]
@@ -138,8 +138,12 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, tag
     if isinstance(tag_data, pd.Series):
         df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
     elif isinstance(tag_data, np.ndarray):
-        padded_tag = np.pad(tag_data, (df_photons.shape[0] - len(tag_data), 0), 'constant')
-        df_photons['TAG'] = padded_tag
+        try:
+            padded_tag = np.pad(tag_data, (df_photons.shape[0] - len(tag_data), 0), 'constant')
+            df_photons['TAG'] = padded_tag
+        except ValueError:  # more TAG pulses than events
+            df_photons['TAG'] = tag_data[:df_photons.shape[0]]
+
 
     return df_photons
 

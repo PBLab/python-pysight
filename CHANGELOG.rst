@@ -196,13 +196,16 @@ Changelog
 
 * Massive refactoring of pipeline.
 
-0.4.7 (2017-05-XX)
+0.4.7 (2017-05-25)
 ------------------
 
-* Fixed tests.
+* Fixed some of the tests.
 
-* Added option to save or discard photons arriving during the returning phase of a unidirectional scan.
+* Added option to save or discard photons arriving during the returning phase of a unidirectional scan. This is the default option now.
 
-* Introduced ``dead_time`` parameter to a ``Movie()`` that determines the delay between volumes.
+* Introduced ``Fill Fraction`` parameter that determines the amount of `time` the mirrors spend "inside" the image.
 
 * Some tests are working again.
+
+* Many other bugfixes.
+
