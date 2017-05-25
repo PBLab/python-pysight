@@ -26,7 +26,6 @@ class Analysis(object):
     y_pixels = attr.ib(validator=attr.validators.instance_of(int))
     laser_freq = attr.ib(validator=attr.validators.instance_of(float))
     binwidth = attr.ib(validator=attr.validators.instance_of(float))
-    flyback = attr.ib(validator=attr.validators.instance_of(float))
     dict_of_slices_hex = attr.ib()
     dict_of_slices_bin = attr.ib()
     bidir = attr.ib(validator=attr.validators.instance_of(int))
@@ -98,9 +97,9 @@ class Analysis(object):
 
         # Validations
         dict_of_data, line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
-                                                       num_of_frames=self.num_of_frames, binwidth=self.binwidth)
-        dict_of_data = validate_frame_input(dict_of_data=dict_of_data, flyback=self.flyback, binwidth=self.binwidth,
-                                            line_delta=line_delta, num_of_lines=self.y_pixels)
+                                                       num_of_frames=self.num_of_frames)
+        dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
+                                            num_of_lines=self.y_pixels, binwidth=self.binwidth)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
                                                          binwidth=self.binwidth)

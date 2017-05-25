@@ -49,8 +49,7 @@ def validate_line_input(dict_of_data: Dict, num_of_lines: int = -1, num_of_frame
     return dict_of_data, line_delta
 
 
-def validate_frame_input(dict_of_data: Dict, flyback: float = 0.001, binwidth: float = 800e-12,
-                         line_delta: int = -1, num_of_lines: int = -1):
+def validate_frame_input(dict_of_data: Dict, binwidth, line_delta: int = -1, num_of_lines: int = -1):
     if line_delta == -1:
         raise ValueError('No line delta input received.')
 
@@ -63,16 +62,14 @@ def validate_frame_input(dict_of_data: Dict, flyback: float = 0.001, binwidth: f
     else:
         last_event_time = int(dict_of_data['Lines'].max() + line_delta)
         frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
-                                         pixels=num_of_lines, spacing_between_lines=line_delta,
-                                         flyback=flyback, binwidth=binwidth)
+                                         pixels=num_of_lines)
         dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype='uint64')
 
     return dict_of_data
 
 
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
-                       pixels: int=None, spacing_between_lines: float=None,
-                       flyback: float=0.001, binwidth: float=800e-12) -> np.ndarray:
+                       pixels: int=None) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
 
     if last_event_time is None or pixels is None or lines.empty:
