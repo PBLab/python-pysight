@@ -24,6 +24,7 @@ class Movie(object):
     z_pixels  = attr.ib(validator=attr.validators.instance_of(int))
     name      = attr.ib(validator=attr.validators.instance_of(str))
     binwidth  = attr.ib(validator=attr.validators.instance_of(float))
+    fill_frac = attr.ib(validator=attr.validators.instance_of(float))
     big_tiff  = attr.ib(default=True)
     bidir     = attr.ib(default=True)
 
@@ -54,13 +55,13 @@ class Movie(object):
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir)
+                             bidir=self.bidir, fill_frac=self.fill_frac)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir)
+                             bidir=self.bidir, fill_frac=self.fill_frac)
 
     def create_tif(self):
         """ Create all volumes, one-by-one, and save them as tiff. """
@@ -148,16 +149,17 @@ class Volume(object):
     A Movie() is a sequence of volumes. Each volume contains frames in a plane.
     """
 
-    x_pixels = attr.ib()
-    y_pixels = attr.ib()
-    z_pixels = attr.ib()
-    number   = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
-    data     = attr.ib()
-    reprate  = attr.ib()  # laser repetition rate, relevant for FLIM
-    end_time = attr.ib()
-    binwidth = attr.ib()
-    bidir    = attr.ib()  # Bi-derictional scanning
-    empty    = attr.ib(default=False, validator=attr.validators.instance_of(bool))
+    x_pixels  = attr.ib()
+    y_pixels  = attr.ib()
+    z_pixels  = attr.ib()
+    number    = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
+    data      = attr.ib()
+    reprate   = attr.ib()  # laser repetition rate, relevant for FLIM
+    end_time  = attr.ib()
+    binwidth  = attr.ib()
+    bidir     = attr.ib()  # Bi-derictional scanning
+    fill_frac = attr.ib()
+    empty     = attr.ib(default=False, validator=attr.validators.instance_of(bool))
 
     @property
     def __metadata(self) -> OrderedDict:
@@ -176,7 +178,8 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
 
         # y-axis metadata
-        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir)
+        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
+                                                    fill_frac=self.fill_frac)
         metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
@@ -274,7 +277,7 @@ def create_linspace(start, stop, num):
     return linspaces
 
 
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True):
+def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, fill_frac: float = 0):
     """
     Create the metadata for the y-axis.
     """
@@ -301,6 +304,9 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True):
     # Case where it's a unidirectional scan and we dump back-phase photons
     if not bidir:
         lines_end /= 2
+
+    if fill_frac > 0:
+        lines_end = lines_end * fill_frac/100
 
     return lines_start, int(lines_end), empty
 

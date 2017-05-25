@@ -33,6 +33,8 @@ class GUIApp(object):
 
         self.__mirror_phase(main_frame)
 
+        self.__fill_frac(main_frame)
+
         self.__reprate(main_frame)
 
         self.__binwidth(main_frame)
@@ -245,6 +247,15 @@ class GUIApp(object):
         z_end_ent = ttk.Entry(main_frame, textvariable=self.z_bit_end, width=3)
         z_end_ent.grid(column=2, row=8, sticky='w')
 
+    def __fill_frac(self, main_frame):
+        """ Percentage of time mirrors spend "inside" the image """
+
+        self.fill_frac = DoubleVar(value=80)  # percent
+        fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
+        fill_frac_text.grid(column=0, row=10, sticky='w')
+        fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
+        fill_frac_entry.grid(column=0, row=10, sticky='e')
+
     def __browsefunc(self):
         self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
                                                      initialdir='.'))
@@ -349,6 +360,12 @@ def verify_gui_input(gui):
 
     if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
         raise UserWarning('Mirror phase must be a number.')
+
+    if gui.fill_frac.get() < 0:
+        raise UserWarning('Fill fraction must be a positive number.')
+
+    if not isinstance(gui.fill_frac.get(), float) and not isinstance(gui.flyback.get(), int):
+        raise UserWarning('Fill fraction must be a number.')
 
 
 if __name__ == '__main__':

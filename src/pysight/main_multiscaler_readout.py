@@ -38,7 +38,7 @@ def main_data_readout(gui):
     final_movie = Movie(data=analyzed_struct.df_allocated, x_pixels=int(gui.x_pixels.get()),
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
-                        binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get())
+                        binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(), fill_frac=gui.fill_frac.get())
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

@@ -36,7 +36,7 @@ class Analysis(object):
     df_allocated = attr.ib(init=False)
 
     def run(self):
-
+        """ Pipeline of analysis """
         if self.is_binary:
             df_after_timepatch = self.tabulate_input_binary()
         else:
