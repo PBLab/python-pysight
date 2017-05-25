@@ -17,21 +17,23 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-    data     = attr.ib()
-    reprate  = attr.ib(validator=attr.validators.instance_of(float))
-    x_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    y_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    z_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    name     = attr.ib(validator=attr.validators.instance_of(str))
-    binwidth = attr.ib(validator=attr.validators.instance_of(float))
-    big_tiff = attr.ib(default=True)
-    bidir    = attr.ib(default=True)
+    data      = attr.ib()
+    reprate   = attr.ib(validator=attr.validators.instance_of(float))
+    x_pixels  = attr.ib(validator=attr.validators.instance_of(int))
+    y_pixels  = attr.ib(validator=attr.validators.instance_of(int))
+    z_pixels  = attr.ib(validator=attr.validators.instance_of(int))
+    name      = attr.ib(validator=attr.validators.instance_of(str))
+    binwidth  = attr.ib(validator=attr.validators.instance_of(float))
+    flyback   = attr.ib(validator=attr.validators.instance_of(float))
+    big_tiff  = attr.ib(default=True)
+    bidir     = attr.ib(default=True)
 
     @property
     def list_of_volume_times(self) -> List:
         """ All volumes start-times in the movie. """
 
         volume_times = np.unique(self.data.index.get_level_values('Frames'))
+
         if len(volume_times) > 1:
             diff_between_frames = np.mean(np.diff(volume_times))
         else:
@@ -39,6 +41,7 @@ class Movie(object):
 
         volume_times = list(volume_times)
         volume_times.append(volume_times[-1] + diff_between_frames)
+
         return volume_times
 
     def gen_of_volumes(self):
@@ -86,7 +89,7 @@ class Movie(object):
                         data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
                     except StopIteration:
                         break
-        except:
+        except PermissionError:
             warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
     def create_array(self):

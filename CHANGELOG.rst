@@ -202,3 +202,5 @@ Changelog
 * Fixed tests.
 
 * Added option to save or discard photons arriving during the returning phase of a unidirectional scan.
+
+* Introduced ``dead_time`` parameter to a ``Movie()`` that determines the delay between volumes.

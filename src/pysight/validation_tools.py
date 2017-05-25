@@ -83,22 +83,15 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
 
     num_of_recorded_lines = lines.shape[0]
     actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
+
     if num_of_recorded_lines < pixels:
-        unnecess_lines = 0
-    else:
-        unnecess_lines = actual_num_of_frames % pixels
-
-    if unnecess_lines == 0:  # either less lines than pixels or a integer multiple of pixels
         array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
     else:
-        last_event_time = int(lines.iloc[num_of_recorded_lines - unnecess_lines] + spacing_between_lines)
-        array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
+        unnecess_lines = num_of_recorded_lines % pixels
+        array_of_frames = lines.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
 
-    if flyback > 0:
-        for idx in range(len(array_of_frames) - 1):
-            array_of_frames[idx + 1] += (flyback/ binwidth) * idx
 
-    return array_of_frames
+    return np.array(array_of_frames)
 
 
 def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frames=None) -> np.ndarray:
