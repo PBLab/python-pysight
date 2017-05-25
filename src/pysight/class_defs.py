@@ -174,7 +174,7 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
 
         # y-axis metadata
-        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter)
+        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir)
         metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
@@ -272,7 +272,7 @@ def create_linspace(start, stop, num):
     return linspaces
 
 
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02):
+def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True):
     """
     Create the metadata for the y-axis.
     """
@@ -296,7 +296,11 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02):
         lines_end = 0
         empty = True
 
-    return lines_start, lines_end, empty
+    # Case where it's a unidirectional scan and we dump back-phase photons
+    if not bidir:
+        lines_end /= 2
+
+    return lines_start, int(lines_end), empty
 
 
 @attr.s

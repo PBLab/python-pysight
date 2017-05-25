@@ -133,7 +133,7 @@ class Analysis(object):
             dict_of_data = self.add_unidirectional_lines(dict_of_data=dict_of_data, line_delta=line_delta)
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
-        for key in relevant_keys:
+        for key in reversed(sorted(relevant_keys)):
             sorted_indices = numba_search_sorted(dict_of_data[key].values, df_photons['abs_time'].values)
             try:
                 df_photons[key] = dict_of_data[key].loc[sorted_indices].values
