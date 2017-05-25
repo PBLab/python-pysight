@@ -201,4 +201,4 @@ Changelog
 
 * Fixed tests.
 
-* Added
+* Added option to save or discard photons arriving during the returning phase of a unidirectional scan.
