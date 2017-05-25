@@ -31,8 +31,6 @@ class GUIApp(object):
 
         self.__debug(main_frame)
 
-        self.__flyback(main_frame)
-
         self.__mirror_phase(main_frame)
 
         self.__reprate(main_frame)
@@ -155,15 +153,6 @@ class GUIApp(object):
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
         debug_check.grid(column=1, row=9, sticky='e')
-
-    def __flyback(self, main_frame):
-        """ Dead time between frames """
-
-        self.flyback = DoubleVar(value=0.001)  # seconds
-        flyback_text = ttk.Label(main_frame, text='Frame flyback [s]: ')
-        flyback_text.grid(column=0, row=10, sticky='w')
-        flyback_entry = ttk.Entry(main_frame, textvariable=self.flyback, width=5)
-        flyback_entry.grid(column=0, row=10, sticky='e')
 
     def __mirror_phase(self, main_frame):
         self.phase = DoubleVar(value=-2.6)
@@ -357,12 +346,6 @@ def verify_gui_input(gui):
 
     if 0 == gui.summed and 0 == gui.tif and 0 == gui.full:
         raise UserWarning('No outputs chosen. Please check at least one.')
-
-    if gui.flyback.get() < 0:
-        raise UserWarning('Flyback time must be a positive number.')
-
-    if not isinstance(gui.flyback.get(), float) and not isinstance(gui.flyback.get(), int):
-        raise UserWarning('Flyback time must be a number.')
 
     if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
         raise UserWarning('Mirror phase must be a number.')

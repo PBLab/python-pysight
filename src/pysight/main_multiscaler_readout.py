@@ -28,7 +28,7 @@ def main_data_readout(gui):
                                is_binary=cur_file.is_binary, num_of_frames=int(gui.num_of_frames.get()),
                                x_pixels=int(gui.x_pixels.get()), y_pixels=int(gui.y_pixels.get()),
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
-                               flyback=gui.flyback.get(), dict_of_slices_hex=dict_of_slices_hex,
+                               dict_of_slices_hex=dict_of_slices_hex,
                                dict_of_slices_bin=None, bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get())
@@ -37,7 +37,7 @@ def main_data_readout(gui):
     # Create a movie object
     final_movie = Movie(data=analyzed_struct.df_allocated, x_pixels=int(gui.x_pixels.get()),
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
-                        reprate=float(gui.reprate.get()), name=gui.filename.get(), flyback=float(gui.flyback.get()),
+                        reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get())
 
     # Find out what the user wanted and output it
@@ -61,6 +61,3 @@ def run():
 
 if __name__ == '__main__':
     df, movie, outputs = run()
-
-
-

@@ -24,7 +24,6 @@ class Movie(object):
     z_pixels  = attr.ib(validator=attr.validators.instance_of(int))
     name      = attr.ib(validator=attr.validators.instance_of(str))
     binwidth  = attr.ib(validator=attr.validators.instance_of(float))
-    flyback   = attr.ib(validator=attr.validators.instance_of(float))
     big_tiff  = attr.ib(default=True)
     bidir     = attr.ib(default=True)
 

@@ -16,26 +16,25 @@ class Analysis(object):
     """
     # TODO: Input validations
     # TODO: Variable documentation
-    timepatch = attr.ib()
-    data_range = attr.ib()
+    timepatch = attr.ib(validator=attr.validators.instance_of(str))
+    data_range = attr.ib(validator=attr.validators.instance_of(int))
     dict_of_inputs = attr.ib()
     data = attr.ib()
-    is_binary = attr.ib()
-    num_of_frames = attr.ib()
-    x_pixels = attr.ib()
-    y_pixels = attr.ib()
-    laser_freq = attr.ib()
-    binwidth = attr.ib()
-    flyback = attr.ib()
+    is_binary = attr.ib(validator=attr.validators.instance_of(bool))
+    num_of_frames = attr.ib(validator=attr.validators.instance_of(int))
+    x_pixels = attr.ib(validator=attr.validators.instance_of(int))
+    y_pixels = attr.ib(validator=attr.validators.instance_of(int))
+    laser_freq = attr.ib(validator=attr.validators.instance_of(float))
+    binwidth = attr.ib(validator=attr.validators.instance_of(float))
+    flyback = attr.ib(validator=attr.validators.instance_of(float))
     dict_of_slices_hex = attr.ib()
     dict_of_slices_bin = attr.ib()
-    bidir = attr.ib()
-    tag_freq = attr.ib()
-    tag_pulses = attr.ib()
-    phase = attr.ib()
+    bidir = attr.ib(validator=attr.validators.instance_of(int))
+    tag_freq = attr.ib(validator=attr.validators.instance_of(float))
+    tag_pulses = attr.ib(validator=attr.validators.instance_of(int))
+    phase = attr.ib(validator=attr.validators.instance_of(float))
     keep_unidir = attr.ib(default=False)
     df_allocated = attr.ib(init=False)
-
 
     def run(self):
 

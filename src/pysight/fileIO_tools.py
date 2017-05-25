@@ -12,11 +12,11 @@ class FileIO(object):
     """
     Manage pipeline of file IO process
     """
-    filename = attr.ib()
-    debug = attr.ib()
-    input_start = attr.ib()
-    input_stop1 = attr.ib()
-    input_stop2 =attr.ib()
+    filename = attr.ib(validator=attr.validators.instance_of(str))
+    debug = attr.ib(validator=attr.validators.instance_of(int))
+    input_start = attr.ib(validator=attr.validators.instance_of(str))
+    input_stop1 = attr.ib(validator=attr.validators.instance_of(str))
+    input_stop2 =attr.ib(validator=attr.validators.instance_of(str))
     is_binary = attr.ib(init=False)
     timepatch = attr.ib(init=False)
     data_range = attr.ib(init=False)
