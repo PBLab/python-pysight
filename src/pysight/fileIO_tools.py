@@ -12,14 +12,14 @@ class FileIO(object):
     """
     Manage pipeline of file IO process
     """
-    filename = attr.ib(validator=attr.validators.instance_of(str))
-    debug = attr.ib(validator=attr.validators.instance_of(int))
+    filename    = attr.ib(validator=attr.validators.instance_of(str))
+    debug       = attr.ib(validator=attr.validators.instance_of(int))
     input_start = attr.ib(validator=attr.validators.instance_of(str))
     input_stop1 = attr.ib(validator=attr.validators.instance_of(str))
-    input_stop2 =attr.ib(validator=attr.validators.instance_of(str))
-    is_binary = attr.ib(init=False)
-    timepatch = attr.ib(init=False)
-    data_range = attr.ib(init=False)
+    input_stop2 = attr.ib(validator=attr.validators.instance_of(str))
+    is_binary   = attr.ib(init=False)
+    timepatch   = attr.ib(init=False)
+    data_range  = attr.ib(init=False)
     start_of_data_pos = attr.ib(init=False)
     dict_of_input_channels = attr.ib(init=False)
     list_of_recorded_data_channels = attr.ib(init=False)
