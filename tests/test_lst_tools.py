@@ -3,13 +3,18 @@ from os import sep
 
 
 class TestLstTools(unittest.TestCase):
+    from pysight.lst_tools import Analysis
 
+
+    analysis = Analysis()
+    analysis.run()
     list_of_file_names = ['tests_data' + sep + 'data_for_tests.lst']
     list_of_real_start_loc = [1749]
     list_of_real_time_patch = ['32']
     list_of_real_range = [80000000 * 2 ** 4]
 
     def test_complete_workflow(self):
+
         from pysight.fileIO_tools import read_lst
         from pysight.lst_tools import tabulate_input
         from pysight.lst_tools import determine_data_channels

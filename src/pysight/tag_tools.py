@@ -38,7 +38,7 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
 
     if changed_ticks > 0.2 * tag_data.shape[0]:  # Corrupted data
         warnings.warn('TAG Lens data was corrupted. Stack will be created without it.')
-        return -1
+        return tag_data.values
 
     counter_of_changes = 1
 
@@ -57,7 +57,7 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
         if counter_of_changes > 100 or changed_ticks > changed_ticks_old:
             warnings.warn('Something is wrong with the TAG interpolation, possibly an out-of-phase lens.\n\
                           Stopping interpolation process.')
-            return -1
+            return tag_data.values
         else:
             counter_of_changes += 1
 
@@ -137,6 +137,9 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, tag
     tag_data = verify_periodicity(tag_data=tag_data, tag_freq=tag_freq, binwidth=binwidth, tag_pulses=tag_pulses)
     if isinstance(tag_data, pd.Series):
         df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
+    elif isinstance(tag_data, np.ndarray):
+        padded_tag = np.pad(tag_data, (df_photons.shape[0] - len(tag_data), 0), 'constant')
+        df_photons['TAG'] = padded_tag
 
     return df_photons
 
