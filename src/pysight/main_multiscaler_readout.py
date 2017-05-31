@@ -18,18 +18,18 @@ def main_data_readout(gui):
                       input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get())
     cur_file.run()
 
-    # Create input structure
+    # Create input structures
     dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
     # dict_of_slices_bin = timepatch_switch.ChoiceManagerBinary().process(cur_file.timepatch)  # Not supported
 
     # Process events into dataframe
     analyzed_struct = Analysis(timepatch=cur_file.timepatch, data_range=cur_file.data_range,
                                dict_of_inputs=cur_file.dict_of_input_channels, data=cur_file.data,
-                               is_binary=cur_file.is_binary, num_of_frames=int(gui.num_of_frames.get()),
+                               is_binary=cur_file.is_binary, num_of_frames=gui.num_of_frames.get(),
                                x_pixels=int(gui.x_pixels.get()), y_pixels=int(gui.y_pixels.get()),
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
-                               dict_of_slices_hex=dict_of_slices_hex,
-                               dict_of_slices_bin=None, bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
+                               dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
+                               bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get())
     analyzed_struct.run()

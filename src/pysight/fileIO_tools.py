@@ -163,15 +163,15 @@ class FileIO(object):
             raise ValueError('No filename given.')
 
         if self.is_binary:
-            format_str = b'time_patch=(\w+)'
-            file_mode = 'rb'
+            format_str: str = b'time_patch=(\w+)'
+            file_mode: str = 'rb'
         else:
-            format_str = r'time_patch=(\w+)'
-            file_mode = 'r'
+            format_str: str = r'time_patch=(\w+)'
+            file_mode: str = 'r'
 
         format_timepatch = re.compile(format_str)
         with open(self.filename, file_mode) as f:
-            cur_str = f.read(5000)  # read 5000 chars for the timepatch value
+            cur_str: str = f.read(5000)  # read 5000 chars for the timepatch value
 
         timepatch = re.search(format_timepatch, cur_str).group(1)
         try:
@@ -181,7 +181,7 @@ class FileIO(object):
         finally:
             return timepatch
 
-    def find_active_channels(self) -> List:
+    def find_active_channels(self) -> List[bool]:
         """
         Create a dictionary containing the active channels.
         """
@@ -200,10 +200,10 @@ class FileIO(object):
             match = '1'
 
         format_active = re.compile(format_str)
-        active_channels = [False, False, False, False, False, False]
+        active_channels: List[bool] = [False, False, False, False, False, False]
 
         with open(self.filename, file_mode) as f:
-            cur_str = f.read(5000)
+            cur_str: str = f.read(5000)
 
         list_of_matches = re.findall(format_active, cur_str)
 
@@ -232,7 +232,7 @@ class FileIO(object):
             file_mode = 'r'
 
         format_data = re.compile(format_str)
-        pos_in_file = 0
+        pos_in_file: int = 0
         with open(self.filename, file_mode) as f:
             while pos_in_file == 0:
                 line = f.readline()
@@ -241,7 +241,7 @@ class FileIO(object):
                     pos_in_file = f.tell()
                     return pos_in_file  # to have the [DATA] as header
 
-    def read_lst(self, num_of_items=-1) -> np.array:
+    def read_lst(self, num_of_items: int=-1) -> np.ndarray:
         """
         Updated version of LST readout using array slicing (and not Pandas slicing).
         :param num_of_items: Number of lines to read. -1 is all file.
@@ -267,10 +267,12 @@ class FileIO(object):
         if self.is_binary:
             with open(self.filename, "rb") as f:
                 f.seek(self.start_of_data_pos)
-                dt = np.dtype(('u1', data_length))
-                arr = np.fromfile(f, dtype=dt, count=num_of_lines_to_read)
-                arr_as_bits = np.unpackbits(np.fliplr(arr), axis=1)
+                dt: np.dtype = np.dtype(('u1', data_length))
+                arr: np.ndarray = np.fromfile(f, dtype=dt, count=num_of_lines_to_read)
+                arr_as_bits: np.ndarray = np.unpackbits(np.fliplr(arr), axis=1)
                 ########## STILL NOT SUPPORTED ##############
+                # It's very hard to pack int32 bits, for example, to a numpy array effectively,
+                # since numpy.packbits only works for uint8. Other solutions seem slow and complicated.
                 raise NotImplementedError('Binary files are still not supported.')
             return arr_as_bits
 
@@ -282,7 +284,7 @@ class FileIO(object):
 
             return arr
 
-    def create_inputs_dict(self) -> Dict:
+    def create_inputs_dict(self) -> Dict[str, str]:
         """
         Create a dictionary for all input channels. Currently allows for three channels.
         'Empty' channels will not be checked.
@@ -303,7 +305,7 @@ class FileIO(object):
 
         return dict_of_inputs
 
-    def compare_recorded_and_input_channels(self):
+    def compare_recorded_and_input_channels(self) -> None:
         """
         Raise error if user gave wrong amount of inputs
         """

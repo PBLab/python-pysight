@@ -209,3 +209,9 @@ Changelog
 
 * Many other bugfixes.
 
+0.4.8 (2017-06-XX)
+------------------
+
+* Added type hinting. As a result, disabled support for Python version 3.5. Code is now entirely 3.6-dependent.
+
+

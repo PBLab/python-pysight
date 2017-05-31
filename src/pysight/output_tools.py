@@ -1,17 +1,18 @@
 """
 __author__ = Hagai Hargil
 """
-from typing import Dict
-import re
+from typing import List, Deque
+import numpy as np
 
 
-def generate_output_list(movie, gui):
+
+def generate_output_list(movie, gui) -> List:
     """
     Main function that generates outputs based on given parameters.
     :return List containing outputs.
     """
 
-    output_list = []
+    output_list: List = []
 
     if 1 == gui.summed.get():
         output_list.append(gen_single(movie=movie, gui=gui))
@@ -25,7 +26,7 @@ def generate_output_list(movie, gui):
     return output_list
 
 
-def gen_tiff(movie, gui):
+def gen_tiff(movie, gui) -> int:
     """
     Algorithm's output will be a tiff file.
     """
@@ -34,20 +35,20 @@ def gen_tiff(movie, gui):
     return 1
 
 
-def gen_array(movie, gui):
+def gen_array(movie, gui) -> Deque:
     """
     Algorithm's output will be the full array of data
     """
-    data_array = movie.create_array()
+    data_array: Deque = movie.create_array()
     print('Data array created.')
     return data_array
 
 
-def gen_single(movie, gui):
+def gen_single(movie, gui) -> np.ndarray:
     """
     Algorithm's output will be a single stack.
     """
-    single_volume = movie.create_single_volume('all')
+    single_volume: np.ndarray = movie.create_single_volume('all')
     print(r'A summed array of all volumes\frames was created.')
     return single_volume
 

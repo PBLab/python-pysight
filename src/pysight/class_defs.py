@@ -6,7 +6,7 @@ import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import List, Iterator, Deque
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict
 import warnings
@@ -29,7 +29,7 @@ class Movie(object):
     bidir     = attr.ib(default=True)
 
     @property
-    def list_of_volume_times(self) -> List:
+    def list_of_volume_times(self) -> List[uint64]:
         """ All volumes start-times in the movie. """
 
         volume_times = np.unique(self.data.index.get_level_values('Frames'))
@@ -44,10 +44,10 @@ class Movie(object):
 
         return volume_times
 
-    def gen_of_volumes(self):
+    def gen_of_volumes(self) -> Iterator['Volume']:
         """ Populate the deque containing the volumes as a generator. """
 
-        list_of_frames = self.list_of_volume_times
+        list_of_frames: List[int] = self.list_of_volume_times
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(current_time, level='Frames')
             if not cur_data.empty:
@@ -63,7 +63,7 @@ class Movie(object):
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac)
 
-    def create_tif(self):
+    def create_tif(self) -> None:
         """ Create all volumes, one-by-one, and save them as tiff. """
 
         from tifffile import TiffWriter
@@ -92,18 +92,18 @@ class Movie(object):
         except PermissionError:
             warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
-    def create_array(self):
+    def create_array(self) -> Deque:
         """ Create all volumes, one-by-one, and return the array of data that holds them. """
         from collections import namedtuple, deque
 
         # Create a deque and a namedtuple for the frames before showing them
         VolTuple = namedtuple('Volume', ('hist', 'edges'))
         data_of_vol = VolTuple
-        deque_of_vols = deque()
-        volumes_in_movie = self.gen_of_volumes()
+        deque_of_vols: Deque = deque()
+        volumes_in_movie: Iterator = self.gen_of_volumes()
 
         try:
-            cur_vol = next(volumes_in_movie)
+            cur_vol: Volume = next(volumes_in_movie)
         except StopIteration:
             raise ValueError('No volumes generated.')
 
@@ -118,7 +118,7 @@ class Movie(object):
         assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
         return deque_of_vols
 
-    def create_single_volume(self, vols) -> np.array:
+    def create_single_volume(self, vols: str) -> np.ndarray:
         """ Aggregate the frames\volumes that vols mark to a single frame\volume.
         :vols Volumes to aggregate. 'all' is all of them.
         :return np.array of histogram
@@ -173,8 +173,8 @@ class Volume(object):
         jitter = 0.02  # 2% of jitter of the signals that creates volumes
 
         # Volume metadata
-        volume_start = 0
-        volume_end = self.end_time
+        volume_start: int = 0
+        volume_end: int = self.end_time
         metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
 
         # y-axis metadata
@@ -220,7 +220,7 @@ class Volume(object):
         else:
             return list(np.ones(len(metadata)))
 
-    def create_hist(self):
+    def create_hist(self) -> np.ndarray:
         """
         Create the histogram of data using calculated edges.
         :return: np.ndarray of shape [num_of_cols, num_of_rows] with the histogram data, and edges
@@ -251,7 +251,7 @@ class Volume(object):
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), 0, 0, 0
 
-    def show(self):
+    def show(self) -> None:
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """
 
         hist, edges = self.create_hist()
@@ -281,16 +281,16 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, f
     """
     Create the metadata for the y-axis.
     """
-    lines_start = 0
-    empty = False
+    lines_start: int = 0
+    empty: bool = False
 
-    unique_indices = np.unique(data.index.get_level_values('Lines'))
+    unique_indices: np.ndarray = np.unique(data.index.get_level_values('Lines'))
     if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
-        diffs = np.diff(unique_indices)
-        diffs_max = diffs.max()
+        diffs: np.ndarray = np.diff(unique_indices)
+        diffs_max: float = diffs.max()
     else:
-        diffs = unique_indices
-        diffs_max = unique_indices
+        diffs: np.ndarray = unique_indices
+        diffs_max: np.ndarray = unique_indices
 
     try:
         if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data

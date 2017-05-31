@@ -2,9 +2,9 @@
 """
 __author__: Hagai Hargil
 """
-import numpy as np
 from collections import OrderedDict
-
+import numpy as np
+from typing import Dict, List
 
 class ChoiceManagerHex:
 
@@ -265,7 +265,7 @@ class ChoiceManagerHex:
         :return:
         """
         from pysight.class_defs import Struct
-        slice_dict = OrderedDict()
+        slice_dict: OrderedDict = OrderedDict()
         keys = ['lost', 'tag', 'sweep', 'abs_time', 'chan_edge']
 
         slice_dict[keys[0]] = False
@@ -288,7 +288,7 @@ class ChoiceManagerHex:
 
 class ChoiceManagerBinary:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.__choice_table = \
         {
             "0": self.timepatch_0,
@@ -307,7 +307,7 @@ class ChoiceManagerBinary:
             "3": self.timepatch_3
         }
 
-    def timepatch_0(self, dict_of_slices):
+    def timepatch_0(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
@@ -325,7 +325,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_5(self, dict_of_slices):
+    def timepatch_5(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('tag', None)
 
         dict_of_slices['sweep'].start = 0
@@ -339,7 +339,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_1(self, dict_of_slices):
+    def timepatch_1(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
@@ -351,7 +351,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_1a(self, dict_of_slices):
+    def timepatch_1a(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('tag', None)
 
         dict_of_slices['sweep'].start = 0
@@ -365,7 +365,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_2a(self, dict_of_slices):
+    def timepatch_2a(self, dict_of_slices) -> OrderedDict:
         dict_of_slices['tag'].start = 0
         dict_of_slices['tag'].end = 8
 
@@ -380,7 +380,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_22(self, dict_of_slices):
+    def timepatch_22(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('sweep', None)
 
         dict_of_slices['tag'].start = 0
@@ -394,7 +394,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_32(self, dict_of_slices):
+    def timepatch_32(self, dict_of_slices) -> OrderedDict:
         dict_of_slices['lost'] = 1
         dict_of_slices.pop('tag', None)
 
@@ -409,7 +409,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_2(self, dict_of_slices):
+    def timepatch_2(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
@@ -421,7 +421,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_5b(self, dict_of_slices):
+    def timepatch_5b(self, dict_of_slices) -> OrderedDict:
         dict_of_slices['lost'].start = 0
         dict_of_slices['lost'].end = 1
         dict_of_slices['lost'].cols = 8
@@ -447,7 +447,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_Db(self, dict_of_slices):
+    def timepatch_Db(self, dict_of_slices) -> OrderedDict:
         dict_of_slices['tag'].start = 0
         dict_of_slices['tag'].end = 16
 
@@ -462,7 +462,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_f3(self, dict_of_slices):
+    def timepatch_f3(self, dict_of_slices) -> OrderedDict:
         dict_of_slices['lost'].start = 0
         dict_of_slices['lost'].end = 1
         dict_of_slices['lost'].cols = 8
@@ -489,7 +489,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_43(self, dict_of_slices):
+    def timepatch_43(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('sweep', None)
 
         dict_of_slices['lost'] = 1
@@ -505,7 +505,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_c3(self, dict_of_slices):
+    def timepatch_c3(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('sweep', None)
 
         dict_of_slices['tag'].start = 0
@@ -519,7 +519,7 @@ class ChoiceManagerBinary:
 
         return dict_of_slices
 
-    def timepatch_3(self, dict_of_slices):
+    def timepatch_3(self, dict_of_slices) -> OrderedDict:
         dict_of_slices.pop('sweep', None)
 
         dict_of_slices['lost'] = 1
@@ -542,22 +542,22 @@ class ChoiceManagerBinary:
         :return:
         """
         from pysight.class_defs import Struct
-        slice_dict = OrderedDict()
-        keys = ['lost', 'tag', 'sweep', 'abs_time', 'edge', 'chan']
+        slice_dict: OrderedDict = OrderedDict()
+        keys: List[str] = ['lost', 'tag', 'sweep', 'abs_time', 'edge', 'chan']
 
         for key in keys:
             slice_dict[key] = Struct(np.nan, np.nan)
 
         return slice_dict
 
-    def process(self, case):
+    def process(self, case: str) -> OrderedDict:
         """
         Generate a dictionary and populate it with the proper value, accoring to the timepatch (==case).
         """
         assert isinstance(case, str)
 
-        dict_of_slices = self.__generate_dict_from_indices()
-        populated_dict_of_slices = self.__choice_table[case](dict_of_slices)
+        dict_of_slices: OrderedDict = self.__generate_dict_from_indices()
+        populated_dict_of_slices: OrderedDict = self.__choice_table[case](dict_of_slices)
 
         return populated_dict_of_slices
 

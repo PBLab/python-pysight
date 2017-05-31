@@ -4,48 +4,46 @@ __author__ = Hagai Hargil
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+import json
+from typing import Dict, Union, Tuple
+from pathlib import Path
+from os import sep
 
 
 class GUIApp(object):
-    """Main GUI for the multiscaler code"""
+    """
+    Main GUI for the multiscaler code.
+    Note - class variables should contain "entry" in their name if they point
+    to an entry TTK object. Also, no variable should contain "root" in its name.
+    """
     def __init__(self):
         self.root = Tk()
         self.root.title("Multiscaler Readout and Display")
         self.root.rowconfigure(5, weight=1)
         self.root.columnconfigure(5, weight=1)
-
-        # Part containing the browse for file option
         main_frame = ttk.Frame(self.root, width=800, height=800)
         main_frame.grid(column=0, row=0)
         main_frame['borderwidth'] = 2
+        style = ttk.Style()
+        style.theme_use('clam')
 
+        # Run widgets
         self.__browse_file(main_frame)
-
         self.__input_channels(main_frame)
-
         self.__num_of_frames(main_frame)
-
         self.__outputs(main_frame)
-
         self.__image_size(main_frame)
-
         self.__debug(main_frame)
-
         self.__mirror_phase(main_frame)
-
         self.__fill_frac(main_frame)
-
         self.__reprate(main_frame)
-
         self.__binwidth(main_frame)
-
         self.__tag_lens(main_frame)
-
         self.__tag_bits(main_frame)
-
         self.__bi_dir(main_frame)
-
         self.__keep_unidir_events(main_frame)
+        self.__save_cfg(main_frame)
+        self.__load_cfg(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -56,15 +54,13 @@ class GUIApp(object):
         self.root.wait_window()
 
     def __browse_file(self, main_frame):
-
-        self.filename = StringVar()
+        self.filename = StringVar(value="")
 
         browse_button = ttk.Button(main_frame, text="Browse", command=self.__browsefunc)
         browse_button.grid(column=0, row=0, sticky='ns')
 
     def __input_channels(self, main_frame):
-
-        # Conboboxes
+        # Comboboxes
         input_channels_label = ttk.Label(main_frame, text='Input Channels')
         input_channels_label.grid(columns=3, row=0, sticky='se')
         self.input_start = StringVar()
@@ -98,7 +94,7 @@ class GUIApp(object):
         frame_label = ttk.Label(main_frame, text='Number of frames')
         frame_label.grid(column=0, row=1, sticky='ns')
 
-        self.num_of_frames = StringVar(value=1)
+        self.num_of_frames = IntVar(value=1)
         self.num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames, width=3)
         self.num_frames_entry.grid(column=0, row=2, sticky='ns')
         self.num_frames_entry.config(state='disabled')
@@ -138,9 +134,9 @@ class GUIApp(object):
         z_size_label = ttk.Label(main_frame, text='Z')
         z_size_label.grid(column=6, row=1, sticky='e')
 
-        self.x_pixels = StringVar(value=512)
-        self.y_pixels = StringVar(value=512)
-        self.z_pixels = StringVar(value=100)
+        self.x_pixels = IntVar(value=512)
+        self.y_pixels = IntVar(value=512)
+        self.z_pixels = IntVar(value=100)
 
         x_pixels_entry = ttk.Entry(main_frame, textvariable=self.x_pixels, width=5)
         x_pixels_entry.grid(column=6, row=2, sticky='w')
@@ -169,7 +165,7 @@ class GUIApp(object):
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
         laser1_label.grid(column=6, row=5, sticky='ns')
 
-        self.reprate = StringVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
+        self.reprate = DoubleVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
         reprate_entry.grid(column=6, row=6, sticky='ns')
 
@@ -178,7 +174,7 @@ class GUIApp(object):
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
         binwidth_label.grid(column=6, row=7, sticky='ns')
-        self.binwidth = StringVar(value=800e-12)
+        self.binwidth = DoubleVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
         binwidth_entry.grid(column=6, row=8, sticky='ns')
 
@@ -294,6 +290,82 @@ class GUIApp(object):
         self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
         self.keep_unidir_check.config(state='disabled')
 
+    def __save_cfg(self, main_frame):
+        """ A button to write a .json with current configs """
+        self.cfg_to_save: StringVar = StringVar(value='default')
+        save_label = ttk.Label(main_frame, text='Config file name to save:')
+        save_label.grid(column=0, row=11, sticky='w')
+        save_entry = ttk.Entry(main_frame, textvariable=self.cfg_to_save, width=10)
+        save_entry.grid(column=1, row=11, sticky='w')
+        save_button = ttk.Button(main_frame, text="Save cfg", command=self.__callback_save_cur_cfg)
+        save_button.grid(column=2, row=11, sticky='w')
+
+    def __callback_save_cur_cfg(self) -> None:
+        """
+        Takes a GUIApp() instance and saves it to a .json file
+        """
+        cfg_dict_to_save: Dict[str, Tuple[str]] = {}
+        for key, val in self.__dict__.items():
+            if key.find('entry') == -1 \
+                and key.find('root') == -1 \
+                and key.find('check') == -1 \
+                and key.find('cfg') == -1 \
+                and key.find('config') == -1:
+                try:
+                    data_to_save = (str(val), val.get())
+                    cfg_dict_to_save[key] = data_to_save
+                except AttributeError:
+                    pass  # don't save non-tkinter variables
+
+        path_to_save_to: str = str(Path(__file__).parents[2]) + sep + 'configs' + \
+                               sep + str(self.cfg_to_save.get()) + '.json'
+        with open(path_to_save_to, 'w') as f:
+            json.dump(cfg_dict_to_save, f, indent=4)
+
+    def __load_cfg(self, main_frame: ttk.Frame):
+        """
+        Load a specific .json file and change all variables accordingly
+        """
+        self.cfg_filename: StringVar = StringVar(value='default')
+        load_button: Button = ttk.Button(main_frame, text="Load cfg", command=self.__browsecfg)
+        load_button.grid(column=4, row=11, sticky='w')
+
+    def __browsecfg(self):
+        self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
+                                                         title='Choose a configuration file',
+                                                         initialdir='..' + sep + '..' + sep + '..' + sep + 'configs'))
+        with open(self.cfg_filename.get(), 'r') as f:
+            self.config = json.load(f)
+        self.__modify_vars()
+
+    def __modify_vars(self):
+        """
+        With the dictionary loaded from the .json file, change all variables
+        """
+        for key, val in self.config.items():
+            # val_to_set = self.__get_matching_tkinter_var(val)
+            self.x_pixels._tk.globalsetvar(val[0], val[1])
+        self.root.update_idletasks()
+
+    def __get_matching_tkinter_var(self, val: Union[StringVar, DoubleVar, IntVar]) -> \
+        Union[StringVar, DoubleVar, IntVar, BooleanVar]:
+        """
+        Create a tkinter variable (StringVar(), for example) that will
+        be set after reading a config file.
+        :param val: Value to be set
+        :return: A Tkinter variable object.
+        """
+        if type(val) == str:
+            return StringVar(value=val)
+        elif type(val) == int:
+            return IntVar(value=val)
+        elif type(val) == float:
+            return DoubleVar(value=val)
+        elif type(val) == bool:
+            return BooleanVar(value=val)
+        else:
+            raise ValueError('Type not recognized for value {}.'.format(val))
+
 
 def verify_gui_input(gui):
     """Validate all GUI inputs"""
@@ -305,14 +377,14 @@ def verify_gui_input(gui):
             if gui.input_stop2.get() != 'PMT1':
                 raise BrokenPipeError('PMT1 value has to be entered in inputs.')
 
-    if gui.num_of_frames.get() == '':
+    if gui.num_of_frames.get() == None:
         if 'Frames' not in data_sources:
             raise BrokenPipeError('You must either enter a frame channel or number of frames.')
     else:
-        if float(gui.num_of_frames.get()) != int(float(gui.num_of_frames.get())):
+        if float(gui.num_of_frames.get()) != gui.num_of_frames.get():
             raise ValueError('Please enter an integer number of frames.')
 
-    if int(gui.num_of_frames.get()) < 0:
+    if gui.num_of_frames.get() < 0:
         raise ValueError('Number of frames has to be a positive number.')
 
     filename = gui.filename.get()
@@ -367,7 +439,42 @@ def verify_gui_input(gui):
     if not isinstance(gui.fill_frac.get(), float) and not isinstance(gui.flyback.get(), int):
         raise UserWarning('Fill fraction must be a number.')
 
+    if gui.x_pixels.get() < 0:
+        raise UserWarning('X pixels value must be greater than 0.')
+
+    if gui.y_pixels.get() < 0:
+        raise UserWarning('X pixels value must be greater than 0.')
+
+    if gui.z_pixels.get() < 0:
+        raise UserWarning('X pixels value must be greater than 0.')
+    try:
+        int(gui.x_pixels.get())
+        int(gui.x_pixels.get())
+        int(gui.x_pixels.get())
+    except ValueError:
+        raise UserWarning('Pixels must be an integer number.')
+
+    if float(gui.x_pixels.get()) != gui.x_pixels.get():
+        raise UserWarning('Enter an integer number for the x-axis pixels.')
+
+    if float(gui.y_pixels.get()) != gui.y_pixels.get():
+        raise UserWarning('Enter an integer number for the y-axis pixels.')
+
+    if float(gui.z_pixels.get()) != gui.z_pixels.get():
+        raise UserWarning('Enter an integer number for the z-axis pixels.')
+
+    if gui.reprate.get() < 0:
+        raise UserWarning('Laser repetition rate must be positive.')
+
+    if gui.binwidth.get() < 0:
+        raise UserWarning('Binwidth must be a positive number.')
+
+    if gui.binwidth.get() > 1e-9:
+        raise UserWarning('Enter a binwidth with units of [seconds].')
+
+    if type(gui.filename.get()) != str:
+        raise UserWarning('Filename must be a string.')
+
 
 if __name__ == '__main__':
     app = GUIApp()
-
