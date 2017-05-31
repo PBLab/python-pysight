@@ -214,4 +214,8 @@ Changelog
 
 * Added type hinting. As a result, disabled support for Python version 3.5. Code is now entirely 3.6-dependent.
 
+* Added ``.json`` configuration files to the GUI. It also automatically loads the last modified configuration file.
+
+* Updated docs.
+
 

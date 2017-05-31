@@ -5,8 +5,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 import json
-from typing import Dict, Union, Tuple
-from pathlib import Path
+from typing import Dict, Union, Tuple, Iterable
+from pathlib import Path, WindowsPath
 from os import sep
 
 
@@ -44,6 +44,7 @@ class GUIApp(object):
         self.__keep_unidir_events(main_frame)
         self.__save_cfg(main_frame)
         self.__load_cfg(main_frame)
+        self.__load_last_used_cfg(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -150,46 +151,46 @@ class GUIApp(object):
         """ Read a smaller portion of data for debugging """
         self.debug = IntVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
-        debug_check.grid(column=1, row=9, sticky='e')
+        debug_check.grid(column=6, row=11, sticky='ns')
 
     def __mirror_phase(self, main_frame):
         self.phase = DoubleVar(value=-2.6)
-        phase_text = ttk.Label(main_frame, text='Scanner phase delay [rad]: ')
-        phase_text.grid(column=0, row=9, sticky='e')
+        phase_text = ttk.Label(main_frame, text='Mirror phase [rad]: ')
+        phase_text.grid(column=6, row=5, sticky='w')
         phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
-        phase_entry.grid(column=1, row=9, sticky='w')
+        phase_entry.grid(column=6, row=5, sticky='e')
 
     def __reprate(self, main_frame):
         """ Laser repetition rate"""
 
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
-        laser1_label.grid(column=6, row=5, sticky='ns')
+        laser1_label.grid(column=0, row=9, sticky='w')
 
         self.reprate = DoubleVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
-        reprate_entry.grid(column=6, row=6, sticky='ns')
+        reprate_entry.grid(column=1, row=9, sticky='w')
 
     def __binwidth(self, main_frame):
 
         # Binwidth of Multiscaler (for FLIM)
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
-        binwidth_label.grid(column=6, row=7, sticky='ns')
+        binwidth_label.grid(column=0, row=10, sticky='ns')
         self.binwidth = DoubleVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
-        binwidth_entry.grid(column=6, row=8, sticky='ns')
+        binwidth_entry.grid(column=1, row=10, sticky='ns')
 
     def __tag_lens(self, main_frame):
 
         # TAG lens nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
-        tag_label.grid(column=6, row=9, sticky='ns')
+        tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
-        tag_label_entry.grid(column=6, row=10, sticky='ns')
+        tag_label_entry.grid(column=6, row=9, sticky='ns')
 
         self.tag_pulses = IntVar(value=1)
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
-        tag_pulses_entry.grid(column=6, row=10, sticky='e')
+        tag_pulses_entry.grid(column=6, row=9, sticky='e')
         tag_pulses_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
@@ -248,9 +249,9 @@ class GUIApp(object):
 
         self.fill_frac = DoubleVar(value=80)  # percent
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
-        fill_frac_text.grid(column=0, row=10, sticky='w')
+        fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
-        fill_frac_entry.grid(column=0, row=10, sticky='e')
+        fill_frac_entry.grid(column=6, row=6, sticky='e')
 
     def __browsefunc(self):
         self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
@@ -365,6 +366,26 @@ class GUIApp(object):
             return BooleanVar(value=val)
         else:
             raise ValueError('Type not recognized for value {}.'.format(val))
+
+    def __load_last_used_cfg(self, main_frame):
+        dir: WindowsPath = Path(__file__).parents[2] / 'configs'
+        all_cfg_files: Iterable = dir.glob('*.json')
+        latest_filename: str = ''
+        latest_file_date: int = 0
+        for cfg_file in all_cfg_files:
+            cur_date_modified = cfg_file.stat()[8]
+            if cur_date_modified > latest_file_date:
+                latest_filename = str(cfg_file)
+                latest_file_date = cur_date_modified
+
+        if latest_filename != '':
+            with open(latest_filename, 'r') as f:
+                self.config = json.load(f)
+            self.__modify_vars()
+
+
+
+
 
 
 def verify_gui_input(gui):
