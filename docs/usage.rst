@@ -28,12 +28,13 @@ Obviously, if you run the script from the command line (option #2) you can only 
 
 GUI Options
 -----------
+.. image:: gui.png
 Choosing a proper ``.lst`` file is done with the `Browse` button, located at the top-left corner of the GUI.
 
-The `Input Channels` option allows you to specify what was the input device to all three of the analog inputs of the multiscaler.
+The *Input Channels* option allows you to specify what was the input device to all three of the analog inputs of the multiscaler.
 Note that at least one of these fields must be a ``PMT1`` entry.
 
-To the right, `Image Size` determines the shape of the output matrix from the algorithm.
+To the right, *Image Size* determines the shape of the output matrix from the algorithm.
 Below it you can check whether the mirrors acquired data in a bi-directional fashion.
 You should also specify, in case data was acquired uni-directionally, whether the algorithm should keep the photons arriving during that returning phase.
 Below, specify the phase delay of the scanners and fill fraction, to cancel pixel-shift and remove the non-linear area of the image, located in the edges.
@@ -43,13 +44,13 @@ but other files can be saved and loaded easily, to allow easier use of the GUI. 
 
 Some other options include:
 
-* `Debug?`: Reads a relatively small portion of a file, allows for quick code-checking.
+* *Debug?*: Reads a relatively small portion of a file, allows for quick code-checking.
 
-* `TAG Bit allocation`: When using the TAG bits you can determine what each bit is responsible for.
+* *TAG Bit allocation*: When using the TAG bits you can determine what each bit is responsible for.
 
-* `Laser repetition rate`: For FLIM.
+* *Laser repetition rate*: For FLIM.
 
-* `Binwidth`: The binwidth, in seconds, of your model of the MCS6A.
+* *Binwidth*: The binwidth, in seconds, of your model of the MCS6A.
 
 
 Limitations
