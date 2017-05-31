@@ -29,7 +29,11 @@ Obviously, if you run the script from the command line (option #2) you can only 
 GUI Options
 -----------
 .. image:: gui.png
-Choosing a proper ``.lst`` file is done with the `Browse` button, located at the top-left corner of the GUI.
+   :scale: 75%
+
+Running **PySight** will open GUI seen above.
+
+Choosing a ``.lst`` file for analysis is done with the *Browse* button, located at the top-left corner of the GUI.
 
 The *Input Channels* option allows you to specify what was the input device to all three of the analog inputs of the multiscaler.
 Note that at least one of these fields must be a ``PMT1`` entry.
