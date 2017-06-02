@@ -3,14 +3,17 @@ Created on Thu Oct 13 09:37:02 2016
 
 __author__: Hagai Hargil
 """
+
+
 def main_data_readout(gui):
     """
     Main function that reads the lst file and processes its data.
     """
     from pysight.fileIO_tools import FileIO
     from pysight.lst_tools import Analysis
-    from pysight.class_defs import Movie
+    from pysight.movie_tools import Movie
     from pysight import timepatch_switch
+    from pysight.censor_tools import CensorCorrection
     from pysight.output_tools import generate_output_list
 
     # Read the file
@@ -40,10 +43,17 @@ def main_data_readout(gui):
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(), fill_frac=gui.fill_frac.get())
 
+    # Censor correction part
+    censored = CensorCorrection(df=analyzed_struct.df_allocated, reprate=gui.reprate.get(),
+                                deque_of_vols=final_movie.create_array(),
+                                binwidth = gui.binwidth.get(), offset=9)
+
+    l = censored.gen_array_of_hists()
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')
     output_list = generate_output_list(final_movie, gui)
-    return analyzed_struct.df_allocated, final_movie, output_list
+
+    return analyzed_struct.df_allocated, final_movie, output_list, censored
 
 
 def run():
@@ -56,8 +66,8 @@ def run():
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
-    df_after, movie_after, list_of_outputs = main_data_readout(gui)
-    return df_after, movie_after, list_of_outputs
+    df_after, movie_after, list_of_outputs, censored = main_data_readout(gui)
+    return df_after, movie_after, list_of_outputs, censored
 
 if __name__ == '__main__':
-    df, movie, outputs = run()
+    df, movie, outputs, censored = run()

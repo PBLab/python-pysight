@@ -218,4 +218,15 @@ Changelog
 
 * Updated docs.
 
+0.5.0 (2017-06-02)
+------------------
+
+* Fixed linux bug with ``Deque`` import.
+
+* Added the ``CensorCorrection`` class for processing generated data using the censor correction method. Methods are:
+    * ``censored.gen_bincount()``: Bin the photons into their relative laser pulses, and count how many photons arrived due to each pulse.
+    * ``censored.gen_temp_structure()``: Generate a summed histogram of the temporal structure of detected photons.
+    * ``censored.gen_array_of_hists()``: Go through each volume in the deque and find the laser pulses for each pixels, creating a summed histogram per pixel.
+
+
 

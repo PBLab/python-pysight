@@ -165,7 +165,7 @@ class Analysis(object):
                                          binwidth=self.binwidth, tag_pulses=self.tag_pulses)
             print('TAG lens interpolation finished.')
 
-        df_photons.drop(['abs_time'], axis=1, inplace=True)
+        # df_photons.drop(['abs_time'], axis=1, inplace=True)
 
         return df_photons
 
@@ -271,7 +271,7 @@ class Analysis(object):
         For unidirectional scans fake line signals have to be inserted.
         :param dict_of_data: All data
         :param line_delta: difference between lines
-        :return: 
+        :return:
         """
 
         if line_delta == -1:

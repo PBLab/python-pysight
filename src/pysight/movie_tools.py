@@ -6,7 +6,7 @@ import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Deque
+from typing import List, Iterator
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict
 import warnings
@@ -92,14 +92,14 @@ class Movie(object):
         except PermissionError:
             warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
-    def create_array(self) -> Deque:
+    def create_array(self):
         """ Create all volumes, one-by-one, and return the array of data that holds them. """
         from collections import namedtuple, deque
 
         # Create a deque and a namedtuple for the frames before showing them
         VolTuple = namedtuple('Volume', ('hist', 'edges'))
         data_of_vol = VolTuple
-        deque_of_vols: Deque = deque()
+        deque_of_vols = deque()
         volumes_in_movie: Iterator = self.gen_of_volumes()
 
         try:

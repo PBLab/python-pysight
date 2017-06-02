@@ -264,7 +264,7 @@ class ChoiceManagerHex:
         :param slices:
         :return:
         """
-        from pysight.class_defs import Struct
+        from pysight.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
         keys = ['lost', 'tag', 'sweep', 'abs_time', 'chan_edge']
 
@@ -541,7 +541,7 @@ class ChoiceManagerBinary:
         :param slices:
         :return:
         """
-        from pysight.class_defs import Struct
+        from pysight.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
         keys: List[str] = ['lost', 'tag', 'sweep', 'abs_time', 'edge', 'chan']
 
