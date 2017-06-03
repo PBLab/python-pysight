@@ -7,6 +7,7 @@ import warnings
 from pysight.apply_df_funcs import get_lost_bit_np, iter_string_hex_to_bin, convert_hex_to_int
 from pysight.validation_tools import validate_line_input, validate_frame_input, \
     validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines
+from collections import defaultdict
 
 
 @attr.s(slots=True)
@@ -34,6 +35,7 @@ class Analysis(object):
     phase = attr.ib(validator=attr.validators.instance_of(float))
     keep_unidir = attr.ib(default=False)
     df_allocated = attr.ib(init=False)
+    dict_of_data = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of analysis """
@@ -43,13 +45,13 @@ class Analysis(object):
             df_after_timepatch = self.tabulate_input_hex()
 
         print('Sorted dataframe created. Starting setting the proper data channel distribution...')
-
-        # Assign the proper channels to their data and function
-        dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
+        self.dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
         print('Channels of events found. Allocating photons to their frames and lines...')
-
-        self.df_allocated = self.allocate_photons(dict_of_data=dict_of_data, line_delta=line_delta)
+        self.df_allocated = self.allocate_photons(dict_of_data=self.dict_of_data, line_delta=line_delta)
         print('Relative times calculated. Creating Movie object...')
+        # Censor correction addition:
+        if 'Laser' not in self.dict_of_data.keys():
+            self.dict_of_data['Laser'] = 0
 
     @staticmethod
     def hex_to_bin_dict():

@@ -41,14 +41,14 @@ def main_data_readout(gui):
     final_movie = Movie(data=analyzed_struct.df_allocated, x_pixels=int(gui.x_pixels.get()),
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
-                        binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(), fill_frac=gui.fill_frac.get())
+                        binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
+                        fill_frac=gui.fill_frac.get())
 
     # Censor correction part
     censored = CensorCorrection(df=analyzed_struct.df_allocated, reprate=gui.reprate.get(),
-                                deque_of_vols=final_movie.create_array(),
-                                binwidth = gui.binwidth.get(), offset=9)
-
-    l = censored.gen_array_of_hists()
+                                movie=final_movie, binwidth=gui.binwidth.get(), offset=9,
+                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
+    a = censored.gen_array_of_hists_deque()
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')
     output_list = generate_output_list(final_movie, gui)

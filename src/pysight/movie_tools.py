@@ -6,7 +6,7 @@ import attr
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator
+from typing import List, Iterator, Tuple, Iterable
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict
 import warnings
@@ -51,8 +51,8 @@ class Movie(object):
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(current_time, level='Frames')
             if not cur_data.empty:
-                yield Volume(data=cur_data, x_pixels=self.x_pixels,
-                             y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
+                yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
+                             z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac)
@@ -70,7 +70,7 @@ class Movie(object):
         from collections import namedtuple
 
         # Create a list containing the frames before showing them
-        VolTuple = namedtuple('Volume', ('hist', 'edges'))
+        VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
         volumes_in_movie = self.gen_of_volumes()
         try:
@@ -97,7 +97,7 @@ class Movie(object):
         from collections import namedtuple, deque
 
         # Create a deque and a namedtuple for the frames before showing them
-        VolTuple = namedtuple('Volume', ('hist', 'edges'))
+        VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
         deque_of_vols = deque()
         volumes_in_movie: Iterator = self.gen_of_volumes()
@@ -148,21 +148,21 @@ class Volume(object):
     """
     A Movie() is a sequence of volumes. Each volume contains frames in a plane.
     """
-
-    x_pixels  = attr.ib()
-    y_pixels  = attr.ib()
-    z_pixels  = attr.ib()
-    number    = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
-    data      = attr.ib()
-    reprate   = attr.ib()  # laser repetition rate, relevant for FLIM
-    end_time  = attr.ib()
-    binwidth  = attr.ib()
-    bidir     = attr.ib()  # Bi-derictional scanning
-    fill_frac = attr.ib()
-    empty     = attr.ib(default=False, validator=attr.validators.instance_of(bool))
+    x_pixels       = attr.ib()
+    y_pixels       = attr.ib()
+    z_pixels       = attr.ib()
+    number         = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
+    data           = attr.ib()
+    reprate        = attr.ib()  # laser repetition rate, relevant for FLIM
+    end_time       = attr.ib()
+    binwidth       = attr.ib()
+    bidir          = attr.ib()  # Bi-directional scanning
+    fill_frac      = attr.ib()
+    abs_start_time = attr.ib(validator=attr.validators.instance_of(np.uint64))
+    empty          = attr.ib(default=False, validator=attr.validators.instance_of(bool))
 
     @property
-    def __metadata(self) -> OrderedDict:
+    def metadata(self) -> OrderedDict:
         """
         Creates the metadata of the volume to be created, to be used for creating the actual images
         using histograms. Metadata can include the first photon arrival time, start and end of volume, etc.
@@ -174,8 +174,7 @@ class Volume(object):
 
         # Volume metadata
         volume_start: int = 0
-        volume_end: int = self.end_time
-        metadata['Volume'] = Struct(start=volume_start, end=volume_end, num=self.x_pixels + 1)
+        metadata['Volume'] = Struct(start=volume_start, end=self.end_time, num=self.x_pixels + 1)
 
         # y-axis metadata
         y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
@@ -207,7 +206,7 @@ class Volume(object):
         Create three vectors that will create the grid of the frame. Uses Numba internal function for optimization.
         :return: Tuple of np.array
         """
-        metadata = self.__metadata
+        metadata = self.metadata
         list_of_edges = []
 
         if self.empty is not True:
@@ -220,7 +219,7 @@ class Volume(object):
         else:
             return list(np.ones(len(metadata)))
 
-    def create_hist(self) -> np.ndarray:
+    def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
         Create the histogram of data using calculated edges.
         :return: np.ndarray of shape [num_of_cols, num_of_rows] with the histogram data, and edges
@@ -249,7 +248,7 @@ class Volume(object):
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
             return hist.astype(np.int32), edges
         else:
-            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), 0, 0, 0
+            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), (0, 0, 0)
 
     def show(self) -> None:
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """

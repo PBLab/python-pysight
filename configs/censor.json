@@ -29,15 +29,15 @@
     ],
     "tif": [
         "PY_VAR7",
-        1
+        0
     ],
     "x_pixels": [
         "PY_VAR8",
-        512
+        128
     ],
     "y_pixels": [
         "PY_VAR9",
-        512
+        128
     ],
     "z_pixels": [
         "PY_VAR10",
@@ -101,7 +101,7 @@
     ],
     "bidir": [
         "PY_VAR25",
-        1
+        0
     ],
     "keep_unidir": [
         "PY_VAR26",
