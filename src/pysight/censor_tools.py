@@ -122,40 +122,42 @@ class CensoredVolume(object):
         :return: np.ndarray of the same size as the original image. Each pixels contains
         a histogram inside it.
         """
-        hist, edges = self.vol.create_hist()
-        lines_in_vol = self.df.index.get_level_values('Lines').categories.values
-        sorted_pulses = np.searchsorted(lines_in_vol, self.laser_pulses) - 1
-        # Clean unneeded pulses (possibly first and last)
-        relevant_indices_for_pulses, = np.where(sorted_pulses > 0)
-        sorted_pulses = sorted_pulses[relevant_indices_for_pulses]
-        corrected_pulse_times = self.laser_pulses[relevant_indices_for_pulses]
-        relative_pulse_times = corrected_pulse_times - lines_in_vol[sorted_pulses]
-
-        digitized_laser_x   = np.digitize(self.laser_pulses, bins=edges[0]) - 1
-        digitized_laser_y   = np.digitize(relative_pulse_times, bins=edges[1]) - 1
-        digitized_photons_x = np.digitize(self.df['abs_time'].values, bins=edges[0]) - 1
-        digitized_photons_y = np.digitize(self.df['time_rel_line'].values, bins=edges[1]) - 1
-
-        image_bincount = np.zeros_like(hist, dtype=object)
-        for row in range(len(edges[0])):
-            pulse_idx_row, = np.where(digitized_laser_x == row)
-            photons_idx_row, = np.where(digitized_photons_x == row)
-            row_hist, _ = np.histogram(self.df['abs_time'].values[photons_idx_row],
-                                       bins=self.laser_pulses[pulse_idx_row])
-            for col in range(len(edges[1])):
-                all_pulses_of_col = np.where(digitized_laser_y == col)[0]
-                pulse_cross_section = all_pulses_of_col[(all_pulses_of_col >= pulse_idx_row.min()) &
-                                                        (all_pulses_of_col <= pulse_idx_row.max())]
-                if photons_idx_row:  # Photons arrived during this line
-                    all_photons_of_col = np.where(digitized_photons_y == col)[0]
-                    photon_cross_section = all_photons_of_col[(all_photons_of_col >= photons_idx_row.min()) &
-                                                              (all_photons_of_col <= photons_idx_row.max())]
-                    col_hist, _ = np.histogram(self.df['abs_time'].values[photon_cross_section],
-                                               bins=self.laser_pulses[pulse_cross_section])
-                else:
-                    col_hist = np.histogram(np.array([]), bins=self.laser_pulses[pulse_cross_section])
-
-                image_bincount[row, col] = (np.bincount(row_hist), np.bincount(col_hist))
-
-
-        return image_bincount
+        # hist, edges = self.vol.create_hist()
+        # lines_in_vol = self.df.index.get_level_values('Lines').categories.values
+        # sorted_pulses = np.searchsorted(lines_in_vol, self.laser_pulses) - 1
+        # # Clean unneeded pulses (possibly first and last)
+        # relevant_indices_for_pulses, = np.where(sorted_pulses > 0)
+        # sorted_pulses = sorted_pulses[relevant_indices_for_pulses]
+        # corrected_pulse_times = self.laser_pulses[relevant_indices_for_pulses]
+        # relative_pulse_times = corrected_pulse_times - lines_in_vol[sorted_pulses]
+        #
+        # digitized_laser_x   = np.digitize(self.laser_pulses, bins=edges[0]) - 1
+        # digitized_laser_y   = np.digitize(relative_pulse_times, bins=edges[1]) - 1
+        # digitized_photons_x = np.digitize(self.df['abs_time'].values, bins=edges[0]) - 1
+        # digitized_photons_y = np.digitize(self.df['time_rel_line'].values, bins=edges[1]) - 1
+        #
+        # image_bincount = np.zeros_like(hist, dtype=object)
+        # for row in range(len(edges[0]) - 1):
+        #     print('Row number {}'.format(row))
+        #     pulses_row = self.laser_pulses[np.where(digitized_laser_x == row)[0]]
+        #     photons_row = self.df['abs_time'].values[np.where(digitized_photons_x == row)[0]]
+        #     # row_hist, _ = np.histogram(photons_row, bins=pulses_row)
+        #     for col in range(len(edges[1]) - 1):
+        #         print('Col number {}'.format(col))
+        #         all_pulses_of_col = np.where(digitized_laser_y == col)[0]
+        #         pulse_cross_section = all_pulses_of_col[(all_pulses_of_col >= pulse_idx_row.min()) &
+        #                                                 (all_pulses_of_col <= pulse_idx_row.max())]
+        #         if len(photons_idx_row) > 0:  # Photons arrived during this line
+        #             all_photons_of_col = np.where(digitized_photons_y == col)[0]
+        #             photon_cross_section = all_photons_of_col[(all_photons_of_col >= photons_idx_row.min()) &
+        #                                                       (all_photons_of_col <= photons_idx_row.max())]
+        #             col_hist, _ = np.histogram(self.df['abs_time'].values[photon_cross_section],
+        #                                        bins=self.laser_pulses[pulse_cross_section])
+        #         else:
+        #             col_hist, _ = np.histogram(np.array([]), bins=self.laser_pulses[pulse_cross_section])
+        #
+        #         image_bincount[row, col] = np.bincount(col_hist)
+        #
+        #
+        # return image_bincount
+        pass

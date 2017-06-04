@@ -4,8 +4,8 @@ __author__ = Hagai Hargil
 
 
 import unittest
-from os import sep
 from pysight.censor_tools import CensorCorrection
+from pysight.censor_tools import CensoredVolume
 import pandas as pd
 from collections import deque, namedtuple
 import numpy as np
