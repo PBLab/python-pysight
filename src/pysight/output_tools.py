@@ -1,7 +1,7 @@
 """
 __author__ = Hagai Hargil
 """
-from typing import List, Deque
+from typing import List
 import numpy as np
 
 
@@ -35,11 +35,11 @@ def gen_tiff(movie, gui) -> int:
     return 1
 
 
-def gen_array(movie, gui) -> Deque:
+def gen_array(movie, gui):
     """
     Algorithm's output will be the full array of data
     """
-    data_array: Deque = movie.create_array()
+    data_array = movie.create_array()
     print('Data array created.')
     return data_array
 

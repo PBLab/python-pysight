@@ -228,3 +228,8 @@ Changelog
 * Fixed linux bug with ``Deque`` import.
 
 * Added tests.
+
+0.5.1 (2017-06-04)
+------------------
+
+* Another go at Linux namespace conflicts.

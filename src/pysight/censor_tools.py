@@ -80,6 +80,24 @@ class CensorCorrection(object):
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.gen_array_of_hists())
 
+    def learn_histograms(self):
+        from sklearn import svm, metrics
+        import matplotlib.pyplot as plt
+
+        # Flatten the array
+        data = self.gen_array_of_hists_deque().flatten()
+        n_samples = len(data)
+        labels = self.gen_labels()
+        classifier = svm.SVC(gamma=0.001)
+        classifier.fit(data[:n_samples / 2], labels[:n_samples / 2])
+
+        # Predictions
+        expected = labels[n_samples / 2:]
+        predicted = classifier.predict(data[n_samples / 2:])
+        print("Classification report for classifier %s:\n%s\n"
+              % (classifier, metrics.classification_report(expected, predicted)))
+        print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+
 @attr.s(slots=True)
 class CensoredVolume(object):
     df = attr.ib(validator=instance_of(pd.DataFrame))

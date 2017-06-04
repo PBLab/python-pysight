@@ -318,8 +318,7 @@ class GUIApp(object):
                 except AttributeError:
                     pass  # don't save non-tkinter variables
 
-        path_to_save_to: str = str(Path(__file__).parents[2]) + sep + 'configs' + \
-                               sep + str(self.cfg_to_save.get()) + '.json'
+        path_to_save_to: str = str(Path(__file__).parent / 'configs') + sep + str(self.cfg_to_save.get()) + '.json'
         with open(path_to_save_to, 'w') as f:
             json.dump(cfg_dict_to_save, f, indent=4)
 
@@ -334,7 +333,7 @@ class GUIApp(object):
     def __browsecfg(self):
         self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
                                                          title='Choose a configuration file',
-                                                         initialdir='..' + sep + '..' + sep + '..' + sep + 'configs'))
+                                                         initialdir='configs'))
         with open(self.cfg_filename.get(), 'r') as f:
             self.config = json.load(f)
         self.__modify_vars()
@@ -368,7 +367,7 @@ class GUIApp(object):
             raise ValueError('Type not recognized for value {}.'.format(val))
 
     def __load_last_used_cfg(self, main_frame):
-        dir: WindowsPath = Path(__file__).parents[2] / 'configs'
+        dir: WindowsPath = Path(__file__).parent / 'configs'
         all_cfg_files: Iterable = dir.glob('*.json')
         latest_filename: str = ''
         latest_file_date: int = 0
@@ -382,10 +381,6 @@ class GUIApp(object):
             with open(latest_filename, 'r') as f:
                 self.config = json.load(f)
             self.__modify_vars()
-
-
-
-
 
 
 def verify_gui_input(gui):
