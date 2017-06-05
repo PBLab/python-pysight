@@ -140,42 +140,54 @@ class CensoredVolume(object):
         :return: np.ndarray of the same size as the original image. Each pixels contains
         a histogram inside it.
         """
-        # hist, edges = self.vol.create_hist()
-        # lines_in_vol = self.df.index.get_level_values('Lines').categories.values
-        # sorted_pulses = np.searchsorted(lines_in_vol, self.laser_pulses) - 1
-        # # Clean unneeded pulses (possibly first and last)
-        # relevant_indices_for_pulses, = np.where(sorted_pulses > 0)
-        # sorted_pulses = sorted_pulses[relevant_indices_for_pulses]
-        # corrected_pulse_times = self.laser_pulses[relevant_indices_for_pulses]
-        # relative_pulse_times = corrected_pulse_times - lines_in_vol[sorted_pulses]
-        #
-        # digitized_laser_x   = np.digitize(self.laser_pulses, bins=edges[0]) - 1
-        # digitized_laser_y   = np.digitize(relative_pulse_times, bins=edges[1]) - 1
-        # digitized_photons_x = np.digitize(self.df['abs_time'].values, bins=edges[0]) - 1
-        # digitized_photons_y = np.digitize(self.df['time_rel_line'].values, bins=edges[1]) - 1
-        #
-        # image_bincount = np.zeros_like(hist, dtype=object)
-        # for row in range(len(edges[0]) - 1):
-        #     print('Row number {}'.format(row))
-        #     pulses_row = self.laser_pulses[np.where(digitized_laser_x == row)[0]]
-        #     photons_row = self.df['abs_time'].values[np.where(digitized_photons_x == row)[0]]
-        #     # row_hist, _ = np.histogram(photons_row, bins=pulses_row)
-        #     for col in range(len(edges[1]) - 1):
-        #         print('Col number {}'.format(col))
-        #         all_pulses_of_col = np.where(digitized_laser_y == col)[0]
-        #         pulse_cross_section = all_pulses_of_col[(all_pulses_of_col >= pulse_idx_row.min()) &
-        #                                                 (all_pulses_of_col <= pulse_idx_row.max())]
-        #         if len(photons_idx_row) > 0:  # Photons arrived during this line
-        #             all_photons_of_col = np.where(digitized_photons_y == col)[0]
-        #             photon_cross_section = all_photons_of_col[(all_photons_of_col >= photons_idx_row.min()) &
-        #                                                       (all_photons_of_col <= photons_idx_row.max())]
-        #             col_hist, _ = np.histogram(self.df['abs_time'].values[photon_cross_section],
-        #                                        bins=self.laser_pulses[pulse_cross_section])
-        #         else:
-        #             col_hist, _ = np.histogram(np.array([]), bins=self.laser_pulses[pulse_cross_section])
-        #
-        #         image_bincount[row, col] = np.bincount(col_hist)
-        #
-        #
-        # return image_bincount
-        pass
+        hist, edges = self.vol.create_hist()
+
+        # Create a relative timestamp to the line signal for each laser pulse
+        lines_in_vol = self.df.index.get_level_values('Lines').categories.values
+        sorted_pulses = np.searchsorted(lines_in_vol, self.laser_pulses) - 1
+        pulses = pd.DataFrame(data=self.laser_pulses[np.where(sorted_pulses >= 0)[0]], columns=['abs_time'])
+        pulses = pulses.assign(Lines=lines_in_vol[sorted_pulses[np.where(sorted_pulses >= 0)[0]]])
+        pulses.dropna(how='any', inplace=True)
+        pulses['Lines'] = pulses['Lines'].astype('uint64')
+        pulses['time_rel_line'] = pulses['abs_time'] - pulses['Lines']
+        pulses['Lines'] = pulses['Lines'].astype('category')
+        pulses.set_index(keys=['Lines'], inplace=True, append=True, drop=True)
+
+        # Allocate laser pulses and photons to their bins
+        pulses.loc[:, 'bins_x']  = np.digitize(pulses['abs_time'].values, bins=edges[0]) - 1
+        pulses.loc[:, 'bins_y']  = np.digitize(pulses['time_rel_line'].values, bins=edges[1]) - 1
+        self.df.loc[:, 'bins_x'] = np.digitize(self.df['abs_time'].values, bins=edges[0]) - 1
+        self.df.loc[:, 'bins_y'] = np.digitize(self.df['time_rel_line'].values, bins=edges[1]) - 1
+        pulses.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+        self.df.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+
+        # Go through each bin and histogram the photons there
+        image_bincount = np.zeros_like(hist, dtype=object)
+        for row in range(self.vol.x_pixels):
+            row_pulses = pulses.xs(key=row, level='bins_x', drop_level=False)
+            assert len(row_pulses) > 0, 'Row {} contains no pulses'.format(row)
+            try:
+                row_photons = self.df.xs(key=row, level='bins_x', drop_level=False)
+            except KeyError:  # no photons in row
+                for col in range(self.vol.y_pixels):
+                    final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
+                    hist, _ = np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)
+                    image_bincount[row, col] = np.bincount(hist)
+            else:
+                for col in range(self.vol.y_pixels):
+                    final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
+                    assert len(final_pulses) > 0, 'Column {} in row {} contains no pulses'.format(col, row)
+                    try:
+                        final_photons = row_photons.xs(key=col, level='bins_y', drop_level=False)
+                    except KeyError:  # no photons in col
+                        hist, _ = np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)
+                    else:
+                        hist, _ = np.histogram(final_photons.loc[:, 'time_rel_line'].values,
+                                               bins=final_pulses.loc[:, 'time_rel_line'].values)
+                    finally:
+                        if not np.all(hist >= 0):
+                            print('WHAT IS GOING ON')
+                        assert np.all(hist >= 0), 'In row {}, column {}, the histogram turned out to be negative.'.format(row, col)
+                        image_bincount[row, col] = np.bincount(hist)
+
+        return image_bincount

@@ -49,7 +49,7 @@ class Movie(object):
 
         list_of_frames: List[int] = self.list_of_volume_times
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
-            cur_data = self.data.xs(current_time, level='Frames')
+            cur_data = self.data.xs(current_time, level='Frames', drop_level=False)
             if not cur_data.empty:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
                              z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
