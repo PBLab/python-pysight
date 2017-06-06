@@ -179,7 +179,10 @@ class Volume(object):
         # y-axis metadata
         y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
                                                     fill_frac=self.fill_frac)
-        metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
+        if y_end == 1:  # single pixel in frame
+            metadata['Y'] = Struct(start=y_start, end=self.end_time, num=self.y_pixels + 1)
+        else:
+            metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
 
         # z-axis metadata
         if 'Phase' in self.data.columns:
@@ -229,8 +232,11 @@ class Volume(object):
         """
         lines = self.data.index.get_level_values('Lines').categories.values
         lines.sort()
-        mean_diff = np.diff(lines).mean()
-        return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
+        if len(lines) > 1:
+            mean_diff = np.diff(lines).mean()
+            return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
+        else:  # single pixel frames, perhaps
+            return np.r_[lines, self.end_time]
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
@@ -302,7 +308,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, f
         diffs_max: float = diffs.max()
     else:
         diffs: np.ndarray = unique_indices
-        diffs_max: np.ndarray = unique_indices
+        diffs_max: np.ndarray = unique_indices + 1
 
     try:
         if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
@@ -320,7 +326,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, f
     if fill_frac > 0:
         lines_end = lines_end * fill_frac/100
 
-    return lines_start, int(lines_end), empty
+    return lines_start, max(int(lines_end), 1), empty
 
 
 @attr.s

@@ -18,7 +18,7 @@ class CensorCorrection(object):
     offset = attr.ib(validator=instance_of(int))
     all_laser_pulses = attr.ib()
 
-    def create_laser_pulses_deque(self) -> np.ndarray:
+    def gen_laser_pulses_deque(self) -> np.ndarray:
         """
         If data has laser pulses - return them. Else - simulate them with an offset
         """
@@ -35,15 +35,14 @@ class CensorCorrection(object):
                 y_pulses = np.arange(start=start_time+self.offset, stop=vol.metadata['Y'].end+step,
                                      step=step)
                 grid = pulse_grid(x_pulses, y_pulses)
-                laser_pulses_deque.append(grid)
+                yield grid
         else:
             for vol in volumes_in_movie:
                 x_pulses = self.all_laser_pulses[(self.all_laser_pulses >= vol.abs_start_time-step) &
                                                    (self.all_laser_pulses <= vol.end_time+step)] + self.offset
                 y_pulses = 1
                 grid = pulse_grid(x_pulses, y_pulses)
-                laser_pulses_deque.append(grid)
-        return laser_pulses_deque
+                yield grid
 
     def get_bincount_deque(self):
         bincount_deque = deque()
@@ -51,7 +50,7 @@ class CensorCorrection(object):
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=laser_pulses_deque[idx].x_pulses)
+                                      laser_pulses=next(laser_pulses_deque).x_pulses)
             bincount_deque.append(censored.gen_bincount())
         return bincount_deque
 
@@ -61,12 +60,12 @@ class CensorCorrection(object):
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=laser_pulses_deque[idx].x_pulses,
+                                      laser_pulses=next(laser_pulses_deque).x_pulses,
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.find_temp_structure())
         return temp_struct_deque
 
-    def gen_array_of_hists_deque(self):
+    def create_array_of_hists_deque(self):
         """
         Go through each volume in the deque and find the laser pulses for each pixel, creating a summed histogram per pixel.
         :return:
@@ -76,7 +75,7 @@ class CensorCorrection(object):
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=laser_pulses_deque[idx].x_pulses,
+                                      laser_pulses=next(laser_pulses_deque).x_pulses,
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.gen_array_of_hists())
         return temp_struct_deque
@@ -87,7 +86,7 @@ class CensorCorrection(object):
         For a given, fixed, power of the laser, find the ratio of photons per pulse
         :return: float
         """
-        deque_of_vols = self.gen_array_of_hists_deque()
+        deque_of_vols = self.create_array_of_hists_deque()
 
 
     def learn_histograms(self):
@@ -107,6 +106,7 @@ class CensorCorrection(object):
         print("Classification report for classifier %s:\n%s\n"
               % (classifier, metrics.classification_report(expected, predicted)))
         print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+
 
 @attr.s(slots=True)
 class CensoredVolume(object):

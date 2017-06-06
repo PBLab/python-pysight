@@ -233,3 +233,15 @@ Changelog
 ------------------
 
 * Another go at Linux namespace conflicts.
+
+0.5.2 (2017-06-04)
+------------------
+
+* Added basic support for "Censor Correction".
+
+0.5.3 (2017-06-04)
+------------------
+
+* Bug fixes, including support for single-pixel images.
+
+* Script should require less memory while running.

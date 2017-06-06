@@ -5,6 +5,7 @@
 *.tif
 *.mat
 *.lst
+*.p
 
 # C extensions
 *.so
