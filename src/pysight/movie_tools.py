@@ -211,13 +211,26 @@ class Volume(object):
 
         if self.empty is not True:
             for num_of_dims, key in enumerate(metadata, 1):
-                list_of_edges.append(create_linspace(start=metadata[key].start,
-                                                     stop=metadata[key].end,
-                                                     num=metadata[key].num))
+                if key != 'Volume':
+                    list_of_edges.append(create_linspace(start=metadata[key].start,
+                                                         stop=metadata[key].end,
+                                                         num=metadata[key].num))
+                else:
+                    list_of_edges.append(self.__create_line_array())
 
             return list_of_edges, num_of_dims
         else:
             return list(np.ones(len(metadata)))
+
+    def __create_line_array(self):
+        """
+        Generates the edges of the final histogram using the line signal from the data
+        :return: np.array
+        """
+        lines = self.data.index.get_level_values('Lines').categories.values
+        lines.sort()
+        mean_diff = np.diff(lines).mean()
+        return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """

@@ -66,7 +66,7 @@ class CensorCorrection(object):
             temp_struct_deque.append(censored.find_temp_structure())
         return temp_struct_deque
 
-    def gen_array_of_hists_deque(self) -> np.ndarray:
+    def gen_array_of_hists_deque(self):
         """
         Go through each volume in the deque and find the laser pulses for each pixel, creating a summed histogram per pixel.
         :return:
@@ -79,6 +79,7 @@ class CensorCorrection(object):
                                       laser_pulses=laser_pulses_deque[idx].x_pulses,
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.gen_array_of_hists())
+        return temp_struct_deque
 
     def learn_histograms(self):
         from sklearn import svm, metrics
@@ -148,16 +149,16 @@ class CensoredVolume(object):
         pulses = pd.DataFrame(data=self.laser_pulses[np.where(sorted_pulses >= 0)[0]], columns=['abs_time'])
         pulses = pulses.assign(Lines=lines_in_vol[sorted_pulses[np.where(sorted_pulses >= 0)[0]]])
         pulses.dropna(how='any', inplace=True)
-        pulses['Lines'] = pulses['Lines'].astype('uint64')
-        pulses['time_rel_line'] = pulses['abs_time'] - pulses['Lines']
-        pulses['Lines'] = pulses['Lines'].astype('category')
+        pulses.loc[:, 'Lines'] = pulses.loc[:, 'Lines'].astype('uint64')
+        pulses.loc[:, 'time_rel_line'] = pulses.loc[:, 'abs_time'] - pulses.loc[:, 'Lines']
+        pulses.loc[:, 'Lines'] = pulses.loc[:, 'Lines'].astype('category')
         pulses.set_index(keys=['Lines'], inplace=True, append=True, drop=True)
 
         # Allocate laser pulses and photons to their bins
-        pulses.loc[:, 'bins_x']  = np.digitize(pulses['abs_time'].values, bins=edges[0]) - 1
-        pulses.loc[:, 'bins_y']  = np.digitize(pulses['time_rel_line'].values, bins=edges[1]) - 1
-        self.df.loc[:, 'bins_x'] = np.digitize(self.df['abs_time'].values, bins=edges[0]) - 1
-        self.df.loc[:, 'bins_y'] = np.digitize(self.df['time_rel_line'].values, bins=edges[1]) - 1
+        pulses.loc[:, 'bins_x']  = np.digitize(pulses.loc[:, 'abs_time'].values, bins=edges[0]) - 1
+        pulses.loc[:, 'bins_y']  = np.digitize(pulses.loc[:, 'time_rel_line'].values, bins=edges[1]) - 1
+        self.df.loc[:, 'bins_x'] = np.digitize(self.df.loc[:, 'abs_time'].values, bins=edges[0]) - 1
+        self.df.loc[:, 'bins_y'] = np.digitize(self.df.loc[:, 'time_rel_line'].values, bins=edges[1]) - 1
         pulses.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
         self.df.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 

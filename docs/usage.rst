@@ -3,6 +3,7 @@ Usage
 =====
 
 To use PySight do one of the following:
+
 1. write a Python script containing::
 
     from pysight import main_multiscaler_readout

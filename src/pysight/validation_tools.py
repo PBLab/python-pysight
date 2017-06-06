@@ -44,7 +44,7 @@ def validate_line_input(dict_of_data: Dict, num_of_lines: int = -1, num_of_frame
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                        num_of_frames=num_of_frames)
         dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
-        line_delta = dict_of_data['Lines'].diff().mean()
+        line_delta = last_event_time/(num_of_lines * int(num_of_frames))
 
     return dict_of_data, line_delta
 
@@ -104,7 +104,7 @@ def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frame
         raise ValueError('Last event time is zero or negative.')
 
     total_lines = num_of_lines * int(num_of_frames)
-    line_array = np.linspace(start=0, stop=last_event_time, num=total_lines)
+    line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines)
     return line_array
 
 
