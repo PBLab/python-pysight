@@ -81,6 +81,15 @@ class CensorCorrection(object):
             temp_struct_deque.append(censored.gen_array_of_hists())
         return temp_struct_deque
 
+
+    def generate_label_for_dataset(self) -> float:
+        """
+        For a given, fixed, power of the laser, find the ratio of photons per pulse
+        :return: float
+        """
+        deque_of_vols = self.gen_array_of_hists_deque()
+
+
     def learn_histograms(self):
         from sklearn import svm, metrics
         import matplotlib.pyplot as plt
@@ -155,10 +164,14 @@ class CensoredVolume(object):
         pulses.set_index(keys=['Lines'], inplace=True, append=True, drop=True)
 
         # Allocate laser pulses and photons to their bins
-        pulses.loc[:, 'bins_x']  = np.digitize(pulses.loc[:, 'abs_time'].values, bins=edges[0]) - 1
-        pulses.loc[:, 'bins_y']  = np.digitize(pulses.loc[:, 'time_rel_line'].values, bins=edges[1]) - 1
-        self.df.loc[:, 'bins_x'] = np.digitize(self.df.loc[:, 'abs_time'].values, bins=edges[0]) - 1
-        self.df.loc[:, 'bins_y'] = np.digitize(self.df.loc[:, 'time_rel_line'].values, bins=edges[1]) - 1
+        pulses.loc[:, 'bins_x']  = (np.digitize(pulses.loc[:, 'abs_time'].values,
+                                                bins=edges[0]) - 1).astype('uint16', copy=False)
+        pulses.loc[:, 'bins_y']  = (np.digitize(pulses.loc[:, 'time_rel_line'].values,
+                                                bins=edges[1]) - 1).astype('uint16', copy=False)
+        self.df.loc[:, 'bins_x'] = (np.digitize(self.df.loc[:, 'abs_time'].values,
+                                                bins=edges[0]) - 1).astype('uint16', copy=False)
+        self.df.loc[:, 'bins_y'] = (np.digitize(self.df.loc[:, 'time_rel_line'].values,
+                                                bins=edges[1]) - 1).astype('uint16', copy=False)
         pulses.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
         self.df.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 
@@ -172,8 +185,9 @@ class CensoredVolume(object):
             except KeyError:  # no photons in row
                 for col in range(self.vol.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
-                    hist, _ = np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)
-                    image_bincount[row, col] = np.bincount(hist)
+                    hist = (np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
+                           .astype('uint8')
+                    image_bincount[row, col] = np.bincount(hist).astype('uint64', copy=False)
             else:
                 for col in range(self.vol.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
@@ -181,14 +195,18 @@ class CensoredVolume(object):
                     try:
                         final_photons = row_photons.xs(key=col, level='bins_y', drop_level=False)
                     except KeyError:  # no photons in col
-                        hist, _ = np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)
+                        hist = (np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
+                               .astype('uint8', copy=False)
                     else:
-                        hist, _ = np.histogram(final_photons.loc[:, 'time_rel_line'].values,
-                                               bins=final_pulses.loc[:, 'time_rel_line'].values)
+                        hist = (np.histogram(final_photons.loc[:, 'time_rel_line'].values,
+                                            bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
+                               .astype('uint8', copy=False)
                     finally:
                         if not np.all(hist >= 0):
                             print('WHAT IS GOING ON')
                         assert np.all(hist >= 0), 'In row {}, column {}, the histogram turned out to be negative.'.format(row, col)
-                        image_bincount[row, col] = np.bincount(hist)
+                        image_bincount[row, col] = np.bincount(hist).astype('uint64', copy=False)
 
         return image_bincount
+
+
