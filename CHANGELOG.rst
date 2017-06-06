@@ -245,3 +245,8 @@ Changelog
 * Bug fixes, including support for single-pixel images.
 
 * Script should require less memory while running.
+
+0.5.4 (2017-06-04)
+------------------
+
+* Fixed untested typo.

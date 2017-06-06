@@ -46,7 +46,7 @@ class CensorCorrection(object):
 
     def get_bincount_deque(self):
         bincount_deque = deque()
-        laser_pulses_deque = self.create_laser_pulses_deque()
+        laser_pulses_deque = self.gen_laser_pulses_deque()
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
@@ -56,7 +56,7 @@ class CensorCorrection(object):
 
     def find_temporal_structure_deque(self):
         temp_struct_deque = deque()
-        laser_pulses_deque = self.create_laser_pulses_deque()
+        laser_pulses_deque = self.gen_laser_pulses_deque()
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
@@ -71,7 +71,7 @@ class CensorCorrection(object):
         :return:
         """
         temp_struct_deque = deque()
-        laser_pulses_deque = self.create_laser_pulses_deque()
+        laser_pulses_deque = self.gen_laser_pulses_deque()
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
