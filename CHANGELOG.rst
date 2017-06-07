@@ -234,19 +234,30 @@ Changelog
 
 * Another go at Linux namespace conflicts.
 
-0.5.2 (2017-06-04)
+0.5.2 (2017-06-06)
 ------------------
 
 * Added basic support for "Censor Correction".
 
-0.5.3 (2017-06-04)
+0.5.3 (2017-06-06)
 ------------------
 
 * Bug fixes, including support for single-pixel images.
 
 * Script should require less memory while running.
 
-0.5.4 (2017-06-04)
+0.5.4 (2017-06-06)
 ------------------
 
 * Fixed untested typo.
+
+0.5.5 (2017-06-07)
+------------------
+
+* Bug fixes for single-pixel frames
+
+* Bug fixes for defining amount of frames manually in script.
+
+* Censor correction shouldn't require as much memory as it did. It's still not as fast as it can be.
+
+* Loading a configuration file will make it the "last used" file, reloading it when re-running PySight.

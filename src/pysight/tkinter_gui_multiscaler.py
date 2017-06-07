@@ -7,7 +7,8 @@ from tkinter import filedialog
 import json
 from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
-from os import sep
+from os import sep, utime
+import time
 
 
 class GUIApp(object):
@@ -336,6 +337,7 @@ class GUIApp(object):
                                                          initialdir='configs'))
         with open(self.cfg_filename.get(), 'r') as f:
             self.config = json.load(f)
+            utime(self.cfg_filename.get(), (time.time(), time.time()))
         self.__modify_vars()
 
     def __modify_vars(self):

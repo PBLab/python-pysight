@@ -47,7 +47,7 @@ class FileIO(object):
             num_of_items = -1
             read_string = 'Reading file "{}"...'.format(self.filename)
         else:
-            num_of_items = 0.5e5
+            num_of_items = 0.5e6
             read_string = '[DEBUG] Reading file "{}"...'.format(self.filename)
 
         print(read_string)
@@ -121,8 +121,11 @@ class FileIO(object):
             with open(self.filename, 'rb') as f:
                 f.read(100)
                 is_binary = True
+        except FileNotFoundError:
+            raise FileNotFoundError("File {} doesn't exist.".format(self.filename))
+
         else:
-            raise ValueError('File read unsuccessfully.')
+            raise ValueError('File [} read unsuccessfully.'.format(self.filename))
         finally:
             return is_binary
 

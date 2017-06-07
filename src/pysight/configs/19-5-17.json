@@ -1,0 +1,110 @@
+{
+    "filename": [
+        "PY_VAR0",
+        "C:/Users/Hagai/Documents/GitHub/python-pysight/Julis sample 4, 2x zoom, TAG OFF, 165 um deep - 20p power - unidirectional 3.86fps - 700 PMT gain - LONG SWEEP - 128.lst"
+    ],
+    "input_start": [
+        "PY_VAR1",
+        "Lines"
+    ],
+    "input_stop1": [
+        "PY_VAR2",
+        "PMT1"
+    ],
+    "input_stop2": [
+        "PY_VAR3",
+        "Empty"
+    ],
+    "num_of_frames": [
+        "PY_VAR4",
+        1
+    ],
+    "summed": [
+        "PY_VAR5",
+        0
+    ],
+    "full": [
+        "PY_VAR6",
+        0
+    ],
+    "tif": [
+        "PY_VAR7",
+        1
+    ],
+    "x_pixels": [
+        "PY_VAR8",
+        2048
+    ],
+    "y_pixels": [
+        "PY_VAR9",
+        2048
+    ],
+    "z_pixels": [
+        "PY_VAR10",
+        100
+    ],
+    "debug": [
+        "PY_VAR11",
+        1
+    ],
+    "phase": [
+        "PY_VAR12",
+        -2.6
+    ],
+    "fill_frac": [
+        "PY_VAR13",
+        80.0
+    ],
+    "reprate": [
+        "PY_VAR14",
+        80000000.0
+    ],
+    "binwidth": [
+        "PY_VAR15",
+        8e-10
+    ],
+    "tag_freq": [
+        "PY_VAR16",
+        "189800.0"
+    ],
+    "tag_pulses": [
+        "PY_VAR17",
+        1
+    ],
+    "tag_bits": [
+        "PY_VAR18",
+        0
+    ],
+    "slow_bit_start": [
+        "PY_VAR19",
+        1
+    ],
+    "slow_bit_end": [
+        "PY_VAR20",
+        3
+    ],
+    "fast_bit_start": [
+        "PY_VAR21",
+        4
+    ],
+    "fast_bit_end": [
+        "PY_VAR22",
+        5
+    ],
+    "z_bit_start": [
+        "PY_VAR23",
+        6
+    ],
+    "z_bit_end": [
+        "PY_VAR24",
+        16
+    ],
+    "bidir": [
+        "PY_VAR25",
+        0
+    ],
+    "keep_unidir": [
+        "PY_VAR26",
+        0
+    ]
+}

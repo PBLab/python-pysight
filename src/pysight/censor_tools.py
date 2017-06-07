@@ -5,14 +5,13 @@ import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of
-from pysight.movie_tools import Volume
+from pysight.movie_tools import Volume, Movie
 from collections import deque, namedtuple
 
 
 @attr.s(slots=True)
 class CensorCorrection(object):
-    df = attr.ib(validator=instance_of(pd.DataFrame))
-    movie = attr.ib()
+    movie = attr.ib(validator=instance_of(Movie))
     reprate = attr.ib(validator=instance_of(float))
     binwidth = attr.ib(validator=instance_of(float))
     offset = attr.ib(validator=instance_of(int))
@@ -121,7 +120,7 @@ class CensoredVolume(object):
         """
         Bin the photons into their relative laser pulses, and count how many photons arrived due to each pulse.
         """
-        hist, _ = np.histogram(self.df['abs_time'].values, bins=self.laser_pulses)
+        hist, _ = np.histogram(self.vol.data['time_rel_frame'].values, bins=self.laser_pulses)
         return np.bincount(hist)
 
     def find_temp_structure(self) -> np.ndarray:
@@ -138,9 +137,9 @@ class CensoredVolume(object):
         Helper function to generate a searchsorted output of photons in laser pulses.
         """
         pulses = self.laser_pulses
-        sorted_indices: np.ndarray = np.searchsorted(pulses, self.df['abs_time'].values) - 1
+        sorted_indices: np.ndarray = np.searchsorted(pulses, self.vol.data['time_rel_frames'].values) - 1
         array_of_laser_starts = pulses[sorted_indices]
-        subtracted_times = self.df['abs_time'].values - array_of_laser_starts
+        subtracted_times = self.vol.data['time_rel_frames'].values - array_of_laser_starts
         return subtracted_times, array_of_laser_starts, sorted_indices
 
     def gen_array_of_hists(self) -> np.ndarray:
@@ -151,29 +150,27 @@ class CensoredVolume(object):
         a histogram inside it.
         """
         hist, edges = self.vol.create_hist()
-
         # Create a relative timestamp to the line signal for each laser pulse
-        lines_in_vol = self.df.index.get_level_values('Lines').categories.values
-        sorted_pulses = np.searchsorted(lines_in_vol, self.laser_pulses) - 1
-        pulses = pd.DataFrame(data=self.laser_pulses[np.where(sorted_pulses >= 0)[0]], columns=['abs_time'])
-        pulses = pulses.assign(Lines=lines_in_vol[sorted_pulses[np.where(sorted_pulses >= 0)[0]]])
+        sorted_pulses = np.searchsorted(edges[0][:-1], self.laser_pulses) - 1
+        pulses = pd.DataFrame(data=self.laser_pulses[np.where(sorted_pulses >= 0)[0]], columns=['time_rel_frames'])
+        pulses = pulses.assign(Lines=edges[0][:-1][sorted_pulses[np.where(sorted_pulses >= 0)[0]]])
         pulses.dropna(how='any', inplace=True)
         pulses.loc[:, 'Lines'] = pulses.loc[:, 'Lines'].astype('uint64')
-        pulses.loc[:, 'time_rel_line'] = pulses.loc[:, 'abs_time'] - pulses.loc[:, 'Lines']
+        pulses.loc[:, 'time_rel_line'] = pulses.loc[:, 'time_rel_frames'] - pulses.loc[:, 'Lines']
         pulses.loc[:, 'Lines'] = pulses.loc[:, 'Lines'].astype('category')
         pulses.set_index(keys=['Lines'], inplace=True, append=True, drop=True)
 
         # Allocate laser pulses and photons to their bins
-        pulses.loc[:, 'bins_x']  = (np.digitize(pulses.loc[:, 'abs_time'].values,
+        pulses.loc[:, 'bins_x']  = (np.digitize(pulses.loc[:, 'time_rel_frames'].values,
                                                 bins=edges[0]) - 1).astype('uint16', copy=False)
         pulses.loc[:, 'bins_y']  = (np.digitize(pulses.loc[:, 'time_rel_line'].values,
                                                 bins=edges[1]) - 1).astype('uint16', copy=False)
-        self.df.loc[:, 'bins_x'] = (np.digitize(self.df.loc[:, 'abs_time'].values,
+        self.vol.data.loc[:, 'bins_x'] = (np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
                                                 bins=edges[0]) - 1).astype('uint16', copy=False)
-        self.df.loc[:, 'bins_y'] = (np.digitize(self.df.loc[:, 'time_rel_line'].values,
+        self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
                                                 bins=edges[1]) - 1).astype('uint16', copy=False)
         pulses.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
-        self.df.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+        self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 
         # Go through each bin and histogram the photons there
         image_bincount = np.zeros_like(hist, dtype=object)
@@ -181,7 +178,7 @@ class CensoredVolume(object):
             row_pulses = pulses.xs(key=row, level='bins_x', drop_level=False)
             assert len(row_pulses) > 0, 'Row {} contains no pulses'.format(row)
             try:
-                row_photons = self.df.xs(key=row, level='bins_x', drop_level=False)
+                row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
             except KeyError:  # no photons in row
                 for col in range(self.vol.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)

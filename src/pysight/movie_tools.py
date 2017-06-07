@@ -236,7 +236,7 @@ class Volume(object):
             mean_diff = np.diff(lines).mean()
             return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
         else:  # single pixel frames, perhaps
-            return np.r_[lines, self.end_time]
+            return np.r_[lines, lines + self.end_time]
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
@@ -307,8 +307,9 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, f
         diffs: np.ndarray = np.diff(unique_indices)
         diffs_max: float = diffs.max()
     else:
-        diffs: np.ndarray = unique_indices
-        diffs_max: np.ndarray = unique_indices + 1
+        empty = False
+        lines_end = 1
+        return lines_start, lines_end, empty
 
     try:
         if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
@@ -326,7 +327,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, f
     if fill_frac > 0:
         lines_end = lines_end * fill_frac/100
 
-    return lines_start, max(int(lines_end), 1), empty
+    return lines_start, int(lines_end), empty
 
 
 @attr.s

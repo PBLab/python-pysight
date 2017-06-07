@@ -45,8 +45,8 @@ def main_data_readout(gui):
                         fill_frac=gui.fill_frac.get())
 
     # Censor correction part
-    censored = CensorCorrection(df=analyzed_struct.df_allocated, reprate=gui.reprate.get(),
-                                movie=final_movie, binwidth=gui.binwidth.get(), offset=9,
+    censored = CensorCorrection(movie=final_movie, reprate=gui.reprate.get(),
+                                binwidth=gui.binwidth.get(), offset=5,
                                 all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
     bincount = censored.create_array_of_hists_deque()
 
@@ -67,8 +67,8 @@ def run():
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
-    df_after, movie_after, list_of_outputs, censored, bincount = main_data_readout(gui)
-    return df_after, movie_after, list_of_outputs, censored, bincount
+    return main_data_readout(gui)
+
 
 if __name__ == '__main__':
-    df, movie, outputs, censored, bincount = run()
+    df, movie, outputs, censored, bincount  = run()
