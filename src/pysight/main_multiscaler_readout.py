@@ -47,8 +47,7 @@ def main_data_readout(gui):
     # Censor correction part
     censored = CensorCorrection(movie=final_movie, reprate=gui.reprate.get(),
                                 binwidth=gui.binwidth.get(), offset=5,
-                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'],
-                                power=1)
+                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

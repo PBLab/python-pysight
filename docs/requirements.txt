@@ -10,3 +10,4 @@ pandas >= 0.20
 attrs >= 1.6
 cython >= 0.24
 tables
+scikit-learn

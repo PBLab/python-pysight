@@ -266,3 +266,16 @@ Changelog
 ------------------
 
 * ML classification is functional.
+
+0.5.7 (2017-06-08)
+------------------
+
+* More robust data generation.
+
+* Added ``scikit-learn`` to ``requirements.txt`` and ``setup.py``.
+
+* ``CensorCorrection().learn_histograms()`` now receives the power label as its input - must be an integer.
+
+* Return of ``CensorCorrection().learn_histograms()`` is now ``data, labels``.
+
+* Made ``__get_bincount_deque()`` private. To be accessed using ``learn_histograms()`` only.
