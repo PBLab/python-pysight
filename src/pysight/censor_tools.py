@@ -7,6 +7,7 @@ import pandas as pd
 from attr.validators import instance_of
 from pysight.movie_tools import Volume, Movie
 from collections import deque, namedtuple
+from typing import Tuple
 
 
 @attr.s(slots=True)
@@ -15,42 +16,55 @@ class CensorCorrection(object):
     reprate = attr.ib(validator=instance_of(float))
     binwidth = attr.ib(validator=instance_of(float))
     offset = attr.ib(validator=instance_of(int))
+    power = attr.ib(validator=instance_of(int))
     all_laser_pulses = attr.ib()
+
+    @property
+    def bins_bet_pulses(self) -> int:
+        return int(np.ceil(1 / (self.reprate * self.binwidth)))
 
     def gen_laser_pulses_deque(self) -> np.ndarray:
         """
         If data has laser pulses - return them. Else - simulate them with an offset
         """
-        laser_pulses_deque = deque()
-        pulse_grid = namedtuple('PulseGrid', ('x_pulses', 'y_pulses'))
         start_time = 0
-        step = int(np.ceil(1 / (self.reprate * self.binwidth)))
+        step = self.bins_bet_pulses
         volumes_in_movie = self.movie.gen_of_volumes()
 
         if self.all_laser_pulses == 0:  # no 'Laser' data was recorded
             for vol in volumes_in_movie:
-                x_pulses = np.arange(start=start_time+self.offset, stop=vol.end_time,
-                                     step=step, dtype=np.uint64)
-                y_pulses = np.arange(start=start_time+self.offset, stop=vol.metadata['Y'].end+step,
-                                     step=step)
-                grid = pulse_grid(x_pulses, y_pulses)
-                yield grid
+                yield np.arange(start=start_time+self.offset, stop=vol.end_time,
+                                step=step, dtype=np.uint64)
+
         else:
             for vol in volumes_in_movie:
-                x_pulses = self.all_laser_pulses[(self.all_laser_pulses >= vol.abs_start_time-step) &
-                                                   (self.all_laser_pulses <= vol.end_time+step)] + self.offset
-                y_pulses = 1
-                grid = pulse_grid(x_pulses, y_pulses)
-                yield grid
+                yield self.all_laser_pulses[(self.all_laser_pulses >= vol.abs_start_time-step) &
+                                            (self.all_laser_pulses <= vol.end_time+step)] + self.offset
 
     def get_bincount_deque(self):
+        print("Movie object created. Generating the bincount deque...")
         bincount_deque = deque()
         laser_pulses_deque = self.gen_laser_pulses_deque()
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=next(laser_pulses_deque).x_pulses)
-            bincount_deque.append(censored.gen_bincount())
+                                      laser_pulses=next(laser_pulses_deque))
+            dig, bincount = censored.gen_bincount()
+            photon_hist = np.zeros((len(dig), self.bins_bet_pulses), dtype=np.uint8)
+            for laser_idx, photon in enumerate(np.nditer(censored.df.loc[:, 'time_rel_frames'].values)):
+                start_time = censored.laser_pulses[dig[laser_idx]]
+                try:
+                    end_time = censored.laser_pulses[dig[laser_idx] + 1]
+                except IndexError:  # photons out of laser pulses
+                    continue
+                else:
+                    photon_hist[laser_idx, :] = np.histogram(photon, bins=np.arange(start_time, end_time + 1,
+                                                                                 dtype='uint64'))[0].tolist()
+            data_dict = {'photon_hist'    : photon_hist,
+                         'bincount'       : bincount,
+                         'num_empty_hists': sum(bincount) - laser_idx}
+            bincount_deque.append(data_dict)
+
         return bincount_deque
 
     def find_temporal_structure_deque(self):
@@ -59,7 +73,7 @@ class CensorCorrection(object):
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=next(laser_pulses_deque).x_pulses,
+                                      laser_pulses=next(laser_pulses_deque),
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.find_temp_structure())
         return temp_struct_deque
@@ -74,34 +88,42 @@ class CensorCorrection(object):
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      laser_pulses=next(laser_pulses_deque).x_pulses,
+                                      laser_pulses=next(laser_pulses_deque),
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.gen_array_of_hists())
         return temp_struct_deque
 
 
-    def generate_label_for_dataset(self) -> float:
+    def gen_labels(self, size) -> np.ndarray:
         """
-        For a given, fixed, power of the laser, find the ratio of photons per pulse
-        :return: float
+        Create labels for the ML algorithm. Label value must be an integer.
+        :size: Number of elements
+        :return: np.ndarray
         """
-        deque_of_vols = self.create_array_of_hists_deque()
+        return np.ones(size, dtype=np.uint8) * self.power
 
-
-    def learn_histograms(self):
+    def learn_histograms(self, bincount):
         from sklearn import svm, metrics
         import matplotlib.pyplot as plt
 
-        # Flatten the array
-        data = self.gen_array_of_hists_deque().flatten()
-        n_samples = len(data)
-        labels = self.gen_labels()
+        print("Bincount done. Adding all data to a single matrix.")
+        data = np.empty((0, self.bins_bet_pulses))
+        for vol in bincount:
+            data = np.r_[data, vol['photon_hist']]  # the histograms with photons in them
+            data = np.r_[data, np.zeros((vol['num_empty_hists'], self.bins_bet_pulses),
+                                        dtype=np.uint8)]  # empty hists
+        n_samples = data.shape[0]
+        labels = self.gen_labels(n_samples)
         classifier = svm.SVC(gamma=0.001)
-        classifier.fit(data[:n_samples / 2], labels[:n_samples / 2])
+        labels[1] = 10  # toying around
+
+        print("Fitting the data...")
+        classifier.fit(data[:n_samples // 2], labels[:n_samples // 2])
 
         # Predictions
-        expected = labels[n_samples / 2:]
-        predicted = classifier.predict(data[n_samples / 2:])
+        expected = labels[n_samples // 2:]
+        predicted = classifier.predict(data[n_samples // 2:])
+        print("Number of samples is %s." % n_samples)
         print("Classification report for classifier %s:\n%s\n"
               % (classifier, metrics.classification_report(expected, predicted)))
         print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
@@ -116,12 +138,14 @@ class CensoredVolume(object):
     binwidth = attr.ib(default=800e-12)
     reprate = attr.ib(default=80e6)
 
-    def gen_bincount(self) -> np.ndarray:
+    def gen_bincount(self) -> Tuple[np.ndarray]:
         """
         Bin the photons into their relative laser pulses, and count how many photons arrived due to each pulse.
         """
-        hist, _ = np.histogram(self.vol.data['time_rel_frame'].values, bins=self.laser_pulses)
-        return np.bincount(hist)
+        hist, _ = np.histogram(self.vol.data.loc[:, 'time_rel_frames'].values, bins=self.laser_pulses)
+        dig = np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
+                          bins=self.laser_pulses) - 1
+        return dig, np.bincount(hist)
 
     def find_temp_structure(self) -> np.ndarray:
         """
@@ -149,6 +173,10 @@ class CensoredVolume(object):
         :return: np.ndarray of the same size as the original image. Each pixels contains
         a histogram inside it.
         """
+        BinData = namedtuple('BinData', ('hist', 'pulses', 'photons'))
+        all_pulses = 0
+        all_photons = 0
+
         hist, edges = self.vol.create_hist()
         # Create a relative timestamp to the line signal for each laser pulse
         sorted_pulses = np.searchsorted(edges[0][:-1], self.laser_pulses) - 1
@@ -184,7 +212,12 @@ class CensoredVolume(object):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
                     hist = (np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
                            .astype('uint8')
-                    image_bincount[row, col] = np.bincount(hist).astype('uint64', copy=False)
+                    cur_bincount = np.bincount(hist).astype('uint64', copy=False)
+                    tot_pulses = np.sum(cur_bincount)
+                    tot_photons = np.average(cur_bincount, weights=range(len(cur_bincount)))
+                    image_bincount[row, col] = BinData(hist=hist, pulses=tot_pulses, photons=tot_photons)
+                    all_photons += tot_photons
+                    all_pulses += tot_pulses
             else:
                 for col in range(self.vol.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
@@ -202,8 +235,13 @@ class CensoredVolume(object):
                         if not np.all(hist >= 0):
                             print('WHAT IS GOING ON')
                         assert np.all(hist >= 0), 'In row {}, column {}, the histogram turned out to be negative.'.format(row, col)
-                        image_bincount[row, col] = np.bincount(hist).astype('uint64', copy=False)
+                        cur_bincount = np.bincount(hist).astype('uint64', copy=False)
+                        tot_pulses = np.sum(cur_bincount)
+                        tot_photons = np.average(cur_bincount, weights=range(len(cur_bincount)))
+                        image_bincount[row, col] = BinData(hist=hist, pulses=tot_pulses, photons=tot_photons)
+                        all_photons += tot_photons
+                        all_pulses += tot_pulses
 
-        return image_bincount
+        return image_bincount, all_pulses, all_photons
 
 

@@ -47,14 +47,14 @@ def main_data_readout(gui):
     # Censor correction part
     censored = CensorCorrection(movie=final_movie, reprate=gui.reprate.get(),
                                 binwidth=gui.binwidth.get(), offset=5,
-                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
-    bincount = censored.create_array_of_hists_deque()
+                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'],
+                                power=1)
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')
     output_list = generate_output_list(final_movie, gui)
 
-    return analyzed_struct.df_allocated, final_movie, output_list, censored, bincount
+    return analyzed_struct.df_allocated, final_movie, output_list, censored
 
 
 def run():
@@ -71,4 +71,4 @@ def run():
 
 
 if __name__ == '__main__':
-    df, movie, outputs, censored, bincount  = run()
+    df, movie, outputs, censored  = run()

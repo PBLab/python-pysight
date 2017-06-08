@@ -261,3 +261,8 @@ Changelog
 * Censor correction shouldn't require as much memory as it did. It's still not as fast as it can be.
 
 * Loading a configuration file will make it the "last used" file, reloading it when re-running PySight.
+
+0.5.6 (2017-06-08)
+------------------
+
+* ML classification is functional.
