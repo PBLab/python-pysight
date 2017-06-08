@@ -52,6 +52,12 @@ class CensorCorrection(object):
             pos_idx = np.where(dig >= 0)[0]
             dig = dig[pos_idx]
             pos_photons = censored.df.iloc[pos_idx, -1].values
+            if len(pos_photons) == 0:
+                data_dict = {'photon_hist'    : np.zeros((1, self.bins_bet_pulses), dtype=np.uint8),
+                             'bincount'       : bincount,
+                             'num_empty_hists': sum(bincount)}
+                return data_dict
+
             photon_hist = np.zeros((pos_photons.shape[0], self.bins_bet_pulses), dtype=np.uint8)
             for laser_idx, photon in enumerate(np.nditer(pos_photons)):
                 start_time = censored.laser_pulses[dig[laser_idx]]
@@ -103,13 +109,15 @@ class CensorCorrection(object):
         """
         return np.ones(size, dtype=np.uint8) * label
 
-    def learn_histograms(self, label):
+    def learn_histograms(self, label: int, power: int, folder_to_save: str):
         """
         Implement the machine learning algorithm on the data.
-        :param bincount: Output of get_bincount_deque.
+        :param label: Label of ML algorithm.
+        :param power: How much power was injected to the Qubig. For saving the file.
         :return: data, labels
         """
         from sklearn import svm, metrics
+        import pathlib
 
         # Start by generating the data and arranging it properly for the machine
         bincount = self.__get_bincount_deque()
@@ -135,7 +143,23 @@ class CensorCorrection(object):
         print("Classification report for classifier %s:\n%s\n"
               % (classifier, metrics.classification_report(expected, predicted)))
         print("Confusion matrix:\n%s" % metrics.confusion_matrix(expected, predicted))
+
+        # Save the data for future use
+        folder_as_path = pathlib.Path(folder_to_save)
+        filename = str(folder_as_path / "{}p_label_{}.npy".format(power, label))
+        self.__save_data(data=data, filename=filename)
         return data, labels
+
+    def __save_data(self, data: np.ndarray, filename: str):
+        """
+        Save the data array for future training.
+        :param data: Data to be learnt.
+        :param filename: Including dir
+        :return:
+        """
+        print("Saving to {}...".format(filename))
+        with open(filename, 'wb') as f:
+            np.save(f, data)
 
 
 @attr.s(slots=True)

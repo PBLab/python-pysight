@@ -279,3 +279,15 @@ Changelog
 * Return of ``CensorCorrection().learn_histograms()`` is now ``data, labels``.
 
 * Made ``__get_bincount_deque()`` private. To be accessed using ``learn_histograms()`` only.
+
+0.5.8 (2017-06-08)
+------------------
+
+* Robustness upgrades.
+
+* QOL changes to GUI.
+
+* A "power" number is needed for ``learn_histograms()`` - the percent of power given to the Qubig. It's just for saving, labeling is done with the ``label`` keyword.
+
+* A ``foldername`` to which the data will be saved to has also been added.
+

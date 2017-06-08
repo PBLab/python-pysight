@@ -255,7 +255,11 @@ class GUIApp(object):
         fill_frac_entry.grid(column=6, row=6, sticky='e')
 
     def __browsefunc(self):
-        self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
+        if self.filename.get() != '':
+            self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
+                                                     initialdir=str(Path(self.filename.get()).parent)))
+        else:
+            self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
                                                      initialdir='.'))
 
     def __check_if_empty(self, *args):
@@ -334,7 +338,7 @@ class GUIApp(object):
     def __browsecfg(self):
         self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
                                                          title='Choose a configuration file',
-                                                         initialdir='configs'))
+                                                         initialdir=str(Path(__file__).parent / 'configs')))
         with open(self.cfg_filename.get(), 'r') as f:
             self.config = json.load(f)
             utime(self.cfg_filename.get(), (time.time(), time.time()))

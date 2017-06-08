@@ -25,4 +25,12 @@ for idx, lst_file in enumerate(all_lst_files):
     movie_list.append(movie)
     outputs_list.append(outputs)
     censored_list.append(censored)
+    label = 6
+    data, labels = censored.learn_histograms(label)
+    filename = r'/data/Lior/Multiscaler data/06 June 2017/TrainedWeights/17p_label_{}.npy'.format(label)
+    import numpy as np
+
+    with open(filename, 'wb') as f:
+        np.save(f, data)
+
 
