@@ -8,6 +8,7 @@ from attr.validators import instance_of
 from pysight.movie_tools import Volume, Movie
 from collections import deque, namedtuple
 from typing import Tuple
+from numba import jit, uint64, uint8, int64
 
 
 @attr.s(slots=True)
@@ -51,14 +52,14 @@ class CensorCorrection(object):
             dig, bincount = censored.gen_bincount()
             pos_idx = np.where(dig >= 0)[0]
             dig = dig[pos_idx]
-            pos_photons = censored.df.iloc[pos_idx, -1].values
+            pos_photons = censored.df.iloc[pos_idx, -1].values.T
             if len(pos_photons) == 0:
-                data_dict = {'photon_hist'    : np.zeros((1, self.bins_bet_pulses), dtype=np.uint8),
+                data_dict = {'photon_hist'    : np.zeros((self.bins_bet_pulses, 1), dtype=np.uint8),
                              'bincount'       : bincount,
-                             'num_empty_hists': sum(bincount)}
+                             'num_empty_hists': bincount[0]}
                 return data_dict
 
-            photon_hist = np.zeros((pos_photons.shape[0], self.bins_bet_pulses), dtype=np.uint8)
+            photon_hist = np.zeros((self.bins_bet_pulses, pos_photons.shape[0]), dtype=np.uint8)
             for laser_idx, photon in enumerate(np.nditer(pos_photons)):
                 start_time = censored.laser_pulses[dig[laser_idx]]
                 try:
@@ -66,11 +67,14 @@ class CensorCorrection(object):
                 except IndexError:  # photons out of laser pulses
                     continue
                 else:
-                    photon_hist[laser_idx, :] = np.histogram(photon, bins=np.arange(start_time, end_time + 1,
-                                                                                    dtype='uint64'))[0].tolist()
+                    photon_hist[:, laser_idx] = np.histogram(photon, bins=np.arange(start_time, end_time + 1,
+                                                                                    dtype='uint64'))[0]
+
             data_dict = {'photon_hist'    : photon_hist,
                          'bincount'       : bincount,
-                         'num_empty_hists': sum(bincount) - laser_idx}
+                         'num_empty_hists': bincount[0]}
+            assert data_dict['num_empty_hists'] >= 0, 'Sum of bincount: {}, number of photons: {}'\
+                .format(sum(bincount), laser_idx)
             bincount_deque.append(data_dict)
 
         return bincount_deque
@@ -123,11 +127,12 @@ class CensorCorrection(object):
         bincount = self.__get_bincount_deque()
         print("Bincount done. Adding all data to a single matrix.")
 
-        data = np.empty((0, self.bins_bet_pulses))
+        data = np.empty((self.bins_bet_pulses, 0))
         for vol in bincount:
-            data = np.r_[data, vol['photon_hist']]  # the histograms with photons in them
-            data = np.r_[data, np.zeros((vol['num_empty_hists'], self.bins_bet_pulses),
-                                        dtype=np.uint8)]  # empty hists
+            data = np.concatenate((data, vol['photon_hist']), axis=1)  # the histograms with photons in them
+            data = np.concatenate((data, np.zeros((self.bins_bet_pulses, vol['num_empty_hists']),
+                                                  dtype=np.uint8)), axis=1)  # empty hists
+        data = data.T
         n_samples = data.shape[0]
         labels = self.__gen_labels(n_samples, label)
         classifier = svm.SVC(gamma=0.001)
@@ -261,14 +266,17 @@ class CensoredVolume(object):
                         hist = (np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
                             .astype('uint8', copy=False)
                     else:
-                        hist = (np.histogram(final_photons.loc[:, 'time_rel_line'].values,
-                                            bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
+                        # hist = (np.histogram(final_photons.loc[:, 'time_rel_line'].values,
+                        #                     bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
+                        #     .astype('uint8', copy=False)
+                        hist = numba_histogram(final_photons.loc[:, 'time_rel_line'].values,
+                                               bins=final_pulses.loc[:, 'time_rel_line'].values)\
                             .astype('uint8', copy=False)
                     finally:
                         if not np.all(hist >= 0):
                             print('WHAT IS GOING ON')
                         assert np.all(hist >= 0), 'In row {}, column {}, the histogram turned out to be negative.'.format(row, col)
-                        cur_bincount = np.bincount(hist).astype('uint64', copy=False)
+                        cur_bincount = numba_bincount(hist).astype('uint64', copy=False)
                         tot_pulses = np.sum(cur_bincount)
                         tot_photons = np.average(cur_bincount, weights=range(len(cur_bincount)))
                         image_bincount[row, col] = BinData(hist=hist, pulses=tot_pulses, photons=tot_photons)
@@ -278,3 +286,14 @@ class CensoredVolume(object):
         return image_bincount, all_pulses, all_photons
 
 
+@jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
+def numba_histogram(arr: np.array, bins) -> np.array:
+    return np.histogram(arr, bins)[0]
+
+@jit((int64[:](uint8[:])), nopython=True, cache=True)
+def numba_bincount(arr: np.array) -> np.array:
+    return np.bincount(arr)
+#
+# @jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
+# def numba_digitize(arr: np.array) -> np.array:
+#     pass

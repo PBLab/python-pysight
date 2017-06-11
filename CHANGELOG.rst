@@ -291,3 +291,9 @@ Changelog
 
 * A ``foldername`` to which the data will be saved to has also been added.
 
+0.5.9 (2017-06-11)
+------------------
+
+* Much (MUCH) faster concatenation of the data.
+
+* Fixed a bug with the number of empty histograms that were added to the learning dataset.
