@@ -297,3 +297,13 @@ Changelog
 * Much (MUCH) faster concatenation of the data.
 
 * Fixed a bug with the number of empty histograms that were added to the learning dataset.
+
+0.5.10 (2017-06-12)
+-------------------
+
+* Changes and optimizations for the file IO process.
+
+* Fixed a bug with laser pulses verification.
+
+* Added offset parameter for laser input.
+

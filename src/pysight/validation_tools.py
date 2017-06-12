@@ -137,7 +137,7 @@ def validate_created_data_channels(dict_of_data: Dict):
         pass
 
 
-def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Series:
+def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int) -> pd.Series:
     """
     Create an orderly laser pulse train.
     :param pulses:
@@ -146,12 +146,14 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Serie
     """
     import warnings
 
-
     diffs = pulses.diff()
-    pulses_final = pulses[(diffs < np.ceil((1 / (laser_freq * binwidth)))) & (diffs >= 0)].reset_index(drop=True)
+    pulses_final = pulses[(diffs <= np.ceil((1 / (laser_freq * binwidth)))) &
+                          (diffs >= np.floor((1 / (laser_freq * binwidth))))]\
+        .reset_index(drop=True) + offset
     if len(pulses_final) < 0.9 * len(pulses):
         warnings.warn("More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine.")
 
+    pulses_final[0] = pulses[1]
     return pulses_final
 
 

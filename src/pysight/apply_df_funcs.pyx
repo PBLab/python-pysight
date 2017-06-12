@@ -59,6 +59,19 @@ cpdef np.ndarray convert_hex_to_int(np.ndarray arr):
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
+cpdef np.ndarray convert_hex_to_bin(np.ndarray arr):
+    cdef np.ndarray[object, ndim=1] result = np.empty((len(arr),), dtype=object)
+    cdef unsigned long long idx
+    cdef unsigned long long length = len(arr)
+
+    for idx in range(length):
+        result[idx] = bin(int(arr[idx], 16))[2:]
+
+    return result
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
 cpdef tuple get_lost_bit_np(list list_with_lost, int step_size, unsigned long long num_of_events):
     cdef list list_of_lost_bits
     cdef np.ndarray[np.uint64_t, ndim=1] timings = np.zeros((num_of_events,), dtype=np.uint64)
@@ -72,5 +85,22 @@ cpdef tuple get_lost_bit_np(list list_with_lost, int step_size, unsigned long lo
 
         str_as_hex = "".join(list_with_lost[idx:idx+step_size])[1:]
         timings[lin_idx] = int(str_as_hex, 16)
+
+    return list_of_lost_bits, timings
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
+cpdef tuple get_lost_bit_tag(list list_with_lost, int step_size, unsigned long long num_of_events):
+    cdef list list_of_lost_bits
+    cdef np.ndarray[object, ndim=1] timings = np.empty((num_of_events,), dtype=object)
+    cdef unsigned long long idx, lin_idx
+    cdef str str_as_hex
+
+    list_of_lost_bits = []
+
+    for lin_idx, idx in enumerate(range(0, len(list_with_lost), step_size)):
+        list_of_lost_bits.append(list_with_lost[idx][0])
+        timings[lin_idx] = "".join(list_with_lost[idx:idx+step_size])[1:]
 
     return list_of_lost_bits, timings

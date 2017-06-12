@@ -7,21 +7,25 @@ import pandas as pd
 from attr.validators import instance_of
 from pysight.movie_tools import Volume, Movie
 from collections import deque, namedtuple
-from typing import Tuple
+from typing import Tuple, Union
 from numba import jit, uint64, uint8, int64
 
 
 @attr.s(slots=True)
 class CensorCorrection(object):
-    movie = attr.ib(validator=instance_of(Movie))
-    reprate = attr.ib(validator=instance_of(float))
-    binwidth = attr.ib(validator=instance_of(float))
-    offset = attr.ib(validator=instance_of(int))
+    movie            = attr.ib(validator=instance_of(Movie))
+    reprate          = attr.ib(validator=instance_of(float))
+    binwidth         = attr.ib(validator=instance_of(float))
+    laser_offset     = attr.ib(validator=instance_of(float))
     all_laser_pulses = attr.ib()
 
     @property
     def bins_bet_pulses(self) -> int:
         return int(np.ceil(1 / (self.reprate * self.binwidth)))
+
+    @property
+    def offset(self):
+        return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
 
     def __gen_laser_pulses_deque(self) -> np.ndarray:
         """
@@ -105,15 +109,18 @@ class CensorCorrection(object):
             temp_struct_deque.append(censored.gen_array_of_hists())
         return temp_struct_deque
 
-    def __gen_labels(self, size, label) -> np.ndarray:
+    def __gen_labels(self, size: int, label: Union[int, float]) -> np.ndarray:
         """
         Create labels for the ML algorithm. Label value must be an integer.
         :size: Number of elements
         :return: np.ndarray
         """
-        return np.ones(size, dtype=np.uint8) * label
+        if isinstance(label, int):  # fixed power during the session
+            return np.ones(size, dtype=np.uint8) * label
+        elif isinstance(label, float):  # `label` contains the frequency of the triangular wave
+            pass
 
-    def learn_histograms(self, label: int, power: int, folder_to_save: str):
+    def learn_histograms(self, label: Union[int, float], power: int, folder_to_save: str):
         """
         Implement the machine learning algorithm on the data.
         :param label: Label of ML algorithm.

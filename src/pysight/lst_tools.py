@@ -4,10 +4,11 @@ import attr
 from typing import Dict, Tuple
 from numba import jit, int64, uint64
 import warnings
-from pysight.apply_df_funcs import get_lost_bit_np, iter_string_hex_to_bin, convert_hex_to_int
+from pysight.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
 from pysight.validation_tools import validate_line_input, validate_frame_input, \
     validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines
-from collections import defaultdict
+from attr.validators import instance_of
+
 
 
 @attr.s(slots=True)
@@ -17,25 +18,27 @@ class Analysis(object):
     """
     # TODO: Input validations
     # TODO: Variable documentation
-    timepatch = attr.ib(validator=attr.validators.instance_of(str))
-    data_range = attr.ib(validator=attr.validators.instance_of(int))
-    dict_of_inputs = attr.ib()
-    data = attr.ib()
-    is_binary = attr.ib(validator=attr.validators.instance_of(bool))
-    num_of_frames = attr.ib(validator=attr.validators.instance_of(int))
-    x_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    y_pixels = attr.ib(validator=attr.validators.instance_of(int))
-    laser_freq = attr.ib(validator=attr.validators.instance_of(float))
-    binwidth = attr.ib(validator=attr.validators.instance_of(float))
+    timepatch          = attr.ib(validator=instance_of(str))
+    data_range         = attr.ib(validator=instance_of(int))
+    dict_of_inputs     = attr.ib()
+    data               = attr.ib()
+    is_binary          = attr.ib(validator=instance_of(bool))
+    num_of_frames      = attr.ib(validator=instance_of(int))
+    x_pixels           = attr.ib(validator=instance_of(int))
+    y_pixels           = attr.ib(validator=instance_of(int))
+    laser_freq         = attr.ib(validator=instance_of(float))
+    binwidth           = attr.ib(validator=instance_of(float))
     dict_of_slices_hex = attr.ib()
     dict_of_slices_bin = attr.ib()
-    bidir = attr.ib(validator=attr.validators.instance_of(int))
-    tag_freq = attr.ib(validator=attr.validators.instance_of(float))
-    tag_pulses = attr.ib(validator=attr.validators.instance_of(int))
-    phase = attr.ib(validator=attr.validators.instance_of(float))
-    keep_unidir = attr.ib(default=False)
-    df_allocated = attr.ib(init=False)
-    dict_of_data = attr.ib(init=False)
+    bidir              = attr.ib(validator=instance_of(int))
+    tag_freq           = attr.ib(validator=instance_of(float))
+    tag_pulses         = attr.ib(validator=instance_of(int))
+    phase              = attr.ib(validator=instance_of(float))
+    use_tag_bits       = attr.ib(validator=instance_of(int))
+    laser_offset       = attr.ib(validator=instance_of(float))
+    keep_unidir        = attr.ib(default=False)
+    df_allocated       = attr.ib(init=False)
+    dict_of_data       = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of analysis """
@@ -80,6 +83,10 @@ class Analysis(object):
             }
         return diction
 
+    @property
+    def offset(self):
+        return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
+
     def determine_data_channels(self, df: pd.DataFrame=None) -> Tuple:
         """ Create a dictionary that contains the data in its ordered form."""
 
@@ -104,7 +111,7 @@ class Analysis(object):
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
-                                                         binwidth=self.binwidth)
+                                                         binwidth=self.binwidth, offset=self.offset)
         except KeyError:
             pass
 
@@ -190,6 +197,9 @@ class Analysis(object):
             self.dict_of_slices_hex[key].data = self.slice_string_arrays(self.data, self.dict_of_slices_hex[key].start,
                                                                          self.dict_of_slices_hex[key].end)
 
+        if not self.use_tag_bits:
+            self.dict_of_slices_hex.pop('tag')
+
         # Channel and edge information
         edge, channel = self.process_chan_edge(self.dict_of_slices_hex.pop('chan_edge'))
         # TODO: Timepatch == '3' is not supported because of this loop.
@@ -199,13 +209,25 @@ class Analysis(object):
                 if self.dict_of_slices_hex[key].needs_bits:
                     list_with_lost = iter_string_hex_to_bin("".join(self.dict_of_slices_hex[key].data))
                     step_size = self.dict_of_slices_hex[key].end - self.dict_of_slices_hex[key].start
-                    list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_np(list_with_lost, step_size,
-                                                                                            len(self.data))
+                    if key == 'tag':
+                        list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_tag(list_with_lost,
+                                                                                                 step_size,
+                                                                                                 len(self.data))
+                    else:
+                        list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_np(list_with_lost,
+                                                                                                step_size,
+                                                                                                len(self.data))
                 else:
-                    self.dict_of_slices_hex[key].processed = convert_hex_to_int(self.dict_of_slices_hex[key].data)
+                    if key == 'tag':
+                        self.dict_of_slices_hex[key].processed = convert_hex_to_bin(self.dict_of_slices_hex[key].data)
+                    else:
+                        self.dict_of_slices_hex[key].processed = convert_hex_to_int(self.dict_of_slices_hex[key].data)
         else:
             for key in list(self.dict_of_slices_hex.keys())[1:]:
-                self.dict_of_slices_hex[key].processed = convert_hex_to_int(self.dict_of_slices_hex[key].data)
+                if key == 'tag':
+                    self.dict_of_slices_hex[key].processed = convert_hex_to_bin(self.dict_of_slices_hex[key].data)
+                else:
+                    self.dict_of_slices_hex[key].processed = convert_hex_to_int(self.dict_of_slices_hex[key].data)
 
         # Reformat data
         df = pd.DataFrame(channel, columns=['channel'], dtype='category')

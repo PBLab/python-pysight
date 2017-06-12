@@ -168,12 +168,18 @@ class GUIApp(object):
         laser1_label.grid(column=0, row=9, sticky='w')
 
         self.reprate = DoubleVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
-        reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=10)
+        reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
         reprate_entry.grid(column=1, row=9, sticky='w')
 
-    def __binwidth(self, main_frame):
+        self.offset = DoubleVar(value=3.5)  # difference between pulse and arrival to sample
+        laser2_label = ttk.Label(main_frame, text='Offset [ns]')
+        laser2_label.grid(column=2, row=9, sticky='w')
+        offset_entry = ttk.Entry(main_frame, textvariable=self.offset, width=3)
+        offset_entry.grid(column=2, row=9, sticky='e')
 
-        # Binwidth of Multiscaler (for FLIM)
+    def __binwidth(self, main_frame):
+        """ Binwidth of Multiscaler (for FLIM) """
+
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
         binwidth_label.grid(column=0, row=10, sticky='ns')
         self.binwidth = DoubleVar(value=800e-12)
@@ -181,8 +187,8 @@ class GUIApp(object):
         binwidth_entry.grid(column=1, row=10, sticky='ns')
 
     def __tag_lens(self, main_frame):
+        """ TAG lens nominal frequency """
 
-        # TAG lens nominal frequency
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
@@ -195,8 +201,8 @@ class GUIApp(object):
         tag_pulses_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
+        """ TAG bits """
 
-        # TAG bits
         tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation')
         tag_bits_label.grid(column=1, row=5, sticky='ns')
 
