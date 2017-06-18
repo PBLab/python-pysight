@@ -113,7 +113,8 @@ class Analysis(object):
                                                        num_of_frames=self.num_of_frames,
                                                        last_event_time=last_event_time)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
-                                            num_of_lines=self.y_pixels, binwidth=self.binwidth)
+                                            num_of_lines=self.y_pixels, binwidth=self.binwidth,
+                                            last_event_time=last_event_time)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
                                                          binwidth=self.binwidth, offset=self.offset)
@@ -136,12 +137,12 @@ class Analysis(object):
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
 
-        df_photons = self.dict_of_data['PMT1']  # TODO: Support more than one data channel
+        df_photons = self.dict_of_data['PMT1'].copy()  # TODO: Support more than one data channel
         column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
 
         # Unidirectional scan - create fake lines
         if not self.bidir:
-            self.dict_of_data = self.add_unidirectional_lines(dict_of_data=self.dict_of_data, line_delta=line_delta)
+            self.dict_of_data = self.add_unidirectional_lines(line_delta=line_delta)
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
@@ -294,8 +295,7 @@ class Analysis(object):
                 # self.dict_of_slices_bin[key].data_as_
                 pass
 
-    @staticmethod
-    def add_unidirectional_lines(dict_of_data: Dict, line_delta: float = -1):
+    def add_unidirectional_lines(self, line_delta: float = -1):
         """
         For unidirectional scans fake line signals have to be inserted.
         :param dict_of_data: All data
@@ -306,15 +306,13 @@ class Analysis(object):
         if line_delta == -1:
             raise ValueError('Line delta variable was miscalculated.')
 
-        length_of_lines       = dict_of_data['Lines'].shape[0]
+        length_of_lines       = self.dict_of_data['Lines'].shape[0]
         new_line_arr          = np.zeros(length_of_lines * 2 - 1)
-        new_line_arr[::2]     = dict_of_data['Lines'].values
-        new_line_arr[1::2]    = dict_of_data['Lines'].rolling(window=2).mean()[1:]
+        new_line_arr[::2]     = self.dict_of_data['Lines'].values
+        new_line_arr[1::2]    = self.dict_of_data['Lines'].rolling(window=2).mean()[1:]
 
-        dict_of_data['Lines'] = pd.Series(new_line_arr, name='Lines', dtype='uint64')
-        return dict_of_data
-
-
+        self.dict_of_data['Lines'] = pd.Series(new_line_arr, name='Lines', dtype='uint64')
+        return self.dict_of_data
 
 
 @jit(nopython=True, cache=True)

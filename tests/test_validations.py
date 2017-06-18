@@ -40,6 +40,15 @@ class TestFrame(TestCase):
         self.assertEqual(calc_last_event_time(dict_of_data, lines_per_frame),
                          200)
 
+    def test_last_event_with_single_frame(self):
+        frame_data = pd.DataFrame([100])
+        dict_of_data = {'PMT1': pd.DataFrame([1, 2, 3]),
+                        'Frames': frame_data,
+                        'Lines': [1, 2, 3]}
+        lines_per_frame = 1
+        self.assertEqual(calc_last_event_time(dict_of_data, lines_per_frame),
+                         200)
+
     def test_last_event_with_lines_less_than_needed_single_frame(self):
         line_data = pd.DataFrame([0, 10, 20])
         lines_per_frame = 5

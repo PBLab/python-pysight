@@ -185,14 +185,14 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
 
     if not bidir and not keep_unidir:
         df = df.drop(df.index[uneven_lines == 1])
-        df['time_rel_line'] = df['time_rel_line_pre_drop']
+        df.loc['time_rel_line'] = df.loc['time_rel_line_pre_drop']
 
     if not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
         sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
-        df['Lines'] = lines.loc[sorted_indices].values
+        df.loc['Lines'] = lines.loc[sorted_indices].values
 
     df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
-    df = df[df.loc[:, 'time_rel_line'] >= 0]
+    df = df.loc[df.loc[:, 'time_rel_line'] >= 0]
 
     return df
 
@@ -219,8 +219,11 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
     ##
     if 'Frames' in dict_of_data:
         last_frame_time = dict_of_data['Frames'].iloc[-1]
-        frame_diff = int(dict_of_data['Frames'].diff().mean())
-        return int(last_frame_time + frame_diff)
+        if dict_of_data['Frames'].shape[0] == 1:
+            return int(2 * last_frame_time)
+        else:
+            frame_diff = int(dict_of_data['Frames'].diff().mean())
+            return int(last_frame_time + frame_diff)
 
     if 'Lines' in dict_of_data:
         num_of_lines_recorded = len(dict_of_data['Lines'])
