@@ -7,7 +7,8 @@ import numpy as np
 import warnings
 
 
-def validate_line_input(dict_of_data: Dict, num_of_lines: int = -1, num_of_frames: int = -1, binwidth: float = 800e-12):
+def validate_line_input(dict_of_data: Dict, num_of_lines: int=-1, num_of_frames: int=-1, binwidth: float=800e-12,
+                        last_event_time: int=-1):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
@@ -15,52 +16,59 @@ def validate_line_input(dict_of_data: Dict, num_of_lines: int = -1, num_of_frame
     if num_of_frames == -1:
         raise ValueError('No number of frames received.')
 
-    last_event_time = dict_of_data['PMT1'].max()  # TODO: Assuming only data from PMT1 is relevant here
+    if last_event_time == -1:
+        raise ValueError('No last event time received.')
+
     if 'Lines' in dict_of_data.keys():
         # Verify that the input is not corrupt
-        median_of_lines = dict_of_data['Lines'].diff().abs().median()
-        mean_of_lines = dict_of_data['Lines'].diff().abs().mean()
-        diff_between_mean_median = abs((mean_of_lines - median_of_lines)/median_of_lines)
-        if diff_between_mean_median > 0.15:  # Large diff suggesting corrupt data
-            warnings.warn('The difference between the mean and median values of the line channel is {}%.\n'
-                          .format(diff_between_mean_median * 100))
-            line_delta = float(input('If you know the expected time (in seconds) between subsequent lines please write it. Else, write 0:\n'))
-            line_delta *= binwidth
-            if line_delta <= 0:
-                raise ValueError('Line data was corrupt.')
-            # Create a new line array
+        max_change_pct = dict_of_data['Lines'][dict_of_data['Lines'].diff().pct_change(periods=10) > 15]
+        if len(max_change_pct) / len(dict_of_data['Lines']) > 0.1\
+            and 'Frames' not in dict_of_data:
+            # Data is corrupted, and no frame channel can help us.
+            raise ValueError(""" Line data was corrupt.
+                             Please rerun PySight without a line channel.""")
+
+        elif len(max_change_pct) / len(dict_of_data['Lines']) > 0.1\
+            and 'Frames' in dict_of_data:
+            # Data is corrupted, but we can rebuild lines on top of the frame channel
             line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                            num_of_frames=num_of_frames)
             dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
-        else:
+            line_delta = last_event_time / (num_of_lines * int(num_of_frames))
+            return dict_of_data, line_delta
+
+        elif len(max_change_pct) / len(dict_of_data['Lines']) < 0.1:
             # Data is valid. Check whether we need a 0-time line event
-            line_delta = median_of_lines
+            line_delta = dict_of_data['Lines'].diff().mean()
             zeroth_line_delta = np.abs(dict_of_data['Lines'][0] - line_delta)/line_delta
             if zeroth_line_delta < 0.05:
                 dict_of_data['Lines'] = pd.Series([0], name='Lines', dtype='uint64') \
                     .append(dict_of_data['Lines'], ignore_index=True)
+            return dict_of_data, line_delta
 
     else:  # create our own line array
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                        num_of_frames=num_of_frames)
         dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
         line_delta = last_event_time/(num_of_lines * int(num_of_frames))
+        return dict_of_data, line_delta
 
-    return dict_of_data, line_delta
 
-
-def validate_frame_input(dict_of_data: Dict, binwidth, line_delta: int = -1, num_of_lines: int = -1):
+def validate_frame_input(dict_of_data: Dict, binwidth, line_delta: int=-1, num_of_lines: int=-1,
+                         last_event_time: int=-1):
     if line_delta == -1:
         raise ValueError('No line delta input received.')
 
     if num_of_lines == -1:
         raise ValueError('No number of lines received.')
 
+    if last_event_time == -1:
+        raise ValueError('No last event time input received.')
+
     if 'Frames' in dict_of_data.keys():
         dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype='uint64')\
             .append(dict_of_data['Frames'], ignore_index=True)
     else:
-        last_event_time = int(dict_of_data['Lines'].max() + line_delta)
         frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
                                          pixels=num_of_lines)
         dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype='uint64')
@@ -187,3 +195,49 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
     df = df[df.loc[:, 'time_rel_line'] >= 0]
 
     return df
+
+
+def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
+    """
+    Find the last event time for the experiment. Logic as follows:
+    No lines \ frames data given: Last event time is the last photon time.
+    Only lines data given: The last start-of-frame time is created, and the difference between subsequent frames
+    in the data is added.
+    Frames data exists: The last frame time plus the difference between subsequent frames is the last event time.
+    :param dict_of_data: Dictionary of data.
+    :param lines_per_frame: Lines per frame.
+    :return: int
+    """
+
+    # Basic assertions
+    if lines_per_frame < 1:
+        raise ValueError('No lines per frame value received, or value was corrupt.')
+
+    if 'PMT1' not in dict_of_data:
+        raise ValueError('No PMT1 channel in dict_of_data.')
+
+    ##
+    if 'Frames' in dict_of_data:
+        last_frame_time = dict_of_data['Frames'].iloc[-1]
+        frame_diff = int(dict_of_data['Frames'].diff().mean())
+        return int(last_frame_time + frame_diff)
+
+    if 'Lines' in dict_of_data:
+        num_of_lines_recorded = len(dict_of_data['Lines'])
+        div, mod = divmod(num_of_lines_recorded, lines_per_frame)
+        if num_of_lines_recorded > lines_per_frame * (div+1):  # excessive number of lines
+            last_line_of_last_frame = dict_of_data['Lines'].iloc[div * lines_per_frame - 1]
+            frame_diff = dict_of_data['Lines'].iloc[div * lines_per_frame - 1] -\
+                dict_of_data['Lines'].iloc[(div - 1) * lines_per_frame]
+            return int(last_line_of_last_frame + frame_diff)
+
+        elif mod == 0:  # number of lines contained exactly in number of lines per frame
+            return int(dict_of_data['Lines'].iloc[-1] + dict_of_data['Lines'].diff().mean())
+
+        elif num_of_lines_recorded < lines_per_frame * (div+1):
+            missing_lines = lines_per_frame - mod
+            line_diff = int(dict_of_data['Lines'].diff().mean())
+            return int(dict_of_data['Lines'].iloc[-1] + ((missing_lines+1) * line_diff))
+
+    # Just PMT data
+    return int(dict_of_data['PMT1'].loc[:, 'abs_time'].max())

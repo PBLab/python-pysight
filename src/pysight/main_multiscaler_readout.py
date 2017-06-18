@@ -71,4 +71,4 @@ def run():
 
 
 if __name__ == '__main__':
-    df, movie, outputs, censored  = run()
+    df, movie, outputs, censored = run()

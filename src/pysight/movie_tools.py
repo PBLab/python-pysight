@@ -40,7 +40,7 @@ class Movie(object):
             diff_between_frames = self.data['time_rel_frames'].max()
 
         volume_times = list(volume_times)
-        volume_times.append(volume_times[-1] + diff_between_frames)
+        volume_times.append(int(volume_times[-1] + diff_between_frames))
 
         return volume_times
 

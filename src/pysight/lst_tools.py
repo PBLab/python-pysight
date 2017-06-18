@@ -6,9 +6,9 @@ from numba import jit, int64, uint64
 import warnings
 from pysight.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
 from pysight.validation_tools import validate_line_input, validate_frame_input, \
-    validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines
+    validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines, \
+    calc_last_event_time
 from attr.validators import instance_of
-
 
 
 @attr.s(slots=True)
@@ -50,7 +50,7 @@ class Analysis(object):
         print('Sorted dataframe created. Starting setting the proper data channel distribution...')
         self.dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
         print('Channels of events found. Allocating photons to their frames and lines...')
-        self.df_allocated = self.allocate_photons(dict_of_data=self.dict_of_data, line_delta=line_delta)
+        self.df_allocated = self.allocate_photons(line_delta=line_delta)
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
@@ -95,18 +95,23 @@ class Analysis(object):
 
         dict_of_data = {}
         for key in self.dict_of_inputs:
-            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], 'abs_time']
+            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], ['abs_time', 'edge']]
             # NUMBA SORT NOT WORKING:
             # sorted_vals = numba_sorted(relevant_values.values)
             # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
             if 'PMT1' == key or 'PMT2' == key:
                 dict_of_data[key] = relevant_values.reset_index(drop=True)
             else:
-                dict_of_data[key] = relevant_values.sort_values().reset_index(drop=True)
+                dict_of_data[key] = relevant_values.loc[:, 'abs_time'].sort_values().reset_index(drop=True)
+
+        if 'Frames' in dict_of_data:
+            self.num_of_frames = len(dict_of_data['Frames']) + 1  # account for first frame
 
         # Validations
+        last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data, line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
-                                                       num_of_frames=self.num_of_frames)
+                                                       num_of_frames=self.num_of_frames,
+                                                       last_event_time=last_event_time)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth)
         try:
@@ -118,7 +123,7 @@ class Analysis(object):
         validate_created_data_channels(dict_of_data)
         return dict_of_data, line_delta
 
-    def allocate_photons(self, dict_of_data=None, line_delta: float = -1) -> pd.DataFrame:
+    def allocate_photons(self, line_delta: float = -1) -> pd.DataFrame:
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
         :param dict_of_data: All events data, distributed to its input channel
@@ -129,43 +134,43 @@ class Analysis(object):
 
         # Preparations
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
-        relevant_keys = set(dict_of_data.keys()) - irrelevant_keys
+        relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
 
-        df_photons = dict_of_data['PMT1']  # TODO: Support more than one data channel
-        df_photons = pd.DataFrame(df_photons, dtype='uint64')  # before this change it's a series with a name, not column head
+        df_photons = self.dict_of_data['PMT1']  # TODO: Support more than one data channel
         column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
 
         # Unidirectional scan - create fake lines
         if not self.bidir:
-            dict_of_data = self.add_unidirectional_lines(dict_of_data=dict_of_data, line_delta=line_delta)
+            self.dict_of_data = self.add_unidirectional_lines(dict_of_data=self.dict_of_data, line_delta=line_delta)
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
-            sorted_indices = numba_search_sorted(dict_of_data[key].values, df_photons['abs_time'].values)
+            sorted_indices = numba_search_sorted(self.dict_of_data[key].values, df_photons.loc[:, 'abs_time'].values)
             try:
-                df_photons[key] = dict_of_data[key].loc[sorted_indices].values
+                df_photons[key] = self.dict_of_data[key].loc[sorted_indices].values
             except KeyError:
                 warnings.warn('All computed sorted_indices were "-1" for key {}. Trying to resume...'.format(key))
 
             df_photons.dropna(how='any', inplace=True)
-            df_photons[key] = df_photons[key].astype(np.uint64)
-            df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key] # relative time of each photon in
-            #                                                                          accordance to the line\frame\laser pulse
+            df_photons.loc[:, key] = df_photons.loc[:, key].astype(np.uint64)
+            # relative time of each photon in accordance to the line\frame\laser pulse
+            df_photons.loc[:, column_heads[key]] = df_photons.loc[:, 'abs_time'] - df_photons.loc[:, key]
+
             if 'Lines' == key:
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
                                                              sorted_indices=sorted_indices[sorted_indices >= 0],
-                                                             lines=dict_of_data['Lines'], bidir=self.bidir,
+                                                             lines=self.dict_of_data['Lines'], bidir=self.bidir,
                                                              phase=self.phase, keep_unidir=self.keep_unidir)
 
             if 'Laser' != key:
-                df_photons[key] = df_photons[key].astype('category')
+                df_photons.loc[:, key] = df_photons.loc[:, key].astype('category')
             df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
         # Closure
-        assert np.all(df_photons.values >= 0)  # finds NaNs as well
+        assert np.all(df_photons.loc[:, 'abs_time'].values >= 0)  # finds NaNs as well
         # Deal with TAG lens interpolation
         try:
-            tag = dict_of_data['TAG Lens']
+            tag = self.dict_of_data['TAG Lens']
         except KeyError:
             pass
         else:
@@ -198,7 +203,7 @@ class Analysis(object):
                                                                          self.dict_of_slices_hex[key].end)
 
         if not self.use_tag_bits:
-            self.dict_of_slices_hex.pop('tag')
+            self.dict_of_slices_hex.pop('tag', None)
 
         # Channel and edge information
         edge, channel = self.process_chan_edge(self.dict_of_slices_hex.pop('chan_edge'))
@@ -308,6 +313,8 @@ class Analysis(object):
 
         dict_of_data['Lines'] = pd.Series(new_line_arr, name='Lines', dtype='uint64')
         return dict_of_data
+
+
 
 
 @jit(nopython=True, cache=True)
