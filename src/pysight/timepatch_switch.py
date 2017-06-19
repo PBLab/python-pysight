@@ -31,9 +31,9 @@ class ChoiceManagerHex:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 3
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 3
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 3
         dict_of_slices['chan_edge'].end = 4
@@ -47,9 +47,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 2
         dict_of_slices['sweep'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 2
-        dict_of_slices['abs_time'].end = 7
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 2
+        dict_of_slices['time_rel_sweep'].end = 7
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 7
         dict_of_slices['chan_edge'].end = 8
@@ -60,9 +60,9 @@ class ChoiceManagerHex:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 7
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 7
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 7
         dict_of_slices['chan_edge'].end = 8
@@ -76,9 +76,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 4
         dict_of_slices['sweep'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 4
-        dict_of_slices['abs_time'].end = 11
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 4
+        dict_of_slices['time_rel_sweep'].end = 11
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 11
         dict_of_slices['chan_edge'].end = 12
@@ -94,9 +94,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 4
         dict_of_slices['sweep'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 4
-        dict_of_slices['abs_time'].end = 11
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 4
+        dict_of_slices['time_rel_sweep'].end = 11
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 11
         dict_of_slices['chan_edge'].end = 12
@@ -110,9 +110,9 @@ class ChoiceManagerHex:
         dict_of_slices['tag'].end = 2
         dict_of_slices['tag'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 2
-        dict_of_slices['abs_time'].end = 11
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 2
+        dict_of_slices['time_rel_sweep'].end = 11
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 11
         dict_of_slices['chan_edge'].end = 12
@@ -127,9 +127,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 2
         dict_of_slices['sweep'].needs_bits = True
 
-        dict_of_slices['abs_time'].start = 2
-        dict_of_slices['abs_time'].end = 11
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 2
+        dict_of_slices['time_rel_sweep'].end = 11
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 11
         dict_of_slices['chan_edge'].end = 12
@@ -140,9 +140,9 @@ class ChoiceManagerHex:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 11
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 11
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 11
         dict_of_slices['chan_edge'].end = 12
@@ -160,9 +160,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 8
         dict_of_slices['sweep'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 8
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 8
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -178,9 +178,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 8
         dict_of_slices['sweep'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 8
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 8
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -198,9 +198,9 @@ class ChoiceManagerHex:
         dict_of_slices['sweep'].end = 6
         dict_of_slices['sweep'].needs_bits = True
 
-        dict_of_slices['abs_time'].start = 6
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 6
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -216,9 +216,9 @@ class ChoiceManagerHex:
         dict_of_slices['tag'].end = 4
         dict_of_slices['tag'].needs_bits = True
 
-        dict_of_slices['abs_time'].start = 4
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 4
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -232,9 +232,9 @@ class ChoiceManagerHex:
         dict_of_slices['tag'].end = 4
         dict_of_slices['tag'].needs_bits = False
 
-        dict_of_slices['abs_time'].start = 4
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 4
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -249,9 +249,9 @@ class ChoiceManagerHex:
         dict_of_slices['tag'].end = 2
         dict_of_slices['tag'].needs_bits = True
 
-        dict_of_slices['abs_time'].start = 2
-        dict_of_slices['abs_time'].end = 15
-        dict_of_slices['abs_time'].needs_bits = False
+        dict_of_slices['time_rel_sweep'].start = 2
+        dict_of_slices['time_rel_sweep'].end = 15
+        dict_of_slices['time_rel_sweep'].needs_bits = False
 
         dict_of_slices['chan_edge'].start = 15
         dict_of_slices['chan_edge'].end = 16
@@ -266,7 +266,7 @@ class ChoiceManagerHex:
         """
         from pysight.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
-        keys = ['lost', 'tag', 'sweep', 'abs_time', 'chan_edge']
+        keys = ['lost', 'tag', 'sweep', 'time_rel_sweep', 'chan_edge']
 
         slice_dict[keys[0]] = False
         for key in keys[1:]:
@@ -311,9 +311,9 @@ class ChoiceManagerBinary:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 12
-        dict_of_slices['abs_time'].cols = 16
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 12
+        dict_of_slices['time_rel_sweep'].cols = 16
 
         dict_of_slices['edge'].start = 12
         dict_of_slices['edge'].end = 13
@@ -331,8 +331,8 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 0
         dict_of_slices['sweep'].end = 8
 
-        dict_of_slices['abs_time'].start = 8
-        dict_of_slices['abs_time'].end = 28
+        dict_of_slices['time_rel_sweep'].start = 8
+        dict_of_slices['time_rel_sweep'].end = 28
 
         dict_of_slices['chan_edge'].start = 28
         dict_of_slices['chan_edge'].end = 32
@@ -343,8 +343,8 @@ class ChoiceManagerBinary:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 28
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 28
 
         dict_of_slices['chan_edge'].start = 28
         dict_of_slices['chan_edge'].end = 32
@@ -357,8 +357,8 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 0
         dict_of_slices['sweep'].end = 16
 
-        dict_of_slices['abs_time'].start = 16
-        dict_of_slices['abs_time'].end = 44
+        dict_of_slices['time_rel_sweep'].start = 16
+        dict_of_slices['time_rel_sweep'].end = 44
 
         dict_of_slices['chan_edge'].start = 44
         dict_of_slices['chan_edge'].end = 48
@@ -372,8 +372,8 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 8
         dict_of_slices['sweep'].end = 16
 
-        dict_of_slices['abs_time'].start = 16
-        dict_of_slices['abs_time'].end = 44
+        dict_of_slices['time_rel_sweep'].start = 16
+        dict_of_slices['time_rel_sweep'].end = 44
 
         dict_of_slices['chan_edge'].start = 44
         dict_of_slices['chan_edge'].end = 48
@@ -386,8 +386,8 @@ class ChoiceManagerBinary:
         dict_of_slices['tag'].start = 0
         dict_of_slices['tag'].end = 8
 
-        dict_of_slices['abs_time'].start = 8
-        dict_of_slices['abs_time'].end = 44
+        dict_of_slices['time_rel_sweep'].start = 8
+        dict_of_slices['time_rel_sweep'].end = 44
 
         dict_of_slices['chan_edge'].start = 44
         dict_of_slices['chan_edge'].end = 48
@@ -401,8 +401,8 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 1
         dict_of_slices['sweep'].end = 8
 
-        dict_of_slices['abs_time'].start = 8
-        dict_of_slices['abs_time'].end = 44
+        dict_of_slices['time_rel_sweep'].start = 8
+        dict_of_slices['time_rel_sweep'].end = 44
 
         dict_of_slices['chan_edge'].start = 44
         dict_of_slices['chan_edge'].end = 48
@@ -413,8 +413,8 @@ class ChoiceManagerBinary:
         dict_of_slices.pop('tag', None)
         dict_of_slices.pop('sweep', None)
 
-        dict_of_slices['abs_time'].start = 0
-        dict_of_slices['abs_time'].end = 44
+        dict_of_slices['time_rel_sweep'].start = 0
+        dict_of_slices['time_rel_sweep'].end = 44
 
         dict_of_slices['chan_edge'].start = 44
         dict_of_slices['chan_edge'].end = 48
@@ -433,9 +433,9 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 16
         dict_of_slices['sweep'].end = 32
 
-        dict_of_slices['abs_time'].start = 32
-        dict_of_slices['abs_time'].end = 60
-        dict_of_slices['abs_time'].cols = 32
+        dict_of_slices['time_rel_sweep'].start = 32
+        dict_of_slices['time_rel_sweep'].end = 60
+        dict_of_slices['time_rel_sweep'].cols = 32
 
         dict_of_slices['edge'].start = 60
         dict_of_slices['edge'].end = 61
@@ -454,8 +454,8 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].start = 16
         dict_of_slices['sweep'].end = 32
 
-        dict_of_slices['abs_time'].start = 32
-        dict_of_slices['abs_time'].end = 60
+        dict_of_slices['time_rel_sweep'].start = 32
+        dict_of_slices['time_rel_sweep'].end = 60
 
         dict_of_slices['chan_edge'].start = 60
         dict_of_slices['chan_edge'].end = 64
@@ -475,9 +475,9 @@ class ChoiceManagerBinary:
         dict_of_slices['sweep'].end = 24
         dict_of_slices['sweep'].cols = 8
 
-        dict_of_slices['abs_time'].start = 24
-        dict_of_slices['abs_time'].end = 60
-        dict_of_slices['abs_time'].cols = 40
+        dict_of_slices['time_rel_sweep'].start = 24
+        dict_of_slices['time_rel_sweep'].end = 60
+        dict_of_slices['time_rel_sweep'].cols = 40
 
         dict_of_slices['edge'].start = 60
         dict_of_slices['edge'].end = 61
@@ -497,8 +497,8 @@ class ChoiceManagerBinary:
         dict_of_slices['tag'].start = 1
         dict_of_slices['tag'].end = 16
 
-        dict_of_slices['abs_time'].start = 16
-        dict_of_slices['abs_time'].end = 60
+        dict_of_slices['time_rel_sweep'].start = 16
+        dict_of_slices['time_rel_sweep'].end = 60
 
         dict_of_slices['chan_edge'].start = 60
         dict_of_slices['chan_edge'].end = 64
@@ -511,8 +511,8 @@ class ChoiceManagerBinary:
         dict_of_slices['tag'].start = 0
         dict_of_slices['tag'].end = 16
 
-        dict_of_slices['abs_time'].start = 16
-        dict_of_slices['abs_time'].end = 60
+        dict_of_slices['time_rel_sweep'].start = 16
+        dict_of_slices['time_rel_sweep'].end = 60
 
         dict_of_slices['chan_edge'].start = 60
         dict_of_slices['chan_edge'].end = 64
@@ -527,8 +527,8 @@ class ChoiceManagerBinary:
         dict_of_slices['tag'].start = 1
         dict_of_slices['tag'].end = 6
 
-        dict_of_slices['abs_time'].start = 6
-        dict_of_slices['abs_time'].end = 60
+        dict_of_slices['time_rel_sweep'].start = 6
+        dict_of_slices['time_rel_sweep'].end = 60
 
         dict_of_slices['chan_edge'].start = 60
         dict_of_slices['chan_edge'].end = 64
@@ -543,7 +543,7 @@ class ChoiceManagerBinary:
         """
         from pysight.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
-        keys: List[str] = ['lost', 'tag', 'sweep', 'abs_time', 'edge', 'chan']
+        keys: List[str] = ['lost', 'tag', 'sweep', 'time_rel_sweep', 'edge', 'chan']
 
         for key in keys:
             slice_dict[key] = Struct(np.nan, np.nan)

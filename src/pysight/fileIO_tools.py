@@ -132,7 +132,7 @@ class FileIO(object):
     def get_range(self) -> int:
         """
         Finds the "range" of the current file in the proper units
-        :return: range as defined my MCS, after bit depth multiplication
+        :return: range as defined by MCS6A
         """
         import re
 

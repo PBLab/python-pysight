@@ -36,6 +36,7 @@ class Analysis(object):
     phase              = attr.ib(validator=instance_of(float))
     use_tag_bits       = attr.ib(validator=instance_of(int))
     laser_offset       = attr.ib(validator=instance_of(float))
+    use_sweeps         = attr.ib(validator=instance_of(bool))
     keep_unidir        = attr.ib(default=False)
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
@@ -94,8 +95,12 @@ class Analysis(object):
             raise ValueError('Received dataframe was empty.')
 
         dict_of_data = {}
+        data_to_grab = ['abs_time']
+        if self.use_sweeps:
+            data_to_grab.extend(('edge', 'sweep', 'time_rel_sweep'))
+
         for key in self.dict_of_inputs:
-            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], ['abs_time', 'edge']]
+            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], data_to_grab]
             # NUMBA SORT NOT WORKING:
             # sorted_vals = numba_sorted(relevant_values.values)
             # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
@@ -254,10 +259,12 @@ class Analysis(object):
         df['abs_time'] = np.uint64(0)
 
         if 'sweep' in self.dict_of_slices_hex:
-            df['abs_time'] = self.dict_of_slices_hex['abs_time'].processed + (
+            df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed + (
                 (self.dict_of_slices_hex['sweep'].processed - 1) * self.data_range)
+            df['sweep'] = self.dict_of_slices_hex['sweep'].processed - 1
+            df['time_rel_sweep'] = self.dict_of_slices_hex['time_rel_sweep'].processed
         else:
-            df['abs_time'] = self.dict_of_slices_hex['abs_time'].processed
+            df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed
 
         # Before sorting all photons make sure that no input is missing from the user. If it's missing
         # the code will ignore this channel, but not raise an exception

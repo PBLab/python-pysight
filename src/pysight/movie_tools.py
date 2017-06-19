@@ -76,8 +76,8 @@ class Movie(object):
         try:
             cur_vol = next(volumes_in_movie)
             data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-        except StopIteration:
-            raise UserWarning('No frames were generated.')
+        except StopIteration as e:
+            return e.value('No frames were generated.')
 
         try:
             with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff,

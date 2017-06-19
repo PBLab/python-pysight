@@ -168,7 +168,7 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int
 def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool = True,
                                     phase: float = 0, keep_unidir: bool = False):
     """
-    "Deal" with photons in uneven lines. Unidir - currently throws them away.
+    "Deal" with photons in uneven lines. Unidir - if keep_unidir is false, will throw them away.
     Bidir = flips them over.
     """
     uneven_lines = np.remainder(sorted_indices, 2)
@@ -185,13 +185,16 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
 
     if not bidir and not keep_unidir:
         df = df.drop(df.index[uneven_lines == 1])
-        df.loc['time_rel_line'] = df.loc['time_rel_line_pre_drop']
+        df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
     if not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
         sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
         df.loc['Lines'] = lines.loc[sorted_indices].values
 
-    df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
+    try:
+        df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
+    except ValueError:  # column label doesn't exist
+        pass
     df = df.loc[df.loc[:, 'time_rel_line'] >= 0]
 
     return df
