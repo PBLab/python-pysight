@@ -40,6 +40,7 @@ class Analysis(object):
     keep_unidir        = attr.ib(default=False)
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
+    data_to_grab       = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of analysis """
@@ -56,6 +57,8 @@ class Analysis(object):
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
             self.dict_of_data['Laser'] = 0
+        # if self.use_sweeps:
+        #     out = self.train_dataset()
 
     @staticmethod
     def hex_to_bin_dict():
@@ -88,38 +91,52 @@ class Analysis(object):
     def offset(self):
         return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
 
+    def __allocate_data_by_channel(self, df):
+        """
+        Go over the channels and find the events from that specific channel, assigning
+        them to a dictionary with a suitable name.
+        :param df: DataFrame with data to allocate.
+        :return: Dict containing the data
+        """
+
+        dict_of_data = {}
+        self.data_to_grab = ['abs_time']
+        if self.use_sweeps:
+            self.data_to_grab.extend(('edge', 'sweep', 'time_rel_sweep'))
+
+        for key in self.dict_of_inputs:
+            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], self.data_to_grab]
+            # NUMBA SORT NOT WORKING:
+            # sorted_vals = numba_sorted(relevant_values.values)
+            # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
+            if key in ['PMT1', 'PMT2']:
+                dict_of_data[key] = relevant_values.reset_index(drop=True)
+            else:
+                dict_of_data[key] = relevant_values.sort_values(by=['abs_time']).reset_index(drop=True)
+
+        return dict_of_data
+
     def determine_data_channels(self, df: pd.DataFrame=None) -> Tuple:
         """ Create a dictionary that contains the data in its ordered form."""
 
         if df.empty:
             raise ValueError('Received dataframe was empty.')
 
-        dict_of_data = {}
-        data_to_grab = ['abs_time']
-        if self.use_sweeps:
-            data_to_grab.extend(('edge', 'sweep', 'time_rel_sweep'))
-
-        for key in self.dict_of_inputs:
-            relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], data_to_grab]
-            # NUMBA SORT NOT WORKING:
-            # sorted_vals = numba_sorted(relevant_values.values)
-            # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
-            if 'PMT1' == key or 'PMT2' == key:
-                dict_of_data[key] = relevant_values.reset_index(drop=True)
-            else:
-                dict_of_data[key] = relevant_values.loc[:, 'abs_time'].sort_values().reset_index(drop=True)
+        dict_of_data = self.__allocate_data_by_channel(df=df)
 
         if 'Frames' in dict_of_data:
-            self.num_of_frames = len(dict_of_data['Frames']) + 1  # account for first frame
+            self.num_of_frames = dict_of_data['Frames'].shape[0] + 1  # account for first frame
 
         # Validations
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data, line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
                                                        num_of_frames=self.num_of_frames,
-                                                       last_event_time=last_event_time)
+                                                       last_event_time=last_event_time,
+                                                       cols_in_data=self.data_to_grab)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
-                                            last_event_time=last_event_time)
+                                            last_event_time=last_event_time,
+                                            cols_in_data=self.data_to_grab)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
                                                          binwidth=self.binwidth, offset=self.offset)
@@ -151,9 +168,10 @@ class Analysis(object):
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
-            sorted_indices = numba_search_sorted(self.dict_of_data[key].values, df_photons.loc[:, 'abs_time'].values)
+            sorted_indices = numba_search_sorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
+                                                 df_photons.loc[:, 'abs_time'].values)
             try:
-                df_photons[key] = self.dict_of_data[key].loc[sorted_indices].values
+                df_photons[key] = self.dict_of_data[key].loc[sorted_indices, 'abs_time'].values
             except KeyError:
                 warnings.warn('All computed sorted_indices were "-1" for key {}. Trying to resume...'.format(key))
 
@@ -165,8 +183,9 @@ class Analysis(object):
             if 'Lines' == key:
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
                                                              sorted_indices=sorted_indices[sorted_indices >= 0],
-                                                             lines=self.dict_of_data['Lines'], bidir=self.bidir,
-                                                             phase=self.phase, keep_unidir=self.keep_unidir)
+                                                             lines=self.dict_of_data['Lines'].loc[:, 'abs_time'],
+                                                             bidir=self.bidir, phase=self.phase,
+                                                             keep_unidir=self.keep_unidir)
 
             if 'Laser' != key:
                 df_photons.loc[:, key] = df_photons.loc[:, key].astype('category')
@@ -176,7 +195,7 @@ class Analysis(object):
         assert np.all(df_photons.loc[:, 'abs_time'].values >= 0)  # finds NaNs as well
         # Deal with TAG lens interpolation
         try:
-            tag = self.dict_of_data['TAG Lens']
+            tag = self.dict_of_data['TAG Lens'].loc[:, 'abs_time']
         except KeyError:
             pass
         else:
@@ -257,6 +276,8 @@ class Analysis(object):
             pass
 
         df['abs_time'] = np.uint64(0)
+        df['sweep'] = np.uint64(0)
+        df['time_rel_sweep'] = np.uint64(0)
 
         if 'sweep' in self.dict_of_slices_hex:
             df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed + (
@@ -315,11 +336,24 @@ class Analysis(object):
 
         length_of_lines       = self.dict_of_data['Lines'].shape[0]
         new_line_arr          = np.zeros(length_of_lines * 2 - 1)
-        new_line_arr[::2]     = self.dict_of_data['Lines'].values
-        new_line_arr[1::2]    = self.dict_of_data['Lines'].rolling(window=2).mean()[1:]
+        new_line_arr[::2]     = self.dict_of_data['Lines'].loc[:, 'abs_time'].values
+        new_line_arr[1::2]    = self.dict_of_data['Lines'].loc[:, 'abs_time']\
+                                    .rolling(window=2).mean()[1:]
 
-        self.dict_of_data['Lines'] = pd.Series(new_line_arr, name='Lines', dtype='uint64')
+        self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
+                                                  dtype='uint64')
         return self.dict_of_data
+
+    def train_dataset(self):
+        """
+        Using almost raw data, allocate photons to their laser pulses
+        (instead of laser pulses to photons) and create all 16 bit words for the ML algorithm.
+        :return:
+        """
+        sorted_indices = numba_search_sorted(self.dict_of_data['Laser'].values,
+                                             self.dict_of_data['PMT1'].values)
+
+
 
 
 @jit(nopython=True, cache=True)

@@ -50,7 +50,6 @@ def main_data_readout(gui):
                                 binwidth=gui.binwidth.get(), laser_offset=gui.offset.get(),
                                 all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
 
-    out = analyzed_struct.gte
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

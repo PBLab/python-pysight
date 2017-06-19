@@ -1,13 +1,14 @@
 """
 __author__ = Hagai Hargil
 """
-from typing import Dict
+from typing import Dict, List
 import pandas as pd
 import numpy as np
 import warnings
 
 
-def validate_line_input(dict_of_data: Dict, num_of_lines: int=-1, num_of_frames: int=-1, binwidth: float=800e-12,
+def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
+                        num_of_frames: int=-1, binwidth: float=800e-12,
                         last_event_time: int=-1):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
@@ -19,42 +20,48 @@ def validate_line_input(dict_of_data: Dict, num_of_lines: int=-1, num_of_frames:
     if last_event_time == -1:
         raise ValueError('No last event time received.')
 
+    if len(cols_in_data) == 0:
+        raise ValueError('No columns in data.')
+
     if 'Lines' in dict_of_data.keys():
         # Verify that the input is not corrupt
-        max_change_pct = dict_of_data['Lines'][dict_of_data['Lines'].diff().pct_change(periods=10) > 15]
-        if len(max_change_pct) / len(dict_of_data['Lines']) > 0.1\
+        max_change_pct = dict_of_data['Lines']['abs_time'][dict_of_data['Lines']['abs_time']\
+            .diff().pct_change(periods=10) > 15]
+        if len(max_change_pct) / dict_of_data['Lines'].shape[0] > 0.1\
             and 'Frames' not in dict_of_data:
             # Data is corrupted, and no frame channel can help us.
             raise ValueError(""" Line data was corrupt.
                              Please rerun PySight without a line channel.""")
 
-        elif len(max_change_pct) / len(dict_of_data['Lines']) > 0.1\
+        elif len(max_change_pct) / dict_of_data['Lines'].shape[0] > 0.1\
             and 'Frames' in dict_of_data:
             # Data is corrupted, but we can rebuild lines on top of the frame channel
             line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                            num_of_frames=num_of_frames)
-            dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
+            dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
             line_delta = last_event_time / (num_of_lines * int(num_of_frames))
             return dict_of_data, line_delta
 
         elif len(max_change_pct) / len(dict_of_data['Lines']) < 0.1:
             # Data is valid. Check whether we need a 0-time line event
-            line_delta = dict_of_data['Lines'].diff().mean()
-            zeroth_line_delta = np.abs(dict_of_data['Lines'][0] - line_delta)/line_delta
+            line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean()
+            zeroth_line_delta = np.abs(dict_of_data['Lines'].loc[0, 'abs_time'] - line_delta)/line_delta
             if zeroth_line_delta < 0.05:
-                dict_of_data['Lines'] = pd.Series([0], name='Lines', dtype='uint64') \
+                dict_of_data['Lines'] = pd.DataFrame([[0] * len(cols_in_data)],
+                                                     columns=cols_in_data,
+                                                     dtype='uint64')\
                     .append(dict_of_data['Lines'], ignore_index=True)
             return dict_of_data, line_delta
 
     else:  # create our own line array
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                        num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.Series(line_array, name='abs_time', dtype='uint64')
+        dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
         line_delta = last_event_time/(num_of_lines * int(num_of_frames))
         return dict_of_data, line_delta
 
 
-def validate_frame_input(dict_of_data: Dict, binwidth, line_delta: int=-1, num_of_lines: int=-1,
+def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_delta: int=-1, num_of_lines: int=-1,
                          last_event_time: int=-1):
     if line_delta == -1:
         raise ValueError('No line delta input received.')
@@ -65,13 +72,19 @@ def validate_frame_input(dict_of_data: Dict, binwidth, line_delta: int=-1, num_o
     if last_event_time == -1:
         raise ValueError('No last event time input received.')
 
+    if len(cols_in_data) == 0:
+        raise ValueError('No columns in data.')
+
     if 'Frames' in dict_of_data.keys():
-        dict_of_data['Frames'] = pd.Series([0], name='abs_time', dtype='uint64')\
-            .append(dict_of_data['Frames'], ignore_index=True)
+        dict_of_data['Frames'] = pd.DataFrame([[0] * len(cols_in_data)],
+                                                     columns=cols_in_data,
+                                                     dtype='uint64')\
+                    .append(dict_of_data['Frames'], ignore_index=True)
     else:
-        frame_array = create_frame_array(lines=dict_of_data['Lines'], last_event_time=last_event_time,
+        frame_array = create_frame_array(lines=dict_of_data['Lines'].loc[:, 'abs_time'],
+                                         last_event_time=last_event_time,
                                          pixels=num_of_lines)
-        dict_of_data['Frames'] = pd.Series(frame_array, name='abs_time', dtype='uint64')
+        dict_of_data['Frames'] = pd.DataFrame(frame_array, columns=['abs_time'], dtype='uint64')
 
     return dict_of_data
 
@@ -94,7 +107,6 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     else:
         unnecess_lines = num_of_recorded_lines % pixels
         array_of_frames = lines.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
-
 
     return np.array(array_of_frames)
 
@@ -154,7 +166,7 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int
     """
     import warnings
 
-    diffs = pulses.diff()
+    diffs = pulses.loc[:, 'abs_time'].diff()
     pulses_final = pulses[(diffs <= np.ceil((1 / (laser_freq * binwidth)))) &
                           (diffs >= np.floor((1 / (laser_freq * binwidth))))]\
         .reset_index(drop=True) + offset
@@ -221,29 +233,32 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
 
     ##
     if 'Frames' in dict_of_data:
-        last_frame_time = dict_of_data['Frames'].iloc[-1]
+        last_frame_time = dict_of_data['Frames'].loc[:, 'abs_time'].iloc[-1]
         if dict_of_data['Frames'].shape[0] == 1:
             return int(2 * last_frame_time)
         else:
-            frame_diff = int(dict_of_data['Frames'].diff().mean())
+            frame_diff = int(dict_of_data['Frames'].loc[:, 'abs_time'].diff().mean())
             return int(last_frame_time + frame_diff)
 
     if 'Lines' in dict_of_data:
-        num_of_lines_recorded = len(dict_of_data['Lines'])
+        num_of_lines_recorded = dict_of_data['Lines'].shape[0]
         div, mod = divmod(num_of_lines_recorded, lines_per_frame)
         if num_of_lines_recorded > lines_per_frame * (div+1):  # excessive number of lines
-            last_line_of_last_frame = dict_of_data['Lines'].iloc[div * lines_per_frame - 1]
-            frame_diff = dict_of_data['Lines'].iloc[div * lines_per_frame - 1] -\
-                dict_of_data['Lines'].iloc[(div - 1) * lines_per_frame]
+            last_line_of_last_frame = dict_of_data['Lines'].loc[:, 'abs_time']\
+                .iloc[div * lines_per_frame - 1]
+            frame_diff = dict_of_data['Lines'].loc[:, 'abs_time'].iloc[div * lines_per_frame - 1] -\
+                dict_of_data['Lines'].loc[:, 'abs_time'].iloc[(div - 1) * lines_per_frame]
             return int(last_line_of_last_frame + frame_diff)
 
         elif mod == 0:  # number of lines contained exactly in number of lines per frame
-            return int(dict_of_data['Lines'].iloc[-1] + dict_of_data['Lines'].diff().mean())
+            return int(dict_of_data['Lines'].loc[:, 'abs_time'].iloc[-1] + dict_of_data['Lines']\
+                .loc[:, 'abs_time'].diff().mean())
 
         elif num_of_lines_recorded < lines_per_frame * (div+1):
             missing_lines = lines_per_frame - mod
-            line_diff = int(dict_of_data['Lines'].diff().mean())
-            return int(dict_of_data['Lines'].iloc[-1] + ((missing_lines+1) * line_diff))
+            line_diff = int(dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean())
+            return int(dict_of_data['Lines'].loc[:, 'abs_time'].iloc[-1] +\
+                ((missing_lines+1) * line_diff))
 
     # Just PMT data
     return int(dict_of_data['PMT1'].loc[:, 'abs_time'].max())
