@@ -38,6 +38,7 @@ class Analysis(object):
     laser_offset       = attr.ib(validator=instance_of(float))
     use_sweeps         = attr.ib(validator=instance_of(bool))
     keep_unidir        = attr.ib(default=False)
+    downsampled        = attr.ib(default=8, validator=instance_of(int))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -114,6 +115,15 @@ class Analysis(object):
             else:
                 dict_of_data[key] = relevant_values.sort_values(by=['abs_time']).reset_index(drop=True)
 
+        # Apply offset for laser
+        # try:
+        #     dict_of_data['Laser']['abs_time'] = dict_of_data['laser']['abs_time'] + self.offset
+        #     dict_of_data['Laser']['time_rel_sweep'] = dict_of_data['laser']['time_rel_sweep'] + self.offset
+        # except KeyError:
+        #     pass
+        # CURRENTLY DISREGARDING OFFSET VALUES, SINCE THE ABOVE OPERATION MIGHT SHIFT LASER PULSES FROM THEIR RELATIVE
+        # CORRECT SWEEP.
+
         return dict_of_data
 
     def determine_data_channels(self, df: pd.DataFrame=None) -> Tuple:
@@ -139,7 +149,8 @@ class Analysis(object):
                                             cols_in_data=self.data_to_grab)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
-                                                         binwidth=self.binwidth, offset=self.offset)
+                                                         binwidth=self.binwidth, offset=self.offset,
+                                                         downsampled=self.downsampled)
         except KeyError:
             pass
 
@@ -343,17 +354,6 @@ class Analysis(object):
         self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
                                                   dtype='uint64')
         return self.dict_of_data
-
-    def train_dataset(self):
-        """
-        Using almost raw data, allocate photons to their laser pulses
-        (instead of laser pulses to photons) and create all 16 bit words for the ML algorithm.
-        :return:
-        """
-        sorted_indices = numba_search_sorted(self.dict_of_data['Laser'].values,
-                                             self.dict_of_data['PMT1'].values)
-
-
 
 
 @jit(nopython=True, cache=True)

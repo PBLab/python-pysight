@@ -157,7 +157,8 @@ def validate_created_data_channels(dict_of_data: Dict):
         pass
 
 
-def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int) -> pd.Series:
+def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int,
+                         downsampled: int) -> pd.Series:
     """
     Create an orderly laser pulse train.
     :param pulses:
@@ -167,14 +168,13 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int
     import warnings
 
     diffs = pulses.loc[:, 'abs_time'].diff()
-    pulses_final = pulses[(diffs <= np.ceil((1 / (laser_freq * binwidth)))) &
-                          (diffs >= np.floor((1 / (laser_freq * binwidth))))]\
-        .reset_index(drop=True) + offset
+    rel_idx = (diffs <= np.ceil((1 / (laser_freq * binwidth)))) & (diffs >= np.floor((1 / (laser_freq * binwidth))))
+    pulses_final = pulses[rel_idx]  # REMINDER: Laser offset wasn't added
     if len(pulses_final) < 0.9 * len(pulses):
         warnings.warn("More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine.")
 
-    pulses_final[0] = pulses[1]
-    return pulses_final
+    pulses_final = pd.concat([pulses.loc[:0, :], pulses_final])
+    return pulses_final.reset_index(drop=True)
 
 
 def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool = True,

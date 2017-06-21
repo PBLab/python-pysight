@@ -13,11 +13,13 @@ from numba import jit, uint64, uint8, int64
 
 @attr.s(slots=True)
 class CensorCorrection(object):
+    raw              = attr.ib(validator=instance_of(dict))
+    data             = attr.ib(validator=instance_of(pd.DataFrame))
     movie            = attr.ib(validator=instance_of(Movie))
-    reprate          = attr.ib(validator=instance_of(float))
-    binwidth         = attr.ib(validator=instance_of(float))
-    laser_offset     = attr.ib(validator=instance_of(float))
     all_laser_pulses = attr.ib()
+    reprate          = attr.ib(default=80e6, validator=instance_of(float))
+    binwidth         = attr.ib(default=800e-12, validator=instance_of(float))
+    laser_offset     = attr.ib(default=3.5, validator=instance_of(float))
 
     @property
     def bins_bet_pulses(self) -> int:
@@ -172,6 +174,39 @@ class CensorCorrection(object):
         print("Saving to {}...".format(filename))
         with open(filename, 'wb') as f:
             np.save(f, data)
+
+    def append_laser_line(self):
+        """
+        Add a final laser line to the laser signal input.
+        """
+        last_laser_row = pd.DataFrame({'abs_time': self.raw['Laser']['abs_time'].iat[-1] + self.bins_bet_pulses,
+                                       'edge': 0,
+                                       'sweep': self.raw['Laser']['sweep'].iat[-1],
+                                       'time_rel_sweep': self.raw['Laser']['time_rel_sweep'].iat[-1] + self.bins_bet_pulses},
+                                      index=[self.raw['Laser'].shape[0]])
+        self.raw['Laser'] = pd.concat([self.raw['Laser'], last_laser_row])
+
+    def train_dataset(self):
+        """
+        Using almost raw data, allocate photons to their laser pulses
+        (instead of laser pulses to photons) and create all 16 bit words for the ML algorithm.
+        :return:
+        """
+        # Append a fake laser pulse to retain original number of "bins"
+        self.append_laser_line()
+        sorted_indices = pd.cut(self.raw['PMT1']['abs_time'], bins=self.raw['Laser']['abs_time'],
+                                labels=self.raw['Laser'].iloc[:-1, 3], include_lowest=True)
+        self.raw['Laser'].set_index(keys='time_rel_sweep', inplace=True,
+                                    append=True, drop=True)
+        num_of_pos_bins = 22
+        new_bins = np.arange(-10, num_of_pos_bins + 1)  # 32 bins
+        min_time_after_sweep = 10
+        max_time_after_sweep = self.raw['Laser']['time_rel_sweep'].max() - num_of_pos_bins - 1
+        indices = np.arange(min_time_after_sweep, max_time_after_sweep)
+        hist_df = pd.DataFrame([], dtype=object)
+        for idx in indices:
+            cur_pulse = self.raw['Laser'].xs(idx, level='time_rel_sweep',
+                                             drop_level=False)
 
 
 @attr.s(slots=True)

@@ -35,7 +35,7 @@ def main_data_readout(gui):
                                bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
-                               laser_offset=gui.offset.get(), use_sweeps=True)
+                               laser_offset=gui.offset.get(), use_sweeps=True, downsampled=int(gui.downsampled.get()))
     analyzed_struct.run()
 
     # Create a movie object
@@ -46,10 +46,11 @@ def main_data_readout(gui):
                         fill_frac=gui.fill_frac.get())
 
     # Censor correction part
-    censored = CensorCorrection(movie=final_movie, reprate=gui.reprate.get(),
-                                binwidth=gui.binwidth.get(), laser_offset=gui.offset.get(),
+    censored = CensorCorrection(raw=analyzed_struct.dict_of_data, movie=final_movie,
+                                reprate=gui.reprate.get(), binwidth=gui.binwidth.get(),
+                                laser_offset=gui.offset.get(), data=analyzed_struct.df_allocated,
                                 all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
-
+    censored.train_dataset()
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

@@ -18,13 +18,13 @@ class Movie(object):
     A holder for Volume objects to be displayed consecutively.
     """
     data      = attr.ib()
-    reprate   = attr.ib(validator=attr.validators.instance_of(float))
-    x_pixels  = attr.ib(validator=attr.validators.instance_of(int))
-    y_pixels  = attr.ib(validator=attr.validators.instance_of(int))
-    z_pixels  = attr.ib(validator=attr.validators.instance_of(int))
-    name      = attr.ib(validator=attr.validators.instance_of(str))
-    binwidth  = attr.ib(validator=attr.validators.instance_of(float))
-    fill_frac = attr.ib(validator=attr.validators.instance_of(float))
+    reprate   = attr.ib(default=80e6, validator=attr.validators.instance_of(float))
+    x_pixels  = attr.ib(default=512, validator=attr.validators.instance_of(int))
+    y_pixels  = attr.ib(default=512, validator=attr.validators.instance_of(int))
+    z_pixels  = attr.ib(default=100, validator=attr.validators.instance_of(int))
+    name      = attr.ib(default='Movie', validator=attr.validators.instance_of(str))
+    binwidth  = attr.ib(default=800e-12, validator=attr.validators.instance_of(float))
+    fill_frac = attr.ib(default=0.8, validator=attr.validators.instance_of(float))
     big_tiff  = attr.ib(default=True)
     bidir     = attr.ib(default=True)
 

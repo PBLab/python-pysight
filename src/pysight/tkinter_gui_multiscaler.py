@@ -46,6 +46,7 @@ class GUIApp(object):
         self.__save_cfg(main_frame)
         self.__load_cfg(main_frame)
         self.__load_last_used_cfg(main_frame)
+        self.__downsampling(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -393,6 +394,23 @@ class GUIApp(object):
             with open(latest_filename, 'r') as f:
                 self.config = json.load(f)
             self.__modify_vars()
+
+    def __downsampling(self, main_frame):
+        """
+        Defines the mapping between one pulse and the missing pulses.
+        For example, downsampling factor of 8 means that every pulse that is
+        received starts an event of 8 pulses, with the next recorded pulse being the 9th.
+        :param main_frame: ttk.Frame
+        """
+        self.downsampled: IntVar = IntVar(value=8)
+        downsample_entry: ttk.Entry = ttk.Entry(main_frame,
+                                                textvariable=self.downsampled,
+                                                width=4)
+        downsample_entry.grid(row=7, column=6, sticky='e')
+        downsample_label: ttk.Label = ttk.Label(main_frame,
+                                                text='Downsampling')
+        downsample_label.grid(row=7, column=6, sticky='w')
+
 
 
 def verify_gui_input(gui):
