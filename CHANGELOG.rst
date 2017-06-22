@@ -307,3 +307,14 @@ Changelog
 
 * Added offset parameter for laser input.
 
+0.5.11 (2017-06-22)
+-------------------
+
+* Added FLIM functionality with laser clock in the Multiscaler's clock.
+
+0.5.12 (2017-06-22)
+-------------------
+
+* Fixed small bug with GUI.
+
+* Possible fix to TAG lens interpolation.
