@@ -46,7 +46,7 @@ class GUIApp(object):
         self.__save_cfg(main_frame)
         self.__load_cfg(main_frame)
         self.__load_last_used_cfg(main_frame)
-        self.__downsampling(main_frame)
+        self.__flim(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -168,7 +168,7 @@ class GUIApp(object):
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
         laser1_label.grid(column=0, row=9, sticky='w')
 
-        self.reprate = DoubleVar(value=80e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
+        self.reprate = DoubleVar(value=80.3e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
         reprate_entry.grid(column=1, row=9, sticky='w')
 
@@ -395,22 +395,18 @@ class GUIApp(object):
                 self.config = json.load(f)
             self.__modify_vars()
 
-    def __downsampling(self, main_frame):
+    def __flim(self, main_frame):
         """
         Defines the mapping between one pulse and the missing pulses.
         For example, downsampling factor of 8 means that every pulse that is
         received starts an event of 8 pulses, with the next recorded pulse being the 9th.
         :param main_frame: ttk.Frame
         """
-        self.downsampled: IntVar = IntVar(value=8)
-        downsample_entry: ttk.Entry = ttk.Entry(main_frame,
-                                                textvariable=self.downsampled,
-                                                width=4)
-        downsample_entry.grid(row=7, column=6, sticky='e')
-        downsample_label: ttk.Label = ttk.Label(main_frame,
-                                                text='Downsampling')
-        downsample_label.grid(row=7, column=6, sticky='w')
-
+        self.flim: IntVar = IntVar(value=0)
+        flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
+                                                      variable=self.flim,
+                                                      text='FLIM?')
+        flim_check.grid(row=9, column=3, sticky='e')
 
 
 def verify_gui_input(gui):
@@ -520,6 +516,9 @@ def verify_gui_input(gui):
 
     if type(gui.filename.get()) != str:
         raise UserWarning('Filename must be a string.')
+
+    if 'Laser' in channel_inputs and gui.flim.get() == 1:
+        raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
 
 
 if __name__ == '__main__':

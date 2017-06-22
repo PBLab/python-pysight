@@ -18,27 +18,27 @@ class Analysis(object):
     """
     # TODO: Input validations
     # TODO: Variable documentation
-    timepatch          = attr.ib(validator=instance_of(str))
-    data_range         = attr.ib(validator=instance_of(int))
     dict_of_inputs     = attr.ib()
     data               = attr.ib()
-    is_binary          = attr.ib(validator=instance_of(bool))
-    num_of_frames      = attr.ib(validator=instance_of(int))
-    x_pixels           = attr.ib(validator=instance_of(int))
-    y_pixels           = attr.ib(validator=instance_of(int))
-    laser_freq         = attr.ib(validator=instance_of(float))
-    binwidth           = attr.ib(validator=instance_of(float))
     dict_of_slices_hex = attr.ib()
     dict_of_slices_bin = attr.ib()
-    bidir              = attr.ib(validator=instance_of(int))
-    tag_freq           = attr.ib(validator=instance_of(float))
-    tag_pulses         = attr.ib(validator=instance_of(int))
-    phase              = attr.ib(validator=instance_of(float))
-    use_tag_bits       = attr.ib(validator=instance_of(int))
-    laser_offset       = attr.ib(validator=instance_of(float))
-    use_sweeps         = attr.ib(validator=instance_of(bool))
+    timepatch          = attr.ib(default='32', validator=instance_of(str))
+    data_range         = attr.ib(default='1', validator=instance_of(int))
+    is_binary          = attr.ib(default=False, validator=instance_of(bool))
+    num_of_frames      = attr.ib(default=1, validator=instance_of(int))
+    x_pixels           = attr.ib(default=512, validator=instance_of(int))
+    y_pixels           = attr.ib(default=512, validator=instance_of(int))
+    laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
+    binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
+    bidir              = attr.ib(default=0, validator=instance_of(int))
+    tag_freq           = attr.ib(default=189e5, validator=instance_of(float))
+    tag_pulses         = attr.ib(default=1, validator=instance_of(int))
+    phase              = attr.ib(default=-2.6, validator=instance_of(float))
+    use_tag_bits       = attr.ib(default=0, validator=instance_of(int))
+    laser_offset       = attr.ib(default=0, validator=instance_of(float))
+    use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
     keep_unidir        = attr.ib(default=False)
-    downsampled        = attr.ib(default=8, validator=instance_of(int))
+    flim               = attr.ib(default=0, validator=instance_of(int))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -149,8 +149,7 @@ class Analysis(object):
                                             cols_in_data=self.data_to_grab)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
-                                                         binwidth=self.binwidth, offset=self.offset,
-                                                         downsampled=self.downsampled)
+                                                         binwidth=self.binwidth, offset=self.offset)
         except KeyError:
             pass
 
@@ -202,8 +201,8 @@ class Analysis(object):
                 df_photons.loc[:, key] = df_photons.loc[:, key].astype('category')
             df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
-        # Closure
         assert np.all(df_photons.loc[:, 'abs_time'].values >= 0)  # finds NaNs as well
+
         # Deal with TAG lens interpolation
         try:
             tag = self.dict_of_data['TAG Lens'].loc[:, 'abs_time']
@@ -215,7 +214,9 @@ class Analysis(object):
                                          binwidth=self.binwidth, tag_pulses=self.tag_pulses)
             print('TAG lens interpolation finished.')
 
-        # df_photons.drop(['abs_time'], axis=1, inplace=True)
+        # Deal with laser pulses interpolation
+        if self.flim:
+            df_photons = self.__interpolate_laser(df_photons)
 
         return df_photons
 
@@ -354,6 +355,18 @@ class Analysis(object):
         self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
                                                   dtype='uint64')
         return self.dict_of_data
+
+    def __interpolate_laser(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Assign a time relative to a laser pulse for each photon.
+        :param df: Dataframe with data for each photon.
+        :return: Modified dataframe.
+        """
+        rel_time1 = df['abs_time'].values % 251
+        rel_time2 = rel_time1 % np.ceil(1 / (self.binwidth * self.laser_freq))
+        df['time_rel_pulse'] = rel_time2
+
+        return df
 
 
 @jit(nopython=True, cache=True)

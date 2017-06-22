@@ -35,7 +35,7 @@ def main_data_readout(gui):
                                bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
-                               laser_offset=gui.offset.get(), use_sweeps=True, downsampled=int(gui.downsampled.get()))
+                               laser_offset=gui.offset.get(), use_sweeps=True, flim=gui.flim.get())
     analyzed_struct.run()
 
     # Create a movie object
@@ -50,7 +50,6 @@ def main_data_readout(gui):
                                 reprate=gui.reprate.get(), binwidth=gui.binwidth.get(),
                                 laser_offset=gui.offset.get(), data=analyzed_struct.df_allocated,
                                 all_laser_pulses=analyzed_struct.dict_of_data['Laser'])
-    censored.train_dataset()
 
     # Find out what the user wanted and output it
     print('======================================================= \nOutputs:\n--------')

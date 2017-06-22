@@ -198,8 +198,8 @@ class Volume(object):
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
             except ZeroDivisionError:
                 laser_start = 0
-                warnings.warn('No laser reprate provided. Assuming 80 MHz.')
-                laser_end = np.ceil(1 / (80e6 * self.binwidth)).astype(int)
+                warnings.warn('No laser reprate provided. Assuming 80.3 MHz.')
+                laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(int)
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
 
         return metadata

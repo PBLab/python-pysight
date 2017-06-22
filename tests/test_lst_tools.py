@@ -1,24 +1,16 @@
 import unittest
 from os import sep
+from pysight.lst_tools import Analysis
 
 
 class TestLstTools(unittest.TestCase):
-    from pysight.lst_tools import Analysis
-
-
-    analysis = Analysis()
-    analysis.run()
-    list_of_file_names = ['tests_data' + sep + 'data_for_tests.lst']
-    list_of_real_start_loc = [1749]
-    list_of_real_time_patch = ['32']
-    list_of_real_range = [80000000 * 2 ** 4]
 
     def test_complete_workflow(self):
-
+        # TODO: NOT FUNCTIONAL, should probably split it
         from pysight.fileIO_tools import read_lst
         from pysight.lst_tools import tabulate_input
         from pysight.lst_tools import determine_data_channels
-        from pysight.lst_tools import allocate_photons  # TODO: Split this test
+        from pysight.lst_tools import allocate_photons
         from pysight.timepatch_switch import ChoiceManager
         import numpy as np
 
@@ -121,6 +113,11 @@ class TestLstTools(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             dict1 = create_inputs_dict(trial_gui)
+
+
+    def test_interpolate_laser(self):
+        analysis = Analysis()
+
 
 
 if __name__ == '__main__':
