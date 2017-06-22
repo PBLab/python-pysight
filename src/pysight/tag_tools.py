@@ -44,7 +44,7 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
 
     # Iterate until TAG pulses are completely periodic
     while changed_ticks != 0:
-        new_ticks = np.take(tag_data.values, missing_ticks - 1) + period
+        new_ticks = np.take(tag_data.values, missing_ticks[missing_ticks < tag_data.shape[0]] - 1) + period
         tag_data = tag_data.append(pd.Series(new_ticks, dtype=np.uint64), ignore_index=True)
         tag_data.sort_values(inplace=True)
 

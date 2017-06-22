@@ -43,10 +43,12 @@ class GUIApp(object):
         self.__tag_bits(main_frame)
         self.__bi_dir(main_frame)
         self.__keep_unidir_events(main_frame)
+        self.__flim(main_frame)
+
+        # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
         self.__load_cfg(main_frame)
         self.__load_last_used_cfg(main_frame)
-        self.__flim(main_frame)
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
@@ -303,6 +305,21 @@ class GUIApp(object):
         self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
         self.keep_unidir_check.config(state='disabled')
 
+    def __flim(self, main_frame):
+        """
+        Defines the mapping between one pulse and the missing pulses.
+        For example, downsampling factor of 8 means that every pulse that is
+        received starts an event of 8 pulses, with the next recorded pulse being the 9th.
+        :param main_frame: ttk.Frame
+        """
+        self.flim: IntVar = IntVar(value=0)
+        flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
+                                                      variable=self.flim,
+                                                      text='FLIM?')
+        flim_check.grid(row=9, column=3, sticky='e')
+
+    ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT #######
+
     def __save_cfg(self, main_frame):
         """ A button to write a .json with current configs """
         self.cfg_to_save: StringVar = StringVar(value='default')
@@ -394,19 +411,6 @@ class GUIApp(object):
             with open(latest_filename, 'r') as f:
                 self.config = json.load(f)
             self.__modify_vars()
-
-    def __flim(self, main_frame):
-        """
-        Defines the mapping between one pulse and the missing pulses.
-        For example, downsampling factor of 8 means that every pulse that is
-        received starts an event of 8 pulses, with the next recorded pulse being the 9th.
-        :param main_frame: ttk.Frame
-        """
-        self.flim: IntVar = IntVar(value=0)
-        flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
-                                                      variable=self.flim,
-                                                      text='FLIM?')
-        flim_check.grid(row=9, column=3, sticky='e')
 
 
 def verify_gui_input(gui):
