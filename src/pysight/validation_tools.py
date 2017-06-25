@@ -262,4 +262,11 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
                 ((missing_lines+1) * line_diff))
 
     # Just PMT data
-    return int(dict_of_data['PMT1'].loc[:, 'abs_time'].max())
+    max_pmt1 = dict_of_data['PMT1'].loc[:, 'abs_time'].max()
+    try:
+        max_pmt2 = dict_of_data['PMT2'].loc[:, 'abs_time'].max()
+    except KeyError:
+        return max_pmt1
+    else:
+        return max(max_pmt1, max_pmt2)
+

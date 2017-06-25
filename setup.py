@@ -92,6 +92,7 @@ setup(
         'attrs >= 16.3',
         'cython >= 0.24',
         'tables',
+        'scipy',
         'scikit-learn'
     ],
     extras_require={

@@ -318,3 +318,8 @@ Changelog
 * Fixed small bug with GUI.
 
 * Possible fix to TAG lens interpolation.
+
+0.5.13 (2017-06-22)
+-------------------
+
+* Added SciPy dependency.

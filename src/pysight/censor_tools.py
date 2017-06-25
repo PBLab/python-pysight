@@ -9,6 +9,7 @@ from pysight.movie_tools import Volume, Movie
 from collections import deque, namedtuple
 from typing import Tuple, Union
 from numba import jit, uint64, uint8, int64
+import sys
 
 
 @attr.s(slots=True)
@@ -17,6 +18,7 @@ class CensorCorrection(object):
     data             = attr.ib(validator=instance_of(pd.DataFrame))
     movie            = attr.ib(validator=instance_of(Movie))
     all_laser_pulses = attr.ib()
+    flim             = attr.ib(default=False, validator=instance_of(bool))
     reprate          = attr.ib(default=80e6, validator=instance_of(float))
     binwidth         = attr.ib(default=800e-12, validator=instance_of(float))
     laser_offset     = attr.ib(default=3.5, validator=instance_of(float))
@@ -29,6 +31,13 @@ class CensorCorrection(object):
     def offset(self):
         return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
 
+    def run(self):
+        """
+        Main pipeline for the censor correction part.
+        """
+        temp_struct = self.create_array_of_hists_deque()
+        return temp_struct
+
     def __gen_laser_pulses_deque(self) -> np.ndarray:
         """
         If data has laser pulses - return them. Else - simulate them with an offset
@@ -37,10 +46,13 @@ class CensorCorrection(object):
         step = self.bins_bet_pulses
         volumes_in_movie = self.movie.gen_of_volumes()
 
-        if self.all_laser_pulses == 0:  # no 'Laser' data was recorded
+        if self.all_laser_pulses == 0 and self.flim == False:  # no 'Laser' data was recorded
             for vol in volumes_in_movie:
                 yield np.arange(start=start_time+self.offset, stop=vol.end_time,
                                 step=step, dtype=np.uint64)
+
+        elif self.all_laser_pulses == 0 and self.flim == True:
+            pass
 
         else:
             for vol in volumes_in_movie:
@@ -95,6 +107,19 @@ class CensorCorrection(object):
                                       binwidth=self.binwidth, reprate=self.reprate)
             temp_struct_deque.append(censored.find_temp_structure())
         return temp_struct_deque
+
+    def create_arr_of_hists_deque(self):
+        """
+        For each volume generate a single matrix with the same size as the underlying volume,
+        which contains a histogram of photons in their laser pulses for each pixel.
+        :return: deque() that contains an array of histograms in each place
+        """
+        temp_struct_deque = deque()
+        volumes_in_movie = self.movie.gen_of_volumes()
+        for idx, vol in enumerate(volumes_in_movie):
+            censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
+                                      binwidth=self.binwidth, reprate=self.reprate)
+            temp_struct_deque.append(censored.gen_arr_of_hists())
 
     def create_array_of_hists_deque(self):
         """
@@ -211,12 +236,15 @@ class CensorCorrection(object):
 
 @attr.s(slots=True)
 class CensoredVolume(object):
-    df = attr.ib(validator=instance_of(pd.DataFrame))
-    vol = attr.ib(validator=instance_of(Volume))
-    laser_pulses = attr.ib(validator=instance_of(np.ndarray))
-    offset = attr.ib(validator=instance_of(int))
-    binwidth = attr.ib(default=800e-12)
-    reprate = attr.ib(default=80e6)
+    df           = attr.ib(validator=instance_of(pd.DataFrame))
+    vol          = attr.ib(validator=instance_of(Volume))
+    offset       = attr.ib(validator=instance_of(int))
+    binwidth     = attr.ib(default=800e-12)
+    reprate      = attr.ib(default=80e6)
+
+    @property
+    def bins_bet_pulses(self) -> int:
+        return int(np.ceil(1 / (self.reprate * self.binwidth)))
 
     def gen_bincount(self) -> Tuple[np.ndarray, np.ndarray]:
         """
@@ -326,6 +354,72 @@ class CensoredVolume(object):
                         all_pulses += tot_pulses
 
         return image_bincount, all_pulses, all_photons
+
+    def gen_arr_of_hists(self) -> np.ndarray:
+        """
+        For each specific frame, sort the photons inside the pixels to gqin
+        statistics on the distribution of the photons inside the pixels.
+        :return: np.ndarray of the same size as the original frame,
+        with each bin containing a histogram.
+        """
+        hist, edges = self.vol.create_hist()
+        delta_x, delta_y = edges[0][1] - edges[0][0], edges[1][1] - edges[1][0]
+
+        assert "time_rel_pulse" in self.vol.data.columns, \
+            "No `time_rel_pulse` column in data."
+
+        self.vol.data.loc[:, 'bins_x'] = (np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
+                                                      bins=edges[0]) - 1).astype('uint16', copy=False)
+        self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
+                                                      bins=edges[1]) - 1).astype('uint16', copy=False)
+        self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+
+        image_bincount = np.zeros_like(hist, dtype=object)  # returned variable, contains hists
+        for row in range(self.vol.x_pixels):
+            try:
+                row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
+            except KeyError:  # no photons in row
+                for col in range(self.vol.y_pixels):
+                    image_bincount[row, col] = self.__allocate_empty_to_bins()
+
+            else:
+                for col in range(self.vol.y_pixels):
+                    image_bincount[row, col] = self.__allocate_photons_to_bins(col, row_photons)
+
+        return image_bincount
+
+    def __allocate_empty_to_bins(self):
+        """
+        Create an empty histogram for a column
+        :param photons:
+        :return:
+        """
+        return (np.histogram(np.array([]), bins=self.bins_bet_pulses)[0]) \
+            .astype('uint8')
+
+
+    def __allocate_photons_to_bins(self, col: int, photons: pd.DataFrame):
+        """
+        Generate a summed-histogram of photons for the relevant edges.
+        :param photons:
+        :param edge_x:
+        :param edge_y:
+        :return:
+        """
+        try:
+            cur_photons = photons.xs(key=col, level='bins_y', drop_level=False)
+        except KeyError:  # no photons in row
+            hist = (np.histogram(np.array([], dtype=np.uint8), bins=self.bins_bet_pulses)[0])\
+                .astype('uint8', copy=False)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+        else:
+            hist = numba_histogram(cur_photons.loc[:, 'time_rel_pulse'].values,
+                                   bins=np.arange(0, self.bins_bet_pulses + 1, dtype=np.uint64))\
+                .astype('uint8', copy=False)
+        finally:
+            assert np.all(hist >= 0), 'In column {}, the histogram turned out to be negative.'.format(col)
+            return hist
 
 
 @jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)

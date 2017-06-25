@@ -3,6 +3,7 @@ __author__ = Hagai Hargil
 """
 
 import attr
+from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -25,8 +26,9 @@ class Movie(object):
     name      = attr.ib(default='Movie', validator=attr.validators.instance_of(str))
     binwidth  = attr.ib(default=800e-12, validator=attr.validators.instance_of(float))
     fill_frac = attr.ib(default=0.8, validator=attr.validators.instance_of(float))
-    big_tiff  = attr.ib(default=True)
-    bidir     = attr.ib(default=True)
+    big_tiff  = attr.ib(default=True, validator=attr.validators.instance_of(bool))
+    bidir     = attr.ib(default=True, validator=attr.validators.instance_of(bool))
+    num_of_channels = attr.ib(default=1, validator=attr.validators.instance_of(int))
 
     @property
     def list_of_volume_times(self) -> List[uint64]:
@@ -148,18 +150,18 @@ class Volume(object):
     """
     A Movie() is a sequence of volumes. Each volume contains frames in a plane.
     """
-    x_pixels       = attr.ib()
-    y_pixels       = attr.ib()
-    z_pixels       = attr.ib()
-    number         = attr.ib(validator=attr.validators.instance_of(int))  # the volume's ordinal number
-    data           = attr.ib()
-    reprate        = attr.ib()  # laser repetition rate, relevant for FLIM
-    end_time       = attr.ib()
-    binwidth       = attr.ib()
-    bidir          = attr.ib()  # Bi-directional scanning
-    fill_frac      = attr.ib()
-    abs_start_time = attr.ib(validator=attr.validators.instance_of(np.uint64))
-    empty          = attr.ib(default=False, validator=attr.validators.instance_of(bool))
+    data           = attr.ib(validator=instance_of(pd.DataFrame))
+    x_pixels       = attr.ib(default=512, validator=instance_of(int))
+    y_pixels       = attr.ib(default=512, validator=instance_of(int))
+    z_pixels       = attr.ib(default=100, validator=instance_of(int))
+    number         = attr.ib(default=1, validator=instance_of(int))  # the volume's ordinal number
+    reprate        = attr.ib(default=80e6, validator=instance_of(float))  # laser repetition rate, relevant for FLIM
+    end_time       = attr.ib(default=100, validator=instance_of(int))
+    binwidth       = attr.ib(default=800e-12, validator=instance_of(float))
+    bidir          = attr.ib(default=False, validator=instance_of(bool))  # Bi-directional scanning
+    fill_frac      = attr.ib(default=0.8, validator=instance_of(float))
+    abs_start_time = attr.ib(default=np.uint64(0), validator=instance_of(np.uint64))
+    empty          = attr.ib(default=False, validator=instance_of(bool))
 
     @property
     def metadata(self) -> OrderedDict:

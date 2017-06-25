@@ -7,7 +7,8 @@ sphinx-py3doc-enhanced-theme
 numpy >= 1.12
 matplotlib >= 2.0
 pandas >= 0.20
-attrs >= 1.6
+attrs
 cython >= 0.24
 tables
+scipy
 scikit-learn

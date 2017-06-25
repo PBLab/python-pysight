@@ -47,7 +47,7 @@ class FileIO(object):
             num_of_items = -1
             read_string = 'Reading file "{}"...'.format(self.filename)
         else:
-            num_of_items = 0.2e6
+            num_of_items = 0.6e6
             read_string = '[DEBUG] Reading file "{}"...'.format(self.filename)
 
         print(read_string)

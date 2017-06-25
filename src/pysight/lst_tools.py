@@ -364,7 +364,7 @@ class Analysis(object):
         """
         rel_time1 = df['abs_time'].values % 251
         rel_time2 = rel_time1 % np.ceil(1 / (self.binwidth * self.laser_freq))
-        df['time_rel_pulse'] = rel_time2
+        df['time_rel_pulse'] = rel_time2.astype(np.uint8)
 
         return df
 
