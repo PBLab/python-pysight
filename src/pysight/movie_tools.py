@@ -7,9 +7,9 @@ from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Tuple, Iterable
+from typing import List, Iterator, Tuple, Iterable, Generator
 from numba import jit, float64, uint64, int64
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple, deque
 import warnings
 
 
@@ -31,7 +31,7 @@ class Movie(object):
     num_of_channels = attr.ib(default=1, validator=instance_of(int))
 
     @property
-    def list_of_volume_times(self) -> List[uint64]:
+    def list_of_volume_times(self) -> List[np.uint64]:
         """ All volumes start-times in the movie. """
 
         volume_times = np.unique(self.data.index.get_level_values('Frames'))
@@ -46,12 +46,12 @@ class Movie(object):
 
         return volume_times
 
-    def gen_of_volumes(self) -> Iterator['Volume']:
+    def gen_of_volumes(self, channel_num: int) -> Iterator[Volume]:
         """ Populate the deque containing the volumes as a generator. """
 
-        list_of_frames: List[int] = self.list_of_volume_times
+        list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
-            cur_data = self.data.xs(current_time, level='Frames', drop_level=False)
+            cur_data = self.data.xs(key=(current_time, channel_num), level=('Frames', 'Channel'), drop_level=False)
             if not cur_data.empty:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
                              z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
@@ -69,80 +69,89 @@ class Movie(object):
         """ Create all volumes, one-by-one, and save them as tiff. """
 
         from tifffile import TiffWriter
-        from collections import namedtuple
 
         # Create a list containing the frames before showing them
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
-        volumes_in_movie = self.gen_of_volumes()
-        try:
-            cur_vol = next(volumes_in_movie)
-            data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-        except StopIteration as e:
-            return e.value('No frames were generated.')
+        for chan in range(self.num_of_channels):
+            volumes_in_movie = self.gen_of_volumes(channel_num=chan)
+            try:
+                cur_vol = next(volumes_in_movie)
+                data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
+            except StopIteration as e:
+                return e.value('No frames were generated.')
 
-        try:
-            with TiffWriter('{}.tif'.format(self.name[:-4]), bigtiff=self.big_tiff,
-                            imagej=True) as tif:
-                while True:
-                    tif.save(data_of_vol.hist.astype(np.uint16))
-                    try:
-                        cur_vol = next(volumes_in_movie)
-                        data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-                    except StopIteration:
-                        break
-        except PermissionError:
-            warnings.warn("Permission Error: Not allowed to save file to original directory.")
+            try:
+                with TiffWriter('{}_Chan_{}.tif'.format(self.name[:-4], chan), bigtiff=self.big_tiff,
+                                imagej=True) as tif:
+                    while True:
+                        tif.save(data_of_vol.hist.astype(np.uint16))
+                        try:
+                            cur_vol = next(volumes_in_movie)
+                            data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
+                        except StopIteration:
+                            break
+            except PermissionError:
+                warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
-    def create_array(self):
+    def create_array(self) -> List[deque]:
         """ Create all volumes, one-by-one, and return the array of data that holds them. """
-        from collections import namedtuple, deque
 
         # Create a deque and a namedtuple for the frames before showing them
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
         deque_of_vols = deque()
-        volumes_in_movie: Iterator = self.gen_of_volumes()
+        data_channels = []
 
-        try:
-            cur_vol: Volume = next(volumes_in_movie)
-        except StopIteration:
-            raise ValueError('No volumes generated.')
+        for chan in range(self.num_of_channels):
+            volumes_in_movie: Generator = self.gen_of_volumes(channel_num=chan)
 
-        while True:
-            data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-            deque_of_vols.append(data_of_vol)
             try:
-                cur_vol = next(volumes_in_movie)
+                cur_vol: Volume = next(volumes_in_movie)
             except StopIteration:
-                break
+                raise ValueError('No volumes generated.')
 
-        assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
-        return deque_of_vols
+            while True:
+                data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
+                deque_of_vols.append(data_of_vol)
+                try:
+                    cur_vol = next(volumes_in_movie)
+                except StopIteration:
+                    break
 
-    def create_single_volume(self, vols: str) -> np.ndarray:
+            assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
+            data_channels.append(deque_of_vols)
+
+        return data_channels
+
+    def create_single_volume(self, vols: str) -> List[np.ndarray]:
         """ Aggregate the frames\volumes that vols mark to a single frame\volume.
         :vols Volumes to aggregate. 'all' is all of them.
         :return np.array of histogram
         """
 
-        deque_of_vols = self.create_array()
+        data_channels = self.create_array()
+        returned_vols_by_chan = []
+        for all_vols in data_channels:
+            if vols == 'all':
+                summed = np.zeros_like(all_vols[0].hist, dtype=np.int32)
+                for vol in all_vols:
+                    summed += vol.hist
+                returned_vols_by_chan.append(summed)
 
-        if vols == 'all':
-            summed = np.zeros_like(deque_of_vols[0].hist, dtype=np.int32)
-            for vol in deque_of_vols:
-                summed += vol.hist
-            return summed
+            if isinstance(vols, int):
+                returned_vols_by_chan.append(all_vols[vols])
 
-        if isinstance(vols, int):
-            return deque_of_vols[vols]
+            try:
+                summed = np.array([0], dtype=np.int32)
+                for idx in all_vols:
+                    summed += all_vols[idx]
+            except TypeError:
+                raise TypeError('vols parameter should be "all", integer or list of volumes.')
+            else:
+                returned_vols_by_chan.append(summed)
 
-        try:
-            summed = np.array([0], dtype=np.int32)
-            for idx in vols:
-                summed += deque_of_vols[vols[idx]]
-        except TypeError:
-            raise TypeError('vols parameter should be "all", integer or list of volumes.')
+        return returned_vols_by_chan
 
 
 @attr.s(slots=True)

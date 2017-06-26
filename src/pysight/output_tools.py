@@ -31,24 +31,24 @@ def gen_tiff(movie, gui) -> int:
     Algorithm's output will be a tiff file.
     """
     movie.create_tif()
-    print('Tiff stack created with name {}.tif'.format(gui.filename.get()[:-4]))
+    print('Tiff stack created with name {}.tif, \none for each channel.'.format(gui.filename.get()[:-4]))
     return 1
 
 
-def gen_array(movie, gui):
+def gen_array(movie, gui) -> List:
     """
-    Algorithm's output will be the full array of data
+    Algorithm's output will be a list, each cell containing the full array of data of that channel
     """
-    data_array = movie.create_array()
+    chan_data_list = movie.create_array()
     print('Data array created.')
-    return data_array
+    return chan_data_list
 
 
-def gen_single(movie, gui) -> np.ndarray:
+def gen_single(movie, gui) -> List[np.ndarray]:
     """
-    Algorithm's output will be a single stack.
+    Algorithm's output will be list, with a single stack for each channel.
     """
-    single_volume: np.ndarray = movie.create_single_volume('all')
+    chan_data_list: List[np.ndarray] = movie.create_single_volume('all')
     print(r'A summed array of all volumes\frames was created.')
-    return single_volume
+    return chan_data_list
 

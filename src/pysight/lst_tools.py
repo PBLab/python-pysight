@@ -16,12 +16,11 @@ class Analysis(object):
     """
     Create pipeline of analysis of lst files.
     """
-    # TODO: Input validations
     # TODO: Variable documentation
-    dict_of_inputs     = attr.ib()
-    data               = attr.ib()
-    dict_of_slices_hex = attr.ib()
-    dict_of_slices_bin = attr.ib()
+    dict_of_inputs     = attr.ib(validator=instance_of(dict))
+    data               = attr.ib(validator=instance_of(pd.DataFrame))
+    dict_of_slices_hex = attr.ib(validator=instance_of(dict))
+    dict_of_slices_bin = attr.ib(validator=instance_of(dict))
     num_of_channels    = attr.ib(default=1, validator=instance_of(int))
     timepatch          = attr.ib(default='32', validator=instance_of(str))
     data_range         = attr.ib(default='1', validator=instance_of(int))
@@ -38,7 +37,7 @@ class Analysis(object):
     use_tag_bits       = attr.ib(default=False, validator=instance_of(bool))
     laser_offset       = attr.ib(default=0, validator=instance_of(float))
     use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
-    keep_unidir        = attr.ib(default=False)
+    keep_unidir        = attr.ib(default=False, validator=instance_of(bool))
     flim               = attr.ib(default=False, validator=instance_of(bool))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
@@ -113,6 +112,9 @@ class Analysis(object):
             # dict_of_data[key] = pd.DataFrame(sorted_vals, columns=['abs_time'])
             if key in ['PMT1', 'PMT2']:
                 dict_of_data[key] = relevant_values.reset_index(drop=True)
+                dict_of_data[key]['Channel'] = 1 if 'PMT1' == key else 2  # Channel is the spectral channel
+                dict_of_data[key]['Channel'] = dict_of_data[key]['Channel'].astype('category')
+                dict_of_data[key].set_index(keys='Channel', inplace=True)
             else:
                 dict_of_data[key] = relevant_values.sort_values(by=['abs_time']).reset_index(drop=True)
 
@@ -170,7 +172,12 @@ class Analysis(object):
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
 
-        df_photons = self.dict_of_data['PMT1'].copy()  # TODO: Support more than one data channel
+        try:
+            df_photons = pd.concat([self.dict_of_data['PMT1'].copy(), self.dict_of_data['PMT2'].copy()], axis=0)
+            self.num_of_channels = 2
+        except KeyError:
+            df_photons = self.dict_of_data['PMT1'].copy()
+
         column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
 
         # Unidirectional scan - create fake lines

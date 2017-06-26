@@ -124,7 +124,6 @@ class CensorCorrection(object):
             self.nano_flim_deque.append(p)
             p.start()
 
-
     def create_array_of_hists_deque(self):
         """
         Go through each volume in the deque and find the laser pulses for each pixel, creating a summed histogram per pixel.

@@ -71,7 +71,7 @@ class GUIApp(object):
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
-        self.tuple_of_data_sources = ('PMT1', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')  # TODO: No PMT2 currently
+        self.tuple_of_data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=2, row=1, sticky='w')
         mb1.set('Frames')
