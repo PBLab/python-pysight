@@ -27,19 +27,19 @@ class FileIO(object):
 
     def run(self):
         # Open file and find the needed parameters
-        self.is_binary = self.determine_binary()
-        self.timepatch = self.get_timepatch()
+        self.is_binary: bool = self.determine_binary()
+        self.timepatch: str = self.get_timepatch()
         if self.timepatch == '3' and not self.is_binary:
             raise NotImplementedError(
                 'Timepatch value "3" is currently not supported for hex files. Please message the package owner.')
-        self.data_range = self.get_range()
+        self.data_range: int = self.get_range()
 
-        self.start_of_data_pos = self.get_start_pos()
-        self.dict_of_input_channels = self.create_inputs_dict()
-        self.list_of_recorded_data_channels = self.find_active_channels()
+        self.start_of_data_pos: int = self.get_start_pos()
+        self.dict_of_input_channels: dict = self.create_inputs_dict()
+        self.list_of_recorded_data_channels: list = self.find_active_channels()
         self.compare_recorded_and_input_channels()
         num_of_items = self.determine_num_of_items()
-        self.data = self.read_lst(num_of_items=num_of_items)
+        self.data: np.ndarray = self.read_lst(num_of_items=num_of_items)
         print('File read. Sorting the file according to timepatch...')
 
     def determine_num_of_items(self):
@@ -47,7 +47,7 @@ class FileIO(object):
             num_of_items = -1
             read_string = 'Reading file "{}"...'.format(self.filename)
         else:
-            num_of_items = 0.6e6
+            num_of_items = 0.3e6
             read_string = '[DEBUG] Reading file "{}"...'.format(self.filename)
 
         print(read_string)

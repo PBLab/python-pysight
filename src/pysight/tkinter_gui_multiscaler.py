@@ -300,7 +300,7 @@ class GUIApp(object):
 
     def __keep_unidir_events(self, main_frame):
         """ Checkbox to see if events taken in the returning phase of a resonant mirror should be kept. """
-        self.keep_unidir = IntVar(value=0)
+        self.keep_unidir = BooleanVar(value=False)
         self.keep_unidir_check = ttk.Checkbutton(main_frame, text='Keep unidirectional?', variable=self.keep_unidir)
         self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
         self.keep_unidir_check.config(state='disabled')

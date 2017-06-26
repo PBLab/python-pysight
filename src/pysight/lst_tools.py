@@ -9,6 +9,7 @@ from pysight.validation_tools import validate_line_input, validate_frame_input, 
     validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines, \
     calc_last_event_time
 from attr.validators import instance_of
+import sys
 
 
 @attr.s(slots=True)
@@ -18,12 +19,12 @@ class Analysis(object):
     """
     # TODO: Variable documentation
     dict_of_inputs     = attr.ib(validator=instance_of(dict))
-    data               = attr.ib(validator=instance_of(pd.DataFrame))
+    data               = attr.ib(validator=instance_of(np.ndarray))
     dict_of_slices_hex = attr.ib(validator=instance_of(dict))
-    dict_of_slices_bin = attr.ib(validator=instance_of(dict))
+    dict_of_slices_bin = attr.ib()
     num_of_channels    = attr.ib(default=1, validator=instance_of(int))
     timepatch          = attr.ib(default='32', validator=instance_of(str))
-    data_range         = attr.ib(default='1', validator=instance_of(int))
+    data_range         = attr.ib(default=1, validator=instance_of(int))
     is_binary          = attr.ib(default=False, validator=instance_of(bool))
     num_of_frames      = attr.ib(default=1, validator=instance_of(int))
     x_pixels           = attr.ib(default=512, validator=instance_of(int))
@@ -53,7 +54,11 @@ class Analysis(object):
         print('Sorted dataframe created. Starting setting the proper data channel distribution...')
         self.dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
         print('Channels of events found. Allocating photons to their frames and lines...')
-        self.df_allocated = self.allocate_photons(line_delta=line_delta)
+        df_photons = self.__create_photon_dataframe()
+        # Unidirectional scan - create fake lines
+        if not self.bidir:
+            self.add_unidirectional_lines(line_delta=line_delta)
+        self.df_allocated = self.allocate_photons(line_delta=line_delta, df_photons=df_photons)
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
@@ -113,8 +118,6 @@ class Analysis(object):
             if key in ['PMT1', 'PMT2']:
                 dict_of_data[key] = relevant_values.reset_index(drop=True)
                 dict_of_data[key]['Channel'] = 1 if 'PMT1' == key else 2  # Channel is the spectral channel
-                dict_of_data[key]['Channel'] = dict_of_data[key]['Channel'].astype('category')
-                dict_of_data[key].set_index(keys='Channel', inplace=True)
             else:
                 dict_of_data[key] = relevant_values.sort_values(by=['abs_time']).reset_index(drop=True)
 
@@ -159,7 +162,27 @@ class Analysis(object):
         validate_created_data_channels(dict_of_data)
         return dict_of_data, line_delta
 
-    def allocate_photons(self, line_delta: float = -1) -> pd.DataFrame:
+    def __create_photon_dataframe(self):
+        """
+        If a single PMT channel exists, create a df_photons object.
+        Else, concatenate the two data channels into a single dataframe.
+        :return pd.DataFrame: Photon data
+        """
+        try:
+            df_photons = pd.concat([self.dict_of_data['PMT1'].copy(),
+                                    self.dict_of_data['PMT2'].copy()], axis=0)
+            self.num_of_channels = 2
+        except KeyError:
+            df_photons = self.dict_of_data['PMT1'].copy().to_frame()
+        except:
+            print("Unknown error: ", sys.exc_info()[0])
+        finally:
+            df_photons.loc[:, 'Channel'] = df_photons.loc[:, 'Channel'].astype('category')
+            df_photons.set_index(keys='Channel', inplace=True)
+
+        return df_photons
+
+    def allocate_photons(self, df_photons: pd.DataFrame, line_delta: float=-1) -> pd.DataFrame:
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
         :param dict_of_data: All events data, distributed to its input channel
@@ -171,18 +194,7 @@ class Analysis(object):
         # Preparations
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
-
-        try:
-            df_photons = pd.concat([self.dict_of_data['PMT1'].copy(), self.dict_of_data['PMT2'].copy()], axis=0)
-            self.num_of_channels = 2
-        except KeyError:
-            df_photons = self.dict_of_data['PMT1'].copy()
-
         column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
-
-        # Unidirectional scan - create fake lines
-        if not self.bidir:
-            self.dict_of_data = self.add_unidirectional_lines(line_delta=line_delta)
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
@@ -209,6 +221,7 @@ class Analysis(object):
                 df_photons.loc[:, key] = df_photons.loc[:, key].astype('category')
             df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
+        assert len(df_photons) > 0
         assert np.all(df_photons.loc[:, 'abs_time'].values >= 0)  # finds NaNs as well
 
         # Deal with TAG lens interpolation
@@ -362,7 +375,6 @@ class Analysis(object):
 
         self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
                                                   dtype='uint64')
-        return self.dict_of_data
 
     def __interpolate_laser(self, df: pd.DataFrame) -> pd.DataFrame:
         """

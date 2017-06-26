@@ -10,7 +10,7 @@ from collections import deque, namedtuple
 from typing import Tuple, Union
 from numba import jit, uint64, uint8, int64
 import sys
-import multiprocessing
+import multiprocessing as mp
 
 
 @attr.s(slots=True)
@@ -19,11 +19,12 @@ class CensorCorrection(object):
     data             = attr.ib(validator=instance_of(pd.DataFrame))
     movie            = attr.ib(validator=instance_of(Movie))
     all_laser_pulses = attr.ib()
-    nano_flim_deque  = attr.ib(init=False)
+    nano_flim_list   = attr.ib(init=False)
     flim             = attr.ib(default=False, validator=instance_of(bool))
     reprate          = attr.ib(default=80e6, validator=instance_of(float))
     binwidth         = attr.ib(default=800e-12, validator=instance_of(float))
     laser_offset     = attr.ib(default=3.5, validator=instance_of(float))
+    num_of_channels  = attr.ib(default=1, validator=instance_of(int))
 
     @property
     def bins_bet_pulses(self) -> int:
@@ -115,14 +116,27 @@ class CensorCorrection(object):
         which contains a histogram of photons in their laser pulses for each pixel.
         :return: deque() that contains an array of histograms in each place
         """
-        self.nano_flim_deque = deque()
-        volumes_in_movie = self.movie.gen_of_volumes()
-        for idx, vol in enumerate(volumes_in_movie):
+        output = mp.Queue()
+        self.nano_flim_list = []  # each cell contains a different data channel
+        for chan in range(1, self.num_of_channels + 1):
+
+            volumes_in_movie = self.movie.gen_of_volumes(channel_num=chan)
+            processes = [mp.Process(target=self.__worker_arr_of_hists, args=(output, vol))
+                         for vol in volumes_in_movie]
+            # Run processes
+            for p in processes:
+                p.start()
+            # Exit completed ones
+            for p in processes:
+                p.join()
+
+        self.nano_flim_list.append([output.get() for p in processes])
+
+    def __worker_arr_of_hists(self, output, vol):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
                                       binwidth=self.binwidth, reprate=self.reprate)
-            p = multiprocessing.Process(target=censored.gen_arr_of_hists)
-            self.nano_flim_deque.append(p)
-            p.start()
+            output.put(censored.gen_arr_of_hists())
+
 
     def create_array_of_hists_deque(self):
         """
@@ -365,19 +379,18 @@ class CensoredVolume(object):
         :return: np.ndarray of the same size as the original frame,
         with each bin containing a histogram.
         """
-        hist, edges = self.vol.create_hist()
-        delta_x, delta_y = edges[0][1] - edges[0][0], edges[1][1] - edges[1][0]
+        edges = self.vol._Volume__create_hist_edges()[0]
 
         assert "time_rel_pulse" in self.vol.data.columns, \
             "No `time_rel_pulse` column in data."
 
         self.vol.data.loc[:, 'bins_x'] = (np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
-                                                      bins=edges[0]) - 1).astype('uint16', copy=False)
+                                                      bins=edges[0])-1).astype('uint16', copy=False)
         self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
-                                                      bins=edges[1]) - 1).astype('uint16', copy=False)
+                                                      bins=edges[1])-1).astype('uint16', copy=False)
         self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 
-        image_bincount = np.zeros_like(hist, dtype=object)  # returned variable, contains hists
+        image_bincount = np.zeros((edges[0]-1, edges[1]-1), dtype=object)  # returned variable, contains hists
         for row in range(self.vol.x_pixels):
             try:
                 row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)

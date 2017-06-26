@@ -46,8 +46,11 @@ class Movie(object):
 
         return volume_times
 
-    def gen_of_volumes(self, channel_num: int) -> Iterator[Volume]:
-        """ Populate the deque containing the volumes as a generator. """
+    def gen_of_volumes(self, channel_num: int) -> Iterator:
+        """
+        Populate the deque containing the volumes as a generator.
+        Creates a list for each channel in the data. Channels start with 1.
+        """
 
         list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
@@ -73,7 +76,7 @@ class Movie(object):
         # Create a list containing the frames before showing them
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
-        for chan in range(self.num_of_channels):
+        for chan in range(1, self.num_of_channels + 1):
             volumes_in_movie = self.gen_of_volumes(channel_num=chan)
             try:
                 cur_vol = next(volumes_in_movie)
@@ -103,7 +106,7 @@ class Movie(object):
         deque_of_vols = deque()
         data_channels = []
 
-        for chan in range(self.num_of_channels):
+        for chan in range(1, self.num_of_channels + 1):
             volumes_in_movie: Generator = self.gen_of_volumes(channel_num=chan)
 
             try:

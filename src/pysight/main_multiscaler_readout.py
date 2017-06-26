@@ -51,7 +51,7 @@ def main_data_readout(gui):
                                 reprate=gui.reprate.get(), binwidth=gui.binwidth.get(),
                                 laser_offset=gui.offset.get(), data=analyzed_struct.df_allocated,
                                 all_laser_pulses=analyzed_struct.dict_of_data['Laser'],
-                                flim=gui.flim.get())
+                                flim=gui.flim.get(), num_of_channels=analyzed_struct.num_of_channels)
     censored.run()
 
     # Find out what the user wanted and output it
