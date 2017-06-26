@@ -29,12 +29,12 @@ class TestCensorTools(unittest.TestCase):
         'Laser': pd.DataFrame([[0, 2, 3, 2], [3, 6, 7, 6]],
                              columns=['abs_time', 'edge', 'sweep', 'time_rel_sweep'])
     }
+    dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
     movie = Movie(data=dict_of_data['PMT1'])
 
 
     def test_allocate_empty(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
-                                  laser_pulses=self.dict_of_data['Laser'].values,
                                   offset=0)
         empty_hist = np.zeros((16,), dtype='uint8')
 
@@ -42,24 +42,22 @@ class TestCensorTools(unittest.TestCase):
 
     def test_allocate_some_photons(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
-                                  laser_pulses=self.dict_of_data['Laser'].values,
                                   offset=0)
         photons = self.dict_of_data['PMT1']
         photons.set_index(keys=['bins_x', 'bins_y'], drop=True, inplace=True)
         col = 7
-        res_hist, _ = np.histogram(np.array([5]),
-                                   bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint64))
+        res_hist, _ = np.histogram(np.array([5], dtype=np.uint8),
+                                   bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint8))
         self.assertTrue(np.all(res_hist == censored._CensoredVolume__allocate_photons_to_bins(col, photons)))
 
     def test_allocate_no_photons(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
-                                  laser_pulses=self.dict_of_data['Laser'].values,
                                   offset=0)
         photons = self.dict_of_data['PMT1']
         photons.set_index(keys=['bins_x', 'bins_y'], drop=True, inplace=True)
         col = 9
-        res_hist, _ = np.histogram(np.array([]),
-                                   bins=np.arange(0, censored.bins_bet_pulses + 1, dtype=np.uint64))
+        res_hist, _ = np.histogram(np.array([], dtype=np.uint8),
+                                   bins=np.arange(0, censored.bins_bet_pulses + 1, dtype=np.uint8))
         self.assertTrue(np.all(res_hist == censored._CensoredVolume__allocate_photons_to_bins(col, photons)))
 
     def test_append_laser(self):

@@ -209,7 +209,7 @@ class GUIApp(object):
         tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation')
         tag_bits_label.grid(column=1, row=5, sticky='ns')
 
-        self.tag_bits = IntVar(value=0)
+        self.tag_bits = BooleanVar(value=False)
         tag_bit_check = ttk.Checkbutton(main_frame, text='Use?', variable=self.tag_bits)
         tag_bit_check.grid(column=2, row=5, sticky='ns')
 
@@ -257,7 +257,7 @@ class GUIApp(object):
     def __fill_frac(self, main_frame):
         """ Percentage of time mirrors spend "inside" the image """
 
-        self.fill_frac = DoubleVar(value=80)  # percent
+        self.fill_frac = DoubleVar(value=80.0)  # percent
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
         fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
@@ -289,7 +289,7 @@ class GUIApp(object):
     def __bi_dir(self, main_frame):
         """ Checkbox for bi-directional scan """
 
-        self.bidir = IntVar(value=1)
+        self.bidir = BooleanVar(value=True)
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
         bidir_check.grid(column=6, row=3, sticky='ns')
         self.bidir.trace('w', self.__check_if_bidir)
@@ -312,7 +312,7 @@ class GUIApp(object):
         received starts an event of 8 pulses, with the next recorded pulse being the 9th.
         :param main_frame: ttk.Frame
         """
-        self.flim: IntVar = IntVar(value=0)
+        self.flim: IntVar = BooleanVar(value=False)
         flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
                                                       variable=self.flim,
                                                       text='FLIM?')

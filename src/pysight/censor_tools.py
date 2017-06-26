@@ -10,6 +10,7 @@ from collections import deque, namedtuple
 from typing import Tuple, Union
 from numba import jit, uint64, uint8, int64
 import sys
+import multiprocessing
 
 
 @attr.s(slots=True)
@@ -18,6 +19,7 @@ class CensorCorrection(object):
     data             = attr.ib(validator=instance_of(pd.DataFrame))
     movie            = attr.ib(validator=instance_of(Movie))
     all_laser_pulses = attr.ib()
+    nano_flim_deque  = attr.ib(init=False)
     flim             = attr.ib(default=False, validator=instance_of(bool))
     reprate          = attr.ib(default=80e6, validator=instance_of(float))
     binwidth         = attr.ib(default=800e-12, validator=instance_of(float))
@@ -35,8 +37,7 @@ class CensorCorrection(object):
         """
         Main pipeline for the censor correction part.
         """
-        temp_struct = self.create_array_of_hists_deque()
-        return temp_struct
+        self.create_arr_of_hists_deque()
 
     def __gen_laser_pulses_deque(self) -> np.ndarray:
         """
@@ -114,12 +115,15 @@ class CensorCorrection(object):
         which contains a histogram of photons in their laser pulses for each pixel.
         :return: deque() that contains an array of histograms in each place
         """
-        temp_struct_deque = deque()
+        self.nano_flim_deque = deque()
         volumes_in_movie = self.movie.gen_of_volumes()
         for idx, vol in enumerate(volumes_in_movie):
             censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
                                       binwidth=self.binwidth, reprate=self.reprate)
-            temp_struct_deque.append(censored.gen_arr_of_hists())
+            p = multiprocessing.Process(target=censored.gen_arr_of_hists)
+            self.nano_flim_deque.append(p)
+            p.start()
+
 
     def create_array_of_hists_deque(self):
         """
@@ -415,14 +419,14 @@ class CensoredVolume(object):
             print("Unexpected error:", sys.exc_info()[0])
         else:
             hist = numba_histogram(cur_photons.loc[:, 'time_rel_pulse'].values,
-                                   bins=np.arange(0, self.bins_bet_pulses + 1, dtype=np.uint64))\
+                                   bins=np.arange(0, self.bins_bet_pulses + 1, dtype=np.uint8))\
                 .astype('uint8', copy=False)
         finally:
             assert np.all(hist >= 0), 'In column {}, the histogram turned out to be negative.'.format(col)
             return hist
 
 
-@jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
+@jit((int64[:](uint8[:], uint8[:])), nopython=True, cache=True)
 def numba_histogram(arr: np.array, bins) -> np.array:
     return np.histogram(arr, bins)[0]
 
