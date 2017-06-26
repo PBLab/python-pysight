@@ -319,7 +319,10 @@ Changelog
 
 * Possible fix to TAG lens interpolation.
 
-0.5.13 (2017-06-22)
+0.5.13 (2017-06-26)
 -------------------
 
 * Added SciPy dependency.
+
+* Added nanoFLIM histogramming.
+

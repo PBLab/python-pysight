@@ -32,33 +32,18 @@ class TestCensorTools(unittest.TestCase):
     dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
     movie = Movie(data=dict_of_data['PMT1'])
 
-
-    def test_allocate_empty(self):
-        censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
-                                  offset=0)
-        empty_hist = np.zeros((16,), dtype='uint8')
-
-        self.assertTrue(np.all(empty_hist == censored._CensoredVolume__allocate_empty_to_bins()))
-
     def test_allocate_some_photons(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
                                   offset=0)
         photons = self.dict_of_data['PMT1']
         photons.set_index(keys=['bins_x', 'bins_y'], drop=True, inplace=True)
-        col = 7
-        res_hist, _ = np.histogram(np.array([5], dtype=np.uint8),
-                                   bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint8))
-        self.assertTrue(np.all(res_hist == censored._CensoredVolume__allocate_photons_to_bins(col, photons)))
-
-    def test_allocate_no_photons(self):
-        censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1']),
-                                  offset=0)
-        photons = self.dict_of_data['PMT1']
-        photons.set_index(keys=['bins_x', 'bins_y'], drop=True, inplace=True)
-        col = 9
-        res_hist, _ = np.histogram(np.array([], dtype=np.uint8),
-                                   bins=np.arange(0, censored.bins_bet_pulses + 1, dtype=np.uint8))
-        self.assertTrue(np.all(res_hist == censored._CensoredVolume__allocate_photons_to_bins(col, photons)))
+        idx_list = np.array([7])
+        result = np.array([0], dtype=object)
+        res_hist = np.histogram(np.array([5], dtype=object),
+                                            bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint8))[0]
+        result[0] = res_hist
+        returned = censored._CensoredVolume__allocate_photons_to_bins(idx_list, photons)
+        self.assertTrue(np.all(result[0] == returned[0]))
 
     def test_append_laser(self):
         censored = CensorCorrection(raw=self.dict_of_data,

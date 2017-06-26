@@ -10,7 +10,6 @@ from collections import deque, namedtuple
 from typing import Tuple, Union
 from numba import jit, uint64, uint8, int64
 import sys
-import multiprocessing as mp
 
 
 @attr.s(slots=True)
@@ -38,6 +37,7 @@ class CensorCorrection(object):
         """
         Main pipeline for the censor correction part.
         """
+        print("Starting the censor correction...")
         self.create_arr_of_hists_deque()
 
     def __gen_laser_pulses_deque(self) -> np.ndarray:
@@ -110,33 +110,22 @@ class CensorCorrection(object):
             temp_struct_deque.append(censored.find_temp_structure())
         return temp_struct_deque
 
+    def __worker_arr_of_hists(self, vol):
+            censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
+                                      binwidth=self.binwidth, reprate=self.reprate)
+            return censored.gen_arr_of_hists()
+
     def create_arr_of_hists_deque(self):
         """
         For each volume generate a single matrix with the same size as the underlying volume,
         which contains a histogram of photons in their laser pulses for each pixel.
         :return: deque() that contains an array of histograms in each place
         """
-        output = mp.Queue()
         self.nano_flim_list = []  # each cell contains a different data channel
         for chan in range(1, self.num_of_channels + 1):
-
+            print("Starting channel number {}: ".format(chan))
             volumes_in_movie = self.movie.gen_of_volumes(channel_num=chan)
-            processes = [mp.Process(target=self.__worker_arr_of_hists, args=(output, vol))
-                         for vol in volumes_in_movie]
-            # Run processes
-            for p in processes:
-                p.start()
-            # Exit completed ones
-            for p in processes:
-                p.join()
-
-        self.nano_flim_list.append([output.get() for p in processes])
-
-    def __worker_arr_of_hists(self, output, vol):
-            censored = CensoredVolume(df=vol.data, vol=vol, offset=self.offset,
-                                      binwidth=self.binwidth, reprate=self.reprate)
-            output.put(censored.gen_arr_of_hists())
-
+            self.nano_flim_list.append([self.__worker_arr_of_hists(vol) for vol in volumes_in_movie])
 
     def create_array_of_hists_deque(self):
         """
@@ -390,31 +379,17 @@ class CensoredVolume(object):
                                                       bins=edges[1])-1).astype('uint16', copy=False)
         self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 
-        image_bincount = np.zeros((edges[0]-1, edges[1]-1), dtype=object)  # returned variable, contains hists
-        for row in range(self.vol.x_pixels):
-            try:
-                row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
-            except KeyError:  # no photons in row
-                for col in range(self.vol.y_pixels):
-                    image_bincount[row, col] = self.__allocate_empty_to_bins()
-
-            else:
-                for col in range(self.vol.y_pixels):
-                    image_bincount[row, col] = self.__allocate_photons_to_bins(col, row_photons)
+        image_bincount = np.zeros((len(edges[0])-1, len(edges[1])-1), dtype=object)  # returned variable, contains hists
+        active_lines = np.unique(self.vol.data.index.get_level_values('bins_x'))
+        for row in active_lines:
+            print("Row number: {}".format(row))
+            row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
+            rel_idx = np.unique(row_photons.index.get_level_values('bins_y'))
+            image_bincount[row, rel_idx] = self.__allocate_photons_to_bins(idx=rel_idx, photons=row_photons)
 
         return image_bincount
 
-    def __allocate_empty_to_bins(self):
-        """
-        Create an empty histogram for a column
-        :param photons:
-        :return:
-        """
-        return (np.histogram(np.array([]), bins=self.bins_bet_pulses)[0]) \
-            .astype('uint8')
-
-
-    def __allocate_photons_to_bins(self, col: int, photons: pd.DataFrame):
+    def __allocate_photons_to_bins(self, idx: np.ndarray, photons: pd.DataFrame):
         """
         Generate a summed-histogram of photons for the relevant edges.
         :param photons:
@@ -422,20 +397,13 @@ class CensoredVolume(object):
         :param edge_y:
         :return:
         """
-        try:
+        hist_storage = np.zeros_like(idx, dtype=object)
+        for cur_idx, col in enumerate(idx):
             cur_photons = photons.xs(key=col, level='bins_y', drop_level=False)
-        except KeyError:  # no photons in row
-            hist = (np.histogram(np.array([], dtype=np.uint8), bins=self.bins_bet_pulses)[0])\
-                .astype('uint8', copy=False)
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-        else:
-            hist = numba_histogram(cur_photons.loc[:, 'time_rel_pulse'].values,
-                                   bins=np.arange(0, self.bins_bet_pulses + 1, dtype=np.uint8))\
-                .astype('uint8', copy=False)
-        finally:
-            assert np.all(hist >= 0), 'In column {}, the histogram turned out to be negative.'.format(col)
-            return hist
+            hist_storage[cur_idx] = numba_histogram(cur_photons.loc[:, 'time_rel_pulse'].values,
+                                                    bins=np.arange(0, self.bins_bet_pulses + 1, dtype=np.uint8))\
+                                        .astype('uint8', copy=False)
+        return hist_storage
 
 
 @jit((int64[:](uint8[:], uint8[:])), nopython=True, cache=True)
