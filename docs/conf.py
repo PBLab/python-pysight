@@ -40,12 +40,6 @@ extlinks = {
     'issue': ('https://github.com/HagaiHargil/python-pysight/issues/%s', '#'),
     'pr': ('https://github.com/HagaiHargil/python-pysight/pull/%s', 'PR #'),
 }
-import sphinx_py3doc_enhanced_theme
-html_theme = "sphinx_py3doc_enhanced_theme"
-html_theme_path = [sphinx_py3doc_enhanced_theme.get_html_theme_path()]
-html_theme_options = {
-    'githuburl': 'https://github.com/HagaiHargil/python-pysight/'
-}
 
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'

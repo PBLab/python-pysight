@@ -1,0 +1,462 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Changelog &#8212; PySight 0.5.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Authors" href="authors.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>0.1.0 (2017-02-27)<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>First release on PyPI.</li>
+</ul>
+</div>
+<div class="section" id="id2">
+<h2>0.1.1 (2017-02-27)<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fixes during installation of Numba.</li>
+<li>Added the <code class="docutils literal"><span class="pre">run()</span></code> method for <code class="docutils literal"><span class="pre">main_multiscaler_readout</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="id3">
+<h2>0.1.2 (2017-02-27)<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Includes <code class="docutils literal"><span class="pre">tifffile</span></code> and minor improvements.</li>
+</ul>
+</div>
+<div class="section" id="id4">
+<h2>0.1.3 (2017-02-28)<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Changed IO from <code class="docutils literal"><span class="pre">.read()</span></code> to <code class="docutils literal"><span class="pre">.readlines()</span></code> for better Linux compatibility.</li>
+<li><code class="docutils literal"><span class="pre">.tif</span></code> is now saved frame-by-frame to save memory, and the method was renamed to <code class="docutils literal"><span class="pre">create_tif()</span></code>.</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h2>0.1.4 (2017-02-28)<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Frames are now generated with a generator.</li>
+<li>Fix to installation problems of previous version.</li>
+</ul>
+</div>
+<div class="section" id="id6">
+<h2>0.1.5 (2017-02-28)<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Single-lined frames are now supported.</li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h2>0.1.6 (2017-02-28)<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>More tests coverage.</li>
+<li>Enforced a few types checks.</li>
+</ul>
+</div>
+<div class="section" id="id8">
+<h2>0.1.7 (2017-03-01)<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Potential fix to <code class="docutils literal"><span class="pre">pip</span> <span class="pre">install</span></code> issues.</li>
+<li>Start of TAG lens interpolation support.</li>
+</ul>
+</div>
+<div class="section" id="id9">
+<h2>0.2.0 (2017-03-05)<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Support for TAG lens added - phase interpolation and image display. Note: The algorithm currently assumes that the pulse is triggered at the zero-phase of the TAG lens.</li>
+<li><code class="docutils literal"><span class="pre">pip</span></code> installation fixed by requiring Numba as a prerequisite.</li>
+<li>Number of pixels in the “Frame” direction (x) supersedes the number of frames as listed by the user.</li>
+<li>Due to massive changes, one test is currently broken.</li>
+</ul>
+</div>
+<div class="section" id="id10">
+<h2>0.3.0 (2017-03-07)<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added method <code class="docutils literal"><span class="pre">create_array</span></code> to Movie() that returns a deque containing the raw data generated by the <code class="docutils literal"><span class="pre">np.histogram</span></code> function, for visualization and analysis purposes.</li>
+<li>Added method <code class="docutils literal"><span class="pre">create_single_volume</span></code> to Movie() that sums all stacks into a single array.</li>
+<li>Fixed bugs in <code class="docutils literal"><span class="pre">tag_tools</span></code>, mainly in <code class="docutils literal"><span class="pre">verify_periodicity()</span></code>.</li>
+<li>Allows for more elaborate user inputs, requiring to choose which type of output you wish for.</li>
+<li>Basic FLIM support.</li>
+</ul>
+</div>
+<div class="section" id="id11">
+<h2>0.3.1 (2017-03-07)<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Tiffs are now saved untiled. Depth axis is x-axis.</li>
+<li>Installation should run smoothly if following the instructions.</li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h2>0.3.2 (2017-03-07)<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added verifications on the FLIM input.</li>
+<li>Bug fixes in FLIM implementation.</li>
+</ul>
+</div>
+<div class="section" id="id13">
+<h2>0.3.3 (2017-03-08)<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Code can take care of the the infamous [-1, …, -1] index list.</li>
+<li>Added <code class="docutils literal"><span class="pre">debug</span></code> mode in which the algorithm reads only a limited amount of lines from a file.</li>
+<li>Fixed minor bug in <code class="docutils literal"><span class="pre">__create_hist</span></code>.</li>
+<li>Decreased size of package by removing excess lines of data for tests.</li>
+</ul>
+</div>
+<div class="section" id="id14">
+<h2>0.3.4 (2017-03-09)<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>More fixes to the [-1] vector problem.</li>
+<li>Added a <code class="docutils literal"><span class="pre">sort</span></code> function before handling the data, because of irregularities.</li>
+</ul>
+</div>
+<div class="section" id="id15">
+<h2>0.3.5 (2017-03-11)<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added sinusoidal interpolation to TAG phase.</li>
+<li>Sorting is now only done for TAG lens input.</li>
+<li>Added <code class="docutils literal"><span class="pre">fileIO_tools.py</span></code> module for increased simplicity.</li>
+<li>Added more verifications to user inputs from GUI that pop up sooner, before heavy computation is made.</li>
+<li>Increased file IO speed with a new <code class="docutils literal"><span class="pre">np.fromfile</span></code> method.</li>
+</ul>
+</div>
+<div class="section" id="id16">
+<h2>0.3.6 (2017-03-14)<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Basic support for TAG bits - no actual interpolation yet.</li>
+<li>GUI additions and changes.</li>
+<li>Minor performance upgrades.</li>
+</ul>
+</div>
+<div class="section" id="id17">
+<h2>0.4.0 (2017-03-16)<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Changes file IO completely. Performance should be higher.</li>
+<li>TAG lens bug fixes.</li>
+<li>Updated docs.</li>
+<li>Updated tests.</li>
+</ul>
+</div>
+<div class="section" id="id18">
+<h2>0.4.1 (2017-03-30)<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Updates to setup.py to allow docs to build successfully.</li>
+<li>Small updates to docs.</li>
+<li>GUI improvements.</li>
+</ul>
+</div>
+<div class="section" id="id19">
+<h2>0.4.2 (2017-03-30)<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added Dask <code class="docutils literal"><span class="pre">delayed</span></code> interface.</li>
+</ul>
+</div>
+<div class="section" id="id20">
+<h2>0.4.3 (2017-04-02)<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Removed Dask.</li>
+<li>Refactored class structure, remove the <code class="docutils literal"><span class="pre">Frame</span></code> class.</li>
+<li>Refactored GUI code.</li>
+</ul>
+</div>
+<div class="section" id="id21">
+<h2>0.4.4 (2017-04-08)<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Changes to file IO.</li>
+<li>Number of requested frames should actually matter now.</li>
+<li>GUI improvements.</li>
+</ul>
+</div>
+<div class="section" id="id22">
+<h2>0.4.5 (2017-04-17)<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fixes and improvements to TAG lens interpolation.</li>
+</ul>
+</div>
+<div class="section" id="id23">
+<h2>0.4.6 (2017-05-16)<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Use <code class="docutils literal"><span class="pre">Debug?</span></code> to read a small portion of an <code class="docutils literal"><span class="pre">.lst</span></code> file.</li>
+<li>Changed defaults in GUI.</li>
+<li>Allows acquisition in bi-directional scanning mode. This is enabled with the <code class="docutils literal"><span class="pre">Mirror</span> <span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">Flyback</span></code> parameters in the GUI.</li>
+<li>Backend changes for possible future support of binary files.</li>
+<li><dl class="first docutils">
+<dt>The code allows to dismiss unwanted input channels by specifying them as “Empty”.</dt>
+<dd><ul class="first last">
+<li>If you mark a channel as containing data while it’s inactive, an error will terminate execution.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Massive refactoring of pipeline.</li>
+</ul>
+</div>
+<div class="section" id="id24">
+<h2>0.4.7 (2017-05-25)<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fixed some of the tests.</li>
+<li>Added option to save or discard photons arriving during the returning phase of a unidirectional scan. This is the default option now.</li>
+<li>Introduced <code class="docutils literal"><span class="pre">Fill</span> <span class="pre">Fraction</span></code> parameter that determines the amount of <cite>time</cite> the mirrors spend “inside” the image.</li>
+<li>Some tests are working again.</li>
+<li>Many other bugfixes.</li>
+</ul>
+</div>
+<div class="section" id="id25">
+<h2>0.4.8 (2017-05-31)<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added type hinting. As a result, disabled support for Python version 3.5. Code is now entirely 3.6-dependent.</li>
+<li>Added <code class="docutils literal"><span class="pre">.json</span></code> configuration files to the GUI. It also automatically loads the last modified configuration file.</li>
+<li>Updated docs.</li>
+</ul>
+</div>
+<div class="section" id="id26">
+<h2>0.5.0 (2017-06-04)<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Added the <code class="docutils literal"><span class="pre">CensorCorrection</span></code> class for processing generated data using the censor correction method. Current available methods are:</dt>
+<dd><ul class="first last">
+<li><code class="docutils literal"><span class="pre">censored.gen_bincount_deque()</span></code>: Bin the photons into their relative laser pulses, and count how many photons arrived due to each pulse.</li>
+<li><code class="docutils literal"><span class="pre">censored.find_temp_structure_deque()</span></code>: Generate a summed histogram of the temporal structure of detected photons.</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Fixed linux bug with <code class="docutils literal"><span class="pre">Deque</span></code> import.</li>
+<li>Added tests.</li>
+</ul>
+</div>
+<div class="section" id="id27">
+<h2>0.5.1 (2017-06-04)<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Another go at Linux namespace conflicts.</li>
+</ul>
+</div>
+<div class="section" id="id28">
+<h2>0.5.2 (2017-06-06)<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added basic support for “Censor Correction”.</li>
+</ul>
+</div>
+<div class="section" id="id29">
+<h2>0.5.3 (2017-06-06)<a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fixes, including support for single-pixel images.</li>
+<li>Script should require less memory while running.</li>
+</ul>
+</div>
+<div class="section" id="id30">
+<h2>0.5.4 (2017-06-06)<a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fixed untested typo.</li>
+</ul>
+</div>
+<div class="section" id="id31">
+<h2>0.5.5 (2017-06-07)<a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fixes for single-pixel frames</li>
+<li>Bug fixes for defining amount of frames manually in script.</li>
+<li>Censor correction shouldn’t require as much memory as it did. It’s still not as fast as it can be.</li>
+<li>Loading a configuration file will make it the “last used” file, reloading it when re-running PySight.</li>
+</ul>
+</div>
+<div class="section" id="id32">
+<h2>0.5.6 (2017-06-08)<a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>ML classification is functional.</li>
+</ul>
+</div>
+<div class="section" id="id33">
+<h2>0.5.7 (2017-06-08)<a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>More robust data generation.</li>
+<li>Added <code class="docutils literal"><span class="pre">scikit-learn</span></code> to <code class="docutils literal"><span class="pre">requirements.txt</span></code> and <code class="docutils literal"><span class="pre">setup.py</span></code>.</li>
+<li><code class="docutils literal"><span class="pre">CensorCorrection().learn_histograms()</span></code> now receives the power label as its input - must be an integer.</li>
+<li>Return of <code class="docutils literal"><span class="pre">CensorCorrection().learn_histograms()</span></code> is now <code class="docutils literal"><span class="pre">data,</span> <span class="pre">labels</span></code>.</li>
+<li>Made <code class="docutils literal"><span class="pre">__get_bincount_deque()</span></code> private. To be accessed using <code class="docutils literal"><span class="pre">learn_histograms()</span></code> only.</li>
+</ul>
+</div>
+<div class="section" id="id34">
+<h2>0.5.8 (2017-06-08)<a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Robustness upgrades.</li>
+<li>QOL changes to GUI.</li>
+<li>A “power” number is needed for <code class="docutils literal"><span class="pre">learn_histograms()</span></code> - the percent of power given to the Qubig. It’s just for saving, labeling is done with the <code class="docutils literal"><span class="pre">label</span></code> keyword.</li>
+<li>A <code class="docutils literal"><span class="pre">foldername</span></code> to which the data will be saved to has also been added.</li>
+</ul>
+</div>
+<div class="section" id="id35">
+<h2>0.5.9 (2017-06-11)<a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Much (MUCH) faster concatenation of the data.</li>
+<li>Fixed a bug with the number of empty histograms that were added to the learning dataset.</li>
+</ul>
+</div>
+<div class="section" id="id36">
+<h2>0.5.10 (2017-06-12)<a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Changes and optimizations for the file IO process.</li>
+<li>Fixed a bug with laser pulses verification.</li>
+<li>Added offset parameter for laser input.</li>
+</ul>
+</div>
+<div class="section" id="id37">
+<h2>0.5.11 (2017-06-22)<a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added FLIM functionality with laser clock in the Multiscaler’s clock.</li>
+</ul>
+</div>
+<div class="section" id="id38">
+<h2>0.5.12 (2017-06-22)<a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Fixed small bug with GUI.</li>
+<li>Possible fix to TAG lens interpolation.</li>
+</ul>
+</div>
+<div class="section" id="id39">
+<h2>0.5.13 (2017-06-26)<a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Added SciPy dependency.</li>
+<li>Added nanoFLIM histogramming.</li>
+</ul>
+</div>
+<div class="section" id="id40">
+<h2>0.5.14 (2017-06-26)<a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Bug fixes and performance improvements.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">0.1.0 (2017-02-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">0.1.1 (2017-02-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">0.1.2 (2017-02-27)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">0.1.3 (2017-02-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">0.1.4 (2017-02-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">0.1.5 (2017-02-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">0.1.6 (2017-02-28)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id8">0.1.7 (2017-03-01)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id9">0.2.0 (2017-03-05)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id10">0.3.0 (2017-03-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id11">0.3.1 (2017-03-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">0.3.2 (2017-03-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">0.3.3 (2017-03-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id14">0.3.4 (2017-03-09)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id15">0.3.5 (2017-03-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id16">0.3.6 (2017-03-14)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id17">0.4.0 (2017-03-16)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id18">0.4.1 (2017-03-30)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id19">0.4.2 (2017-03-30)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id20">0.4.3 (2017-04-02)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id21">0.4.4 (2017-04-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id22">0.4.5 (2017-04-17)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id23">0.4.6 (2017-05-16)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id24">0.4.7 (2017-05-25)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id25">0.4.8 (2017-05-31)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id26">0.5.0 (2017-06-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id27">0.5.1 (2017-06-04)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id28">0.5.2 (2017-06-06)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id29">0.5.3 (2017-06-06)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id30">0.5.4 (2017-06-06)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id31">0.5.5 (2017-06-07)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id32">0.5.6 (2017-06-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id33">0.5.7 (2017-06-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id34">0.5.8 (2017-06-08)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id35">0.5.9 (2017-06-11)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id36">0.5.10 (2017-06-12)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id37">0.5.11 (2017-06-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id38">0.5.12 (2017-06-22)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id39">0.5.13 (2017-06-26)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id40">0.5.14 (2017-06-26)</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/changelog.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Hagai Hargil.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/changelog.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

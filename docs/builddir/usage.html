@@ -1,0 +1,161 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Usage &#8212; PySight 0.5.14 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.5.14',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reference" href="reference/index.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>To use PySight do one of the following:</p>
+<ol class="arabic">
+<li><p class="first">write a Python script containing:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pysight</span> <span class="k">import</span> <span class="n">main_multiscaler_readout</span>
+
+
+<span class="n">df</span><span class="p">,</span> <span class="n">movie</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_multiscaler_readout</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">From the command line:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">pysight</span><span class="o">/</span><span class="nb">dir</span><span class="o">/</span><span class="n">main_multiscaler_readout</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>This command will open a GUI in which you’ll have to choose a <code class="docutils literal"><span class="pre">.lst</span></code> file to parse.</p>
+<p>If you use option #1, The algorithm will create the pandas DataFrame <code class="docutils literal"><span class="pre">df</span></code> containing all data, a <code class="docutils literal"><span class="pre">movie</span></code> object with allocated data, and a list <code class="docutils literal"><span class="pre">outputs</span></code>.
+In the GUI you can also choose the wanted <code class="docutils literal"><span class="pre">output(s)</span></code> in that list using the checkboxes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">single</span></code> - The algorithm will create a single <code class="docutils literal"><span class="pre">n</span></code>-dimensional matrix that is the sum of all photon events in the list file. Each dimension corresponds to a recorded physical axis - frames, lines, laser pulse, etc.</li>
+<li><code class="docutils literal"><span class="pre">array</span></code> - Full-blown array containing all available data in separate framesvolumes, no aggregation like in <code class="docutils literal"><span class="pre">single</span></code>. Access it from the <code class="docutils literal"><span class="pre">.hist</span></code> field of the generated object.</li>
+<li><code class="docutils literal"><span class="pre">tiff</span></code> - Outputs a <code class="docutils literal"><span class="pre">.tif</span></code> file with the same name as the file, in the same folder.</li>
+</ul>
+<p>Obviously, if you run the script from the command line (option #2) you can only interact with the <code class="docutils literal"><span class="pre">.tif</span></code> file.</p>
+<div class="section" id="gui-options">
+<h2>GUI Options<a class="headerlink" href="#gui-options" title="Permalink to this headline">¶</a></h2>
+<a class="reference internal image-reference" href="_images/gui.png"><img alt="_images/gui.png" src="_images/gui.png" style="width: 692.25px; height: 448.5px;" /></a>
+<p>Running <strong>PySight</strong> will open GUI seen above.</p>
+<p>Choosing a <code class="docutils literal"><span class="pre">.lst</span></code> file for analysis is done with the <em>Browse</em> button, located at the top-left corner of the GUI.</p>
+<p>The <em>Input Channels</em> option allows you to specify what was the input device to all three of the analog inputs of the multiscaler.
+Note that at least one of these fields must be a <code class="docutils literal"><span class="pre">PMT1</span></code> entry.</p>
+<p>To the right, <em>Image Size</em> determines the shape of the output matrix from the algorithm.
+Below it you can check whether the mirrors acquired data in a bi-directional fashion.
+You should also specify, in case data was acquired uni-directionally, whether the algorithm should keep the photons arriving during that returning phase.
+Below, specify the phase delay of the scanners and fill fraction, to cancel pixel-shift and remove the non-linear area of the image, located in the edges.</p>
+<p>At the bottom part of the GUI you can load a specific <code class="docutils literal"><span class="pre">.json</span></code> file to be used as a config file. A default <code class="docutils literal"><span class="pre">default.json</span></code> file is shipped with the package,
+but other files can be saved and loaded easily, to allow easier use of the GUI. The full filename is also saved.</p>
+<p>Some other options include:</p>
+<ul class="simple">
+<li><em>Debug?</em>: Reads a relatively small portion of a file, allows for quick code-checking.</li>
+<li><em>TAG Bit allocation</em>: When using the TAG bits you can determine what each bit is responsible for.</li>
+<li><em>Laser repetition rate</em>: For FLIM.</li>
+<li><em>Binwidth</em>: The binwidth, in seconds, of your model of the MCS6A.</li>
+</ul>
+</div>
+<div class="section" id="limitations">
+<h2>Limitations<a class="headerlink" href="#limitations" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>List (<code class="docutils literal"><span class="pre">.lst</span></code>) files have to be saved in <code class="docutils literal"><span class="pre">ASCII</span></code> format, and not binary.</li>
+<li>The code currently supports only three input channels, and a single PMT channel.</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#gui-options">GUI Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#limitations">Limitations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/usage.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Hagai Hargil.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/usage.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
