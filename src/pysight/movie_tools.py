@@ -34,15 +34,15 @@ class Movie(object):
     def list_of_volume_times(self) -> List[np.uint64]:
         """ All volumes start-times in the movie. """
 
-        volume_times = np.unique(self.data.index.get_level_values('Frames'))
+        volume_times = np.unique(self.data.index.get_level_values('Frames')).astype(np.uint64)
 
         if len(volume_times) > 1:
             diff_between_frames = np.mean(np.diff(volume_times))
         else:
-            diff_between_frames = self.data['time_rel_frames'].max()
+            diff_between_frames = np.uint64(np.max(self.data['time_rel_frames']))
 
         volume_times = list(volume_times)
-        volume_times.append(int(volume_times[-1] + diff_between_frames))
+        volume_times.append(np.uint64(volume_times[-1] + diff_between_frames))
 
         return volume_times
 

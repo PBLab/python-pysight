@@ -37,8 +37,11 @@ class CensorCorrection(object):
         """
         Main pipeline for the censor correction part.
         """
-        print("Starting the censor correction...")
-        self.create_arr_of_hists_deque()
+        if self.flim:
+            print("Starting the censor correction...")
+            self.create_arr_of_hists_deque()
+        else:
+            print("FLIM deactivated, no censor correction performed.")
 
     def __gen_laser_pulses_deque(self) -> np.ndarray:
         """
@@ -378,6 +381,8 @@ class CensoredVolume(object):
         self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
                                                       bins=edges[1])-1).astype('uint16', copy=False)
         self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+        self.vol.data.drop(len(edges[0])-1, level='bins_x', inplace=True)
+        self.vol.data.drop(len(edges[1])-1, level='bins_y', inplace=True)
 
         image_bincount = np.zeros((len(edges[0])-1, len(edges[1])-1), dtype=object)  # returned variable, contains hists
         active_lines = np.unique(self.vol.data.index.get_level_values('bins_x'))

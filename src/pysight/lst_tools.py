@@ -201,14 +201,13 @@ class Analysis(object):
             sorted_indices = numba_search_sorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
                                                  df_photons.loc[:, 'abs_time'].values)
             try:
-                df_photons[key] = self.dict_of_data[key].loc[sorted_indices, 'abs_time'].values
+                df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values
             except KeyError:
                 warnings.warn('All computed sorted_indices were "-1" for key {}. Trying to resume...'.format(key))
-
             df_photons.dropna(how='any', inplace=True)
             df_photons.loc[:, key] = df_photons.loc[:, key].astype(np.uint64)
             # relative time of each photon in accordance to the line\frame\laser pulse
-            df_photons.loc[:, column_heads[key]] = df_photons.loc[:, 'abs_time'] - df_photons.loc[:, key]
+            df_photons.loc[:, column_heads[key]] = df_photons.iloc[:, 0] - df_photons.loc[:, key]
 
             if 'Lines' == key:
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
@@ -222,7 +221,7 @@ class Analysis(object):
             df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
         assert len(df_photons) > 0
-        assert np.all(df_photons.loc[:, 'abs_time'].values >= 0)  # finds NaNs as well
+        assert np.all(df_photons.iloc[:, 0].values >= 0)  # finds NaNs as well
 
         # Deal with TAG lens interpolation
         try:

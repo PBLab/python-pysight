@@ -103,7 +103,8 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
 
     if num_of_recorded_lines < pixels:
-        array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames), endpoint=False)
+        array_of_frames = np.linspace(start=0, stop=last_event_time, num=int(actual_num_of_frames),
+                                      endpoint=False, dtype=np.uint64)
     else:
         unnecess_lines = num_of_recorded_lines % pixels
         array_of_frames = lines.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
@@ -124,7 +125,7 @@ def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frame
         raise ValueError('Last event time is zero or negative.')
 
     total_lines = num_of_lines * int(num_of_frames)
-    line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines)
+    line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines, dtype=np.uint64)
     return line_array
 
 

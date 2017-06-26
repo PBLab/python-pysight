@@ -326,3 +326,7 @@ Changelog
 
 * Added nanoFLIM histogramming.
 
+0.5.14 (2017-06-26)
+-------------------
+
+* Bug fixes and performance improvements.
