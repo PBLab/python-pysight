@@ -44,6 +44,7 @@ class GUIApp(object):
         self.__bi_dir(main_frame)
         self.__keep_unidir_events(main_frame)
         self.__flim(main_frame)
+        self.__censor(main_frame)
 
         # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
@@ -67,7 +68,7 @@ class GUIApp(object):
     def __input_channels(self, main_frame):
         # Comboboxes
         input_channels_label = ttk.Label(main_frame, text='Input Channels')
-        input_channels_label.grid(columns=3, row=0, sticky='se')
+        input_channels_label.grid(column=1, row=0, sticky='ns')
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
@@ -117,13 +118,13 @@ class GUIApp(object):
         outputs_label = ttk.Label(main_frame, text='Outputs:')
         outputs_label.grid(column=0, row=3, sticky='w')
 
-        self.summed = IntVar()
+        self.summed = BooleanVar(value=False)
         summed_array = ttk.Checkbutton(main_frame, text='Summed array', variable=self.summed)
         summed_array.grid(column=0, row=4, sticky='w')
-        self.full = IntVar()
+        self.full = BooleanVar(value=False)
         full_array = ttk.Checkbutton(main_frame, text='Full array', variable=self.full)
         full_array.grid(column=1, row=4, sticky='ns')
-        self.tif = IntVar(value=1)
+        self.tif = BooleanVar(value=True)
         tif = ttk.Checkbutton(main_frame, text='Tiff', variable=self.tif)
         tif.grid(column=2, row=4, sticky='ns')
 
@@ -297,6 +298,8 @@ class GUIApp(object):
     def __check_if_bidir(self, *args):
         if self.bidir:
             self.keep_unidir_check.config(state='normal')
+        if not self.bidir:
+            self.keep_unidir_check.config(state='disabled')
 
     def __keep_unidir_events(self, main_frame):
         """ Checkbox to see if events taken in the returning phase of a resonant mirror should be kept. """
@@ -312,11 +315,31 @@ class GUIApp(object):
         received starts an event of 8 pulses, with the next recorded pulse being the 9th.
         :param main_frame: ttk.Frame
         """
-        self.flim: IntVar = BooleanVar(value=False)
+        self.flim: BooleanVar = BooleanVar(value=False)
         flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
                                                       variable=self.flim,
                                                       text='FLIM?')
         flim_check.grid(row=9, column=3, sticky='e')
+        self.flim.trace('w', self.__check_if_flim)
+
+    def __censor(self, main_frame):
+        """
+        If FLIM is active, this checkbox enables the use of censor correction on the generated images.
+        :param main_frame: ttk.Frame
+        """
+        self.censor: BooleanVar = BooleanVar(value=True)
+        self.censor_check: ttk.Checkbutton = ttk.Checkbutton(main_frame, variable=self.censor,
+                                                      text='Censor Correction')
+        self.censor_check.grid(row=10, column=2, sticky='e')
+        self.censor_check.config(state='disabled')
+
+    def __check_if_flim(self, *args):
+        if self.flim:
+            self.censor_check.config(state='normal')
+        else:
+            self.censor_check.config(state='disabled')
+        self.root.update_idletasks()
+
 
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT #######
 
@@ -412,6 +435,18 @@ class GUIApp(object):
                 self.config = json.load(f)
             self.__modify_vars()
 
+    @property
+    def outputs(self):
+        """
+        Create a dictionary with the wanted user outputs.
+        """
+        output = {}
+
+        if True == self.summed.get(): output['summed'] = True
+        if True == self.full.get(): output['full'] = True
+        if True == self.tif.get(): output['tif'] = True
+
+        return output
 
 def verify_gui_input(gui):
     """Validate all GUI inputs"""

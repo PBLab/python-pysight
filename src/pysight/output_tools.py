@@ -14,14 +14,7 @@ def generate_output_list(movie, gui) -> List:
 
     output_list: List = []
 
-    if 1 == gui.summed.get():
-        output_list.append(gen_single(movie=movie, gui=gui))
 
-    if 1 == gui.full.get():
-        output_list.append(gen_array(movie=movie, gui=gui))
-
-    if 1 == gui.tif.get():
-        output_list.append(gen_tiff(movie=movie, gui=gui))
 
     return output_list
 

@@ -330,3 +330,12 @@ Changelog
 -------------------
 
 * Bug fixes and performance improvements.
+
+0.5.15 (2017-06-27)
+-------------------
+
+* Refactoring of output:
+
+    * Start of censor correction is integrated into the generation of the outputs.
+
+    * More efficient when required to output several types of data.

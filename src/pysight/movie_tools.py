@@ -1,7 +1,8 @@
 """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 __author__ = Hagai Hargil
 """
-
 import attr
 from attr.validators import instance_of
 import matplotlib.pyplot as plt
@@ -29,6 +30,9 @@ class Movie(object):
     big_tiff  = attr.ib(default=True, validator=instance_of(bool))
     bidir     = attr.ib(default=True, validator=instance_of(bool))
     num_of_channels = attr.ib(default=1, validator=instance_of(int))
+    outputs   = attr.ib(default={}, validator=instance_of(dict))
+    summed    = attr.ib(init=False)
+    stack     = attr.ib(init=False)
 
     @property
     def list_of_volume_times(self) -> List[np.uint64]:
@@ -45,6 +49,15 @@ class Movie(object):
         volume_times.append(np.uint64(volume_times[-1] + diff_between_frames))
 
         return volume_times
+
+    def run(self):
+        """
+        Main pipeline for the movie object
+        :return:
+        """
+        self.__create_outputs()
+        self.__print_outputs()
+        print("Movie object created, analysis done.")
 
     def gen_of_volumes(self, channel_num: int) -> Iterator:
         """
@@ -68,94 +81,77 @@ class Movie(object):
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac)
 
-    def create_tif(self) -> None:
-        """ Create all volumes, one-by-one, and save them as tiff. """
+    def __create_outputs(self) -> None:
+        """
+        Create the outputs according to the outputs dictionary.
+        """
+        if not self.outputs:
+            warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
+            return
 
-        from tifffile import TiffWriter
+        self.__bind_output_methods()
 
-        # Create a list containing the frames before showing them
+        self.summed = {i: 0 for i in range(1, self.num_of_channels + 1)}
+        self.stack = {}
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
-        for chan in range(1, self.num_of_channels + 1):
-            volumes_in_movie = self.gen_of_volumes(channel_num=chan)
-            try:
-                cur_vol = next(volumes_in_movie)
-                data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-            except StopIteration as e:
-                return e.value('No frames were generated.')
-
-            try:
-                with TiffWriter('{}_Chan_{}.tif'.format(self.name[:-4], chan), bigtiff=self.big_tiff,
-                                imagej=True) as tif:
-                    while True:
-                        tif.save(data_of_vol.hist.astype(np.uint16))
-                        try:
-                            cur_vol = next(volumes_in_movie)
-                            data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
-                        except StopIteration:
-                            break
-            except PermissionError:
-                warnings.warn("Permission Error: Not allowed to save file to original directory.")
-
-    def create_array(self) -> List[deque]:
-        """ Create all volumes, one-by-one, and return the array of data that holds them. """
-
-        # Create a deque and a namedtuple for the frames before showing them
-        VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
-        data_of_vol = VolTuple
-        deque_of_vols = deque()
-        data_channels = []
 
         for chan in range(1, self.num_of_channels + 1):
-            volumes_in_movie: Generator = self.gen_of_volumes(channel_num=chan)
+            deque_of_vols = deque()
+            for vol in self.gen_of_volumes(channel_num=chan):
+                data_of_vol.hist, data_of_vol.edges = vol.create_hist()
 
-            try:
-                cur_vol: Volume = next(volumes_in_movie)
-            except StopIteration:
-                raise ValueError('No volumes generated.')
+                # Censor correction
+                data_of_vol.hist = self.__nanoflim(data=data_of_vol.hist)
 
-            while True:
-                data_of_vol.hist, data_of_vol.edges = cur_vol.create_hist()
                 deque_of_vols.append(data_of_vol)
                 try:
-                    cur_vol = next(volumes_in_movie)
-                except StopIteration:
-                    break
+                    self.outputs['tif'](data=data_of_vol.hist, channel=chan)
+                except KeyError:
+                    pass
+                self.summed[chan] += data_of_vol.hist
 
             assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
-            data_channels.append(deque_of_vols)
+            self.stack[chan] = deque_of_vols
 
-        return data_channels
-
-    def create_single_volume(self, vols: str) -> List[np.ndarray]:
-        """ Aggregate the frames\volumes that vols mark to a single frame\volume.
-        :vols Volumes to aggregate. 'all' is all of them.
-        :return np.array of histogram
+    def __bind_output_methods(self) -> None:
         """
+        For each valid dictionary key in the output bind the proper method of the Movie object.
+        """
+        if 'tif' in self.outputs:
+            self.outputs['tif'] = self.__create_tif
 
-        data_channels = self.create_array()
-        returned_vols_by_chan = []
-        for all_vols in data_channels:
-            if vols == 'all':
-                summed = np.zeros_like(all_vols[0].hist, dtype=np.int32)
-                for vol in all_vols:
-                    summed += vol.hist
-                returned_vols_by_chan.append(summed)
 
-            if isinstance(vols, int):
-                returned_vols_by_chan.append(all_vols[vols])
+    def __create_tif(self, data, channel) -> None:
+        """ Create all volumes, one-by-one, and save them as tiff. """
 
-            try:
-                summed = np.array([0], dtype=np.int32)
-                for idx in all_vols:
-                    summed += all_vols[idx]
-            except TypeError:
-                raise TypeError('vols parameter should be "all", integer or list of volumes.')
-            else:
-                returned_vols_by_chan.append(summed)
+        from tifffile import imsave
 
-        return returned_vols_by_chan
+        try:
+            imsave('{}_Chan_{}.tif'.format(self.name[:-4], channel), data, bigtiff=self.big_tiff, append=True)
+        except PermissionError:
+            warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
+    def __print_outputs(self) -> None:
+        """
+        Print to console the outputs that were generated.
+        """
+        if not self.outputs:
+            return
+
+        print('======================================================= \nOutputs:\n--------')
+        if 'tif' in self.outputs:
+            print('Tiff stack created with name {}.tif, \none for each channel.'.format(self.name[:-4]))
+
+        if 'full' in self.outputs:
+            print('The full data is present in dictionary form (key per channel) under `movie.stack`')
+
+        if 'summed' in self.outputs:
+            print('Summed data is present in dictionary form (key per channel) under `movie.summed`.')
+
+
+    def __nano_flim(self, data: np.ndarray):
+        pass
 
 @attr.s(slots=True)
 class Volume(object):
@@ -208,12 +204,12 @@ class Volume(object):
         if 'time_rel_pulse' in self.data.columns:
             try:
                 laser_start = 0
-                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(int)
+                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
             except ZeroDivisionError:
                 laser_start = 0
                 warnings.warn('No laser reprate provided. Assuming 80.3 MHz.')
-                laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(int)
+                laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(np.uint8)
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
 
         return metadata
@@ -228,12 +224,12 @@ class Volume(object):
 
         if self.empty is not True:
             for num_of_dims, key in enumerate(metadata, 1):
-                if key != 'Volume':
+                if 'Volume' == key:
+                    list_of_edges.append(self.__create_line_array())
+                else:
                     list_of_edges.append(create_linspace(start=metadata[key].start,
                                                          stop=metadata[key].end,
                                                          num=metadata[key].num))
-                else:
-                    list_of_edges.append(self.__create_line_array())
 
             return list_of_edges, num_of_dims
         else:
@@ -279,9 +275,9 @@ class Volume(object):
             assert len(list_of_data_columns) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
-            return hist.astype(np.int32), edges
+            return hist.astype(np.int16), edges
         else:
-            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int32), (0, 0, 0)
+            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int16), (0, 0, 0)
 
     def show(self) -> None:
         """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """

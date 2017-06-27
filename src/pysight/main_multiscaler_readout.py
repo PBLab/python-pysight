@@ -1,6 +1,8 @@
 """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+__author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
-
 __author__: Hagai Hargil
 """
 
@@ -43,22 +45,19 @@ def main_data_readout(gui):
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
-                        fill_frac=gui.fill_frac.get(),
+                        fill_frac=gui.fill_frac.get(), outputs=gui.outputs,
                         num_of_channels=analyzed_struct.num_of_channels)
 
+    final_movie.run()
     # Censor correction part
-    censored = CensorCorrection(raw=analyzed_struct.dict_of_data, movie=final_movie,
-                                reprate=gui.reprate.get(), binwidth=gui.binwidth.get(),
-                                laser_offset=gui.offset.get(), data=analyzed_struct.df_allocated,
-                                all_laser_pulses=analyzed_struct.dict_of_data['Laser'],
-                                flim=gui.flim.get(), num_of_channels=analyzed_struct.num_of_channels)
-    censored.run()
+    # censored = CensorCorrection(raw=analyzed_struct.dict_of_data, movie=final_movie,
+    #                             reprate=gui.reprate.get(), binwidth=gui.binwidth.get(),
+    #                             laser_offset=gui.offset.get(), data=analyzed_struct.df_allocated,
+    #                             all_laser_pulses=analyzed_struct.dict_of_data['Laser'],
+    #                             flim=gui.flim.get(), num_of_channels=analyzed_struct.num_of_channels)
+    # censored.run()
 
-    # Find out what the user wanted and output it
-    print('======================================================= \nOutputs:\n--------')
-    output_list = generate_output_list(final_movie, gui)
-
-    return analyzed_struct.df_allocated, final_movie, output_list, censored
+    return analyzed_struct.df_allocated, final_movie
 
 
 def run():
@@ -75,4 +74,4 @@ def run():
 
 
 if __name__ == '__main__':
-    df, movie, outputs, censored = run()
+    df, movie = run()

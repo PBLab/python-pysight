@@ -31,7 +31,7 @@ project = 'PySight'
 year = '2017'
 author = 'Hagai Hargil'
 copyright = '{0}, {1}'.format(year, author)
-version = release = '0.5.14'
+version = release = '0.5.15'
 autodoc = True
 
 pygments_style = 'trac'
@@ -40,7 +40,11 @@ extlinks = {
     'issue': ('https://github.com/HagaiHargil/python-pysight/issues/%s', '#'),
     'pr': ('https://github.com/HagaiHargil/python-pysight/pull/%s', 'PR #'),
 }
-
+html_theme = "alabaster"
+html_theme_options = {
+    "font_family": "Palatino, Georgia, serif",
+    "font_size": "18px",
+}
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_use_index = True

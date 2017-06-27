@@ -373,6 +373,7 @@ class CensoredVolume(object):
         """
         edges = self.vol._Volume__create_hist_edges()[0]
 
+        hist_t, edges_t = self.vol.create_hist()
         assert "time_rel_pulse" in self.vol.data.columns, \
             "No `time_rel_pulse` column in data."
 

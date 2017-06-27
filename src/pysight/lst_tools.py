@@ -173,7 +173,7 @@ class Analysis(object):
                                     self.dict_of_data['PMT2'].copy()], axis=0)
             self.num_of_channels = 2
         except KeyError:
-            df_photons = self.dict_of_data['PMT1'].copy().to_frame()
+            df_photons = self.dict_of_data['PMT1'].copy()
         except:
             print("Unknown error: ", sys.exc_info()[0])
         finally:
