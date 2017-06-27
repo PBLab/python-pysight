@@ -45,7 +45,7 @@ def main_data_readout(gui):
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
-                        fill_frac=gui.fill_frac.get(), outputs=gui.outputs,
+                        fill_frac=gui.fill_frac.get(), outputs=gui.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels)
 
     final_movie.run()

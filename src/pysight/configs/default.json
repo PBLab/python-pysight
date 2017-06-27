@@ -1,0 +1,122 @@
+{
+    "filename": [
+        "PY_VAR0",
+        ""
+    ],
+    "input_start": [
+        "PY_VAR1",
+        "Frames"
+    ],
+    "input_stop1": [
+        "PY_VAR2",
+        "PMT1"
+    ],
+    "input_stop2": [
+        "PY_VAR3",
+        "Lines"
+    ],
+    "num_of_frames": [
+        "PY_VAR4",
+        1
+    ],
+    "summed": [
+        "PY_VAR5",
+        false
+    ],
+    "full": [
+        "PY_VAR6",
+        false
+    ],
+    "tif": [
+        "PY_VAR7",
+        true
+    ],
+    "x_pixels": [
+        "PY_VAR8",
+        512
+    ],
+    "y_pixels": [
+        "PY_VAR9",
+        512
+    ],
+    "z_pixels": [
+        "PY_VAR10",
+        100
+    ],
+    "debug": [
+        "PY_VAR11",
+        0
+    ],
+    "phase": [
+        "PY_VAR12",
+        -2.6
+    ],
+    "fill_frac": [
+        "PY_VAR13",
+        80.0
+    ],
+    "reprate": [
+        "PY_VAR14",
+        80300000.0
+    ],
+    "offset": [
+        "PY_VAR15",
+        3.5
+    ],
+    "binwidth": [
+        "PY_VAR16",
+        8e-10
+    ],
+    "tag_freq": [
+        "PY_VAR17",
+        "189800.0"
+    ],
+    "tag_pulses": [
+        "PY_VAR18",
+        1
+    ],
+    "tag_bits": [
+        "PY_VAR19",
+        false
+    ],
+    "slow_bit_start": [
+        "PY_VAR20",
+        1
+    ],
+    "slow_bit_end": [
+        "PY_VAR21",
+        3
+    ],
+    "fast_bit_start": [
+        "PY_VAR22",
+        4
+    ],
+    "fast_bit_end": [
+        "PY_VAR23",
+        5
+    ],
+    "z_bit_start": [
+        "PY_VAR24",
+        6
+    ],
+    "z_bit_end": [
+        "PY_VAR25",
+        16
+    ],
+    "bidir": [
+        "PY_VAR26",
+        true
+    ],
+    "keep_unidir": [
+        "PY_VAR27",
+        false
+    ],
+    "flim": [
+        "PY_VAR28",
+        false
+    ],
+    "censor": [
+        "PY_VAR29",
+        true
+    ]
+}

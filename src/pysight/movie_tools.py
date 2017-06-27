@@ -19,20 +19,21 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-    data      = attr.ib()
-    reprate   = attr.ib(default=80e6, validator=instance_of(float))
-    x_pixels  = attr.ib(default=512, validator=instance_of(int))
-    y_pixels  = attr.ib(default=512, validator=instance_of(int))
-    z_pixels  = attr.ib(default=100, validator=instance_of(int))
-    name      = attr.ib(default='Movie', validator=instance_of(str))
-    binwidth  = attr.ib(default=800e-12, validator=instance_of(float))
-    fill_frac = attr.ib(default=80.0, validator=instance_of(float))
-    big_tiff  = attr.ib(default=True, validator=instance_of(bool))
-    bidir     = attr.ib(default=True, validator=instance_of(bool))
+    data            = attr.ib()
+    reprate         = attr.ib(default=80e6, validator=instance_of(float))
+    x_pixels        = attr.ib(default=512, validator=instance_of(int))
+    y_pixels        = attr.ib(default=512, validator=instance_of(int))
+    z_pixels        = attr.ib(default=100, validator=instance_of(int))
+    name            = attr.ib(default='Movie', validator=instance_of(str))
+    binwidth        = attr.ib(default=800e-12, validator=instance_of(float))
+    fill_frac       = attr.ib(default=80.0, validator=instance_of(float))
+    big_tiff        = attr.ib(default=True, validator=instance_of(bool))
+    bidir           = attr.ib(default=True, validator=instance_of(bool))
     num_of_channels = attr.ib(default=1, validator=instance_of(int))
-    outputs   = attr.ib(default={}, validator=instance_of(dict))
-    summed    = attr.ib(init=False)
-    stack     = attr.ib(init=False)
+    outputs         = attr.ib(default={}, validator=instance_of(dict))
+    censor          = attr.ib(default=False, validator=instance_of(bool))
+    summed          = attr.ib(init=False)
+    stack           = attr.ib(init=False)
 
     @property
     def list_of_volume_times(self) -> List[np.uint64]:
@@ -102,7 +103,8 @@ class Movie(object):
                 data_of_vol.hist, data_of_vol.edges = vol.create_hist()
 
                 # Censor correction
-                data_of_vol.hist = self.__nanoflim(data=data_of_vol.hist)
+                if self.censor:
+                    data_of_vol.hist = self.__nanoflim(data=data_of_vol.hist)
 
                 deque_of_vols.append(data_of_vol)
                 try:
@@ -148,7 +150,6 @@ class Movie(object):
 
         if 'summed' in self.outputs:
             print('Summed data is present in dictionary form (key per channel) under `movie.summed`.')
-
 
     def __nano_flim(self, data: np.ndarray):
         pass

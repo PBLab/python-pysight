@@ -339,3 +339,8 @@ Changelog
     * Start of censor correction is integrated into the generation of the outputs.
 
     * More efficient when required to output several types of data.
+
+0.5.16 (2017-06-27)
+-------------------
+
+* Fixed small bug with censor correction.
