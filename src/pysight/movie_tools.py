@@ -104,13 +104,14 @@ class Movie(object):
 
                 # Censor correction
                 if self.censor:
-                    data_of_vol.hist = self.__nanoflim(data=data_of_vol.hist)
-
+                    data_of_vol.hist = self.__nano_flim(data=data_of_vol.hist)
                 deque_of_vols.append(data_of_vol)
+
                 try:
                     self.outputs['tif'](data=data_of_vol.hist, channel=chan)
                 except KeyError:
                     pass
+
                 self.summed[chan] += data_of_vol.hist
 
             assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
@@ -130,7 +131,8 @@ class Movie(object):
         from tifffile import imsave
 
         try:
-            imsave('{}_Chan_{}.tif'.format(self.name[:-4], channel), data, bigtiff=self.big_tiff, append=True)
+            imsave('{}_Chan_{}.tif'.format(self.name[:-4], channel), data, bigtiff=self.big_tiff, contiguous=True,
+                   software='PySight', append=True, metadata={'axes': 'XYZCT'})
         except PermissionError:
             warnings.warn("Permission Error: Not allowed to save file to original directory.")
 
@@ -151,8 +153,9 @@ class Movie(object):
         if 'summed' in self.outputs:
             print('Summed data is present in dictionary form (key per channel) under `movie.summed`.')
 
-    def __nano_flim(self, data: np.ndarray):
+    def __nano_flim(self, data: np.ndarray) -> None:
         pass
+
 
 @attr.s(slots=True)
 class Volume(object):
@@ -244,8 +247,11 @@ class Volume(object):
         lines = self.data.index.get_level_values('Lines').categories.values
         lines.sort()
         if len(lines) > 1:
-            mean_diff = np.diff(lines).mean()
-            return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
+            if len(lines) < self.x_pixels:
+                raise ValueError('Not enough line events in volume number {}. '.format(self.number))
+            else:
+                mean_diff = np.diff(lines).mean()
+                return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
         else:  # single pixel frames, perhaps
             return np.r_[lines, lines + self.end_time]
 

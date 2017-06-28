@@ -37,7 +37,8 @@ def main_data_readout(gui):
                                bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
-                               laser_offset=gui.offset.get(), use_sweeps=False, flim=gui.flim.get())
+                               laser_offset=gui.offset.get(), use_sweeps=False, flim=gui.flim.get(),
+                               censor=gui.censor.get())
     analyzed_struct.run()
 
     # Create a movie object

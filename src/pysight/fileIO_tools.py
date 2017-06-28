@@ -3,6 +3,7 @@ __author__ = Hagai Hargil
 """
 import pandas as pd
 from typing import Dict, List
+from attr.validators import instance_of
 import numpy as np
 import attr
 
@@ -12,11 +13,11 @@ class FileIO(object):
     """
     Manage pipeline of file IO process
     """
-    filename    = attr.ib(validator=attr.validators.instance_of(str))
-    debug       = attr.ib(validator=attr.validators.instance_of(int))
-    input_start = attr.ib(validator=attr.validators.instance_of(str))
-    input_stop1 = attr.ib(validator=attr.validators.instance_of(str))
-    input_stop2 = attr.ib(validator=attr.validators.instance_of(str))
+    filename    = attr.ib(validator=instance_of(str))
+    debug       = attr.ib(default=0, validator=instance_of(int))
+    input_start = attr.ib(default='Frames', validator=instance_of(str))
+    input_stop1 = attr.ib(default='PMT1', validator=instance_of(str))
+    input_stop2 = attr.ib(default='Lines', validator=instance_of(str))
     is_binary   = attr.ib(init=False)
     timepatch   = attr.ib(init=False)
     data_range  = attr.ib(init=False)

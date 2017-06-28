@@ -290,7 +290,7 @@ class GUIApp(object):
     def __bi_dir(self, main_frame):
         """ Checkbox for bi-directional scan """
 
-        self.bidir = BooleanVar(value=True)
+        self.bidir = BooleanVar(value=False)
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
         bidir_check.grid(column=6, row=3, sticky='ns')
         self.bidir.trace('w', self.__check_if_bidir)
@@ -327,9 +327,9 @@ class GUIApp(object):
         If FLIM is active, this checkbox enables the use of censor correction on the generated images.
         :param main_frame: ttk.Frame
         """
-        self.censor: BooleanVar = BooleanVar(value=True)
+        self.censor: BooleanVar = BooleanVar(value=False)
         self.censor_check: ttk.Checkbutton = ttk.Checkbutton(main_frame, variable=self.censor,
-                                                      text='Censor Correction')
+                                                             text='Censor Correction')
         self.censor_check.grid(row=10, column=2, sticky='e')
         self.censor_check.config(state='disabled')
 
@@ -345,10 +345,10 @@ class GUIApp(object):
 
     def __save_cfg(self, main_frame):
         """ A button to write a .json with current configs """
-        self.cfg_to_save: StringVar = StringVar(value='default')
+        self.save_as: StringVar = StringVar(value='default')
         save_label = ttk.Label(main_frame, text='Config file name to save:')
         save_label.grid(column=0, row=11, sticky='w')
-        save_entry = ttk.Entry(main_frame, textvariable=self.cfg_to_save, width=10)
+        save_entry = ttk.Entry(main_frame, textvariable=self.save_as, width=10)
         save_entry.grid(column=1, row=11, sticky='w')
         save_button = ttk.Button(main_frame, text="Save cfg", command=self.__callback_save_cur_cfg)
         save_button.grid(column=2, row=11, sticky='w')
@@ -370,7 +370,7 @@ class GUIApp(object):
                 except AttributeError:
                     pass  # don't save non-tkinter variables
 
-        path_to_save_to: str = str(Path(__file__).parent / 'configs') + sep + str(self.cfg_to_save.get()) + '.json'
+        path_to_save_to: str = str(Path(__file__).parent / 'configs') + sep + str(self.save_as.get()) + '.json'
         with open(path_to_save_to, 'w') as f:
             json.dump(cfg_dict_to_save, f, indent=4)
 
@@ -380,7 +380,7 @@ class GUIApp(object):
         """
         self.cfg_filename: StringVar = StringVar(value='default')
         load_button: Button = ttk.Button(main_frame, text="Load cfg", command=self.__browsecfg)
-        load_button.grid(column=4, row=11, sticky='w')
+        load_button.grid(column=3, row=11, sticky='w')
 
     def __browsecfg(self):
         self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],

@@ -10,6 +10,9 @@ from pysight.validation_tools import validate_line_input, validate_frame_input, 
     calc_last_event_time
 from attr.validators import instance_of
 import sys
+from scipy.optimize import curve_fit
+from scipy.signal import find_peaks_cwt
+
 
 
 @attr.s(slots=True)
@@ -40,9 +43,12 @@ class Analysis(object):
     use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
     keep_unidir        = attr.ib(default=False, validator=instance_of(bool))
     flim               = attr.ib(default=False, validator=instance_of(bool))
+    exp_params         = attr.ib(default=None)
+    censor             = attr.ib(default=False, validator=instance_of(bool))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
+
 
     def run(self):
         """ Pipeline of analysis """
@@ -236,7 +242,9 @@ class Analysis(object):
 
         # Deal with laser pulses interpolation
         if self.flim:
-            df_photons = self.__interpolate_laser(df_photons)
+            df_photons, rel_time = self.__interpolate_laser(df_photons)
+            if self.censor:
+                self.exp_params = self.__fit_data_to_exponent(rel_time)
 
         return df_photons
 
@@ -355,6 +363,25 @@ class Analysis(object):
                 # self.dict_of_slices_bin[key].data_as_
                 pass
 
+    def __nano_flim_exp(x, a, b, c):
+        """ Exponential function for FLIM and censor correction """
+        return a * np.exp(-b * x) + c
+
+    def __fit_data_to_exponent(self, modulu: np.ndarray) -> np.ndarray:
+        """
+        Take the data after modulu BINS_BETWEEN_PULSES and fit an exponential decay to it, with some lifetime.
+        :return: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array
+        """
+        yn = np.histogram(modulu, 16)[0]
+        peakind = find_peaks_cwt(yn, np.arange(1, 10))
+        min_value = min(yn[yn > 0])
+        max_value = yn[peakind[0]]
+        y_filt = yn[peakind[0]:]
+        x = np.arange(len(y_filt))
+        popt, pcov = curve_fit(self.__nano_flim_exp, x, y_filt, p0=(max_value, 1/3.5, min_value),
+                               maxfev=10000)
+        return popt
+
     def add_unidirectional_lines(self, line_delta: float = -1):
         """
         For unidirectional scans fake line signals have to be inserted.
@@ -375,17 +402,19 @@ class Analysis(object):
         self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
                                                   dtype='uint64')
 
-    def __interpolate_laser(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __interpolate_laser(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray]:
         """
         Assign a time relative to a laser pulse for each photon.
         :param df: Dataframe with data for each photon.
+        Assuming that the clock is synced to a 10 MHz signal.
         :return: Modified dataframe.
         """
-        rel_time1 = df['abs_time'].values % 251
+        TEN_MEGAHERTZ_IN_BINS = 251
+        rel_time1 = df['abs_time'].values % TEN_MEGAHERTZ_IN_BINS
         rel_time2 = rel_time1 % np.ceil(1 / (self.binwidth * self.laser_freq))
         df['time_rel_pulse'] = rel_time2.astype(np.uint8)
 
-        return df
+        return df, rel_time2
 
 
 @jit(nopython=True, cache=True)
