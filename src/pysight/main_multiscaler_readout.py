@@ -15,8 +15,6 @@ def main_data_readout(gui):
     from pysight.lst_tools import Analysis
     from pysight.movie_tools import Movie
     from pysight import timepatch_switch
-    from pysight.censor_tools import CensorCorrection
-    from pysight.output_tools import generate_output_list
 
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
@@ -47,7 +45,8 @@ def main_data_readout(gui):
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get(), outputs=gui.outputs, censor=gui.censor.get(),
-                        num_of_channels=analyzed_struct.num_of_channels)
+                        num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
+                        lst_metadata=cur_file.lst_metadata)
 
     final_movie.run()
     # Censor correction part

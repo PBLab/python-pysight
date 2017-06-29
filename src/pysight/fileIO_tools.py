@@ -25,31 +25,44 @@ class FileIO(object):
     dict_of_input_channels = attr.ib(init=False)
     list_of_recorded_data_channels = attr.ib(init=False)
     data = attr.ib(init=False)
+    lst_metadata = attr.ib(init=False)
 
     def run(self):
         # Open file and find the needed parameters
-        self.is_binary: bool = self.determine_binary()
-        self.timepatch: str = self.get_timepatch()
+        self.determine_binary()
+        metadata: str = self.__get_metadata()
+        self.timepatch: str = self.get_timepatch(metadata)
         if self.timepatch == '3' and not self.is_binary:
             raise NotImplementedError(
                 'Timepatch value "3" is currently not supported for hex files. Please message the package owner.')
-        self.data_range: int = self.get_range()
+        self.data_range: int = self.get_range(metadata)
 
         self.start_of_data_pos: int = self.get_start_pos()
         self.dict_of_input_channels: dict = self.create_inputs_dict()
-        self.list_of_recorded_data_channels: list = self.find_active_channels()
+        self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
         num_of_items = self.determine_num_of_items()
         self.data: np.ndarray = self.read_lst(num_of_items=num_of_items)
         print('File read. Sorting the file according to timepatch...')
 
+    def __get_metadata(self) -> str:
+        """
+        Read the file's metadata to be parsed by other functions.
+        :return: String with the .lst file's metadata
+        """
+        file_mode = 'rb' if self.is_binary else 'r'
+        with open(self.filename, file_mode) as f:
+            metadata = f.read(5000)
+
+        return metadata
+
     def determine_num_of_items(self):
         if self.debug == 0:
             num_of_items = -1
-            read_string = 'Reading file "{}"...'.format(self.filename)
+            read_string = f'Reading file "{self.filename}"...'
         else:
             num_of_items = 0.3e6
-            read_string = '[DEBUG] Reading file "{}"...'.format(self.filename)
+            read_string = f'[DEBUG] Reading file "{self.filename}"...'
 
         print(read_string)
         return num_of_items
@@ -106,13 +119,15 @@ class FileIO(object):
             }
         return diction
 
-    def determine_binary(self) -> bool:
+    def determine_binary(self):
         """
         Determine whether we're dealing with a binary or a hex file.
-        :return: Boolean value
         """
         if self.filename == '':
             raise ValueError('No filename given.')
+
+        is_binary: bool = False
+        self.is_binary = is_binary
 
         try:
             with open(self.filename, 'r') as f:
@@ -123,14 +138,13 @@ class FileIO(object):
                 f.read(100)
                 is_binary = True
         except FileNotFoundError:
-            raise FileNotFoundError("File {} doesn't exist.".format(self.filename))
-
-        else:
-            raise ValueError('File [} read unsuccessfully.'.format(self.filename))
+            raise FileNotFoundError(f"File {self.filename} doesn't exist.")
+        except:
+            raise Exception(f'File {self.filename} read unsuccessfully.')
         finally:
-            return is_binary
+            self.is_binary = is_binary
 
-    def get_range(self) -> int:
+    def get_range(self, cur_str) -> int:
         """
         Finds the "range" of the current file in the proper units
         :return: range as defined by MCS6A
@@ -142,23 +156,18 @@ class FileIO(object):
 
         if self.is_binary:
             format_str = b'range=(\d+)'
-            file_mode = 'rb'
         else:
             format_str = r'range=(\d+)'
-            file_mode = 'r'
 
         format_range = re.compile(format_str)
-        with open(self.filename, file_mode) as f:
-            cur_str = f.read(500)
-
         range = int(re.search(format_range, cur_str).group(1))
 
         return range
 
-    def get_timepatch(self) -> str:
+    def get_timepatch(self, cur_str: str) -> str:
         """
         Get the time patch value out of of a list file.
-        :param filename: File to be read.
+        :param metadata: Start of file to be analyzed.
         :return: Time patch value as string.
         """
         import re
@@ -168,15 +177,10 @@ class FileIO(object):
 
         if self.is_binary:
             format_str: str = b'time_patch=(\w+)'
-            file_mode: str = 'rb'
         else:
             format_str: str = r'time_patch=(\w+)'
-            file_mode: str = 'r'
 
         format_timepatch = re.compile(format_str)
-        with open(self.filename, file_mode) as f:
-            cur_str: str = f.read(5000)  # read 5000 chars for the timepatch value
-
         timepatch = re.search(format_timepatch, cur_str).group(1)
         try:
             timepatch = timepatch.decode('utf-8')
@@ -185,9 +189,10 @@ class FileIO(object):
         finally:
             return timepatch
 
-    def find_active_channels(self) -> List[bool]:
+    def find_active_channels(self, cur_str) -> List[bool]:
         """
         Create a dictionary containing the active channels.
+        :param cur_str: String to be analyzed.
         """
         import re
 
@@ -196,19 +201,13 @@ class FileIO(object):
 
         if self.is_binary:
             format_str = b'active=(\d)'
-            file_mode = 'rb'
             match = b'1'
         else:
             format_str = r'active=(\d)'
-            file_mode = 'r'
             match = '1'
 
         format_active = re.compile(format_str)
         active_channels: List[bool] = [False, False, False, False, False, False]
-
-        with open(self.filename, file_mode) as f:
-            cur_str: str = f.read(5000)
-
         list_of_matches = re.findall(format_active, cur_str)
 
         for idx, cur_match in enumerate(list_of_matches):
@@ -220,7 +219,6 @@ class FileIO(object):
     def get_start_pos(self) -> int:
         """
         Returns the start position of the data
-        :param filename: Name of file
         :return: Integer of file position for f.seek() method
         """
         import re

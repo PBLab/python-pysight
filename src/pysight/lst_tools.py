@@ -207,9 +207,10 @@ class Analysis(object):
             sorted_indices = numba_search_sorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
                                                  df_photons.loc[:, 'abs_time'].values)
             try:
-                df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values
+                df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
+                # but this .iloc method is amazingly faster than .loc
             except KeyError:
-                warnings.warn('All computed sorted_indices were "-1" for key {}. Trying to resume...'.format(key))
+                warnings.warn(f'All computed sorted_indices were "-1" for key {key}. Trying to resume...')
             df_photons.dropna(how='any', inplace=True)
             df_photons.loc[:, key] = df_photons.loc[:, key].astype(np.uint64)
             # relative time of each photon in accordance to the line\frame\laser pulse
@@ -332,7 +333,7 @@ class Analysis(object):
         actual_data_channels = set(df['channel'].cat.categories.values)
         if actual_data_channels != set(self.dict_of_inputs.values()):
             warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                          "The list files contains data in the following channels: {}.".format(actual_data_channels))
+                          f"The list files contains data in the following channels: {actual_data_channels}.")
 
         assert np.all(df['abs_time'].values >= 0)
 
@@ -363,7 +364,7 @@ class Analysis(object):
                 # self.dict_of_slices_bin[key].data_as_
                 pass
 
-    def __nano_flim_exp(x, a, b, c):
+    def __nano_flim_exp(self, x, a, b, c):
         """ Exponential function for FLIM and censor correction """
         return a * np.exp(-b * x) + c
 

@@ -344,3 +344,10 @@ Changelog
 -------------------
 
 * Fixed small bug with censor correction.
+
+0.5.17 (2017-6-29)
+------------------
+
+* Fixed ``.tif`` generation.
+
+* Refactoring of ``FileIO`` (tests still pass).

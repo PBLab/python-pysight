@@ -142,7 +142,7 @@ class GUIApp(object):
 
         self.x_pixels = IntVar(value=512)
         self.y_pixels = IntVar(value=512)
-        self.z_pixels = IntVar(value=100)
+        self.z_pixels = IntVar(value=1)
 
         x_pixels_entry = ttk.Entry(main_frame, textvariable=self.x_pixels, width=5)
         x_pixels_entry.grid(column=6, row=2, sticky='w')
@@ -417,7 +417,7 @@ class GUIApp(object):
         elif type(val) == bool:
             return BooleanVar(value=val)
         else:
-            raise ValueError('Type not recognized for value {}.'.format(val))
+            raise ValueError(f'Type not recognized for value {val}.')
 
     def __load_last_used_cfg(self, main_frame):
         dir: WindowsPath = Path(__file__).parent / 'configs'

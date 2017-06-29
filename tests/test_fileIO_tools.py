@@ -29,6 +29,7 @@ class TestFileIOTools(unittest.TestCase):
         list_of_real_range = [80000000]
         list_of_returned_range = []
         for oname in self.file_io_objects:
+            metadata = oname._FileIO__get_metadata()
             list_of_returned_range.append(oname.data_range)
 
         self.assertEqual(list_of_real_range, list_of_returned_range)
@@ -37,6 +38,7 @@ class TestFileIOTools(unittest.TestCase):
         list_of_real_time_patch = ['32']
         list_of_returned_time_patch = []
         for oname in self.file_io_objects:
+            metadata = oname._FileIO__get_metadata()
             list_of_returned_time_patch.append(oname.timepatch)
 
         self.assertEqual(list_of_real_time_patch, list_of_returned_time_patch)
@@ -53,6 +55,7 @@ class TestFileIOTools(unittest.TestCase):
         real_list_of_active_channels = [[True, True, True, False, False, False]]
         returned_list_of_active_channels = []
         for oname in self.file_io_objects:
+            metadata = oname._FileIO__get_metadata()
             returned_list_of_active_channels.append(oname.list_of_recorded_data_channels)
 
         self.assertEqual(returned_list_of_active_channels, real_list_of_active_channels)

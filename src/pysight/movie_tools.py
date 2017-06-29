@@ -8,7 +8,7 @@ from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Tuple, Iterable, Generator
+from typing import List, Iterator, Tuple, Iterable, Generator, Deque
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
@@ -23,7 +23,7 @@ class Movie(object):
     reprate         = attr.ib(default=80e6, validator=instance_of(float))
     x_pixels        = attr.ib(default=512, validator=instance_of(int))
     y_pixels        = attr.ib(default=512, validator=instance_of(int))
-    z_pixels        = attr.ib(default=100, validator=instance_of(int))
+    z_pixels        = attr.ib(default=1, validator=instance_of(int))
     name            = attr.ib(default='Movie', validator=instance_of(str))
     binwidth        = attr.ib(default=800e-12, validator=instance_of(float))
     fill_frac       = attr.ib(default=80.0, validator=instance_of(float))
@@ -32,8 +32,17 @@ class Movie(object):
     num_of_channels = attr.ib(default=1, validator=instance_of(int))
     outputs         = attr.ib(default={}, validator=instance_of(dict))
     censor          = attr.ib(default=False, validator=instance_of(bool))
+    flim            = attr.ib(default=False, validator=instance_of(bool))
+    lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
     summed          = attr.ib(init=False)
     stack           = attr.ib(init=False)
+
+    @property
+    def bins_bet_pulses(self) -> int:
+        if self.flim:
+            return int(np.ceil(1 / (self.reprate * self.binwidth)))
+        else:
+            return 1
 
     @property
     def list_of_volume_times(self) -> List[np.uint64]:
@@ -90,51 +99,51 @@ class Movie(object):
             warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
             return
 
-        self.__bind_output_methods()
-
         self.summed = {i: 0 for i in range(1, self.num_of_channels + 1)}
         self.stack = {}
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
 
         for chan in range(1, self.num_of_channels + 1):
-            deque_of_vols = deque()
-            for vol in self.gen_of_volumes(channel_num=chan):
-                data_of_vol.hist, data_of_vol.edges = vol.create_hist()
+            if 'tif' in self.outputs:
+                deque_of_vols = self.__create_tif(channel=chan)
+            else:
+                deque_of_vols = deque()
+                for vol in self.gen_of_volumes(channel_num=chan):
+                    data_of_vol.hist, data_of_vol.edges = vol.create_hist()
+                    # Censor correction
+                    if self.censor:
+                        data_of_vol.hist = self.__nano_flim(data=data_of_vol.hist)
 
-                # Censor correction
-                if self.censor:
-                    data_of_vol.hist = self.__nano_flim(data=data_of_vol.hist)
-                deque_of_vols.append(data_of_vol)
-
-                try:
-                    self.outputs['tif'](data=data_of_vol.hist, channel=chan)
-                except KeyError:
-                    pass
-
-                self.summed[chan] += data_of_vol.hist
+                    deque_of_vols.append(data_of_vol.hist)
+                    self.summed[chan] += data_of_vol.hist
 
             assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
             self.stack[chan] = deque_of_vols
 
-    def __bind_output_methods(self) -> None:
-        """
-        For each valid dictionary key in the output bind the proper method of the Movie object.
-        """
-        if 'tif' in self.outputs:
-            self.outputs['tif'] = self.__create_tif
-
-
-    def __create_tif(self, data, channel) -> None:
+    def __create_tif(self, channel) -> Deque[np.ndarray]:
         """ Create all volumes, one-by-one, and save them as tiff. """
 
-        from tifffile import imsave
+        from tifffile import TiffWriter
 
-        try:
-            imsave('{}_Chan_{}.tif'.format(self.name[:-4], channel), data, bigtiff=self.big_tiff, contiguous=True,
-                   software='PySight', append=True, metadata={'axes': 'XYZCT'})
-        except PermissionError:
-            warnings.warn("Permission Error: Not allowed to save file to original directory.")
+        deque_of_vols = deque()
+        with TiffWriter(f'{self.name[:-4]}_Chan_{channel}.tif', bigtiff=self.big_tiff,
+                        software='PySight', imagej=True) as tif:
+            for vol in self.gen_of_volumes(channel_num=channel):
+                hist, edges = vol.create_hist()
+                self.summed[channel] += hist
+                deque_of_vols.append(hist)
+                try:
+                    # Dimension order: Z-Lifetime (C)-T-Y-X-S
+                    # Might need to swap Z and T.
+                    tif.save(hist.reshape(self.z_pixels, self.bins_bet_pulses,
+                                          1, self.y_pixels, self.x_pixels, 1),
+                             metadata=self.lst_metadata)
+                except PermissionError:
+                    warnings.warn("Permission Error: Not allowed to save file to original directory.")
+
+        print(f"Finished writing `.tif` of channel {channel}.")
+        return deque_of_vols
 
     def __print_outputs(self) -> None:
         """
@@ -145,7 +154,7 @@ class Movie(object):
 
         print('======================================================= \nOutputs:\n--------')
         if 'tif' in self.outputs:
-            print('Tiff stack created with name {}.tif, \none for each channel.'.format(self.name[:-4]))
+            print(f'Tiff stack created with name {self.name[:-4]}.tif, \none for each channel.')
 
         if 'full' in self.outputs:
             print('The full data is present in dictionary form (key per channel) under `movie.stack`')
@@ -165,7 +174,7 @@ class Volume(object):
     data           = attr.ib(validator=instance_of(pd.DataFrame))
     x_pixels       = attr.ib(default=512, validator=instance_of(int))
     y_pixels       = attr.ib(default=512, validator=instance_of(int))
-    z_pixels       = attr.ib(default=100, validator=instance_of(int))
+    z_pixels       = attr.ib(default=1, validator=instance_of(int))
     number         = attr.ib(default=1, validator=instance_of(int))  # the volume's ordinal number
     reprate        = attr.ib(default=80e6, validator=instance_of(float))  # laser repetition rate, relevant for FLIM
     end_time       = attr.ib(default=np.uint64(100), validator=instance_of(np.uint64))
@@ -292,7 +301,7 @@ class Volume(object):
         hist, edges = self.create_hist()
         plt.figure()
         # plt.imshow(hist, cmap='gray')
-        plt.title('Volume number {}'.format(self.number))
+        plt.title(f'Volume number {self.number}')
         plt.axis('off')
 
 
@@ -302,7 +311,7 @@ def validate_number_larger_than_zero(instance, attribute, value: int=0):
     """
 
     if value >= instance.attribute:
-        raise ValueError("{} has to be larger than 0.".format(attribute))
+        raise ValueError(f"{attribute} has to be larger than 0.")
 
 
 @jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)
