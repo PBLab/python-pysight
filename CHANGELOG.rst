@@ -365,3 +365,12 @@ Changelog
     * "range"
     * "sweepmode"
     * "fdac"
+
+0.5.19 (2017-06-29)
+-------------------
+
+* Fixed small bug with censoring.
+
+* Added checks to see whether we need censor correction.
+
+* Added tests for ``lst_tools`` - they should pass, much like ``file_io``'s tests.

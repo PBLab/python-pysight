@@ -3,7 +3,6 @@
 # -*- coding: utf-8 -*-
 __author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
-__author__: Hagai Hargil
 """
 
 

@@ -39,11 +39,11 @@ class Analysis(object):
     tag_pulses         = attr.ib(default=1, validator=instance_of(int))
     phase              = attr.ib(default=-2.6, validator=instance_of(float))
     use_tag_bits       = attr.ib(default=False, validator=instance_of(bool))
-    laser_offset       = attr.ib(default=0, validator=instance_of(float))
+    laser_offset       = attr.ib(default=0.0, validator=instance_of(float))
     use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
     keep_unidir        = attr.ib(default=False, validator=instance_of(bool))
     flim               = attr.ib(default=False, validator=instance_of(bool))
-    exp_params         = attr.ib(default=None)
+    exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
@@ -379,14 +379,38 @@ class Analysis(object):
         for chan, data_of_channel in enumerate(list_of_channels, 1):
             yn = np.histogram(data_of_channel, 16)[0]
             peakind = find_peaks_cwt(yn, np.arange(1, 10))
-            min_value = min(yn[yn > 0])
-            max_value = yn[peakind[0]]
-            y_filt = yn[peakind[0]:]
-            x = np.arange(len(y_filt))
-            popt, pcov = curve_fit(self.__nano_flim_exp, x, y_filt, p0=(max_value, 1/3.5, min_value),
-                                   maxfev=10000)
-            params[chan] = popt
+            if self.__requires_censoring(data=yn[peakind[0]:]):
+                min_value = min(yn[yn > 0])
+                max_value = yn[peakind[0]]
+                y_filt = yn[peakind[0]:]
+                x = np.arange(len(y_filt))
+                popt, pcov = curve_fit(self.__nano_flim_exp, x, y_filt, p0=(max_value, 1/3.5, min_value),
+                                       maxfev=10000)
+                params[chan] = popt
+            else:
+                continue
+
         return params
+
+    def __requires_censoring(self, data: np.ndarray):
+        """
+        Method to determine if we should undergo the censor correction process
+        :param data: Bins of histogram from their peak onward.
+        :return: boolean value
+        """
+        diffs = np.diff(data)
+        if len(diffs) == 0:
+            return True
+        if np.all(diffs <= 0):  # No censoring occurred
+            return False
+        else:
+            first_idx = np.argwhere(diffs >= 0)[0][0]
+            diffs2 = diffs[first_idx:]
+            if np.all(diffs2 >= 0) or np.all(diffs2 <= 0):
+                return True
+            else:  # either false alarm, or a third photon is on its way
+                self.__requires_censoring(diffs2)
+                return True
 
     def add_unidirectional_lines(self, line_delta: float = -1):
         """

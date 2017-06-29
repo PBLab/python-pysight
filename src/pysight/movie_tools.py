@@ -316,6 +316,9 @@ class Volume(object):
         :param data:
         :return:
         """
+        rel_idx = np.argwhere(np.sum(data, axis=-1) > 1)
+        split = np.split(rel_idx, 2, axis=1)
+        squeezed = np.squeeze(data[split[0], split[1], :])
         return data
 
 
@@ -325,7 +328,7 @@ def validate_number_larger_than_zero(instance, attribute, value: int=0):
     """
 
     if value >= instance.attribute:
-        raise ValueError(f"{attribute} has to be larger than 0.")
+        raise ValueError(f"{attribute} has to be larger than {value}.")
 
 
 @jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)

@@ -338,8 +338,6 @@ class FileIO(object):
         for cur_str in list_to_parse:
             self.__parse_str(metadata, cur_str)
 
-        assert len(list_to_parse) == len(self.lst_metadata)
-
     def __parse_str(self, metadata, str_to_parse):
         """
         Find str_to_parse in metadata and place the corresponding value in
@@ -351,5 +349,8 @@ class FileIO(object):
             format_str: str = str_to_parse + '=(\w+)'
 
         format_regex = re.compile(format_str)
-        self.lst_metadata[str_to_parse] = re.search(format_regex,
-                                                    metadata).group(1)
+        try:
+            self.lst_metadata[str_to_parse] = re.search(format_regex,
+                                                        metadata).group(1)
+        except AttributeError:  # field is non-existent
+            pass
