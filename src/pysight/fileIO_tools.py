@@ -1,11 +1,11 @@
 """
 __author__ = Hagai Hargil
 """
-import pandas as pd
 from typing import Dict, List
 from attr.validators import instance_of
 import numpy as np
 import attr
+import re
 
 
 @attr.s(slots=True)
@@ -42,6 +42,9 @@ class FileIO(object):
         self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
         num_of_items = self.determine_num_of_items()
+        # Grab some additional metadata from the file, to be saved later
+        self.__parse_extra_metadata(metadata)
+        # Read the actual data
         self.data: np.ndarray = self.read_lst(num_of_items=num_of_items)
         print('File read. Sorting the file according to timepatch...')
 
@@ -149,8 +152,6 @@ class FileIO(object):
         Finds the "range" of the current file in the proper units
         :return: range as defined by MCS6A
         """
-        import re
-
         if self.filename == '':
             raise ValueError('No filename given.')
 
@@ -160,18 +161,16 @@ class FileIO(object):
             format_str = r'range=(\d+)'
 
         format_range = re.compile(format_str)
-        range = int(re.search(format_range, cur_str).group(1))
+        range_lst = int(re.search(format_range, cur_str).group(1))
 
-        return range
+        return range_lst
 
     def get_timepatch(self, cur_str: str) -> str:
         """
         Get the time patch value out of of a list file.
-        :param metadata: Start of file to be analyzed.
+        :param cur_str: Start of file to be analyzed.
         :return: Time patch value as string.
         """
-        import re
-
         if self.filename == '':
             raise ValueError('No filename given.')
 
@@ -194,8 +193,6 @@ class FileIO(object):
         Create a dictionary containing the active channels.
         :param cur_str: String to be analyzed.
         """
-        import re
-
         if self.filename == '':
             raise ValueError('No filename given.')
 
@@ -221,8 +218,6 @@ class FileIO(object):
         Returns the start position of the data
         :return: Integer of file position for f.seek() method
         """
-        import re
-
         if self.filename == '':
             raise ValueError('No filename given.')
 
@@ -313,9 +308,12 @@ class FileIO(object):
         """
 
         # If a user assumes an input exists, but it doesn't - raise an error
-        if self.list_of_recorded_data_channels.count(True) < len(self.dict_of_input_channels):
-            raise UserWarning('Wrong number of user inputs ({}) compared to number of actual inputs ({}) to the multiscaler.'
-                              .format(len(self.dict_of_input_channels), self.list_of_recorded_data_channels.count(True)))
+        recorded = self.list_of_recorded_data_channels.count(True)
+        input_chans = len(self.dict_of_input_channels)
+        if recorded< input_chans:
+            raise UserWarning(f'Wrong number of user inputs ({input_chans})' +
+                              f'compared to number of actual inputs ' +
+                              f'({recorded}) to the multiscaler.')
 
         help_dict = {
             '001': 0,
@@ -325,5 +323,33 @@ class FileIO(object):
 
         for key in self.dict_of_input_channels:
             if not self.list_of_recorded_data_channels[help_dict[self.dict_of_input_channels[key]]]:
-                raise UserWarning('Wrong channel specification - the key {} is on an empty channel (number {}).'.\
-                      format(key, self.dict_of_input_channels[key]))
+                raise UserWarning(f'Wrong channel specification - the key {key} is on an empty channel'
+                                  f'(number {self.dict_of_input_channels[key]}).')
+
+    def __parse_extra_metadata(self, metadata):
+        """
+        Update self.lst_metadata with some additional information
+        :param metadata: Start of the lst file.
+        """
+        list_to_parse = ["fstchan", "holdafter", "periods", "rtpreset",
+                         "cycles", "sequences", "range", "sweepmode",
+                         "fdac"]
+        self.lst_metadata = {}
+        for cur_str in list_to_parse:
+            self.__parse_str(metadata, cur_str)
+
+        assert len(list_to_parse) == len(self.lst_metadata)
+
+    def __parse_str(self, metadata, str_to_parse):
+        """
+        Find str_to_parse in metadata and place the corresponding value in
+        the dictionary self.lst_metadata
+        """
+        if self.is_binary:
+            format_str: str = str_to_parse.encode('utf-8') + b'=(\w+)'
+        else:
+            format_str: str = str_to_parse + '=(\w+)'
+
+        format_regex = re.compile(format_str)
+        self.lst_metadata[str_to_parse] = re.search(format_regex,
+                                                    metadata).group(1)

@@ -46,7 +46,7 @@ def main_data_readout(gui):
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get(), outputs=gui.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
-                        lst_metadata=cur_file.lst_metadata)
+                        lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params)
 
     final_movie.run()
     # Censor correction part

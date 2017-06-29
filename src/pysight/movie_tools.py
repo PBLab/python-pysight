@@ -34,6 +34,7 @@ class Movie(object):
     censor          = attr.ib(default=False, validator=instance_of(bool))
     flim            = attr.ib(default=False, validator=instance_of(bool))
     lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
+    exp_params      = attr.ib(default={}, validator=instance_of(dict))
     summed          = attr.ib(init=False)
     stack           = attr.ib(init=False)
 
@@ -83,13 +84,13 @@ class Movie(object):
                              z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac)
+                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac)
+                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor)
 
     def __create_outputs(self) -> None:
         """
@@ -183,6 +184,7 @@ class Volume(object):
     fill_frac      = attr.ib(default=80.0, validator=instance_of(float))
     abs_start_time = attr.ib(default=np.uint64(0), validator=instance_of(np.uint64))
     empty          = attr.ib(default=False, validator=instance_of(bool))
+    censor         = attr.ib(default=False, validator=instance_of(bool))
 
     @property
     def metadata(self) -> OrderedDict:
@@ -257,7 +259,7 @@ class Volume(object):
         lines.sort()
         if len(lines) > 1:
             if len(lines) < self.x_pixels:
-                raise ValueError('Not enough line events in volume number {}. '.format(self.number))
+                raise ValueError(f'Not enough line events in volume number {self.number}.')
             else:
                 mean_diff = np.diff(lines).mean()
                 return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
@@ -291,6 +293,10 @@ class Volume(object):
             assert len(list_of_data_columns) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
+
+            if self.censor:
+                hist = self.__censor_correction(hist)
+
             return hist.astype(np.int16), edges
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int16), (0, 0, 0)
@@ -303,6 +309,14 @@ class Volume(object):
         # plt.imshow(hist, cmap='gray')
         plt.title(f'Volume number {self.number}')
         plt.axis('off')
+
+    def __censor_correction(self, data) -> np.ndarray:
+        """
+        Add censor correction to the data after being histogrammed
+        :param data:
+        :return:
+        """
+        return data
 
 
 def validate_number_larger_than_zero(instance, attribute, value: int=0):

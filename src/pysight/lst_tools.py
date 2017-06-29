@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import attr
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from numba import jit, int64, uint64
 import warnings
 from pysight.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
@@ -368,20 +368,25 @@ class Analysis(object):
         """ Exponential function for FLIM and censor correction """
         return a * np.exp(-b * x) + c
 
-    def __fit_data_to_exponent(self, modulu: np.ndarray) -> np.ndarray:
+    def __fit_data_to_exponent(self, list_of_channels: List) -> Dict:
         """
-        Take the data after modulu BINS_BETWEEN_PULSES and fit an exponential decay to it, with some lifetime.
-        :return: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array
+        Take the data after modulu BINS_BETWEEN_PULSES, in each channel,
+         and fit an exponential decay to it, with some lifetime.
+        :return: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
+        inside a dictionary with the channel number as its key.
         """
-        yn = np.histogram(modulu, 16)[0]
-        peakind = find_peaks_cwt(yn, np.arange(1, 10))
-        min_value = min(yn[yn > 0])
-        max_value = yn[peakind[0]]
-        y_filt = yn[peakind[0]:]
-        x = np.arange(len(y_filt))
-        popt, pcov = curve_fit(self.__nano_flim_exp, x, y_filt, p0=(max_value, 1/3.5, min_value),
-                               maxfev=10000)
-        return popt
+        params = {}
+        for chan, data_of_channel in enumerate(list_of_channels, 1):
+            yn = np.histogram(data_of_channel, 16)[0]
+            peakind = find_peaks_cwt(yn, np.arange(1, 10))
+            min_value = min(yn[yn > 0])
+            max_value = yn[peakind[0]]
+            y_filt = yn[peakind[0]:]
+            x = np.arange(len(y_filt))
+            popt, pcov = curve_fit(self.__nano_flim_exp, x, y_filt, p0=(max_value, 1/3.5, min_value),
+                                   maxfev=10000)
+            params[chan] = popt
+        return params
 
     def add_unidirectional_lines(self, line_delta: float = -1):
         """
@@ -403,7 +408,7 @@ class Analysis(object):
         self.dict_of_data['Lines'] = pd.DataFrame(new_line_arr, columns=['abs_time'],
                                                   dtype='uint64')
 
-    def __interpolate_laser(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, np.ndarray]:
+    def __interpolate_laser(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List]:
         """
         Assign a time relative to a laser pulse for each photon.
         :param df: Dataframe with data for each photon.
@@ -411,11 +416,14 @@ class Analysis(object):
         :return: Modified dataframe.
         """
         TEN_MEGAHERTZ_IN_BINS = 251
-        rel_time1 = df['abs_time'].values % TEN_MEGAHERTZ_IN_BINS
-        rel_time2 = rel_time1 % np.ceil(1 / (self.binwidth * self.laser_freq))
-        df['time_rel_pulse'] = rel_time2.astype(np.uint8)
+        rel_time = []
+        for chan in range(1, self.num_of_channels + 1):
+            rel_time251 = df.xs(key=chan, level='Channel', drop_level=False)['abs_time'].values % TEN_MEGAHERTZ_IN_BINS
+            rel_time_per_pulse = rel_time251 % np.ceil(1 / (self.binwidth * self.laser_freq))
+            rel_time.append(np.uint8(rel_time_per_pulse))
+            df.loc[chan, 'time_rel_pulse'] = np.uint8(rel_time_per_pulse)
 
-        return df, rel_time2
+        return df, rel_time
 
 
 @jit(nopython=True, cache=True)

@@ -345,9 +345,23 @@ Changelog
 
 * Fixed small bug with censor correction.
 
-0.5.17 (2017-6-29)
-------------------
+0.5.17 (2017-06-29)
+-------------------
 
 * Fixed ``.tif`` generation.
 
 * Refactoring of ``FileIO`` (tests still pass).
+
+0.5.18 (2017-06-29)
+-------------------
+
+* Added metadata from ``.lst`` file to the saved ``.tif`` file. Variables saved:
+    * "fstchan"
+    * "holdafter"
+    * "periods"
+    * "rtpreset"
+    * "cycles"
+    * "sequences"
+    * "range"
+    * "sweepmode"
+    * "fdac"
