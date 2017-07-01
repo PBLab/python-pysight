@@ -119,14 +119,14 @@ class GUIApp(object):
         outputs_label.grid(column=0, row=3, sticky='w')
 
         self.summed = BooleanVar(value=False)
-        summed_array = ttk.Checkbutton(main_frame, text='Summed array', variable=self.summed)
+        summed_array = ttk.Checkbutton(main_frame, text='Summed Tiff', variable=self.summed)
         summed_array.grid(column=0, row=4, sticky='w')
-        self.full = BooleanVar(value=False)
-        full_array = ttk.Checkbutton(main_frame, text='Full array', variable=self.full)
-        full_array.grid(column=1, row=4, sticky='ns')
+        self.memory = BooleanVar(value=False)
+        in_memory = ttk.Checkbutton(main_frame, text='In Memory', variable=self.memory)
+        in_memory.grid(column=2, row=4, sticky='ns')
         self.tif = BooleanVar(value=True)
-        tif = ttk.Checkbutton(main_frame, text='Tiff', variable=self.tif)
-        tif.grid(column=2, row=4, sticky='ns')
+        tif = ttk.Checkbutton(main_frame, text='Full Tiff', variable=self.tif)
+        tif.grid(column=1, row=4, sticky='ns')
 
     def __image_size(self, main_frame):
 
@@ -443,7 +443,7 @@ class GUIApp(object):
         output = {}
 
         if True == self.summed.get(): output['summed'] = True
-        if True == self.full.get(): output['full'] = True
+        if True == self.memory.get(): output['memory'] = True
         if True == self.tif.get(): output['tif'] = True
 
         return output
@@ -507,9 +507,6 @@ def verify_gui_input(gui):
 
     if gui.z_bit_start.get() > gui.z_bit_end.get():
         raise UserWarning('Z bit end is smaller than its start.')
-
-    if 0 == gui.summed and 0 == gui.tif and 0 == gui.full:
-        raise UserWarning('No outputs chosen. Please check at least one.')
 
     if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
         raise UserWarning('Mirror phase must be a number.')

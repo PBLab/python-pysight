@@ -374,3 +374,11 @@ Changelog
 * Added checks to see whether we need censor correction.
 
 * Added tests for ``lst_tools`` - they should pass, much like ``file_io``'s tests.
+
+0.5.20 (2017-07-01)
+-------------------
+
+* Refactored the output-generating script, while changing the possible outputs of PySight:
+    * Summed tif.
+    * Full stack as tif.
+    * In memory - both stack and tif accessed through the ``movie`` object.

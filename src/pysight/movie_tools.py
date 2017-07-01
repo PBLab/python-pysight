@@ -35,8 +35,10 @@ class Movie(object):
     flim            = attr.ib(default=False, validator=instance_of(bool))
     lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
     exp_params      = attr.ib(default={}, validator=instance_of(dict))
-    summed          = attr.ib(init=False)
+    summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
+    summed_tif      = attr.ib(init=False)
+    all_tif_ptr     = attr.ib(init=False)
 
     @property
     def bins_bet_pulses(self) -> int:
@@ -96,55 +98,101 @@ class Movie(object):
         """
         Create the outputs according to the outputs dictionary.
         """
+        from tifffile import TiffWriter
+
         if not self.outputs:
             warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
             return
 
-        self.summed = {i: 0 for i in range(1, self.num_of_channels + 1)}
-        self.stack = {}
+        funcs_to_execute = []
+        if 'memory' in self.outputs:
+            self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
+            self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}
+            funcs_to_execute.append(self.__create_memory_output)
+        if 'tif' in self.outputs:
+            funcs_to_execute.append(self.__create_all_tif)
+            self.all_tif_ptr = {channel: TiffWriter(f'{self.name[:-4]}_chan_{channel}_stack.tif',
+                                                    bigtiff=self.big_tiff, software='PySight', imagej=True)
+                                for channel in range(1, self.num_of_channels + 1)}
+        if 'summed' in self.outputs:
+            self.summed_tif = {i: 0 for i in range(1, self.num_of_channels + 1)}
+            funcs_to_execute.append(self.__create_summed_tif)
+
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
 
         for chan in range(1, self.num_of_channels + 1):
-            if 'tif' in self.outputs:
-                deque_of_vols = self.__create_tif(channel=chan)
-            else:
-                deque_of_vols = deque()
-                for vol in self.gen_of_volumes(channel_num=chan):
-                    data_of_vol.hist, data_of_vol.edges = vol.create_hist()
-                    # Censor correction
-                    if self.censor:
-                        data_of_vol.hist = self.__nano_flim(data=data_of_vol.hist)
+            for vol in self.gen_of_volumes(channel_num=chan):
+                data_of_vol.hist, data_of_vol.edges = vol.create_hist()
+                for func in funcs_to_execute:
+                    func(data=data_of_vol.hist, channel=chan)
 
-                    deque_of_vols.append(data_of_vol.hist)
-                    self.summed[chan] += data_of_vol.hist
+            if 'summed' in self.outputs:
+                self.__save_summed_tif(channel=chan)
 
-            assert len(deque_of_vols) == len(self.list_of_volume_times) - 1
-            self.stack[chan] = deque_of_vols
+        # Close open file pointers (if any)
+        for idx in range(1, self.num_of_channels + 1):
+            try:
+                self.all_tif_ptr[idx].close()
+            except NameError:
+                pass
 
-    def __create_tif(self, channel) -> Deque[np.ndarray]:
-        """ Create all volumes, one-by-one, and save them as tiff. """
+    def __create_memory_output(self, data: np.ndarray, channel: int):
+        """
+        If the user desired, create two memory constructs -
+        A summed array of all images (for a specific channel), and a stack containing
+        all images in a serial manner.
+        :param data: Data to be saved.
+        :param channel: Current spectral channel of data
+        """
+        self.stack[channel].append(data)
+        self.summed_mem[channel] += data
 
+    def __create_all_tif(self, data: np.ndarray, channel: int):
+        """
+        Save incrementally new data to an open file on the disk
+        :param data: Data to save
+        :param channel: Current spectral channel of data
+        """
+        try:
+            # Dimension order: Z-Lifetime (C)-T-Y-X-S
+            # Might need to swap Z and T.
+            self.all_tif_ptr[channel].save(data.reshape(self.z_pixels, self.bins_bet_pulses,
+                                           1, self.y_pixels, self.x_pixels, 1),
+                                           metadata=self.lst_metadata)
+        except PermissionError:
+            warnings.warn("Permission Error: Not allowed to save file to original directory.")
+        except IOError:
+            warnings.warn("IO Error.")
+
+    def __create_summed_tif(self, data: np.ndarray, channel: int):
+        """
+        Create a summed variable later to be saved as the channel's data
+        :param data: Data to be saved
+        :param channel: Spectral channel of data to be saved
+        """
+        self.summed_tif[channel] += data
+
+    def __save_summed_tif(self, channel: int):
+        """
+        Save once
+        :param channel:
+        :return:
+        """
         from tifffile import TiffWriter
 
-        deque_of_vols = deque()
-        with TiffWriter(f'{self.name[:-4]}_Chan_{channel}.tif', bigtiff=self.big_tiff,
-                        software='PySight', imagej=True) as tif:
-            for vol in self.gen_of_volumes(channel_num=channel):
-                hist, edges = vol.create_hist()
-                self.summed[channel] += hist
-                deque_of_vols.append(hist)
-                try:
-                    # Dimension order: Z-Lifetime (C)-T-Y-X-S
-                    # Might need to swap Z and T.
-                    tif.save(hist.reshape(self.z_pixels, self.bins_bet_pulses,
-                                          1, self.y_pixels, self.x_pixels, 1),
-                             metadata=self.lst_metadata)
-                except PermissionError:
-                    warnings.warn("Permission Error: Not allowed to save file to original directory.")
-
-        print(f"Finished writing `.tif` of channel {channel}.")
-        return deque_of_vols
+        with TiffWriter(f'{self.name[:-4]}_chan_{channel}_summed.tif',
+                        bigtiff=self.big_tiff, software='PySight', imagej=True) as tif:
+            try:
+                # Dimension order: Z-Lifetime (C)-T-Y-X-S
+                # Might need to swap Z and T.
+                tif.save(self.summed_tif[channel].reshape(self.z_pixels, self.bins_bet_pulses,
+                                                          1, self.y_pixels, self.x_pixels, 1),
+                         metadata=self.lst_metadata)
+            except PermissionError:
+                warnings.warn("Permission Error: Not allowed to save file to original directory.")
+            except IOError:
+                warnings.warn("IO Error.")
 
     def __print_outputs(self) -> None:
         """
@@ -155,13 +203,14 @@ class Movie(object):
 
         print('======================================================= \nOutputs:\n--------')
         if 'tif' in self.outputs:
-            print(f'Tiff stack created with name {self.name[:-4]}.tif, \none for each channel.')
+            print(f'Tiff stack created with name {self.name[:-4]}_chan_X_stack.tif, \none for each channel.')
 
-        if 'full' in self.outputs:
-            print('The full data is present in dictionary form (key per channel) under `movie.stack`')
+        if 'memory' in self.outputs:
+            print('The full data is present in dictionary form (key per channel) under `movie.stack`, '
+                  'and in stacked form under `movie.summed_mem`.')
 
         if 'summed' in self.outputs:
-            print('Summed data is present in dictionary form (key per channel) under `movie.summed`.')
+            print(f'Summed tiff file created with name {self.name[:-4]}_chan_X_summed.tif, \none for each channel.')
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
