@@ -13,19 +13,22 @@ class FileIO(object):
     """
     Manage pipeline of file IO process
     """
-    filename    = attr.ib(validator=instance_of(str))
-    debug       = attr.ib(default=0, validator=instance_of(int))
-    input_start = attr.ib(default='Frames', validator=instance_of(str))
-    input_stop1 = attr.ib(default='PMT1', validator=instance_of(str))
-    input_stop2 = attr.ib(default='Lines', validator=instance_of(str))
-    is_binary   = attr.ib(init=False)
-    timepatch   = attr.ib(init=False)
-    data_range  = attr.ib(init=False)
-    start_of_data_pos = attr.ib(init=False)
-    dict_of_input_channels = attr.ib(init=False)
+    filename                       = attr.ib(validator=instance_of(str))
+    debug                          = attr.ib(default=0, validator=instance_of(int))
+    input_start                    = attr.ib(default='Frames', validator=instance_of(str))
+    input_stop1                    = attr.ib(default='PMT1', validator=instance_of(str))
+    input_stop2                    = attr.ib(default='Lines', validator=instance_of(str))
+    binwidth                       = attr.ib(default=800e-12, validator=instance_of(float))
+    is_binary                      = attr.ib(init=False)
+    timepatch                      = attr.ib(init=False)
+    data_range                     = attr.ib(init=False)
+    time_after                     = attr.ib(init=False)
+    acq_delay                      = attr.ib(init=False)
+    start_of_data_pos              = attr.ib(init=False)
+    dict_of_input_channels         = attr.ib(init=False)
     list_of_recorded_data_channels = attr.ib(init=False)
-    data = attr.ib(init=False)
-    lst_metadata = attr.ib(init=False)
+    data                           = attr.ib(init=False)
+    lst_metadata                   = attr.ib(init=False)
 
     def run(self):
         # Open file and find the needed parameters
@@ -38,6 +41,8 @@ class FileIO(object):
         self.data_range: int = self.get_range(metadata)
 
         self.start_of_data_pos: int = self.get_start_pos()
+        self.time_after: int = self.__get_hold_after(cur_str=metadata)
+        self.acq_delay: int = self.__get_fstchan(cur_str=metadata)
         self.dict_of_input_channels: dict = self.create_inputs_dict()
         self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
@@ -230,13 +235,53 @@ class FileIO(object):
 
         format_data = re.compile(format_str)
         pos_in_file: int = 0
+        line_num: int = 0
         with open(self.filename, file_mode) as f:
-            while pos_in_file == 0:
+            while pos_in_file == 0 and line_num < 1000:
                 line = f.readline()
+                line_num += 1
                 match = re.search(format_data, line)
                 if match is not None:
                     pos_in_file = f.tell()
                     return pos_in_file  # to have the [DATA] as header
+
+    def __get_hold_after(self, cur_str) -> int:
+        """
+        Read the time (in ns, and convert to timebins) that is considered a
+        "hold after", or "hold-off", after a single sweep. Add that time, along with a 96 ns
+        inherit delay, to all future times of the sweep.
+        :param cur_str: String to parse
+        :return: Final time that has to be added to all sweeps, in timebins
+        """
+        if self.is_binary:
+            format_str: str = b'holdafter=([\w\+]+)'
+        else:
+            format_str: str = r'holdafter=([\w\+]+)'
+
+        format_holdafter = re.compile(format_str)
+        holdafter = float(re.search(format_holdafter, cur_str).group(1))
+        EOS_DEADTIME = 96  # ns, current spec of Multiscaler
+
+        time_after_sweep = int((EOS_DEADTIME + holdafter) * self.binwidth)
+        return time_after_sweep
+
+    def __get_fstchan(self, cur_str: str) -> int:
+        """
+        Read the acquisition delay of each sweep, called "fstchan" in the list files
+        :param cur_str: Metadata to be parsed
+        :return: Acq delay in timebins
+        """
+        if self.is_binary:
+            format_str: str = b'fstchan=(\w+)'
+        else:
+            format_str: str = r'fstchan=(\w+)'
+
+        NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
+
+        format_fstchan = re.compile(format_str)
+        fstchan = int(re.search(format_fstchan, cur_str).group(1)) * NANOSECONDS_PER_FSTCHAN  # in nanoseconds
+        acq_delay = int(fstchan / self.binwidth)
+        return acq_delay
 
     def read_lst(self, num_of_items: int=-1) -> np.ndarray:
         """

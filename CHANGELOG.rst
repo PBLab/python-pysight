@@ -382,3 +382,11 @@ Changelog
     * Summed tif.
     * Full stack as tif.
     * In memory - both stack and tif accessed through the ``movie`` object.
+
+0.5.21 (2017-07-02)
+-------------------
+
+* Added the acquisition delay and "hold-after" times to the calculation of the the absolute time of each event.
+
+* Decreased package size dramatically by deleting unneeded test data.
+

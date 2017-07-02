@@ -203,14 +203,14 @@ class Movie(object):
 
         print('======================================================= \nOutputs:\n--------')
         if 'tif' in self.outputs:
-            print(f'Tiff stack created with name {self.name[:-4]}_chan_X_stack.tif, \none for each channel.')
+            print(f'Tiff stack created with name {self.name[:-4]}_chan_X_stack.tif, \none file per channel.')
 
         if 'memory' in self.outputs:
             print('The full data is present in dictionary form (key per channel) under `movie.stack`, '
                   'and in stacked form under `movie.summed_mem`.')
 
         if 'summed' in self.outputs:
-            print(f'Summed tiff file created with name {self.name[:-4]}_chan_X_summed.tif, \none for each channel.')
+            print(f'Summed tiff file created with name {self.name[:-4]}_chan_X_summed.tif, \none file per channel.')
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass

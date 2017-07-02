@@ -45,6 +45,8 @@ class Analysis(object):
     flim               = attr.ib(default=False, validator=instance_of(bool))
     exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
+    time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
+    acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -321,8 +323,11 @@ class Analysis(object):
         df['time_rel_sweep'] = np.uint64(0)
 
         if 'sweep' in self.dict_of_slices_hex:
-            df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed + (
-                (self.dict_of_slices_hex['sweep'].processed - 1) * self.data_range)
+            # Each event has an acquisition delay before the start of sweep time,
+            # and has to be multiplied by the sweep number and the time-after-sweep delay
+            df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed + \
+                ((self.dict_of_slices_hex['sweep'].processed - 1) * (self.data_range + self.time_after_sweep)) + \
+                self.dict_of_slices_hex['sweep'].processed * self.acq_delay
             df['sweep'] = self.dict_of_slices_hex['sweep'].processed - 1
             df['time_rel_sweep'] = self.dict_of_slices_hex['time_rel_sweep'].processed
         else:

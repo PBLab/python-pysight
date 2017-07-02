@@ -17,7 +17,7 @@ def main_data_readout(gui):
 
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
-                      input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get())
+                      input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get(), binwidth=gui.binwidth.get())
     cur_file.run()
 
     # Create input structures
@@ -35,7 +35,8 @@ def main_data_readout(gui):
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
                                laser_offset=gui.offset.get(), use_sweeps=False, flim=gui.flim.get(),
-                               censor=gui.censor.get())
+                               censor=gui.censor.get(), time_after_sweep=cur_file.time_after,
+                               acq_delay=cur_file.acq_delay)
     analyzed_struct.run()
 
     # Create a movie object
