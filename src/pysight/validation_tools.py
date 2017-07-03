@@ -140,7 +140,8 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     if last_event_time <= 0:
         raise ValueError('Last event time is zero or negative.')
 
-    num_of_recorded_lines = lines.shape[0] if bidir else lines.shape[0] // 2
+    lines_for_frame_generation = lines if bidir else lines[::2]
+    num_of_recorded_lines = lines_for_frame_generation.shape[0]
     actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
 
     if num_of_recorded_lines < pixels:
@@ -148,7 +149,7 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
                                       endpoint=False, dtype=np.uint64)
     else:
         unnecess_lines = num_of_recorded_lines % pixels
-        array_of_frames = lines.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
+        array_of_frames = lines_for_frame_generation.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
 
     return np.array(array_of_frames)
 
