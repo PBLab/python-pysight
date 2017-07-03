@@ -172,7 +172,7 @@ class Analysis(object):
             pass
 
         validate_created_data_channels(dict_of_data)
-        return dict_of_data, line_delta
+        return dict_of_data, line_delta if self.bidir else line_delta * 2
 
     def __create_photon_dataframe(self):
         """
