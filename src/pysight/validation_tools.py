@@ -98,7 +98,7 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
                                        num_of_frames=num_of_frames)
         dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
-        line_delta = last_event_time/(num_of_lines * int(num_of_frames))
+        line_delta = last_event_time / (num_of_lines * int(num_of_frames))
         return dict_of_data, line_delta
 
 
@@ -118,9 +118,9 @@ def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_
 
     if 'Frames' in dict_of_data.keys():
         dict_of_data['Frames'] = pd.DataFrame([[0] * len(cols_in_data)],
-                                                     columns=cols_in_data,
-                                                     dtype='uint64')\
-                    .append(dict_of_data['Frames'], ignore_index=True)
+                                              columns=cols_in_data,
+                                              dtype='uint64')\
+            .append(dict_of_data['Frames'], ignore_index=True)
     else:
         frame_array = create_frame_array(lines=dict_of_data['Lines'].loc[:, 'abs_time'],
                                          last_event_time=last_event_time,
@@ -239,7 +239,7 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
         df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
 
     if not bidir and not keep_unidir:
-        df = df.loc[uneven_lines != 1, :]
+        df = df.loc[uneven_lines != 1, :].copy()
         df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
     if not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
