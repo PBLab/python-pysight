@@ -1,15 +1,56 @@
 """
 __author__ = Hagai Hargil
 """
-from typing import Dict, List
+from typing import Dict, List, Union
 import pandas as pd
 import numpy as np
 import warnings
 
 
+def extrapolate_line_data(last_event: int, line_point: int=0,
+                          line_delta: int=0) -> pd.DataFrame:
+    """
+    From a single line signal extrapolate the presumed line data vector. The line frequency is doubled
+    the original frequency. If needed, events will be discarded later.
+    :param last_event: The last moment of the experiment
+    :param line_delta: Bins between subsequent lines.
+    :param line_point: Start interpolation from this point.
+    :return: pd.DataFrame of line data
+    """
+    line_vec = np.arange(start=line_point, stop=last_event, step=line_delta,
+                         dtype=np.uint64)
+
+    line_vec = np.r_[np.flip(np.arange(start=line_point, stop=0, step=-line_delta,
+                               dtype=np.uint64)[1:], axis=0), line_vec]
+
+    # Check if 0 should be included
+    if line_vec[0] - line_delta == 0:
+        line_vec = np.r_[0, line_vec]
+    return pd.DataFrame(line_vec, columns=['abs_time'], dtype=np.uint64)
+
+def bins_bet_lines(line_freq: float=0, binwidth: float=0,
+                   lines: Union[int, pd.DataFrame]=0, bidir: bool=False) -> int:
+    """
+    Calculate number of bins between lines, and half it because of possible bidirectional scanning
+    :param lines: Raw data of lines, if it exists.
+    :return: int
+    """
+    if type(lines) == int:
+        freq_in_bins = 1/(line_freq * binwidth)
+        return int(freq_in_bins / 2)
+    else:
+        line_diff = lines['abs_time'].diff()
+        max_change_pct = lines['abs_time'][line_diff.pct_change(periods=10) > 5]  # 5 percent change is allowed
+        if len(max_change_pct) / len(lines) < 0.05:
+            return int(line_diff.mean() if bidir else line_diff.mean() / 2)
+        else:  # line data is corrupt, build lines from scratch
+            freq_in_bins = 1 / (line_freq * binwidth)
+            return int(freq_in_bins / 2)
+
+
 def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
                         num_of_frames: int=-1, binwidth: float=800e-12,
-                        last_event_time: int=-1):
+                        last_event_time: int=-1, bidir: bool=False):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
@@ -62,7 +103,7 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
 
 
 def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_delta: int=-1, num_of_lines: int=-1,
-                         last_event_time: int=-1):
+                         last_event_time: int=-1, bidir: bool=False):
     if line_delta == -1:
         raise ValueError('No line delta input received.')
 
@@ -83,14 +124,14 @@ def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_
     else:
         frame_array = create_frame_array(lines=dict_of_data['Lines'].loc[:, 'abs_time'],
                                          last_event_time=last_event_time,
-                                         pixels=num_of_lines)
+                                         pixels=num_of_lines, bidir=bidir)
         dict_of_data['Frames'] = pd.DataFrame(frame_array, columns=['abs_time'], dtype='uint64')
 
     return dict_of_data
 
 
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
-                       pixels: int=None) -> np.ndarray:
+                       pixels: int=None, bidir: bool=False) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
 
     if last_event_time is None or pixels is None or lines.empty:
@@ -99,7 +140,7 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     if last_event_time <= 0:
         raise ValueError('Last event time is zero or negative.')
 
-    num_of_recorded_lines = lines.shape[0]
+    num_of_recorded_lines = lines.shape[0] if bidir else lines.shape[0] // 2
     actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
 
     if num_of_recorded_lines < pixels:
@@ -207,7 +248,9 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
 
     try:
         df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
-    except ValueError:  # column label doesn't exist
+    except KeyError:  # column label doesn't exist
+        pass
+    except ValueError:
         pass
     df = df.loc[df.loc[:, 'time_rel_line'] >= 0]
 

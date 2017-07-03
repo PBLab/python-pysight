@@ -45,7 +45,7 @@ class GUIApp(object):
         self.__keep_unidir_events(main_frame)
         self.__flim(main_frame)
         self.__censor(main_frame)
-
+        self.__line_freq(main_frame)
         # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
         self.__load_cfg(main_frame)
@@ -263,6 +263,14 @@ class GUIApp(object):
         fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
         fill_frac_entry.grid(column=6, row=6, sticky='e')
+
+    def __line_freq(self, main_frame):
+        """ Line frequency of scanner """
+        self.line_freq = DoubleVar(value=7910.0)  # Hz
+        line_freq_text = ttk.Label(main_frame, text='Line frequency [Hz]: ')
+        line_freq_text.grid(column=6, row=7, sticky='w')
+        line_freq_entry = ttk.Entry(main_frame, textvariable=self.line_freq, width=6)
+        line_freq_entry.grid(column=6, row=7, sticky='e')
 
     def __browsefunc(self):
         if self.filename.get() != '':
@@ -483,30 +491,31 @@ def verify_gui_input(gui):
             raise KeyError('Input consisted of two or more similar names which are not "Empty".')
 
     # TAG bits input verification
-    set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
-                   gui.fast_bit_start.get(), gui.fast_bit_end.get(),
-                   gui.z_bit_start.get(), gui.z_bit_end.get()}
+    if gui.tag_bits.get():
+        set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
+                       gui.fast_bit_start.get(), gui.fast_bit_end.get(),
+                       gui.z_bit_start.get(), gui.z_bit_end.get()}
 
-    for num in set_of_tags:
-        assert isinstance(num, int), 'TAG bit has to be an integer.'
+        for num in set_of_tags:
+            assert isinstance(num, int), 'TAG bit has to be an integer.'
 
-    if len(set_of_tags) != 6:
-        raise UserWarning('Conflicting starts and ends of TAG bits. Take note that bits are inclusive on both ends.')
+        if len(set_of_tags) != 6:
+            raise UserWarning('Conflicting starts and ends of TAG bits. Take note that bits are inclusive on both ends.')
 
-    if max(set_of_tags) > 16:
-        raise UserWarning('Maximal TAG bit is 16.')
+        if max(set_of_tags) > 16:
+            raise UserWarning('Maximal TAG bit is 16.')
 
-    if min(set_of_tags) < 1:
-        raise UserWarning('Minimal TAG bit is 1.')
+        if min(set_of_tags) < 1:
+            raise UserWarning('Minimal TAG bit is 1.')
 
-    if gui.slow_bit_start.get() > gui.slow_bit_end.get():
-        raise UserWarning('Slow bit end is smaller than its start.')
+        if gui.slow_bit_start.get() > gui.slow_bit_end.get():
+            raise UserWarning('Slow bit end is smaller than its start.')
 
-    if gui.fast_bit_start.get() > gui.fast_bit_end.get():
-        raise UserWarning('Fast bit end is smaller than its start.')
+        if gui.fast_bit_start.get() > gui.fast_bit_end.get():
+            raise UserWarning('Fast bit end is smaller than its start.')
 
-    if gui.z_bit_start.get() > gui.z_bit_end.get():
-        raise UserWarning('Z bit end is smaller than its start.')
+        if gui.z_bit_start.get() > gui.z_bit_end.get():
+            raise UserWarning('Z bit end is smaller than its start.')
 
     if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
         raise UserWarning('Mirror phase must be a number.')
@@ -555,6 +564,15 @@ def verify_gui_input(gui):
 
     if 'Laser' in channel_inputs and gui.flim.get() == 1:
         raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
+
+    if type(gui.line_freq.get()) != float:
+        raise UserWarning("Use a float as the line frequency of the mirrors.")
+
+    if gui.line_freq.get() < 0:
+        raise UserWarning("Enter a positive line frequency number.")
+
+    if gui.line_freq.get() > 1e6:
+        raise UserWarning("Line frequency was too high. Enter the frequency in Hz.")
 
 
 if __name__ == '__main__':

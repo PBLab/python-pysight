@@ -1,11 +1,11 @@
 {
     "filename": [
         "PY_VAR0",
-        ""
+        "C:/Users/Hagai/Documents/GitHub/python-pysight/Julis sample 4, 2x zoom, TAG OFF, 165 um deep - 1p power - unidirectional 3.86fps - 700 PMT gain - 124.lst"
     ],
     "input_start": [
         "PY_VAR1",
-        "Frames"
+        "Lines"
     ],
     "input_stop1": [
         "PY_VAR2",
@@ -13,7 +13,7 @@
     ],
     "input_stop2": [
         "PY_VAR3",
-        "Lines"
+        "Empty"
     ],
     "num_of_frames": [
         "PY_VAR4",
@@ -21,11 +21,11 @@
     ],
     "summed": [
         "PY_VAR5",
-        false
+        true
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "tif": [
         "PY_VAR7",
@@ -33,11 +33,11 @@
     ],
     "x_pixels": [
         "PY_VAR8",
-        512
+        2048
     ],
     "y_pixels": [
         "PY_VAR9",
-        512
+        2048
     ],
     "z_pixels": [
         "PY_VAR10",
@@ -45,7 +45,7 @@
     ],
     "debug": [
         "PY_VAR11",
-        0
+        1
     ],
     "phase": [
         "PY_VAR12",
@@ -125,6 +125,6 @@
     ],
     "save_as": [
         "PY_VAR31",
-        "default"
+        "17-5-9"
     ]
 }

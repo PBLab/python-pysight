@@ -5,9 +5,9 @@ from typing import Dict, Tuple, List
 from numba import jit, int64, uint64
 import warnings
 from pysight.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
-from pysight.validation_tools import validate_line_input, validate_frame_input, \
+from pysight.validation_tools import bins_bet_lines, validate_frame_input, \
     validate_laser_input, validate_created_data_channels, rectify_photons_in_uneven_lines, \
-    calc_last_event_time
+    calc_last_event_time, extrapolate_line_data
 from attr.validators import instance_of
 import sys
 from scipy.optimize import curve_fit
@@ -47,6 +47,7 @@ class Analysis(object):
     censor             = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
+    line_freq          = attr.ib(default=7910.0, validator=instance_of(float))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -63,9 +64,6 @@ class Analysis(object):
         self.dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
         print('Channels of events found. Allocating photons to their frames and lines...')
         df_photons = self.__create_photon_dataframe()
-        # Unidirectional scan - create fake lines
-        if not self.bidir:
-            self.add_unidirectional_lines(line_delta=line_delta)
         self.df_allocated = self.allocate_photons(line_delta=line_delta, df_photons=df_photons)
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
@@ -151,12 +149,18 @@ class Analysis(object):
         if 'Frames' in dict_of_data:
             self.num_of_frames = dict_of_data['Frames'].shape[0] + 1  # account for first frame
 
-        # Validations
+        # Create line data, and validations
+        if 'Lines' in dict_of_data:
+            line_delta = bins_bet_lines(line_freq=self.line_freq, binwidth=self.binwidth,
+                                        lines=dict_of_data['Lines'], bidir=self.bidir)
+            line_point = dict_of_data['Lines'].at[0, 'abs_time']
+        else:
+            line_delta = bins_bet_lines(line_freq=self.line_freq, binwidth=self.binwidth, bidir=self.bidir)
+            line_point = 0
+
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
-        dict_of_data, line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
-                                                       num_of_frames=self.num_of_frames,
-                                                       last_event_time=last_event_time,
-                                                       cols_in_data=self.data_to_grab)
+        dict_of_data['Lines'] = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
+                                                      line_delta=line_delta)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
                                             last_event_time=last_event_time,
