@@ -198,7 +198,7 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
         df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
 
     if not bidir and not keep_unidir:
-        df = df.loc[uneven_lines != 1, :]
+        df = df.loc[uneven_lines != 1, :].copy()
         df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
     if not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
