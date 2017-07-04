@@ -23,24 +23,30 @@ def extrapolate_line_data(last_event: int, line_point: int=0,
     :param binwidth: Binwidth of multiscaler in seconds.
     :return: pd.DataFrame of line data
     """
-    line_vec = np.arange(start=line_point, stop=last_event, step=line_delta,
-                         dtype=np.uint64)
+    # Create the matrix containing the duplicate frame data
+    line_delta_without_bidir = line_delta if bidir else line_delta * 2
+    delay_between_frames_in_bins = int(delay_between_frames / binwidth)
+    cur_len = int(line_delta_without_bidir * num_of_lines / line_delta)
+    time_of_frame = line_delta_without_bidir * num_of_lines \
+                    + delay_between_frames_in_bins
+    num_of_frames = int(np.floor(last_event / time_of_frame))
+    time_of_frame_mat = np.tile(time_of_frame * np.arange(num_of_frames), (cur_len, 1))
 
+    # Create the matrix containing the duplicate line data
+    line_vec = np.arange(start=line_point, stop=line_delta_without_bidir * num_of_lines, step=line_delta,
+                         dtype=np.uint64)
     line_vec = np.r_[np.flip(np.arange(start=line_point, stop=0, step=-line_delta,
                                dtype=np.uint64)[1:], axis=0), line_vec]
+    line_mat = np.tile(line_vec.reshape(len(line_vec), 1), (1, num_of_frames))
 
+    # Add them up
+    final_mat = line_mat + time_of_frame_mat
+    line_vec_final = np.ravel(final_mat, order='F')
     # Check if 0 should be included
-    if line_vec[0] - line_delta == 0:
-        line_vec = np.r_[0, line_vec]
+    if line_vec_final[0] - line_delta == 0:
+        line_vec_final = np.r_[0, line_vec_final]
 
-    # Add frame delay
-    step_between_frames = num_of_lines if bidir else num_of_lines * 2
-    delay_between_frames_in_bins = int(delay_between_frames / binwidth)
-    indices_of_addition = np.arange(step_between_frames, len(line_vec), step=step_between_frames)
-    for idx in indices_of_addition:
-        line_vec[idx:] = line_vec[idx:] + delay_between_frames_in_bins
-
-    return pd.DataFrame(line_vec, columns=['abs_time'], dtype=np.uint64)
+    return pd.DataFrame(line_vec_final, columns=['abs_time'], dtype=np.uint64)
 
 def bins_bet_lines(line_freq: float=0, binwidth: float=0,
                    lines: Union[int, pd.DataFrame]=0, bidir: bool=False) -> int:
