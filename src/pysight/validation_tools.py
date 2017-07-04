@@ -42,7 +42,7 @@ def bins_bet_lines(line_freq: float=0, binwidth: float=0,
         line_diff = lines['abs_time'].diff()
         max_change_pct = lines['abs_time'][line_diff.pct_change(periods=10) > 5]  # 5 percent change is allowed
         if len(max_change_pct) / len(lines) < 0.05:
-            return int(line_diff.mean() if bidir else line_diff.mean() / 2)
+            return int(line_diff.median() if bidir else line_diff.median() / 2)
         else:  # line data is corrupt, build lines from scratch
             freq_in_bins = 1 / (line_freq * binwidth)
             return int(freq_in_bins / 2)
