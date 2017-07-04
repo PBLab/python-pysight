@@ -39,6 +39,7 @@ class GUIApp(object):
         self.__fill_frac(main_frame)
         self.__reprate(main_frame)
         self.__binwidth(main_frame)
+        self.__time_bet_frames(main_frame)
         self.__tag_lens(main_frame)
         self.__tag_bits(main_frame)
         self.__bi_dir(main_frame)
@@ -190,18 +191,26 @@ class GUIApp(object):
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
         binwidth_entry.grid(column=1, row=10, sticky='ns')
 
+    def __time_bet_frames(self, main_frame):
+        """ Delay between subsequent frames """
+        self.frame_delay = DoubleVar(value=0.0011335)
+        frame_delay_label = ttk.Label(main_frame, text='Frame delay [s]: ')
+        frame_delay_label.grid(column=6, row=8, sticky='w')
+        frame_delay_entry = ttk.Entry(main_frame, textvariable=self.frame_delay, width=9)
+        frame_delay_entry.grid(column=6, row=8, sticky='e')
+
     def __tag_lens(self, main_frame):
         """ TAG lens nominal frequency """
 
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
-        tag_label.grid(column=6, row=8, sticky='ns')
+        tag_label.grid(column=6, row=9, sticky='ns')
         self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
-        tag_label_entry.grid(column=6, row=9, sticky='ns')
+        tag_label_entry.grid(column=6, row=10, sticky='ns')
 
         self.tag_pulses = IntVar(value=1)
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
-        tag_pulses_entry.grid(column=6, row=9, sticky='e')
+        tag_pulses_entry.grid(column=6, row=10, sticky='e')
         tag_pulses_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
@@ -574,6 +583,14 @@ def verify_gui_input(gui):
     if gui.line_freq.get() > 1e6:
         raise UserWarning("Line frequency was too high. Enter the frequency in Hz.")
 
+    if gui.frame_delay.get() < 0:
+        raise UserWarning("Frame delay must be larger than 0.")
+
+    if gui.frame_delay.get() > 10:
+        raise UserWarning("Enter frame delay in seconds.")
+
+    if not isinstance(gui.frame_delay.get(), float):
+        raise UserWarning("Frame delay should be a floating point number.")
 
 if __name__ == '__main__':
     app = GUIApp()

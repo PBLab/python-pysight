@@ -8,13 +8,19 @@ import warnings
 
 
 def extrapolate_line_data(last_event: int, line_point: int=0,
-                          line_delta: int=0) -> pd.DataFrame:
+                          line_delta: int=0, num_of_lines: int=1,
+                          delay_between_frames: float=0.0011355,
+                          bidir: bool=False, binwidth: float=800e-12) -> pd.DataFrame:
     """
     From a single line signal extrapolate the presumed line data vector. The line frequency is doubled
     the original frequency. If needed, events will be discarded later.
     :param last_event: The last moment of the experiment
     :param line_delta: Bins between subsequent lines.
     :param line_point: Start interpolation from this point.
+    :param num_of_lines: Number of lines in a frame.
+    :param delay_between_frames: Time (in sec) between frames.
+    :param bidir: Whether the scan was bidirectional.
+    :param binwidth: Binwidth of multiscaler in seconds.
     :return: pd.DataFrame of line data
     """
     line_vec = np.arange(start=line_point, stop=last_event, step=line_delta,
@@ -26,6 +32,14 @@ def extrapolate_line_data(last_event: int, line_point: int=0,
     # Check if 0 should be included
     if line_vec[0] - line_delta == 0:
         line_vec = np.r_[0, line_vec]
+
+    # Add frame delay
+    step_between_frames = num_of_lines if bidir else num_of_lines * 2
+    delay_between_frames_in_bins = int(delay_between_frames / binwidth)
+    indices_of_addition = np.arange(step_between_frames, len(line_vec), step=step_between_frames)
+    for idx in indices_of_addition:
+        line_vec[idx:] = line_vec[idx:] + delay_between_frames_in_bins
+
     return pd.DataFrame(line_vec, columns=['abs_time'], dtype=np.uint64)
 
 def bins_bet_lines(line_freq: float=0, binwidth: float=0,
@@ -140,7 +154,7 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     if last_event_time <= 0:
         raise ValueError('Last event time is zero or negative.')
 
-    lines_for_frame_generation = lines if bidir else lines[::2]
+    lines_for_frame_generation = lines.values if bidir else lines[::2].values
     num_of_recorded_lines = lines_for_frame_generation.shape[0]
     actual_num_of_frames = max(num_of_recorded_lines // pixels, 1)
 
@@ -149,9 +163,9 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
                                       endpoint=False, dtype=np.uint64)
     else:
         unnecess_lines = num_of_recorded_lines % pixels
-        array_of_frames = lines_for_frame_generation.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
+        array_of_frames = lines_for_frame_generation[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
 
-    return np.array(array_of_frames)
+    return array_of_frames
 
 
 def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frames=None) -> np.ndarray:

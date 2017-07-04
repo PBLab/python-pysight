@@ -67,64 +67,68 @@
         "PY_VAR16",
         8e-10
     ],
-    "tag_freq": [
+    "frame_delay": [
         "PY_VAR17",
+        0.0011335
+    ],
+    "tag_freq": [
+        "PY_VAR18",
         "189800.0"
     ],
     "tag_pulses": [
-        "PY_VAR18",
+        "PY_VAR19",
         1
     ],
     "tag_bits": [
-        "PY_VAR19",
+        "PY_VAR20",
         false
     ],
     "slow_bit_start": [
-        "PY_VAR20",
+        "PY_VAR21",
         1
     ],
     "slow_bit_end": [
-        "PY_VAR21",
+        "PY_VAR22",
         3
     ],
     "fast_bit_start": [
-        "PY_VAR22",
+        "PY_VAR23",
         4
     ],
     "fast_bit_end": [
-        "PY_VAR23",
+        "PY_VAR24",
         5
     ],
     "z_bit_start": [
-        "PY_VAR24",
+        "PY_VAR25",
         6
     ],
     "z_bit_end": [
-        "PY_VAR25",
+        "PY_VAR26",
         16
     ],
     "bidir": [
-        "PY_VAR26",
-        false
-    ],
-    "keep_unidir": [
         "PY_VAR27",
         false
     ],
-    "flim": [
+    "keep_unidir": [
         "PY_VAR28",
         false
     ],
-    "censor": [
+    "flim": [
         "PY_VAR29",
         false
     ],
-    "line_freq": [
+    "censor": [
         "PY_VAR30",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR31",
         7910.0
     ],
     "save_as": [
-        "PY_VAR31",
+        "PY_VAR32",
         "default"
     ]
 }

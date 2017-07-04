@@ -48,6 +48,7 @@ class Analysis(object):
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
     line_freq          = attr.ib(default=7910.0, validator=instance_of(float))
+    delay_bet_frames   = attr.ib(default=0.0011335, validator=instance_of(float))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -160,7 +161,9 @@ class Analysis(object):
 
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data['Lines'] = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
-                                                      line_delta=line_delta)
+                                                      line_delta=line_delta, num_of_lines=self.y_pixels,
+                                                      delay_between_frames=self.delay_bet_frames,
+                                                      bidir=self.bidir, binwidth=self.binwidth)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
                                             last_event_time=last_event_time,
