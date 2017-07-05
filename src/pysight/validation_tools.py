@@ -48,6 +48,7 @@ def extrapolate_line_data(last_event: int, line_point: int=0,
 
     return pd.DataFrame(line_vec_final, columns=['abs_time'], dtype=np.uint64)
 
+
 def bins_bet_lines(line_freq: float=0, binwidth: float=0,
                    lines: Union[int, pd.DataFrame]=0, bidir: bool=False) -> int:
     """

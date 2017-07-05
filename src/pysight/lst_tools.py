@@ -48,7 +48,7 @@ class Analysis(object):
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
     line_freq          = attr.ib(default=7910.0, validator=instance_of(float))
-    delay_bet_frames   = attr.ib(default=0.0011335, validator=instance_of(float))
+    delay_bet_frames   = attr.ib(default=0.0011308, validator=instance_of(float))
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)

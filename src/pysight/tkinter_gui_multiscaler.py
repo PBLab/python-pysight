@@ -193,7 +193,7 @@ class GUIApp(object):
 
     def __time_bet_frames(self, main_frame):
         """ Delay between subsequent frames """
-        self.frame_delay = DoubleVar(value=0.0011335)
+        self.frame_delay = DoubleVar(value=0.0011308)
         frame_delay_label = ttk.Label(main_frame, text='Frame delay [s]: ')
         frame_delay_label.grid(column=6, row=8, sticky='w')
         frame_delay_entry = ttk.Entry(main_frame, textvariable=self.frame_delay, width=9)
