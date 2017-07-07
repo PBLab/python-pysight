@@ -54,7 +54,7 @@ class Movie(object):
         volume_times = np.unique(self.data.index.get_level_values('Frames')).astype(np.uint64)
 
         if len(volume_times) > 1:
-            diff_between_frames = np.mean(np.diff(volume_times))
+            diff_between_frames = np.median(np.diff(volume_times))
         else:
             diff_between_frames = np.uint64(np.max(self.data['time_rel_frames']))
 
@@ -162,8 +162,6 @@ class Movie(object):
                                            metadata=self.lst_metadata)
         except PermissionError:
             warnings.warn("Permission Error: Not allowed to save file to original directory.")
-        except IOError:
-            warnings.warn("IO Error.")
 
     def __create_summed_tif(self, data: np.ndarray, channel: int):
         """

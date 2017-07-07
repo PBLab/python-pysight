@@ -383,10 +383,14 @@ Changelog
     * Full stack as tif.
     * In memory - both stack and tif accessed through the ``movie`` object.
 
-0.5.21 (2017-07-02)
+0.5.21 (2017-07-07)
 -------------------
 
 * Added the acquisition delay and "hold-after" times to the calculation of the the absolute time of each event.
 
 * Decreased package size dramatically by deleting unneeded test data.
 
+* All 34 tests of code pass. I'll try to keep it that way :)
+
+* Added an extrapolation method to create fake lines when the line data is too corrupt to work with. This is done using
+  the new "line frequency" and "frame delay" parmaeters in the GUI.

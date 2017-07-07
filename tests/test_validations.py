@@ -80,3 +80,57 @@ class TestFrame(TestCase):
                         'Lines': line_data}
         self.assertEqual(calc_last_event_time(dict_of_data, lines_per_frame),
                          120)
+
+    def tets_bins_bet_lines(self):
+        line_freq = 10
+        binwidth = 0.01
+        bidir = False
+        self.assertEqual(10, bins_bet_lines(line_freq=line_freq,
+                                            binwidth=binwidth,
+                                            bidir=bidir))
+
+    def test_bins_bet_lines_bidir(self):
+        line_freq = 10
+        binwidth = 0.01
+        bidir = True
+        self.assertEqual(5, bins_bet_lines(line_freq=line_freq,
+                                            binwidth=binwidth,
+                                            bidir=bidir))
+
+    def test_extrapolate_without_zero(self):
+        line_point = 9
+        last_event_time = 15
+        line_delta = 2
+        num_of_lines = last_event_time // line_delta
+        returned_lines = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
+                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        real_lines = np.arange(1, 15, step=2, dtype=np.uint64)
+        self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
+
+    def test_extrapolate_from_zero(self):
+        line_point = 8
+        last_event_time = 15
+        line_delta = 1
+        num_of_lines = last_event_time // line_delta
+        returned_lines = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
+                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        real_lines = np.arange(0, 15, dtype=np.uint64)
+        self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
+
+    def test_extrapolate_without_timepoint(self):
+        last_event_time = 15
+        line_delta = 1
+        num_of_lines = last_event_time // line_delta
+        returned_lines = extrapolate_line_data(last_event=last_event_time,
+                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        real_lines = np.arange(0, 15, dtype=np.uint64)
+        self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
+
+    def test_extrapolate_without_timepoint_and_zero(self):
+        last_event_time = 15
+        line_delta = 2
+        num_of_lines = last_event_time // line_delta + 1
+        returned_lines = extrapolate_line_data(last_event=last_event_time,
+                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        real_lines = np.arange(0, 15, step=2, dtype=np.uint64)
+        self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())

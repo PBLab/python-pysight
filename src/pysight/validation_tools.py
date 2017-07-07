@@ -9,7 +9,8 @@ import warnings
 
 def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
                         num_of_frames: int=-1, binwidth: float=800e-12,
-                        last_event_time: int=-1):
+                        last_event_time: int=-1, line_freq: float=7910.0, bidir: bool=False,
+                        delay_between_frames: float=0.0011355):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
@@ -26,12 +27,22 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
     if 'Lines' in dict_of_data.keys():
         # Verify that the input is not corrupt
         max_change_pct = dict_of_data['Lines']['abs_time'][dict_of_data['Lines']['abs_time']\
-            .diff().pct_change(periods=10) > 15]
+            .diff().pct_change(periods=1) > 0.05]
         if len(max_change_pct) / dict_of_data['Lines'].shape[0] > 0.1\
             and 'Frames' not in dict_of_data:
             # Data is corrupted, and no frame channel can help us.
-            raise ValueError(""" Line data was corrupt.
-                             Please rerun PySight without a line channel.""")
+            warnings.warn("""Line data was corrupt.
+                             Simulating line data using GUI's parameters.""")
+            line_delta = bins_bet_lines(line_freq=line_freq, binwidth=binwidth,
+                                        bidir=bidir)
+            dict_of_data['Lines'] = extrapolate_line_data(last_event=last_event_time,
+                                                          line_point=dict_of_data['Lines'].at[0, 'abs_time'],
+                                                          num_of_lines=num_of_lines,
+                                                          line_delta=line_delta,
+                                                          delay_between_frames=delay_between_frames,
+                                                          bidir=bidir, binwidth=binwidth,
+                                                          num_of_frames=num_of_frames)
+            return dict_of_data, line_delta
 
         elif len(max_change_pct) / dict_of_data['Lines'].shape[0] > 0.1\
             and 'Frames' in dict_of_data:
@@ -87,6 +98,63 @@ def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_
         dict_of_data['Frames'] = pd.DataFrame(frame_array, columns=['abs_time'], dtype='uint64')
 
     return dict_of_data
+
+
+def bins_bet_lines(line_freq: float=0, binwidth: float=0,
+                   bidir: bool=False) -> int:
+    """
+    Calculate the line difference in bins, according to the frequency
+    of the line signal.
+    :param line_freq: Frequency of lines in Hz. Regardless of bidirectional scanning.
+    :return: int - line delta
+    """
+    freq_in_bins = 1/(line_freq * binwidth)
+    return int(freq_in_bins / 2) if bidir else freq_in_bins
+
+
+def extrapolate_line_data(last_event: int, line_point: int=0,
+                          line_delta: int=0, num_of_lines: int=1,
+                          delay_between_frames: float=0.0011355,
+                          bidir: bool=False, binwidth: float=800e-12,
+                          num_of_frames: int=1) -> pd.DataFrame:
+    """
+    From a single line signal extrapolate the presumed line data vector. The line frequency is doubled
+    the original frequency. If needed, events will be discarded later.
+    :param last_event: The last moment of the experiment
+    :param line_delta: Bins between subsequent lines.
+    :param line_point: Start interpolation from this point.
+    :param num_of_lines: Number of lines in a frame.
+    :param delay_between_frames: Time (in sec) between frames.
+    :param bidir: Whether the scan was bidirectional.
+    :param binwidth: Binwidth of multiscaler in seconds.
+    :return: pd.DataFrame of line data
+    """
+    # Create the matrix containing the duplicate frame data
+    delay_between_frames_in_bins = int(delay_between_frames / binwidth)
+    cur_len = int(line_delta * num_of_lines / line_delta)
+    time_of_frame = line_delta * num_of_lines \
+                    + delay_between_frames_in_bins
+    num_of_frames = max(int(np.floor(last_event / time_of_frame)), 1)
+    time_of_frame_mat = np.tile(time_of_frame * np.arange(num_of_frames), (cur_len, 1))
+
+    # Create the matrix containing the duplicate line data
+    line_vec = np.arange(start=line_point, stop=line_delta * num_of_lines, step=line_delta,
+                         dtype=np.uint64)
+    line_vec = np.r_[np.flip(np.arange(start=line_point, stop=0, step=-line_delta,
+                               dtype=np.uint64)[1:], axis=0), line_vec]
+    # Check if 0 should be included
+    if line_vec[0] - line_delta == 0:
+        line_vec = np.r_[0, line_vec]
+
+    line_mat = np.tile(line_vec.reshape(len(line_vec), 1), (1, num_of_frames))
+
+    # Add them up
+    assert len(line_mat) > 0
+    assert len(time_of_frame_mat) > 0
+    final_mat = line_mat + time_of_frame_mat
+    line_vec_final = np.ravel(final_mat, order='F')
+
+    return pd.DataFrame(line_vec_final, columns=['abs_time'], dtype=np.uint64)
 
 
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,

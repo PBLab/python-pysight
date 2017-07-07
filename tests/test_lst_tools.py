@@ -20,7 +20,7 @@ class TestLstTools(unittest.TestCase):
                               columns=['abs_time', 'edge', 'sweep', 'time_rel_sweep'])
     }
     dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
-    cur_file = FileIO(filename='tests_data' + sep + 'data_for_tests.lst')
+    cur_file = FileIO(filename='tests_data' + sep + 'data_for_tests_1.lst')
     cur_file.run()
     dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
     analyzed = Analysis(dict_of_inputs=cur_file.dict_of_input_channels, data=cur_file.data,

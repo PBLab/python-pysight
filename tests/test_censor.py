@@ -48,7 +48,8 @@ class TestCensorTools(unittest.TestCase):
     def test_append_laser(self):
         censored = CensorCorrection(raw=self.dict_of_data,
                                     movie=self.movie,
-                                    all_laser_pulses=self.dict_of_data['Laser'])
+                                    all_laser_pulses=self.dict_of_data['Laser'],
+                                    data=pd.DataFrame())
 
         censored.append_laser_line()
         res = pd.DataFrame([[0, 2, 3, 2], [3, 6, 7, 6], [19, 0, 7, 22]],
