@@ -9,7 +9,7 @@ import warnings
 
 def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
                         num_of_frames: int=-1, binwidth: float=800e-12,
-                        last_event_time: int=-1, line_freq: float=7910.0, bidir: bool=False,
+                        last_event_time: int=-1, line_freq: float=7930.0, bidir: bool=False,
                         delay_between_frames: float=0.0011355):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
@@ -55,7 +55,7 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
 
         elif len(max_change_pct) / len(dict_of_data['Lines']) < 0.1:
             # Data is valid. Check whether we need a 0-time line event
-            line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean()
+            line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().median()
             zeroth_line_delta = np.abs(dict_of_data['Lines'].loc[0, 'abs_time'] - line_delta)/line_delta
             if zeroth_line_delta < 0.05:
                 dict_of_data['Lines'] = pd.DataFrame([[0] * len(cols_in_data)],
@@ -72,10 +72,8 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
         return dict_of_data, line_delta
 
 
-def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, line_delta: int=-1, num_of_lines: int=-1,
+def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, num_of_lines: int=-1,
                          last_event_time: int=-1):
-    if line_delta == -1:
-        raise ValueError('No line delta input received.')
 
     if num_of_lines == -1:
         raise ValueError('No number of lines received.')
@@ -131,11 +129,10 @@ def extrapolate_line_data(last_event: int, line_point: int=0,
     """
     # Create the matrix containing the duplicate frame data
     delay_between_frames_in_bins = int(delay_between_frames / binwidth)
-    cur_len = int(line_delta * num_of_lines / line_delta)
     time_of_frame = line_delta * num_of_lines \
                     + delay_between_frames_in_bins
     num_of_frames = max(int(np.floor(last_event / time_of_frame)), 1)
-    time_of_frame_mat = np.tile(time_of_frame * np.arange(num_of_frames), (cur_len, 1))
+    time_of_frame_mat = np.tile(time_of_frame * np.arange(num_of_frames), (num_of_lines, 1))
 
     # Create the matrix containing the duplicate line data
     line_vec = np.arange(start=line_point, stop=line_delta * num_of_lines, step=line_delta,
@@ -277,7 +274,7 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
         df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
     except ValueError:  # column label doesn't exist
         pass
-    df = df.loc[df.loc[:, 'time_rel_line'] >= 0]
+    df = df.loc[df.loc[:, 'time_rel_line'] >= 0, :]
 
     return df
 

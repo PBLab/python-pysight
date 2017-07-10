@@ -35,6 +35,7 @@ class Movie(object):
     flim            = attr.ib(default=False, validator=instance_of(bool))
     lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
     exp_params      = attr.ib(default={}, validator=instance_of(dict))
+    line_delta      = attr.ib(default=158000, validator=instance_of(int))
     summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
     summed_tif      = attr.ib(init=False)
@@ -86,13 +87,15 @@ class Movie(object):
                              z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor)
+                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
+                             line_delta=self.line_delta)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor)
+                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
+                             line_delta=self.line_delta)
 
     def __create_outputs(self) -> None:
         """
@@ -104,19 +107,25 @@ class Movie(object):
             warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
             return
 
-        funcs_to_execute = []
+        funcs_to_execute_during = []
+        funcs_to_execute_end = []
         if 'memory' in self.outputs:
             self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
             self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}
-            funcs_to_execute.append(self.__create_memory_output)
+            funcs_to_execute_during.append(self.__create_memory_output)
+            funcs_to_execute_end.append(self.__convert_deque_to_arr)
+
         if 'tif' in self.outputs:
-            funcs_to_execute.append(self.__create_all_tif)
             self.all_tif_ptr = {channel: TiffWriter(f'{self.name[:-4]}_chan_{channel}_stack.tif',
                                                     bigtiff=self.big_tiff, software='PySight', imagej=True)
                                 for channel in range(1, self.num_of_channels + 1)}
+            funcs_to_execute_during.append(self.__create_all_tif)
+            funcs_to_execute_end.append(self.__close_file)
+
         if 'summed' in self.outputs:
             self.summed_tif = {i: 0 for i in range(1, self.num_of_channels + 1)}
-            funcs_to_execute.append(self.__create_summed_tif)
+            funcs_to_execute_during.append(self.__create_summed_tif)
+            funcs_to_execute_end.append(self.__save_summed_tif)
 
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
@@ -124,18 +133,21 @@ class Movie(object):
         for chan in range(1, self.num_of_channels + 1):
             for vol in self.gen_of_volumes(channel_num=chan):
                 data_of_vol.hist, data_of_vol.edges = vol.create_hist()
-                for func in funcs_to_execute:
+                for func in funcs_to_execute_during:
                     func(data=data_of_vol.hist, channel=chan)
 
-            if 'summed' in self.outputs:
-                self.__save_summed_tif(channel=chan)
+            for func in funcs_to_execute_end:
+                func(channel=chan)
 
-        # Close open file pointers (if any)
-        for idx in range(1, self.num_of_channels + 1):
-            try:
-                self.all_tif_ptr[idx].close()
-            except NameError:
-                pass
+    def __close_file(self, channel: int):
+        """ Close the file pointer of the specific channel """
+        self.all_tif_ptr[channel].close()
+
+    def __convert_deque_to_arr(self, channel: int):
+        """ Convert a deque with a bunch of frames into a single numpy array with an extra
+        dimension (0) containing the data.
+        """
+        self.stack[channel] = np.stack(self.stack[channel])
 
     def __create_memory_output(self, data: np.ndarray, channel: int):
         """
@@ -145,7 +157,7 @@ class Movie(object):
         :param data: Data to be saved.
         :param channel: Current spectral channel of data
         """
-        self.stack[channel].append(data)
+        self.stack[channel].append(data)  # TODO: Refactor into a simple np.stack, instead of deque.
         self.summed_mem[channel] += data
 
     def __create_all_tif(self, data: np.ndarray, channel: int):
@@ -189,8 +201,6 @@ class Movie(object):
                          metadata=self.lst_metadata)
             except PermissionError:
                 warnings.warn("Permission Error: Not allowed to save file to original directory.")
-            except IOError:
-                warnings.warn("IO Error.")
 
     def __print_outputs(self) -> None:
         """
@@ -201,14 +211,14 @@ class Movie(object):
 
         print('======================================================= \nOutputs:\n--------')
         if 'tif' in self.outputs:
-            print(f'Tiff stack created with name {self.name[:-4]}_chan_X_stack.tif, \none file per channel.')
+            print(f'Tiff stack created with name "{self.name[:-4]}_chan_X_stack.tif", \none file per channel.')
 
         if 'memory' in self.outputs:
             print('The full data is present in dictionary form (key per channel) under `movie.stack`, '
                   'and in stacked form under `movie.summed_mem`.')
 
         if 'summed' in self.outputs:
-            print(f'Summed tiff file created with name {self.name[:-4]}_chan_X_summed.tif, \none file per channel.')
+            print(f'Summed tiff file created with name "{self.name[:-4]}_chan_X_summed.tif", \none file per channel.')
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
@@ -232,6 +242,7 @@ class Volume(object):
     abs_start_time = attr.ib(default=np.uint64(0), validator=instance_of(np.uint64))
     empty          = attr.ib(default=False, validator=instance_of(bool))
     censor         = attr.ib(default=False, validator=instance_of(bool))
+    line_delta     = attr.ib(default=158000, validator=instance_of(int))
 
     @property
     def metadata(self) -> OrderedDict:
@@ -249,8 +260,8 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=self.end_time, num=self.x_pixels + 1)
 
         # y-axis metadata
-        y_start, y_end, self.empty = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
-                                                    fill_frac=self.fill_frac)
+        y_start, y_end = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
+                                                    fill_frac=self.fill_frac, delta=self.line_delta)
         if y_end == 1:  # single pixel in frame
             metadata['Y'] = Struct(start=y_start, end=self.end_time, num=self.y_pixels + 1)
         else:
@@ -385,39 +396,28 @@ def create_linspace(start, stop, num):
     return linspaces
 
 
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool = True, fill_frac: float = 0):
+def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fill_frac: float=0,
+                   delta: int=158000):
     """
     Create the metadata for the y-axis.
     """
     lines_start: int = 0
-    empty: bool = False
 
     unique_indices: np.ndarray = np.unique(data.index.get_level_values('Lines'))
-    if unique_indices.shape[0] > 1:  # TODO: Doesn't make sense that there's a single line in a frame
-        diffs: np.ndarray = np.diff(unique_indices)
-        diffs_max: float = diffs.max()
-    else:
-        empty = False
+    if unique_indices.shape[0] <= 1:
         lines_end = 1
-        return lines_start, lines_end, empty
-
-    try:
-        if diffs_max > ((1 + 4 * jitter) * np.mean(diffs)):  # Noisy data
-            lines_end = np.mean(diffs) * (1 + jitter)
-        else:
-            lines_end = int(diffs_max)
-    except ValueError:
-        lines_end = 0
-        empty = True
+        return lines_start, lines_end
 
     # Case where it's a unidirectional scan and we dump back-phase photons
     if not bidir:
-        lines_end /= 2
+        delta /= 2
 
     if fill_frac > 0:
-        lines_end = lines_end * fill_frac/100
+        lines_end = delta * fill_frac/100
+    else:
+        lines_end = delta
 
-    return lines_start, int(lines_end), empty
+    return lines_start, int(lines_end)
 
 
 @attr.s

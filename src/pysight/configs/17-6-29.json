@@ -1,11 +1,11 @@
 {
     "filename": [
         "PY_VAR0",
-        ""
+        "X:/Lior/Multiscaler data/29 June 2017/Low acq delay Planar FLIM/JS1 FOV3 - 800nm1xz-FLIM-PMT2START,PMT1STOP1-8mVBothEdges800mVgain-LineSTOP2-8Kbins+30us HoldAfter-512pix-0p1p pow--28Kframes -200 um deep - 013.lst"
     ],
     "input_start": [
         "PY_VAR1",
-        "Frames"
+        "PMT2"
     ],
     "input_stop1": [
         "PY_VAR2",
@@ -21,11 +21,11 @@
     ],
     "summed": [
         "PY_VAR5",
-        false
+        true
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "tif": [
         "PY_VAR7",
@@ -45,7 +45,7 @@
     ],
     "debug": [
         "PY_VAR11",
-        0
+        1
     ],
     "phase": [
         "PY_VAR12",
@@ -113,7 +113,7 @@
     ],
     "flim": [
         "PY_VAR28",
-        false
+        true
     ],
     "censor": [
         "PY_VAR29",
@@ -125,6 +125,6 @@
     ],
     "save_as": [
         "PY_VAR31",
-        "default"
+        "17-6-29"
     ]
 }

@@ -47,6 +47,8 @@ class Analysis(object):
     censor             = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
+    line_freq          = attr.ib(default=7930.0, validator=instance_of(float))
+    line_delta         = attr.ib(init=False)
     df_allocated       = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -60,13 +62,13 @@ class Analysis(object):
             df_after_timepatch = self.tabulate_input_hex()
 
         print('Sorted dataframe created. Starting setting the proper data channel distribution...')
-        self.dict_of_data, line_delta = self.determine_data_channels(df=df_after_timepatch)
+        self.dict_of_data = self.determine_data_channels(df=df_after_timepatch)
         print('Channels of events found. Allocating photons to their frames and lines...')
         df_photons = self.__create_photon_dataframe()
         # Unidirectional scan - create fake lines
         if not self.bidir:
-            self.add_unidirectional_lines(line_delta=line_delta)
-        self.df_allocated = self.allocate_photons(line_delta=line_delta, df_photons=df_photons)
+            self.add_unidirectional_lines()
+        self.df_allocated = self.allocate_photons(df_photons=df_photons)
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
@@ -140,7 +142,7 @@ class Analysis(object):
 
         return dict_of_data
 
-    def determine_data_channels(self, df: pd.DataFrame=None) -> Tuple:
+    def determine_data_channels(self, df: pd.DataFrame=None) -> Dict:
         """ Create a dictionary that contains the data in its ordered form."""
 
         if df.empty:
@@ -153,11 +155,11 @@ class Analysis(object):
 
         # Validations
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
-        dict_of_data, line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
-                                                       num_of_frames=self.num_of_frames,
+        dict_of_data, self.line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
+                                                       num_of_frames=self.num_of_frames, line_freq=self.line_freq,
                                                        last_event_time=last_event_time,
                                                        cols_in_data=self.data_to_grab)
-        dict_of_data = validate_frame_input(dict_of_data=dict_of_data, line_delta=line_delta,
+        dict_of_data = validate_frame_input(dict_of_data=dict_of_data,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
                                             last_event_time=last_event_time,
                                             cols_in_data=self.data_to_grab)
@@ -168,7 +170,7 @@ class Analysis(object):
             pass
 
         validate_created_data_channels(dict_of_data)
-        return dict_of_data, line_delta
+        return dict_of_data
 
     def __create_photon_dataframe(self):
         """
@@ -190,7 +192,7 @@ class Analysis(object):
 
         return df_photons
 
-    def allocate_photons(self, df_photons: pd.DataFrame, line_delta: float=-1) -> pd.DataFrame:
+    def allocate_photons(self, df_photons: pd.DataFrame) -> pd.DataFrame:
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
         :param dict_of_data: All events data, distributed to its input channel
@@ -216,7 +218,7 @@ class Analysis(object):
             df_photons.dropna(how='any', inplace=True)
             df_photons.loc[:, key] = df_photons.loc[:, key].astype(np.uint64)
             # relative time of each photon in accordance to the line\frame\laser pulse
-            df_photons.loc[:, column_heads[key]] = df_photons.iloc[:, 0] - df_photons.loc[:, key]
+            df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]
 
             if 'Lines' == key:
                 df_photons = rectify_photons_in_uneven_lines(df=df_photons,
@@ -417,16 +419,12 @@ class Analysis(object):
                 self.__requires_censoring(diffs2)
                 return True
 
-    def add_unidirectional_lines(self, line_delta: float = -1):
+    def add_unidirectional_lines(self):
         """
         For unidirectional scans fake line signals have to be inserted.
         :param dict_of_data: All data
-        :param line_delta: difference between lines
         :return:
         """
-
-        if line_delta == -1:
-            raise ValueError('Line delta variable was miscalculated.')
 
         length_of_lines       = self.dict_of_data['Lines'].shape[0]
         new_line_arr          = np.zeros(length_of_lines * 2 - 1)

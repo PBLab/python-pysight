@@ -45,6 +45,7 @@ class GUIApp(object):
         self.__keep_unidir_events(main_frame)
         self.__flim(main_frame)
         self.__censor(main_frame)
+        self.__line_freq(main_frame)
 
         # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
@@ -340,6 +341,13 @@ class GUIApp(object):
             self.censor_check.config(state='disabled')
         self.root.update_idletasks()
 
+    def __line_freq(self, main_frame):
+        """ Frequency of the line scanning mirror """
+        self.line_freq = DoubleVar(value=7930.0)  # Hz
+        line_freq_label = ttk.Label(main_frame, text="Line freq [Hz]: ")
+        line_freq_label.grid(row=7, column=6, sticky='w')
+        line_freq_entry = ttk.Entry(main_frame, textvariable=self.line_freq, width=8)
+        line_freq_entry.grid(row=7, column=6, sticky='e')
 
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT #######
 

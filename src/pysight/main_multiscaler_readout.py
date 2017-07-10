@@ -36,7 +36,7 @@ def main_data_readout(gui):
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
                                laser_offset=gui.offset.get(), use_sweeps=False, flim=gui.flim.get(),
                                censor=gui.censor.get(), time_after_sweep=cur_file.time_after,
-                               acq_delay=cur_file.acq_delay)
+                               acq_delay=cur_file.acq_delay, line_freq=gui.line_freq.get())
     analyzed_struct.run()
 
     # Create a movie object
@@ -46,7 +46,8 @@ def main_data_readout(gui):
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get(), outputs=gui.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
-                        lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params)
+                        lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
+                        line_delta=int(analyzed_struct.line_delta))
 
     final_movie.run()
     # Censor correction part
