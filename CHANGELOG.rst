@@ -404,4 +404,4 @@ Changelog
 
 * Small performance upgrade.
 
-*
+* Added an option to treat sweeps as lines.
