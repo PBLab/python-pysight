@@ -6,6 +6,7 @@ from attr.validators import instance_of
 import numpy as np
 import attr
 import re
+import logging
 
 
 @attr.s(slots=True)

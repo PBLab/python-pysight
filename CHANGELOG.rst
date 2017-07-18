@@ -400,3 +400,8 @@ Changelog
 
 * Added an optional line frequency entry to the GUI.
 
+* Refactoring of some parts of the validation tools.
+
+* Small performance upgrade.
+
+*

@@ -14,6 +14,11 @@ def main_data_readout(gui):
     from pysight.lst_tools import Analysis
     from pysight.movie_tools import Movie
     from pysight import timepatch_switch
+    from pysight.logging_tools import basic_logging
+
+
+    # Set up logging
+    basic_logging()
 
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
@@ -34,9 +39,10 @@ def main_data_readout(gui):
                                bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), use_tag_bits=gui.tag_bits.get(),
-                               laser_offset=gui.offset.get(), use_sweeps=False, flim=gui.flim.get(),
-                               censor=gui.censor.get(), time_after_sweep=cur_file.time_after,
-                               acq_delay=cur_file.acq_delay, line_freq=gui.line_freq.get())
+                               laser_offset=gui.offset.get(), use_sweeps=gui.sweeps_as_lines.get(),
+                               flim=gui.flim.get(), censor=gui.censor.get(),
+                               time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
+                               line_freq=gui.line_freq.get())
     analyzed_struct.run()
 
     # Create a movie object

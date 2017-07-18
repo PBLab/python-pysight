@@ -46,6 +46,7 @@ class GUIApp(object):
         self.__flim(main_frame)
         self.__censor(main_frame)
         self.__line_freq(main_frame)
+        self.__sweeps_as_lines(main_frame)
 
         # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
@@ -130,7 +131,6 @@ class GUIApp(object):
         tif.grid(column=1, row=4, sticky='ns')
 
     def __image_size(self, main_frame):
-
         # Define image sizes
         image_size_label = ttk.Label(main_frame, text='Image Size')
         image_size_label.grid(column=6, row=0, sticky='ns')
@@ -349,6 +349,13 @@ class GUIApp(object):
         line_freq_entry = ttk.Entry(main_frame, textvariable=self.line_freq, width=8)
         line_freq_entry.grid(row=7, column=6, sticky='e')
 
+    def __sweeps_as_lines(self, main_frame):
+        """ Use the sweeps as lines for the image generation """
+        self.sweeps_as_lines = BooleanVar(value=False)
+        sweeps_cb = ttk.Checkbutton(main_frame, variable=self.sweeps_as_lines,
+                                      text='Sweeps as lines?')
+        sweeps_cb.grid(row=10, column=3, sticky='ns')
+
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT #######
 
     def __save_cfg(self, main_frame):
@@ -564,6 +571,8 @@ def verify_gui_input(gui):
     if 'Laser' in channel_inputs and gui.flim.get() == 1:
         raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
 
+    if gui.sweeps_as_lines.get() and 'Lines' in channel_inputs:
+        raise UserWarning("Can't have both a line signal and the 'Sweeps as lines' option checked.")
 
 if __name__ == '__main__':
     app = GUIApp()

@@ -123,8 +123,12 @@
         "PY_VAR30",
         7930.0
     ],
-    "save_as": [
+    "sweeps_as_lines": [
         "PY_VAR31",
+        false
+    ],
+    "save_as": [
+        "PY_VAR32",
         "17-5-9"
     ]
 }
