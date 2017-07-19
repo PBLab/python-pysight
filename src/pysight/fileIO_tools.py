@@ -20,6 +20,7 @@ class FileIO(object):
     input_stop1                    = attr.ib(default='PMT1', validator=instance_of(str))
     input_stop2                    = attr.ib(default='Lines', validator=instance_of(str))
     binwidth                       = attr.ib(default=800e-12, validator=instance_of(float))
+    use_sweeps                     = attr.ib(default=False, validator=instance_of(bool))
     is_binary                      = attr.ib(init=False)
     timepatch                      = attr.ib(init=False)
     data_range                     = attr.ib(init=False)
@@ -30,6 +31,7 @@ class FileIO(object):
     list_of_recorded_data_channels = attr.ib(init=False)
     data                           = attr.ib(init=False)
     lst_metadata                   = attr.ib(init=False)
+    fill_fraction                  = attr.ib(init=False)
 
     def run(self):
         # Open file and find the needed parameters
@@ -44,6 +46,7 @@ class FileIO(object):
         self.start_of_data_pos: int = self.get_start_pos()
         self.time_after: int = self.__get_hold_after(cur_str=metadata)
         self.acq_delay: int = self.__get_fstchan(cur_str=metadata)
+        self.fill_fraction: float = self.__calc_actual_fill_fraction()
         self.dict_of_input_channels: dict = self.create_inputs_dict()
         self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
@@ -263,7 +266,7 @@ class FileIO(object):
         holdafter = float(re.search(format_holdafter, cur_str).group(1))
         EOS_DEADTIME = 96  # ns, current spec of Multiscaler
 
-        time_after_sweep = int((EOS_DEADTIME + holdafter) * self.binwidth)
+        time_after_sweep = int((EOS_DEADTIME + holdafter) * 10**(-9) / self.binwidth)
         return time_after_sweep
 
     def __get_fstchan(self, cur_str: str) -> int:
@@ -400,3 +403,15 @@ class FileIO(object):
                                                         metadata).group(1)
         except AttributeError:  # field is non-existent
             pass
+
+    def __calc_actual_fill_fraction(self) -> float:
+        """
+        If we're using sweeps as lines then the true fill fraction is determined
+        by the multiscaler's parameters, like hold_after and acquisiton delay.
+        :return: True fill fraction
+        """
+        if self.use_sweeps:
+            fill_frac = self.data_range / (self.acq_delay + self.data_range + self.time_after)
+            return fill_frac * 100  # in percent
+        else:
+            return -1.0

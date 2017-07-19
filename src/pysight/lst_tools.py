@@ -123,8 +123,9 @@ class Analysis(object):
             if len(sweep_vec) < 2:
                 warnings.warn("All data was registered to a single sweep. Line data will be completely simulated.")
             else:
-                dict_of_data['Lines'] = pd.DataFrame(sweep_vec * self.data_range,
-                                                     columns=['abs_time'], dtype=np.uint64)
+                dict_of_data['Lines'] = pd.DataFrame(
+                    sweep_vec * (self.acq_delay + self.data_range + self.time_after_sweep),
+                    columns=['abs_time'], dtype=np.uint64)
 
         for key in self.dict_of_inputs:
             relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], self.data_to_grab]

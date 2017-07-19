@@ -46,6 +46,7 @@ class Movie(object):
     lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
     exp_params      = attr.ib(default={}, validator=instance_of(dict))
     line_delta      = attr.ib(default=158000, validator=instance_of(int))
+    use_sweeps      = attr.ib(default=False, validator=instance_of(bool))
     summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
     summed_tif      = attr.ib(init=False)
@@ -98,14 +99,14 @@ class Movie(object):
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta)
+                             line_delta=self.line_delta, use_sweeps=self.use_sweeps)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta)
+                             line_delta=self.line_delta, use_sweeps=self.use_sweeps)
 
     def __create_outputs(self) -> None:
         """
@@ -254,6 +255,7 @@ class Volume(object):
     empty          = attr.ib(default=False, validator=instance_of(bool))
     censor         = attr.ib(default=False, validator=instance_of(bool))
     line_delta     = attr.ib(default=158000, validator=instance_of(int))
+    use_sweeps     = attr.ib(default=False, validator=instance_of(bool))
 
     @property
     def metadata(self) -> OrderedDict:
@@ -272,7 +274,8 @@ class Volume(object):
 
         # y-axis metadata
         y_start, y_end = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
-                                                    fill_frac=self.fill_frac, delta=self.line_delta)
+                                        fill_frac=self.fill_frac, delta=self.line_delta,
+                                        sweeps=self.use_sweeps)
         if y_end == 1:  # single pixel in frame
             metadata['Y'] = Struct(start=y_start, end=self.end_time, num=self.y_pixels + 1)
         else:
@@ -409,7 +412,7 @@ def create_linspace(start, stop, num):
 
 
 def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fill_frac: float=0,
-                   delta: int=158000):
+                   delta: int=158000, sweeps: bool=False):
     """
     Create the metadata for the y-axis.
     """
@@ -421,7 +424,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fil
         return lines_start, lines_end
 
     # Case where it's a unidirectional scan and we dump back-phase photons
-    if not bidir:
+    if not bidir and not sweeps:
         delta /= 2
 
     if fill_frac > 0:

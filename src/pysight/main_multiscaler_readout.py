@@ -18,11 +18,12 @@ def main_data_readout(gui):
 
 
     # Set up logging
-    basic_logging()
+    # basic_logging()  # need to add mkdir
 
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
-                      input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get(), binwidth=gui.binwidth.get())
+                      input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get(), binwidth=gui.binwidth.get(),
+                      use_sweeps=gui.sweeps_as_lines.get())
     cur_file.run()
 
     # Create input structures
@@ -50,10 +51,11 @@ def main_data_readout(gui):
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
-                        fill_frac=gui.fill_frac.get(), outputs=gui.outputs, censor=gui.censor.get(),
+                        fill_frac=gui.fill_frac.get() if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
+                        outputs=gui.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
-                        line_delta=int(analyzed_struct.line_delta))
+                        line_delta=int(analyzed_struct.line_delta), use_sweeps=gui.sweeps_as_lines.get())
 
     final_movie.run()
     # Censor correction part

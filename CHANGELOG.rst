@@ -395,7 +395,7 @@ Changelog
 * Added an extrapolation method to create fake lines when the line data is too corrupt to work with. This is done using
   the new "line frequency" and "frame delay" parmaeters in the GUI.
 
-0.5.22 (2017-07-10)
+0.5.22 (2017-07-17)
 -------------------
 
 * Added an optional line frequency entry to the GUI.
@@ -405,3 +405,8 @@ Changelog
 * Small performance upgrade.
 
 * Added an option to treat sweeps as lines.
+
+0.5.23 (2017-07-XX)
+-------------------
+
+* Supports generating images from pure sweeps, without a line signal.

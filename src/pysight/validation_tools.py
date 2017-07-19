@@ -358,6 +358,7 @@ def match_line_data_to_case(lines: pd.Series, keys: list,
         max_change_pct = lines[lines.diff().pct_change(periods=1) > 0.05]
         if len(max_change_pct) / lines.shape[0] > 0.1 and 'Frames' not in keys:
             warnings.warn("Line data was corrupt - the period didn't make sense.\n"
+                          f"{len(max_change_pct)} out of {lines.shape[0]} lines were mispositioned. "
                           "Simulating line data using GUI's parameters.")
             return 'corrupt'
 
