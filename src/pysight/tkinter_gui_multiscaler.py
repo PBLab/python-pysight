@@ -571,8 +571,5 @@ def verify_gui_input(gui):
     if 'Laser' in channel_inputs and gui.flim.get() == 1:
         raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
 
-    if gui.sweeps_as_lines.get() and 'Lines' in channel_inputs:
-        raise UserWarning("Can't have both a line signal and the 'Sweeps as lines' option checked.")
-
 if __name__ == '__main__':
     app = GUIApp()

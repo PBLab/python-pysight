@@ -10,7 +10,8 @@ import warnings
 def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
                         num_of_frames: int=-1, binwidth: float=800e-12,
                         last_event_time: int=-1, line_freq: float=7930.0, bidir: bool=False,
-                        delay_between_frames: float=0.0011355):
+                        delay_between_frames: float=0.0011355, use_sweeps: bool=False,
+                        max_sweep: int=65535, total_sweep_time: int=1):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
@@ -27,7 +28,8 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
     # Find the suitable case for this data regarding the line signal recorded
     type_of_line_data = match_line_data_to_case(lines=dict_of_data['Lines'].loc[:, 'abs_time'],
                                                 num_of_lines=num_of_lines,
-                                                keys=list(dict_of_data.keys()))
+                                                keys=list(dict_of_data.keys()),
+                                                use_sweeps=use_sweeps)
 
     if 'corrupt' == type_of_line_data:
         # Data is corrupted, and no frame channel can help us.
@@ -69,6 +71,23 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
         line_delta = last_event_time/(num_of_lines * int(num_of_frames))
         return dict_of_data, line_delta
 
+    elif 'sweeps-rebuild' == type_of_line_data:  # create our own line array with the sweeps data
+        line_delta = 1 / line_freq if not bidir else 1 / (2 * line_freq)
+        num_of_frames = np.ceil(last_event_time / (line_delta / binwidth * num_of_lines))
+        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
+                                       num_of_frames=num_of_frames, line_delta=line_delta/binwidth)
+        dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
+        return dict_of_data, int(line_delta / binwidth)
+
+    elif 'sweeps-from-scratch' == type_of_line_data:  # brand new line data
+        sweep_vec = np.arange(max_sweep + 1, dtype=np.uint64)
+        if len(sweep_vec) < 2:
+            warnings.warn("All data was registered to a single sweep. Line data will be completely simulated.")
+        else:
+            dict_of_data['Lines'] = pd.DataFrame(
+                sweep_vec * total_sweep_time,
+                columns=['abs_time'], dtype=np.uint64)
+        return dict_of_data, total_sweep_time
 
 def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, num_of_lines: int=-1,
                          last_event_time: int=-1):
@@ -179,7 +198,8 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
     return np.array(array_of_frames)
 
 
-def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frames=None) -> np.ndarray:
+def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frames=None,
+                      line_delta: float=0.0) -> np.ndarray:
     """Create a pandas Series of start-of-line times"""
 
     if (last_event_time is None) or (num_of_lines is None) or (num_of_frames is None):
@@ -192,7 +212,10 @@ def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frame
         raise ValueError('Last event time is zero or negative.')
 
     total_lines = num_of_lines * int(num_of_frames)
-    line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines, dtype=np.uint64)
+    if line_delta == 0.0:
+        line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines, dtype=np.uint64)
+    else:
+        line_array = np.arange(start=0, stop=last_event_time, step=line_delta, dtype=np.uint64)
     return line_array
 
 
@@ -303,6 +326,7 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
     ##
     if 'Frames' in dict_of_data:
         last_frame_time = dict_of_data['Frames'].loc[:, 'abs_time'].iloc[-1]
+
         if dict_of_data['Frames'].shape[0] == 1:
             return int(2 * last_frame_time)
         else:
@@ -312,6 +336,7 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
     if 'Lines' in dict_of_data:
         num_of_lines_recorded = dict_of_data['Lines'].shape[0]
         div, mod = divmod(num_of_lines_recorded, lines_per_frame)
+
         if num_of_lines_recorded > lines_per_frame * (div+1):  # excessive number of lines
             last_line_of_last_frame = dict_of_data['Lines'].loc[:, 'abs_time']\
                 .iloc[div * lines_per_frame - 1]
@@ -339,15 +364,23 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
         return max(max_pmt1, max_pmt2)
 
 
-def match_line_data_to_case(lines: pd.Series, keys: list,
-                            num_of_lines: int=512) -> str:
+def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
+                            use_sweeps:bool=False) -> str:
     """
     Enumerate all possibilities of line data and choose the right option
     :param lines: Line data
     :param keys: Keys of `dict_of_data` dictionary
     :param num_of_lines: Number of lines per frame
-    :return: String of the specific case. Either: 'corrupt', 'rebuild', 'valid' or 'from_scratch'
+    :param use_sweeps: Whether the sweeps have a meaning for image generation.
+    :return: String of the specific case. Either: 'corrupt', 'rebuild', 'valid', 'from_scratch',
+    'sweeps-rebuild' or 'sweeps-from-scratch'.
     """
+    if use_sweeps and 'Lines' in keys:
+        return 'sweeps-rebuild'
+
+    if use_sweeps and not 'Lines' in keys:
+        return 'sweeps-from-scratch'
+
     if 'Lines' in keys:
         # Verify that the input is not corrupt
         if lines.shape[0] < num_of_lines // 2:

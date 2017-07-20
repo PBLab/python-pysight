@@ -94,7 +94,7 @@ class TestFileIOTools(unittest.TestCase):
         self.assertEqual(real_fstchan, returned_fstchan)
 
     def test_time_after_sweep(self):
-        real_time_after = [0, 0]
+        real_time_after = [120, 120]
         returned_time_after = []
         for oname in self.file_io_objects:
             returned_time_after.append(oname.time_after)

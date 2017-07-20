@@ -406,7 +406,9 @@ Changelog
 
 * Added an option to treat sweeps as lines.
 
-0.5.23 (2017-07-XX)
+0.5.23 (2017-07-20)
 -------------------
 
 * Supports generating images from pure sweeps, without a line signal.
+
+* Supports generating images from combined sweep and line signals.

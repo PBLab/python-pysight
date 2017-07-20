@@ -107,25 +107,19 @@ class Analysis(object):
     def offset(self):
         return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
 
-    def __allocate_data_by_channel(self, df):
+    @property
+    def total_sweep_time(self):
+        return self.acq_delay + self.data_range + self.time_after_sweep
+
+    def __allocate_data_by_channel(self, df: pd.DataFrame):
         """
         Go over the channels and find the events from that specific channel, assigning
         them to a dictionary with a suitable name.
         :param df: DataFrame with data to allocate.
         :return: Dict containing the data
         """
-
         dict_of_data = {}
-        self.data_to_grab = ['abs_time']
-        if self.use_sweeps: # Sweeps as lines - generate a "fake" line signal
-            self.data_to_grab.extend(('edge', 'sweep', 'time_rel_sweep'))
-            sweep_vec = np.arange(df['sweep'].max() + 1, dtype=np.uint64)
-            if len(sweep_vec) < 2:
-                warnings.warn("All data was registered to a single sweep. Line data will be completely simulated.")
-            else:
-                dict_of_data['Lines'] = pd.DataFrame(
-                    sweep_vec * (self.acq_delay + self.data_range + self.time_after_sweep),
-                    columns=['abs_time'], dtype=np.uint64)
+        self.data_to_grab = ['abs_time', 'edge', 'sweep']
 
         for key in self.dict_of_inputs:
             relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], self.data_to_grab]
@@ -163,9 +157,11 @@ class Analysis(object):
         # Validations
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data, self.line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
-                                                       num_of_frames=self.num_of_frames, line_freq=self.line_freq,
-                                                       last_event_time=last_event_time,
-                                                       cols_in_data=self.data_to_grab)
+                                                            num_of_frames=self.num_of_frames, line_freq=self.line_freq,
+                                                            last_event_time=last_event_time,
+                                                            cols_in_data=self.data_to_grab, use_sweeps=self.use_sweeps,
+                                                            max_sweep=df['sweep'].max(),
+                                                            total_sweep_time=self.total_sweep_time)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
                                             last_event_time=last_event_time,

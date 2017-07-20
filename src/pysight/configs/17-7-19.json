@@ -1,11 +1,11 @@
 {
     "filename": [
         "PY_VAR0",
-        "X:/Lior/Multiscaler data/19 July 2017/Full power/1x Zoom/LS1 - StartLinesStop12PMT12_10mV850mV_2048xU1xZ8128bins6msHoldAfter002.lst"
+        "X:/Lior/Multiscaler data/19 July 2017/Full power/10x zoom/LS1 - StartLinesStop12PMT12_10mV850mV_2048xU10xZ8128bins60usHoldAfter005.lst"
     ],
     "input_start": [
         "PY_VAR1",
-        "Empty"
+        "Lines"
     ],
     "input_stop1": [
         "PY_VAR2",
@@ -113,7 +113,7 @@
     ],
     "flim": [
         "PY_VAR28",
-        true
+        false
     ],
     "censor": [
         "PY_VAR29",
