@@ -169,7 +169,7 @@ class Movie(object):
         :param data: Data to be saved.
         :param channel: Current spectral channel of data
         """
-        self.stack[channel].append(data)  # TODO: Refactor into a simple np.stack, instead of deque.
+        self.stack[channel].append(data)
         self.summed_mem[channel] += data
 
     def __create_all_tif(self, data: np.ndarray, channel: int):
@@ -235,6 +235,13 @@ class Movie(object):
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
 
+    def show_summed(self, channel) -> None:
+        """ Show the summed Movie """
+
+        plt.figure()
+        plt.imshow(np.sum(self.summed_mem[channel], axis=-1), cmap='gray')
+        plt.title(f'Channel number {channel}')
+        plt.axis('off')
 
 @attr.s(slots=True)
 class Volume(object):
@@ -373,15 +380,6 @@ class Volume(object):
             return hist.astype(np.int16), edges
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int16), (0, 0, 0)
-
-    def show(self) -> None:
-        """ Show the Volume. Mainly for debugging purposes, as the Movie object doesn't use it. """
-
-        hist, edges = self.create_hist()
-        plt.figure()
-        # plt.imshow(hist, cmap='gray')
-        plt.title(f'Volume number {self.number}')
-        plt.axis('off')
 
     def __censor_correction(self, data) -> np.ndarray:
         """

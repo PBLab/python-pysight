@@ -6,9 +6,9 @@ from pysight.main_multiscaler_readout import main_data_readout
 from pysight.tkinter_gui_multiscaler import GUIApp
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 
-config_filename = r''
+config_filename = r'X:\Lior\Multiscaler data\24 July 2017\No HoldAfterSweep'
 
-path = pathlib.Path(config_filename).parent
+path = pathlib.Path(config_filename)
 all_lst_files = path.glob('*.lst')
 
 gui = GUIApp()
@@ -20,17 +20,10 @@ outputs_list = []
 censored_list = []
 
 for idx, lst_file in enumerate(all_lst_files):
-    df, movie, outputs, censored = main_data_readout(gui)
-    df_list.append(df)
-    movie_list.append(movie)
-    outputs_list.append(outputs)
-    censored_list.append(censored)
-    label = 6
-    data, labels = censored.learn_histograms(label)
-    filename = r'/data/Lior/Multiscaler data/06 June 2017/TrainedWeights/17p_label_{}.npy'.format(label)
-    import numpy as np
-
-    with open(filename, 'wb') as f:
-        np.save(f, data)
+    if lst_file.stat().st_size > 3e3:
+        gui.filename.set(str(lst_file))
+        df, movie = main_data_readout(gui)
+    else:
+        print(f"File {str(lst_file)} was empty.")
 
 

@@ -2,6 +2,7 @@
 __author__ = Hagai Hargil
 """
 import logging
+import os
 
 
 def basic_logging(logger_name: str='PySightLogger'):
@@ -12,6 +13,7 @@ def basic_logging(logger_name: str='PySightLogger'):
     :return: Logger object
     """
     # set up logging to file - see previous section for more details
+    os.mkdir("./logs/")
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                         datefmt='%m-%d %H:%M',

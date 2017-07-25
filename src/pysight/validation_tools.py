@@ -26,7 +26,7 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
         raise ValueError('No columns in data.')
 
     # Find the suitable case for this data regarding the line signal recorded
-    type_of_line_data = match_line_data_to_case(lines=dict_of_data['Lines'].loc[:, 'abs_time'],
+    type_of_line_data = match_line_data_to_case(lines=dict_of_data.get('Lines'),
                                                 num_of_lines=num_of_lines,
                                                 keys=list(dict_of_data.keys()),
                                                 use_sweeps=use_sweeps)
@@ -382,6 +382,7 @@ def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
         return 'sweeps-from-scratch'
 
     if 'Lines' in keys:
+        lines = lines.loc[:, 'abs_time']
         # Verify that the input is not corrupt
         if lines.shape[0] < num_of_lines // 2:
             warnings.warn("Line data was corrupt as there were too few lines.\n"
