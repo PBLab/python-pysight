@@ -37,7 +37,7 @@ class Tabulate(object):
     use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
-    line_freq          = attr.ib(default=7930.0, validator=instance_of(float))
+    line_freq          = attr.ib(default=7900.0, validator=instance_of(float))
     line_delta         = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)

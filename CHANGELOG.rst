@@ -412,3 +412,13 @@ Changelog
 * Supports generating images from pure sweeps, without a line signal.
 
 * Supports generating images from combined sweep and line signals.
+
+0.5.24 (2017-07-XX)
+-------------------
+
+* Bugfixes for line validations.
+
+* Added methods ``show_summed(channel)`` and ``show_stack(channel, _iterable)``.
+
+* More refactoring to decrease class absolute size.
+

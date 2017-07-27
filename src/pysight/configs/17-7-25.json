@@ -1,7 +1,7 @@
 {
     "filename": [
         "PY_VAR0",
-        "X:/Hagai/Multiscaler/25-7-17/FLIM/9_mv_threshold_2_channels_FLIM_with_fitc_medium_illum011.lst"
+        "X:/Hagai/Multiscaler/25-7-17/FLIM/9_mv_threshold_1_channel_FLIM_with_fitc_high_illum_fov_2_026.lst"
     ],
     "input_start": [
         "PY_VAR1",
@@ -13,7 +13,7 @@
     ],
     "input_stop2": [
         "PY_VAR3",
-        "PMT2"
+        "Empty"
     ],
     "num_of_frames": [
         "PY_VAR4",
@@ -121,7 +121,7 @@
     ],
     "line_freq": [
         "PY_VAR30",
-        15150.0
+        7850.0
     ],
     "sweeps_as_lines": [
         "PY_VAR31",

@@ -235,13 +235,42 @@ class Movie(object):
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
 
-    def show_summed(self, channel) -> None:
+    def show_summed(self, channel: int) -> None:
         """ Show the summed Movie """
 
         plt.figure()
-        plt.imshow(np.sum(self.summed_mem[channel], axis=-1), cmap='gray')
+        if len(self.summed_mem[channel].shape) == 3:  # a FLIM image
+            plt.imshow(np.sum(self.summed_mem[channel], axis=-1), cmap='gray')
+        else:
+            plt.imshow(self.summed_mem[channel], cmap='gray')
         plt.title(f'Channel number {channel}')
         plt.axis('off')
+
+    def show_stack(self, channel: int, slice_range: Iterable) -> None:
+        """ Show the stack of given slices """
+        if self.flim:
+            self.__show_stack_flim(channel=channel, slice_range=slice_range)
+        else:
+            self.__show_stack_no_flim(channel=channel, slice_range=slice_range)
+
+    def __show_stack_no_flim(self, channel: int, slice_range: Iterable):
+        """ Show the slices from the generated stack """
+
+        img = None
+        for frame in slice_range:
+            if None == img:
+                img = plt.imshow(self.stack[channel][frame, :, :], cmap='gray')
+            else:
+                img.set_data(self.stack[channel][frame, :, :])
+            plt.pause(0.1)
+            plt.draw()
+
+    def __show_stack_flim(self, channel: int, slice_range: Iterable):
+        """ Show the slices from the generated stack that contains FLIM data """
+
+        for frame in slice_range:
+            plt.figure()
+            plt.imshow(np.sum(self.stack[channel][frame, :, :], axis=-1), cmap='gray')
 
 @attr.s(slots=True)
 class Volume(object):
