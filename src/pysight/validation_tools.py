@@ -269,8 +269,8 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int
     return pulses_final
 
 
-def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool = True,
-                                    phase: float = 0, keep_unidir: bool = False):
+def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool=True,
+                                    phase: float=0, keep_unidir: bool=False):
     """
     "Deal" with photons in uneven lines. Unidir - if keep_unidir is false, will throw them away.
     Bidir = flips them over.

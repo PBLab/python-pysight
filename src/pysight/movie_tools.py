@@ -451,7 +451,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fil
         return lines_start, lines_end
 
     # Case where it's a unidirectional scan and we dump back-phase photons
-    if not bidir and not sweeps:
+    if not bidir:
         delta /= 2
 
     if fill_frac > 0:
