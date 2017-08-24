@@ -418,9 +418,18 @@ Changelog
 
 * Bugfixes for line validations.
 
-* Added methods ``show_summed(channel)`` and ``show_stack(channel, _iterable)``.
+* Added methods ``show_summed(channel)`` and ``show_stack(channel, iterable)``.
 
 * More refactoring to decrease class absolute size.
 
 * Small bug fix in the sweeps-as-lines implementation.
+
+0.5.25 (2017-08-XX)
+-------------------
+
+* Added the ``photons_per_pulse`` property to ``Movie()``.
+
+* Introduced the ``run_batch(foldername)`` function to the ``main`` module, to run PySight with the same configs on multiple ``.lst`` files in a folder.
+
+* Added the ``num_of_vols`` property to ``Movie()``.
 

@@ -45,7 +45,6 @@ def main_data_readout(gui):
 
     analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels,
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
-                               bidir=gui.bidir.get(), tag_freq=float(gui.tag_freq.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
                                censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data)
@@ -101,3 +100,4 @@ def run_batch(foldername: str):
 
 if __name__ == '__main__':
     df, movie = run()
+    # run_batch(r'X:\Hagai\Multiscaler\7-8-17\2_channels')

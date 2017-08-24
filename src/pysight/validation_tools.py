@@ -258,9 +258,10 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int
     import warnings
 
     diffs = pulses.loc[:, 'abs_time'].diff()
-    rel_idx = (diffs <= np.ceil((1 / (laser_freq * binwidth)))) & (diffs >= np.floor((1 / (laser_freq * binwidth))))
+    rel_idx = (diffs <= 1.05*np.ceil((1 / (laser_freq * binwidth)))) & (diffs >= 0.95*np.floor((1 / (laser_freq * binwidth))))
     pulses_final = pulses[rel_idx]  # REMINDER: Laser offset wasn't added
-    if len(pulses_final) < 0.9 * len(pulses):
+    if len(pulses_final) < 0.9 * len(pulses):  # TODO: If there's holdafter time, there's a good chance that the pulses
+                                               # will not be periodic due to this extra time.
         warnings.warn("More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine.")
 
     pulses_final = pd.concat([pulses.loc[:0, :], pulses_final])  # Add back the first pulse

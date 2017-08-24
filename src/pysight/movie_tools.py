@@ -8,7 +8,7 @@ from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Tuple, Iterable, Generator, Deque
+from typing import List, Iterator, Tuple, Iterable, Dict
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
@@ -51,6 +51,7 @@ class Movie(object):
     stack           = attr.ib(init=False)
     summed_tif      = attr.ib(init=False)
     all_tif_ptr     = attr.ib(init=False)
+    num_of_vols     = attr.ib(init=False)
 
     @property
     def bins_bet_pulses(self) -> int:
@@ -64,7 +65,7 @@ class Movie(object):
         """ All volumes start-times in the movie. """
 
         volume_times = np.unique(self.data.index.get_level_values('Frames')).astype(np.uint64)
-
+        self.num_of_vols = len(volume_times)
         if len(volume_times) > 1:
             diff_between_frames = np.median(np.diff(volume_times))
         else:
@@ -74,6 +75,19 @@ class Movie(object):
         volume_times.append(np.uint64(volume_times[-1] + diff_between_frames))
 
         return volume_times
+
+    @property
+    def photons_per_pulse(self) -> Dict[int, float]:
+        """ Caclculate the amount of detected photons per pulse """
+        max_time = self.list_of_volume_times[-1] * self.binwidth
+        num_of_pulses = int(max_time * self.reprate)
+        photons_per_pulse = {}
+        if self.num_of_channels == 1:
+            photons_per_pulse[1] = self.data.shape[0] / num_of_pulses
+            return photons_per_pulse
+        else:
+            for chan in range(self.num_of_channels):
+                photons_per_pulse[chan] = self.data.loc[chan]
 
     def run(self):
         """
@@ -118,9 +132,10 @@ class Movie(object):
         if not self.outputs:
             warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
             return
-
+        # Lists that will contain function handles to execute
         funcs_to_execute_during = []
         funcs_to_execute_end = []
+
         if 'memory' in self.outputs:
             self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
             self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}

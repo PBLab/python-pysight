@@ -6,24 +6,21 @@ from pysight.main_multiscaler_readout import main_data_readout
 from pysight.tkinter_gui_multiscaler import GUIApp
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 
-config_filename = r'X:\Lior\Multiscaler data\24 July 2017\No HoldAfterSweep'
 
-path = pathlib.Path(config_filename)
-all_lst_files = path.glob('*.lst')
+def batch_lst_files(foldername):
+    """ Analyze all .lst files in a dir with a single cfg file """
 
-gui = GUIApp()
-gui.root.mainloop()
-verify_gui_input(gui)
-df_list = []
-movie_list = []
-outputs_list = []
-censored_list = []
+    path = pathlib.Path(foldername)
+    all_lst_files = path.glob('*.lst')
 
-for idx, lst_file in enumerate(all_lst_files):
-    if lst_file.stat().st_size > 3e3:
-        gui.filename.set(str(lst_file))
-        df, movie = main_data_readout(gui)
-    else:
-        print(f"File {str(lst_file)} was empty.")
+    gui = GUIApp()
+    gui.root.mainloop()
+    verify_gui_input(gui)
 
-
+    for idx, lst_file in enumerate(all_lst_files):
+        if lst_file.stat().st_size > 3e2:
+            gui.filename.set(str(lst_file))
+            df, movie = main_data_readout(gui)
+            print(f"File {str(lst_file)} analyzed successfully, moving onwards...")
+        else:
+            print(f"File {str(lst_file)} was empty.")
