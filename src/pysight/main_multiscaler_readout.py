@@ -100,4 +100,3 @@ def run_batch(foldername: str):
 
 if __name__ == '__main__':
     df, movie = run()
-    # run_batch(r'X:\Hagai\Multiscaler\7-8-17\2_channels')

@@ -123,7 +123,6 @@ class Allocate(object):
                                          binwidth=self.binwidth, tag_pulses=self.tag_pulses)
             print('TAG lens interpolation finished.')
 
-        # COMMENTED OUT HAGAI 20-8-17 DUE TO MANUAL CHANGES TO INPUT
         # Deal with laser pulses interpolation
         if self.flim:
             df_photons, rel_time = self.__interpolate_laser(df_photons)
@@ -203,7 +202,7 @@ class Allocate(object):
         Assuming that the clock is synced to a 10 MHz signal.
         :return: Modified dataframe.
         """
-        TEN_MEGAHERTZ_IN_BINS = 251  # 251
+        TEN_MEGAHERTZ_IN_BINS = 251
         rel_time = []
         for chan in range(1, self.num_of_channels + 1):
             rel_time251 = df.xs(key=chan, level='Channel', drop_level=False)[

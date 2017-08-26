@@ -424,7 +424,7 @@ Changelog
 
 * Small bug fix in the sweeps-as-lines implementation.
 
-0.5.25 (2017-08-XX)
+0.5.25 (2017-08-26)
 -------------------
 
 * Added the ``photons_per_pulse`` property to ``Movie()``.
