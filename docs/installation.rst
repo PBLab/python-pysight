@@ -12,7 +12,7 @@ Download and install Anaconda_ for Python 3.6.
 
 It's usually good habit to create a new environment for new projects. At the command line:
 ::
-    conda create --name py36 python=3.6 numba tifffile -c conda-forge
+    conda create --name py36 python=3.6 numba -c conda-forge
     source activate py36
     pip install pysight
 
@@ -20,7 +20,7 @@ It's usually good habit to create a new environment for new projects. At the com
 Users who already installed Python
 ----------------------------------
 In a virtual environment install two of PySight's dependencies first, then install the package itself::
-    pip install numba tifffile
+    pip install numba
     pip install pysight
 
 The "Usage" tab provides more details on the operation of PySight.

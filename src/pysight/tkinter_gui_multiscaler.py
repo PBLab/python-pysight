@@ -20,9 +20,9 @@ class GUIApp(object):
     def __init__(self):
         self.root = Tk()
         self.root.title("Multiscaler Readout and Display")
-        self.root.rowconfigure(5, weight=1)
-        self.root.columnconfigure(5, weight=1)
-        main_frame = ttk.Frame(self.root, width=800, height=800)
+        self.root.rowconfigure(6, weight=1)
+        self.root.columnconfigure(6, weight=1)
+        main_frame = ttk.Frame(self.root, width=1000, height=1000)
         main_frame.grid(column=0, row=0)
         main_frame['borderwidth'] = 2
         style = ttk.Style()
@@ -54,8 +54,8 @@ class GUIApp(object):
         self.__load_last_used_cfg(main_frame)
 
         # Define the last quit button and wrap up GUI
-        quit_button = ttk.Button(self.root, text='Start', command=self.root.destroy)
-        quit_button.grid()
+        quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy)
+        quit_button.grid(row=12, column=2, sticky='ns')
 
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
@@ -121,13 +121,13 @@ class GUIApp(object):
         outputs_label.grid(column=0, row=3, sticky='w')
 
         self.summed = BooleanVar(value=False)
-        summed_array = ttk.Checkbutton(main_frame, text='Summed Tiff', variable=self.summed)
+        summed_array = ttk.Checkbutton(main_frame, text='Summed Stack', variable=self.summed)
         summed_array.grid(column=0, row=4, sticky='w')
         self.memory = BooleanVar(value=False)
         in_memory = ttk.Checkbutton(main_frame, text='In Memory', variable=self.memory)
         in_memory.grid(column=2, row=4, sticky='ns')
-        self.tif = BooleanVar(value=True)
-        tif = ttk.Checkbutton(main_frame, text='Full Tiff', variable=self.tif)
+        self.stack = BooleanVar(value=True)
+        tif = ttk.Checkbutton(main_frame, text='Full Stack', variable=self.stack)
         tif.grid(column=1, row=4, sticky='ns')
 
     def __image_size(self, main_frame):
@@ -459,7 +459,7 @@ class GUIApp(object):
 
         if True == self.summed.get(): output['summed'] = True
         if True == self.memory.get(): output['memory'] = True
-        if True == self.tif.get(): output['tif'] = True
+        if True == self.stack.get(): output['stack'] = True
 
         return output
 

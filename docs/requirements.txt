@@ -12,3 +12,4 @@ cython >= 0.24
 tables
 scipy
 scikit-learn
+h5py

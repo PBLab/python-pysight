@@ -16,6 +16,8 @@ def main_data_readout(gui):
     from pysight.movie_tools import Movie
     from pysight import timepatch_switch
     from pysight.logging_tools import basic_logging
+    from pysight.output_tools import OutputParser
+    import numpy as np
 
 
     # Set up logging
@@ -50,13 +52,23 @@ def main_data_readout(gui):
                                censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data)
     analyzed_struct.run()
 
+    # Determine type and shape of wanted outputs, and open the file pointers there
+    outputs = OutputParser(num_of_frames=len(np.unique(analyzed_struct.df_allocated.index
+                                                       .get_level_values('Frames')).astype(np.uint64)),
+                           output_dict=gui.outputs, filename=gui.filename.get(),
+                           x_pixels=gui.x_pixels.get(), y_pixels=gui.y_pixels.get(),
+                           z_pixels=gui.z_pixels.get(), num_of_channels=analyzed_struct.num_of_channels,
+                           flim=gui.flim.get(), binwidth=gui.binwidth.get(), reprate=gui.reprate.get(),
+                           lst_metadata=cur_file.lst_metadata)
+    outputs.run()
+
     # Create a movie object
     final_movie = Movie(data=analyzed_struct.df_allocated, x_pixels=int(gui.x_pixels.get()),
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get() if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
-                        outputs=gui.outputs, censor=gui.censor.get(),
+                        outputs=outputs.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get())

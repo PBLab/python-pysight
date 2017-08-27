@@ -433,3 +433,7 @@ Changelog
 
 * Added the ``num_of_vols`` property to ``Movie()``.
 
+0.6.0 (2017-08-XX)
+------------------
+
+* Changed output file format to ``.hdf5`` due to compatibility issues of ``.tif``s.

@@ -372,8 +372,8 @@ class FileIO(object):
 
         for key in self.dict_of_input_channels:
             if not self.list_of_recorded_data_channels[help_dict[self.dict_of_input_channels[key]]]:
-                raise UserWarning(f'Wrong channel specification - the key {key} is on an empty channel'
-                                  f'(number {self.dict_of_input_channels[key]}).')
+                raise UserWarning(f'Wrong channel specification - the key "{key}" is on an empty channel'
+                                  f' (number {self.dict_of_input_channels[key]}).')
 
     def __parse_extra_metadata(self, metadata):
         """
