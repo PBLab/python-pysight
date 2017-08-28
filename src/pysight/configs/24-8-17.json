@@ -1,11 +1,11 @@
 {
     "filename": [
         "PY_VAR0",
-        ""
+        "/mnt/data/Hagai/Multiscaler/24-8-17/thresh_20mv_bins_4096_gain_850mv_power_0_3p_980nm_no_bypass_scan_unidir_with_lines_stop2_004.lst"
     ],
     "input_start": [
         "PY_VAR1",
-        "Frames"
+        "Empty"
     ],
     "input_stop1": [
         "PY_VAR2",
@@ -21,11 +21,11 @@
     ],
     "summed": [
         "PY_VAR5",
-        false
+        true
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "stack": [
         "PY_VAR7",
@@ -113,7 +113,7 @@
     ],
     "flim": [
         "PY_VAR28",
-        false
+        true
     ],
     "censor": [
         "PY_VAR29",
@@ -129,6 +129,6 @@
     ],
     "save_as": [
         "PY_VAR32",
-        "default"
+        "24-8-17"
     ]
 }

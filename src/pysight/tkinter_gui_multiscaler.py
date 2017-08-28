@@ -43,6 +43,7 @@ class GUIApp(object):
         self.__tag_bits(main_frame)
         self.__bi_dir(main_frame)
         self.__keep_unidir_events(main_frame)
+        self.__gating(main_frame)
         self.__flim(main_frame)
         self.__censor(main_frame)
         self.__line_freq(main_frame)
@@ -176,11 +177,11 @@ class GUIApp(object):
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
         reprate_entry.grid(column=1, row=9, sticky='w')
 
-        self.offset = DoubleVar(value=3.5)  # difference between pulse and arrival to sample
-        laser2_label = ttk.Label(main_frame, text='Offset [ns]')
-        laser2_label.grid(column=2, row=9, sticky='w')
-        offset_entry = ttk.Entry(main_frame, textvariable=self.offset, width=3)
-        offset_entry.grid(column=2, row=9, sticky='e')
+    def __gating(self, main_frame):
+        self.gating = BooleanVar(value=True)  # difference between pulse and arrival to sample
+        self.gating_check = ttk.Checkbutton(main_frame, text='With Gating?', variable=self.gating)
+        self.gating_check.grid(column=3, row=9, sticky='w')
+        self.gating_check.config(state='disabled')
 
     def __binwidth(self, main_frame):
         """ Binwidth of Multiscaler (for FLIM) """
@@ -320,7 +321,7 @@ class GUIApp(object):
         flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
                                                       variable=self.flim,
                                                       text='FLIM?')
-        flim_check.grid(row=9, column=3, sticky='e')
+        flim_check.grid(row=9, column=2, sticky='w')
         self.flim.trace('w', self.__check_if_flim)
 
     def __censor(self, main_frame):
@@ -337,8 +338,10 @@ class GUIApp(object):
     def __check_if_flim(self, *args):
         if self.flim:
             self.censor_check.config(state='normal')
+            self.gating_check.config(state='normal')
         else:
             self.censor_check.config(state='disabled')
+            self.gating_check.config(state='disabled')
         self.root.update_idletasks()
 
     def __line_freq(self, main_frame):

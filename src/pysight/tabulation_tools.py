@@ -33,7 +33,6 @@ class Tabulate(object):
     laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
     use_tag_bits       = attr.ib(default=False, validator=instance_of(bool))
-    laser_offset       = attr.ib(default=0.0, validator=instance_of(float))
     use_sweeps         = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
@@ -79,10 +78,6 @@ class Tabulate(object):
                 'f': '1111',
             }
         return diction
-
-    @property
-    def offset(self):
-        return int(np.floor(self.laser_offset * 10**-9 / self.binwidth))
 
     @property
     def total_sweep_time(self):
@@ -136,7 +131,7 @@ class Tabulate(object):
                                             cols_in_data=self.data_to_grab)
         try:
             dict_of_data['Laser'] = validate_laser_input(dict_of_data['Laser'], laser_freq=self.laser_freq,
-                                                         binwidth=self.binwidth, offset=self.offset)
+                                                         binwidth=self.binwidth)
         except KeyError:
             pass
 

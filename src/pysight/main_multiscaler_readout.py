@@ -17,6 +17,7 @@ def main_data_readout(gui):
     from pysight import timepatch_switch
     from pysight.logging_tools import basic_logging
     from pysight.output_tools import OutputParser
+    from pysight.gating_tools import GatedDetection
     import numpy as np
 
 
@@ -39,10 +40,10 @@ def main_data_readout(gui):
                               is_binary=cur_file.is_binary, num_of_frames=gui.num_of_frames.get(),
                               laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                               dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
-                              use_tag_bits=gui.tag_bits.get(), laser_offset=gui.offset.get(),
-                              use_sweeps=gui.sweeps_as_lines.get(), time_after_sweep=cur_file.time_after,
-                              acq_delay=cur_file.acq_delay, line_freq=gui.line_freq.get(),
-                              x_pixels=gui.x_pixels.get(), y_pixels=gui.y_pixels.get())
+                              use_tag_bits=gui.tag_bits.get(), use_sweeps=gui.sweeps_as_lines.get(),
+                              time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
+                              line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
+                              y_pixels=gui.y_pixels.get())
     tabulated_data.run()
 
     analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels,
@@ -62,8 +63,15 @@ def main_data_readout(gui):
                            lst_metadata=cur_file.lst_metadata)
     outputs.run()
 
+    if gui.gating.get():
+        gated = GatedDetection(raw=analyzed_struct.df_allocated, reprate=gui.reprate.get(),
+                               binwidth=gui.binwidth.get())
+        gated.run()
+
+    data_for_movie = gated.data if gui.gating.get() else analyzed_struct.df_allocated
+
     # Create a movie object
-    final_movie = Movie(data=analyzed_struct.df_allocated, x_pixels=int(gui.x_pixels.get()),
+    final_movie = Movie(data=data_for_movie, x_pixels=int(gui.x_pixels.get()),
                         y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),

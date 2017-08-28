@@ -8,6 +8,7 @@ from pysight.movie_tools import trunc_end_of_file
 import h5py
 import numpy as np
 import warnings
+import os
 
 
 @attr.s(slots=True)
@@ -38,20 +39,31 @@ class OutputParser(object):
             return
         self.outputs = {}
         self.outputs['memory'] = self.output_dict['memory']
-
-        if 'stack' in self.output_dict or 'summed' in self.output_dict:
+        f = self.__create_prelim_file()
+        if f is not None:
             data_shape_full = self.determine_data_shape_full()
-            data_shape_summed = data_shape_full[:-1]
+            self.__populate_hdf(f, data_shape_full=data_shape_full)
+
+    def __create_prelim_file(self):
+        """ Try to create a preliminary .hdf5 file """
+        if 'stack' in self.output_dict or 'summed' in self.output_dict:
             try:
-                f = h5py.File(f'{self.filename[:-4]}.hdf5', 'w')
-            except PermissionError:
+                fullfile = f'{self.filename[:-4]}.hdf5'
+                f = h5py.File(fullfile, 'w')
+            except PermissionError or OSError:
                 self.file_pointer_created = False
                 warnings.warn("Permission Error: Couldn't write data to disk.")
                 return
+            return f
         else:
             return
 
-        # Generate files and add metadata to each group
+    def __populate_hdf(self, f, data_shape_full):
+        """
+        Generate files and add metadata to each group
+        f: File pointer
+        """
+        data_shape_summed = data_shape_full[:-1]
         if 'stack' in self.output_dict:
             try:
                 self.outputs['stack'] = [f.require_group('Full Stack')
@@ -64,7 +76,7 @@ class OutputParser(object):
                     for chan in range(self.num_of_channels):
                         self.outputs['stack'][chan].attrs.create(name=key, data=val.encode())
 
-            except PermissionError:
+            except PermissionError or OSError:
                 self.file_pointer_created = False
 
         if 'summed' in self.output_dict:
@@ -78,7 +90,7 @@ class OutputParser(object):
                     for chan in range(self.num_of_channels):
                         self.outputs['summed'][chan].attrs.create(name=key, data=val.encode())
 
-            except PermissionError:
+            except PermissionError or OSError:
                 self.file_pointer_created = False
 
         f.close()

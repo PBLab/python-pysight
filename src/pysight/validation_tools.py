@@ -248,7 +248,7 @@ def validate_created_data_channels(dict_of_data: Dict):
         pass
 
 
-def validate_laser_input(pulses, laser_freq: float, binwidth: float, offset: int) -> pd.Series:
+def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Series:
     """
     Create an orderly laser pulse train.
     :param pulses:

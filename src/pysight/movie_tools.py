@@ -250,7 +250,7 @@ class Movie(object):
 
     def show_stack(self, channel: int, slice_range: Iterable) -> None:
         """ Show the stack of given slices """
-        if self.flim:
+        if 'time_rel_pulse' in self.data.columns:
             self.__show_stack_flim(channel=channel, slice_range=slice_range)
         else:
             self.__show_stack_no_flim(channel=channel, slice_range=slice_range)
