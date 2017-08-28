@@ -433,7 +433,12 @@ Changelog
 
 * Added the ``num_of_vols`` property to ``Movie()``.
 
-0.6.0 (2017-08-XX)
+0.6.0 (2017-08-27)
 ------------------
 
 * Changed output file format to ``.hdf5`` due to compatibility issues of ``.tif``s.
+
+0.6.1 (2017-08-28)
+------------------
+
+* Added gating to photons that arrive too early (or too late) after a laser pulse.

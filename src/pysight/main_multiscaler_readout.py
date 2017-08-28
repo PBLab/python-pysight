@@ -20,7 +20,6 @@ def main_data_readout(gui):
     from pysight.gating_tools import GatedDetection
     import numpy as np
 
-
     # Set up logging
     # basic_logging()  # need to add mkdir
 

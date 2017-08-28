@@ -47,10 +47,10 @@ class TestGatedDetection(unittest.TestCase):
         self.assertSequenceEqual(obj.data.time_rel_pulse.tolist(), arr[:9].tolist())
 
     def test_discard_with_wrap(self):
-        arr = np.array([1, 2, 3, 3, 4, 4, 11, 13, 15, 15, 15, 1], dtype=np.uint64)
+        arr = np.array([1, 2, 3, 3, 4, 4, 11, 13, 14, 15, 15, 15, 1], dtype=np.uint64)
         df = pd.DataFrame(arr, columns=['time_rel_pulse'], dtype=np.uint64)
         hist, _ = np.histogram(arr, bins=16)
         obj = GatedDetection(raw=df)
         obj._GatedDetection__discard_events(hist=hist)
-        ans_arr = [1, 2, 3, 3, 4, 4, 15, 15, 15, 1]
+        ans_arr = [1, 2, 3, 3, 4, 4, 14, 15, 15, 15, 1]
         self.assertSequenceEqual(obj.data.time_rel_pulse.tolist(), ans_arr)
