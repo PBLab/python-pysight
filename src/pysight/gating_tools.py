@@ -14,12 +14,15 @@ class GatedDetection(object):
     raw = attr.ib(validator=instance_of(pd.DataFrame))
     reprate = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
-    RANGE_LENGTH = attr.ib(default=8, validator=instance_of(int))
     data = attr.ib(init=False)
 
     @property
     def bins_bet_pulses(self) -> int:
         return int(np.ceil(1 / (self.reprate * self.binwidth)))
+
+    @property
+    def range_length(self) -> int:
+        return int(self.bins_bet_pulses / 2)
 
     def run(self):
         """ Main pipeline of class """
@@ -48,7 +51,7 @@ class GatedDetection(object):
         peak_idx = np.argmax(hist)
         lower_range = (peak_idx - 1) % self.bins_bet_pulses  # taking into consideration photons that came
                                                        # just before the peak, mainly due to resolution considerations
-        upper_range = lower_range + self.RANGE_LENGTH
+        upper_range = lower_range + self.range_length
         range_after_mod = np.arange(int(lower_range), int(upper_range)) % self.bins_bet_pulses
         mask = self.raw.time_rel_pulse.isin(range_after_mod)
         self.data = self.raw.loc[mask]

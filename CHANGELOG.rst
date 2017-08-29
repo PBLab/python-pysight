@@ -442,3 +442,8 @@ Changelog
 ------------------
 
 * Added gating to photons that arrive too early (or too late) after a laser pulse.
+
+0.6.2 (2017-08-29)
+------------------
+
+* Fixed bug with ``movie.show_stack()``.

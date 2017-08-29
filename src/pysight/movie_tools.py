@@ -174,7 +174,7 @@ class Movie(object):
         dimension (0) containing the data.
         """
         for channel in range(1, self.num_of_channels + 1):
-            self.stack[f'Channel {channel}'] = np.stack(self.stack[channel])
+            self.stack[channel] = np.stack(self.stack[channel])
 
     def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs):
         """
@@ -260,6 +260,7 @@ class Movie(object):
 
         img = None
         for frame in slice_range:
+            print(frame, channel)
             if None == img:
                 img = plt.imshow(self.stack[channel][frame, :, :], cmap='gray')
             else:
