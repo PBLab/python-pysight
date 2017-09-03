@@ -18,6 +18,8 @@ def main_data_readout(gui):
     from pysight.logging_tools import basic_logging
     from pysight.output_tools import OutputParser
     from pysight.gating_tools import GatedDetection
+    from pysight.photon_df_tools import PhotonDF
+    from pysight.tag_bits_tools import ParseTAGBits
     import numpy as np
 
     # Set up logging
@@ -45,15 +47,20 @@ def main_data_readout(gui):
                               y_pixels=gui.y_pixels.get())
     tabulated_data.run()
 
+    photon_df = PhotonDF(dict_of_data=tabulated_data.dict_of_data)
+    tag_bit_parser = ParseTAGBits(dict_of_data=tabulated_data.dict_of_data, photons=photon_df.gen_df(),
+                                  use_tag_bits=gui.tag_bits.get(), bits_dict=gui.tag_bits_dict)
+
     analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels,
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
-                               censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data)
+                               censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
+                               df_photons=tag_bit_parser.gen_df())
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there
-    outputs = OutputParser(num_of_frames=len(np.unique(analyzed_struct.df_allocated.index
+    outputs = OutputParser(num_of_frames=len(np.unique(analyzed_struct.df_photons.index
                                                        .get_level_values('Frames')).astype(np.uint64)),
                            output_dict=gui.outputs, filename=gui.filename.get(),
                            x_pixels=gui.x_pixels.get(), y_pixels=gui.y_pixels.get(),
@@ -63,11 +70,11 @@ def main_data_readout(gui):
     outputs.run()
 
     if gui.gating.get():
-        gated = GatedDetection(raw=analyzed_struct.df_allocated, reprate=gui.reprate.get(),
+        gated = GatedDetection(raw=analyzed_struct.df_photons, reprate=gui.reprate.get(),
                                binwidth=gui.binwidth.get())
         gated.run()
 
-    data_for_movie = gated.data if gui.gating.get() else analyzed_struct.df_allocated
+    data_for_movie = gated.data if gui.gating.get() else analyzed_struct.df_photons
 
     # Create a movie object
     final_movie = Movie(data=data_for_movie, x_pixels=int(gui.x_pixels.get()),
@@ -82,7 +89,7 @@ def main_data_readout(gui):
 
     final_movie.run()
 
-    return analyzed_struct.df_allocated, final_movie
+    return analyzed_struct.df_photons, final_movie
 
 
 def run():

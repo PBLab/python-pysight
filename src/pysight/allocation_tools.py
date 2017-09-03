@@ -21,6 +21,7 @@ class Allocate(object):
     """
     # TODO: Variable documentation
     dict_of_inputs     = attr.ib(validator=instance_of(dict))
+    df_photons         = attr.ib(validator=instance_of(pd.DataFrame))
     num_of_channels    = attr.ib(default=1, validator=instance_of(int))
     laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
@@ -33,16 +34,14 @@ class Allocate(object):
     exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
     dict_of_data       = attr.ib(default={}, validator=instance_of(dict))
-    df_allocated       = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of analysis """
         print('Channels of events found. Allocating photons to their frames and lines...')
-        df_photons = self.__create_photon_dataframe()
         # Unidirectional scan - create fake lines
         if not self.bidir:
             self.add_unidirectional_lines()
-        self.df_allocated = self.allocate_photons(df_photons=df_photons)
+        self.allocate_photons()
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
@@ -50,32 +49,9 @@ class Allocate(object):
             # if self.use_sweeps:
             #     out = self.train_dataset()
 
-    def __create_photon_dataframe(self):
-        """
-        If a single PMT channel exists, create a df_photons object.
-        Else, concatenate the two data channels into a single dataframe.
-        :return pd.DataFrame: Photon data
-        """
-        try:
-            df_photons = pd.concat([self.dict_of_data['PMT1'].copy(),
-                                    self.dict_of_data['PMT2'].copy()], axis=0)
-            self.num_of_channels = 2
-        except KeyError:
-            df_photons = self.dict_of_data['PMT1'].copy()
-        except:
-            print("Unknown error: ", sys.exc_info()[0])
-        finally:
-            df_photons.loc[:, 'Channel'] = df_photons.loc[:, 'Channel'].astype('category')
-            df_photons.set_index(keys='Channel', inplace=True)
-
-        return df_photons
-
-    def allocate_photons(self, df_photons: pd.DataFrame) -> pd.DataFrame:
+    def allocate_photons(self):
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
-        :param dict_of_data: All events data, distributed to its input channel
-        :param gui: Input GUI
-        :return: pandas.DataFrame
         """
         from pysight.tag_tools import interpolate_tag
 
@@ -87,30 +63,30 @@ class Allocate(object):
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
             sorted_indices = numba_search_sorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
-                                                 df_photons.loc[:, 'abs_time'].values)
+                                                 self.df_photons.loc[:, 'abs_time'].values)
             try:
-                df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
+                self.df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
                 # but this .iloc method is amazingly faster than .loc
             except KeyError:
                 warnings.warn(f'All computed sorted_indices were "-1" for key {key}. Trying to resume...')
-            df_photons.dropna(how='any', inplace=True)
-            df_photons.loc[:, key] = df_photons.loc[:, key].astype(np.uint64)
+            self.df_photons.dropna(how='any', inplace=True)
+            self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype(np.uint64)
             # relative time of each photon in accordance to the line\frame\laser pulse
-            df_photons[column_heads[key]] = df_photons['abs_time'] - df_photons[key]
+            self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
 
             if 'Lines' == key:
-                df_photons = rectify_photons_in_uneven_lines(df=df_photons,
-                                                             sorted_indices=sorted_indices[sorted_indices >= 0],
-                                                             lines=self.dict_of_data['Lines'].loc[:, 'abs_time'],
-                                                             bidir=self.bidir, phase=self.phase,
-                                                             keep_unidir=self.keep_unidir)
+                self.df_photons = rectify_photons_in_uneven_lines(df=self.df_photons,
+                                                                  sorted_indices=sorted_indices[sorted_indices >= 0],
+                                                                  lines=self.dict_of_data['Lines'].loc[:, 'abs_time'],
+                                                                  bidir=self.bidir, phase=self.phase,
+                                                                  keep_unidir=self.keep_unidir)
 
             if 'Laser' != key:
-                df_photons.loc[:, key] = df_photons.loc[:, key].astype('category')
-            df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
+                self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype('category')
+            self.df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
-        assert len(df_photons) > 0
-        assert np.all(df_photons.iloc[:, 0].values >= 0)  # finds NaNs as well
+        assert len(self.df_photons) > 0
+        assert np.all(self.df_photons.iloc[:, 0].values >= 0)  # finds NaNs as well
 
         # Deal with TAG lens interpolation
         try:
@@ -119,17 +95,15 @@ class Allocate(object):
             pass
         else:
             print('Interpolating TAG lens data...')
-            df_photons = interpolate_tag(df_photons=df_photons, tag_data=tag, tag_freq=self.tag_freq,
+            self.df_photons = interpolate_tag(df_photons=self.df_photons, tag_data=tag, tag_freq=self.tag_freq,
                                          binwidth=self.binwidth, tag_pulses=self.tag_pulses)
             print('TAG lens interpolation finished.')
 
         # Deal with laser pulses interpolation
         if self.flim:
-            df_photons, rel_time = self.__interpolate_laser(df_photons)
+            self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
             if self.censor:
                 self.exp_params = self.__fit_data_to_exponent(rel_time)
-
-        return df_photons
 
     def __nano_flim_exp(self, x, a, b, c):
         """ Exponential function for FLIM and censor correction """

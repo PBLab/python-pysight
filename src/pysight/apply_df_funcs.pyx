@@ -46,6 +46,19 @@ cpdef list iter_string_hex_to_bin(str long_str):
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
+cpdef np.ndarray convert_bin_to_int(np.ndarray arr):
+    cdef np.ndarray[np.uint64_t, ndim=1] result = np.zeros((len(arr),), dtype=np.uint64)
+    cdef unsigned long long idx
+    cdef unsigned long long length = len(arr)
+
+    for idx in range(length):
+        result[idx] = int(arr[idx], 2)
+
+    return result
+
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
 cpdef np.ndarray convert_hex_to_int(np.ndarray arr):
     cdef np.ndarray[np.uint64_t, ndim=1] result = np.zeros((len(arr),), dtype=np.uint64)
     cdef unsigned long long idx

@@ -91,7 +91,7 @@ class Tabulate(object):
         :return: Dict containing the data
         """
         dict_of_data = {}
-        self.data_to_grab = ['abs_time', 'edge', 'sweep']
+        self.data_to_grab = ['abs_time', 'edge', 'sweep', 'tag']
 
         for key in self.dict_of_inputs:
             relevant_values = df.loc[df['channel'] == self.dict_of_inputs[key], self.data_to_grab]

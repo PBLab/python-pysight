@@ -25,11 +25,11 @@
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "stack": [
         "PY_VAR7",
-        true
+        false
     ],
     "x_pixels": [
         "PY_VAR8",
@@ -75,60 +75,72 @@
         "PY_VAR18",
         false
     ],
-    "slow_bit_start": [
+    "bits_grp_1_start": [
         "PY_VAR19",
         1
     ],
-    "slow_bit_end": [
+    "bits_grp_1_end": [
         "PY_VAR20",
         3
     ],
-    "fast_bit_start": [
+    "bits_grp_2_start": [
         "PY_VAR21",
         4
     ],
-    "fast_bit_end": [
+    "bits_grp_2_end": [
         "PY_VAR22",
-        5
-    ],
-    "z_bit_start": [
-        "PY_VAR23",
         6
     ],
-    "z_bit_end": [
+    "bits_grp_3_start": [
+        "PY_VAR23",
+        7
+    ],
+    "bits_grp_3_end": [
         "PY_VAR24",
         16
     ],
-    "bidir": [
+    "bits_grp_1_label": [
         "PY_VAR25",
-        false
+        "None"
     ],
-    "keep_unidir": [
+    "bits_grp_2_label": [
         "PY_VAR26",
-        false
+        "None"
     ],
-    "gating": [
+    "bits_grp_3_label": [
         "PY_VAR27",
-        true
+        "None"
     ],
-    "flim": [
+    "bidir": [
         "PY_VAR28",
         false
     ],
-    "censor": [
+    "keep_unidir": [
         "PY_VAR29",
         false
     ],
-    "line_freq": [
+    "gating": [
         "PY_VAR30",
-        7930.0
+        false
     ],
-    "sweeps_as_lines": [
+    "flim": [
         "PY_VAR31",
         false
     ],
-    "save_as": [
+    "censor": [
         "PY_VAR32",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR33",
+        7930.0
+    ],
+    "sweeps_as_lines": [
+        "PY_VAR34",
+        false
+    ],
+    "save_as": [
+        "PY_VAR35",
         "default"
     ]
 }

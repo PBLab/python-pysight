@@ -9,6 +9,32 @@ from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
 from os import sep, utime
 import time
+import attr
+from attr.validators import instance_of
+import warnings
+
+
+def is_positive(instance, attribute, value):
+    if value < 0:
+        return ValueError("TAG Bit value has to be greater than 0.")
+
+
+def end_is_greater(instance, attribute, value):
+    if value < instance.start:
+        return ValueError("TAG Bit 'end' value has to be equal or greater to 'start'.")
+
+
+@attr.s(slots=True)
+class TagBits(object):
+    """
+    Storage for TAG bits
+    """
+    value = attr.ib(default="None", validator=instance_of(str))
+    start = attr.ib(default=0, validator=[instance_of(int),
+                                          is_positive])
+    end   = attr.ib(default=1, validator=[instance_of(int),
+                                          is_positive,
+                                          end_is_greater])
 
 
 class GUIApp(object):
@@ -216,46 +242,71 @@ class GUIApp(object):
         tag_bit_check = ttk.Checkbutton(main_frame, text='Use?', variable=self.tag_bits)
         tag_bit_check.grid(column=2, row=5, sticky='ns')
 
-        slow_axis_label = ttk.Label(main_frame, text='Slow Axis:')
-        slow_axis_label.grid(column=0, row=6, sticky='e')
-        fast_axis_label = ttk.Label(main_frame, text='Fast Axis:')
-        fast_axis_label.grid(column=0, row=7, sticky='e')
-        z_axis_label = ttk.Label(main_frame, text='Z Axis:')
-        z_axis_label.grid(column=0, row=8, sticky='e')
+        self.bits_grp_1_start = IntVar(value=1)
+        self.bits_grp_1_end = IntVar(value=3)
+        self.bits_grp_2_start = IntVar(value=4)
+        self.bits_grp_2_end = IntVar(value=5)
+        self.bits_grp_3_start = IntVar(value=6)
+        self.bits_grp_3_end = IntVar(value=16)
 
-        self.slow_bit_start = IntVar(value=1)
-        self.slow_bit_end = IntVar(value=3)
-        self.fast_bit_start = IntVar(value=4)
-        self.fast_bit_end = IntVar(value=5)
-        self.z_bit_start = IntVar(value=6)
-        self.z_bit_end = IntVar(value=16)
+        self.bits_grp_1_label = StringVar()
+        self.bits_grp_2_label = StringVar()
+        self.bits_grp_3_label = StringVar()
 
-        slow_start = ttk.Label(main_frame, text='Start')
-        slow_start.grid(column=1, row=6, sticky='w')
-        slow_start_ent = ttk.Entry(main_frame, textvariable=self.slow_bit_start, width=3)
-        slow_start_ent.grid(column=1, row=6, sticky='ns')
-        slow_end = ttk.Label(main_frame, text='End')
-        slow_end.grid(column=1, row=6, sticky='e')
-        slow_end_ent = ttk.Entry(main_frame, textvariable=self.slow_bit_end, width=3)
-        slow_end_ent.grid(column=2, row=6, sticky='w')
+        self.tag_bits_group_options = ("Power", "Slow axis", "Fast axis", "Z axis", "None")
 
-        fast_start = ttk.Label(main_frame, text='Start')
-        fast_start.grid(column=1, row=7, sticky='w')
-        fast_start_ent = ttk.Entry(main_frame, textvariable=self.fast_bit_start, width=3)
-        fast_start_ent.grid(column=1, row=7, sticky='ns')
-        fast_end = ttk.Label(main_frame, text='End')
-        fast_end.grid(column=1, row=7, sticky='e')
-        fast_end_ent = ttk.Entry(main_frame, textvariable=self.fast_bit_end, width=3)
-        fast_end_ent.grid(column=2, row=7, sticky='w')
+        bits_grp_1 = ttk.Combobox(main_frame, textvariable=self.bits_grp_1_label, width=10)
+        bits_grp_1.grid(column=0, row=6, sticky='e')
+        bits_grp_1.set('Power')
+        bits_grp_1['values'] = self.tag_bits_group_options
 
-        z_start = ttk.Label(main_frame, text='Start')
-        z_start.grid(column=1, row=8, sticky='w')
-        z_start_ent = ttk.Entry(main_frame, textvariable=self.z_bit_start, width=3)
-        z_start_ent.grid(column=1, row=8, sticky='ns')
-        z_end = ttk.Label(main_frame, text='End')
-        z_end.grid(column=1, row=8, sticky='e')
-        z_end_ent = ttk.Entry(main_frame, textvariable=self.z_bit_end, width=3)
-        z_end_ent.grid(column=2, row=8, sticky='w')
+        bits_grp_2 = ttk.Combobox(main_frame, textvariable=self.bits_grp_2_label, width=10)
+        bits_grp_2.grid(column=0, row=7, sticky='e')
+        bits_grp_2.set('None')
+        bits_grp_2['values'] = self.tag_bits_group_options
+
+        bits_grp_3 = ttk.Combobox(main_frame, textvariable=self.bits_grp_3_label, width=10)
+        bits_grp_3.grid(column=0, row=8, sticky='e')
+        bits_grp_3.set('None')
+        bits_grp_3['values'] = self.tag_bits_group_options
+
+        bits_grp_1_start_lab = ttk.Label(main_frame, text='Start')
+        bits_grp_1_start_lab.grid(column=1, row=6, sticky='w')
+        bits_grp_1_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_1_start, width=3)
+        bits_grp_1_start_ent.grid(column=1, row=6, sticky='ns')
+        bits_grp_1_end_lab = ttk.Label(main_frame, text='End')
+        bits_grp_1_end_lab.grid(column=1, row=6, sticky='e')
+        bits_grp_1_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_1_end, width=3)
+        bits_grp_1_end_ent.grid(column=2, row=6, sticky='w')
+
+        bits_grp_2_start_lab = ttk.Label(main_frame, text='Start')
+        bits_grp_2_start_lab.grid(column=1, row=7, sticky='w')
+        bits_grp_2_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_2_start, width=3)
+        bits_grp_2_start_ent.grid(column=1, row=7, sticky='ns')
+        bits_grp_2_end_lab = ttk.Label(main_frame, text='End')
+        bits_grp_2_end_lab.grid(column=1, row=7, sticky='e')
+        bits_grp_2_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_2_end, width=3)
+        bits_grp_2_end_ent.grid(column=2, row=7, sticky='w')
+
+        bits_grp_3_start_lab = ttk.Label(main_frame, text='Start')
+        bits_grp_3_start_lab.grid(column=1, row=8, sticky='w')
+        bits_grp_3_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_3_start, width=3)
+        bits_grp_3_start_ent.grid(column=1, row=8, sticky='ns')
+        bits_grp_3_end_lab = ttk.Label(main_frame, text='End')
+        bits_grp_3_end_lab.grid(column=1, row=8, sticky='e')
+        bits_grp_3_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_3_end, width=3)
+        bits_grp_3_end_ent.grid(column=2, row=8, sticky='w')
+
+        self.tag_bits_dict = {}
+        self.tag_bits_dict = {0: TagBits(value=self.bits_grp_1_label.get(),
+                                         start=self.bits_grp_1_start.get(),
+                                         end=self.bits_grp_1_end.get()),
+                              1: TagBits(value=self.bits_grp_2_label.get(),
+                                         start=self.bits_grp_2_start.get(),
+                                         end=self.bits_grp_2_end.get()),
+                              2: TagBits(value=self.bits_grp_3_label.get(),
+                                         start=self.bits_grp_3_start.get(),
+                                         end=self.bits_grp_3_end.get())}
 
     def __fill_frac(self, main_frame):
         """ Percentage of time mirrors spend "inside" the image """
@@ -359,7 +410,7 @@ class GUIApp(object):
                                       text='Sweeps as lines?')
         sweeps_cb.grid(row=10, column=3, sticky='ns')
 
-    ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT #######
+    ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT ########
 
     def __save_cfg(self, main_frame):
         """ A button to write a .json with current configs """
@@ -381,12 +432,16 @@ class GUIApp(object):
                 and key.find('root') == -1 \
                 and key.find('check') == -1 \
                 and key.find('cfg') == -1 \
+                and key.find('dict') == -1 \
                 and key.find('config') == -1:
                 try:
                     data_to_save = (str(val), val.get())
                     cfg_dict_to_save[key] = data_to_save
                 except AttributeError:
                     pass  # don't save non-tkinter variables
+                except TypeError:  # The TAG bits variable
+                    # warnings.warn(f"Error with value {val} under key {key}. Configuration file not saved. ")
+                    cfg_dict_to_save[key] = val
 
         path_to_save_to: str = str(Path(__file__).parent / 'configs') + sep + str(self.save_as.get()) + '.json'
         with open(path_to_save_to, 'w') as f:
@@ -450,7 +505,10 @@ class GUIApp(object):
 
         if latest_filename != '':
             with open(latest_filename, 'r') as f:
-                self.config = json.load(f)
+                try:
+                    self.config = json.load(f)
+                except json.decoder.JSONDecodeError:  # Unable to load .json config
+                    self.config = {}
             self.__modify_vars()
 
     @property
@@ -470,6 +528,8 @@ def verify_gui_input(gui):
     """Validate all GUI inputs"""
     data_sources = set(gui.tuple_of_data_sources)
     channel_inputs = {gui.input_start.get(), gui.input_stop1.get(), gui.input_stop2.get()}
+    MINIMAL_TAG_BIT = 1
+    MAXIMAL_TAG_BIT = 16
 
     if gui.input_start.get() != 'PMT1':
         if gui.input_stop1.get() != 'PMT1':
@@ -501,30 +561,32 @@ def verify_gui_input(gui):
             raise KeyError('Input consisted of two or more similar names which are not "Empty".')
 
     # TAG bits input verification
-    set_of_tags = {gui.slow_bit_start.get(), gui.slow_bit_end.get(),
-                   gui.fast_bit_start.get(), gui.fast_bit_end.get(),
-                   gui.z_bit_start.get(), gui.z_bit_end.get()}
+    if gui.tag_bits.get():
+        values_of_bits_set = set()
+        start_bits_set = set()
+        end_bits_set = set()
+        for key, val in gui.tag_bits_dict.items():
+            if val.value not in gui.tag_bits_group_options:
+                raise UserWarning(f"Value {val} not in allowed TAG bits inputs.")
+            if not isinstance(val.start, int):
+                raise UserWarning(f"The start bit of TAG label {val.value} wasn't an integer.")
+            if not isinstance(val.end, int):
+                raise UserWarning(f"The end bit of TAG label {val.value} wasn't an integer.")
+            if val.end < val.start:
+                raise UserWarning(f"Bits in row {key + 1} have a start value which is higher than its end.")
+            if val.start > MAXIMAL_TAG_BIT or val.end > MAXIMAL_TAG_BIT:
+                raise UserWarning(f"In label {key} maximal allowed TAG bit is {MAXIMAL_TAG_BIT}.")
+            if val.start < MINIMAL_TAG_BIT or val.end < MINIMAL_TAG_BIT:
+                raise UserWarning(f"In label {key} minimal allowed TAG bit is {MINIMAL_TAG_BIT}.")
+            values_of_bits_set.add(val)
+            start_bits_set.add(val.start)
+            end_bits_set.add(val.end)
 
-    for num in set_of_tags:
-        assert isinstance(num, int), 'TAG bit has to be an integer.'
+        if len(values_of_bits_set) > len(start_bits_set):
+            raise UserWarning("Some TAG bit labels weren't given unique start bits.")
 
-    if len(set_of_tags) != 6:
-        raise UserWarning('Conflicting starts and ends of TAG bits. Take note that bits are inclusive on both ends.')
-
-    if max(set_of_tags) > 16:
-        raise UserWarning('Maximal TAG bit is 16.')
-
-    if min(set_of_tags) < 1:
-        raise UserWarning('Minimal TAG bit is 1.')
-
-    if gui.slow_bit_start.get() > gui.slow_bit_end.get():
-        raise UserWarning('Slow bit end is smaller than its start.')
-
-    if gui.fast_bit_start.get() > gui.fast_bit_end.get():
-        raise UserWarning('Fast bit end is smaller than its start.')
-
-    if gui.z_bit_start.get() > gui.z_bit_end.get():
-        raise UserWarning('Z bit end is smaller than its start.')
+        if len(values_of_bits_set) > len(end_bits_set):
+            raise UserWarning("Some TAG bit labels weren't given unique end bits.")
 
     if not isinstance(gui.phase.get(), float) and not isinstance(gui.phase.get(), int):
         raise UserWarning('Mirror phase must be a number.')
@@ -573,6 +635,7 @@ def verify_gui_input(gui):
 
     if 'Laser' in channel_inputs and gui.flim.get() == 1:
         raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
+
 
 if __name__ == '__main__':
     app = GUIApp()

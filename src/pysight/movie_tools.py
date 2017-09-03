@@ -275,6 +275,7 @@ class Movie(object):
             plt.figure()
             plt.imshow(np.sum(self.stack[channel][frame, :, :], axis=-1), cmap='gray')
 
+
 @attr.s(slots=True)
 class Volume(object):
     """
