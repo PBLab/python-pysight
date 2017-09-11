@@ -34,10 +34,9 @@ class OutputParser(object):
 
     def run(self):
         """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
-
+        self.outputs = {}
         if not self.output_dict:
             return
-        self.outputs = {}
         self.outputs['memory'] = self.output_dict['memory']
         f = self.__create_prelim_file()
         if f is not None:
