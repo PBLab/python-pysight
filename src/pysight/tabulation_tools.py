@@ -25,7 +25,6 @@ class Tabulate(object):
     dict_of_slices_bin = attr.ib()
     x_pixels           = attr.ib(default=512, validator=instance_of(int))
     y_pixels           = attr.ib(default=512, validator=instance_of(int))
-    num_of_channels    = attr.ib(default=1, validator=instance_of(int))
     timepatch          = attr.ib(default='32', validator=instance_of(str))
     data_range         = attr.ib(default=1, validator=instance_of(int))
     is_binary          = attr.ib(default=False, validator=instance_of(bool))

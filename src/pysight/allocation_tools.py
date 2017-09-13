@@ -66,10 +66,9 @@ class Allocate(object):
                                                  self.df_photons.loc[:, 'abs_time'].values)
             self.df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
             # but this .iloc method is amazingly faster than .loc
-            negative_mask = sorted_indices < 0
-            idx_to_drop, = np.nonzero(negative_mask)
-            if len(idx_to_drop) > 0:  # drop photons that came before the first line
-                self.df_photons = self.df_photons.iloc[idx_to_drop[-1]+1:].copy()
+            positive_mask = sorted_indices >= 0
+            # drop photons that came before the first line
+            self.df_photons = self.df_photons.iloc[positive_mask].copy()
             # relative time of each photon in accordance to the line\frame\laser pulse
             self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
 

@@ -447,3 +447,17 @@ Changelog
 ------------------
 
 * Fixed bug with ``movie.show_stack()``.
+
+0.6.3 (2017-09-11)
+------------------
+
+* Better support for "early" photons.
+
+* Allow for no outputs from PySight.
+
+0.6.4 (2017-09-XX)
+------------------
+
+* Fixed bug with two-channel output.
+
+* Fixed bug with "early" photons.

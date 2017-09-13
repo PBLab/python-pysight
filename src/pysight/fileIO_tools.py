@@ -32,6 +32,7 @@ class FileIO(object):
     data                           = attr.ib(init=False)
     lst_metadata                   = attr.ib(init=False)
     fill_fraction                  = attr.ib(init=False)
+    num_of_channels                = attr.ib(init=False)
 
     def run(self):
         # Open file and find the needed parameters
@@ -348,6 +349,9 @@ class FileIO(object):
 
         assert len(dict_of_inputs) >= 1
         assert 'Empty' not in list(dict_of_inputs.keys())
+
+        # Calculate the number of channels
+        self.num_of_channels = sum([1 for key in dict_of_inputs if 'PMT' in key])
 
         return dict_of_inputs
 
