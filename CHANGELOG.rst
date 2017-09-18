@@ -455,7 +455,7 @@ Changelog
 
 * Allow for no outputs from PySight.
 
-0.6.4 (2017-09-XX)
+0.6.4 (2017-09-18)
 ------------------
 
 * Fixed bug with two-channel output.

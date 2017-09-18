@@ -1,0 +1,146 @@
+{
+    "filename": [
+        "PY_VAR0",
+        "X:/Hagai/Multiscaler/12-9-17/For analysis/Calcium Imaging FOV2/power_40p7_512unidir_gain900_thresh18mv_start_pmt1_stop1_lines_calcium_001.lst"
+    ],
+    "input_start": [
+        "PY_VAR1",
+        "PMT1"
+    ],
+    "input_stop1": [
+        "PY_VAR2",
+        "Lines"
+    ],
+    "input_stop2": [
+        "PY_VAR3",
+        "Empty"
+    ],
+    "num_of_frames": [
+        "PY_VAR4",
+        1
+    ],
+    "summed": [
+        "PY_VAR5",
+        true
+    ],
+    "memory": [
+        "PY_VAR6",
+        true
+    ],
+    "stack": [
+        "PY_VAR7",
+        true
+    ],
+    "x_pixels": [
+        "PY_VAR8",
+        512
+    ],
+    "y_pixels": [
+        "PY_VAR9",
+        512
+    ],
+    "z_pixels": [
+        "PY_VAR10",
+        1
+    ],
+    "debug": [
+        "PY_VAR11",
+        0
+    ],
+    "phase": [
+        "PY_VAR12",
+        -2.6
+    ],
+    "fill_frac": [
+        "PY_VAR13",
+        80.0
+    ],
+    "reprate": [
+        "PY_VAR14",
+        80300000.0
+    ],
+    "binwidth": [
+        "PY_VAR15",
+        8e-10
+    ],
+    "tag_freq": [
+        "PY_VAR16",
+        "189800.0"
+    ],
+    "tag_pulses": [
+        "PY_VAR17",
+        1
+    ],
+    "tag_bits": [
+        "PY_VAR18",
+        false
+    ],
+    "bits_grp_1_start": [
+        "PY_VAR19",
+        1
+    ],
+    "bits_grp_1_end": [
+        "PY_VAR20",
+        3
+    ],
+    "bits_grp_2_start": [
+        "PY_VAR21",
+        4
+    ],
+    "bits_grp_2_end": [
+        "PY_VAR22",
+        6
+    ],
+    "bits_grp_3_start": [
+        "PY_VAR23",
+        7
+    ],
+    "bits_grp_3_end": [
+        "PY_VAR24",
+        16
+    ],
+    "bits_grp_1_label": [
+        "PY_VAR25",
+        "None"
+    ],
+    "bits_grp_2_label": [
+        "PY_VAR26",
+        "None"
+    ],
+    "bits_grp_3_label": [
+        "PY_VAR27",
+        "None"
+    ],
+    "bidir": [
+        "PY_VAR28",
+        false
+    ],
+    "keep_unidir": [
+        "PY_VAR29",
+        false
+    ],
+    "gating": [
+        "PY_VAR30",
+        false
+    ],
+    "flim": [
+        "PY_VAR31",
+        true
+    ],
+    "censor": [
+        "PY_VAR32",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR33",
+        7930.0
+    ],
+    "sweeps_as_lines": [
+        "PY_VAR34",
+        false
+    ],
+    "save_as": [
+        "PY_VAR35",
+        "12-9-17-ca"
+    ]
+}

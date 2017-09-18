@@ -15,15 +15,12 @@ def main_data_readout(gui):
     from pysight.allocation_tools import Allocate
     from pysight.movie_tools import Movie
     from pysight import timepatch_switch
-    from pysight.logging_tools import basic_logging
     from pysight.output_tools import OutputParser
     from pysight.gating_tools import GatedDetection
     from pysight.photon_df_tools import PhotonDF
     from pysight.tag_bits_tools import ParseTAGBits
     import numpy as np
 
-    # Set up logging
-    # basic_logging()  # need to add mkdir
 
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
@@ -126,3 +123,4 @@ def run_batch(foldername: str):
 
 if __name__ == '__main__':
     df, movie = run()
+    # run_batch(r"X:\Hagai\Multiscaler\12-9-17\For analysis\Calcium Imaging FOV2")
