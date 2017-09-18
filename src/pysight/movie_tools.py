@@ -12,8 +12,8 @@ from typing import List, Iterator, Tuple, Iterable, Dict
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
+import h5py_cache
 import h5py
-
 
 def trunc_end_of_file(name) -> str:
     """
@@ -143,7 +143,7 @@ class Movie(object):
             funcs_to_execute_end.append(self.__convert_deque_to_arr)
 
         if 'stack' in self.outputs:
-            self.outputs['stack'] = h5py.File(f'{self.name[:-4]}.hdf5', 'a').require_group('Full Stack')
+            self.outputs['stack'] = h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a').require_group('Full Stack')
             funcs_to_execute_during.append(self.__save_stack_incr)
             funcs_to_execute_end.append(self.__close_file)
 
@@ -210,7 +210,7 @@ class Movie(object):
         :param channel:
         :return:
         """
-        with h5py.File(f'{self.name[:-4]}.hdf5', 'a') as f:
+        with h5py.File(f'{self.name[:-4]}.hdf5', 'a', libver='latest') as f:
             for channel in range(1, self.num_of_channels + 1):
                 f['Summed Stack'][f'Channel {channel}'][...] = self.summed_to_file[channel]
 

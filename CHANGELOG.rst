@@ -461,3 +461,8 @@ Changelog
 * Fixed bug with two-channel output.
 
 * Fixed bug with "early" photons.
+
+0.6.5 (2017-09-18)
+------------------
+
+* Writing output ``.hdf5`` to disk is much faster now.
