@@ -331,7 +331,9 @@ class Volume(object):
         if 'time_rel_pulse' in self.data.columns:
             try:
                 laser_start = 0
-                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
+                # CHANGED BY HAGAI 26.9.17 FOR LIOR'S GAMES TODO
+                # laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
+                laser_end = 251
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
             except ZeroDivisionError:
                 laser_start = 0
@@ -410,9 +412,9 @@ class Volume(object):
             if self.censor:
                 hist = self.__censor_correction(hist)
 
-            return hist.astype(np.int16), edges
+            return hist.astype(np.int8), edges
         else:
-            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int16), (0, 0, 0)
+            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int8), (0, 0, 0)
 
     def __censor_correction(self, data) -> np.ndarray:
         """

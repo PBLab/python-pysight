@@ -182,7 +182,9 @@ class Allocate(object):
             bincount = np.bincount(np.int64(rel_time251), minlength=TEN_MEGAHERTZ_IN_BINS)
             sorted_idx = np.argsort(bincount)
             sorted_rel = np.take(sorted_idx, np.int64(rel_time251))
-            rel_time_per_pulse = sorted_rel % np.ceil(1 / (self.binwidth * self.laser_freq))
+            # CHANGED BY HAGAI 26.9.17 FOR LIOR'S GAMES  TODO
+            # rel_time_per_pulse = sorted_rel % np.ceil(1 / (self.binwidth * self.laser_freq))
+            rel_time_per_pulse = sorted_rel
             rel_time.append(np.uint8(rel_time_per_pulse))
             df.loc[chan, 'time_rel_pulse'] = np.uint8(rel_time_per_pulse)
 
