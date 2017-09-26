@@ -94,7 +94,8 @@ setup(
         'tables',
         'scipy',
         'scikit-learn',
-        'h5py'
+        'h5py',
+        'h5py-cache'
     ],
     extras_require={
     },

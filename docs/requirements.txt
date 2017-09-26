@@ -4,7 +4,7 @@ sphinx-py3doc-enhanced-theme
 
 -e .
 
-numpy >= 1.12
+numpy >= 1.13
 matplotlib >= 2.0
 pandas >= 0.20
 attrs
@@ -13,3 +13,4 @@ tables
 scipy
 scikit-learn
 h5py
+h5py-cache
