@@ -354,7 +354,9 @@ class Volume(object):
         if 'time_rel_pulse' in self.data.columns:
             try:
                 laser_start = 0
-                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
+                # CHANGED BY HAGAI 26.9.17 FOR LIOR'S GAMES TODO
+                # laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
+                laser_end = 251
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
             except ZeroDivisionError:
                 laser_start = 0

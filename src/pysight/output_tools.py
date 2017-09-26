@@ -107,7 +107,9 @@ class OutputParser(object):
     @property
     def bins_bet_pulses(self) -> int:
         if self.flim:
-            return int(np.ceil(1 / (self.reprate * self.binwidth)))
+            # CHANGED BY HAGAI 26.9.17 FOR LIOR'S GAMES TODO
+            # return int(np.ceil(1 / (self.reprate * self.binwidth)))
+            return 251
         else:
             return 1
 
