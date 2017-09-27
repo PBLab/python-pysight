@@ -71,7 +71,8 @@ class OutputParser(object):
                                           .require_dataset(name=f'Channel {channel}',
                                                            shape=data_shape_full,
                                                            dtype=np.int16,
-                                                           chunks=tuple(chunk_shape))
+                                                           chunks=tuple(chunk_shape),
+                                                           compression="gzip")
                                          for channel in range(1, self.num_of_channels + 1)]
 
                 for key, val in self.lst_metadata.items():
@@ -87,7 +88,8 @@ class OutputParser(object):
                                            .require_dataset(name=f'Channel {channel}',
                                                             shape=data_shape_summed,
                                                             dtype=np.int16,
-                                                            chunks=data_shape_summed)
+                                                            chunks=data_shape_summed,
+                                                            compression="gzip")
                                           for channel in range(1, self.num_of_channels + 1)]
                 for key, val in self.lst_metadata.items():
                     for chan in range(self.num_of_channels):

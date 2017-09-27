@@ -26,7 +26,7 @@ class Allocate(object):
     laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
     bidir              = attr.ib(default=False, validator=instance_of(bool))
-    tag_freq           = attr.ib(default=189e5, validator=instance_of(float))
+    tag_freq           = attr.ib(default=189e3, validator=instance_of(float))
     tag_pulses         = attr.ib(default=1, validator=instance_of(int))
     phase              = attr.ib(default=-2.6, validator=instance_of(float))
     keep_unidir        = attr.ib(default=False, validator=instance_of(bool))

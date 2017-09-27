@@ -466,3 +466,10 @@ Changelog
 ------------------
 
 * Writing output ``.hdf5`` to disk is much faster now.
+
+0.6.6 (2017-09-27)
+------------------
+
+* Now compressing HDF5 files.
+
+* Fixed small bug in TAG implementation.
