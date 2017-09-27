@@ -466,3 +466,10 @@ Changelog
 ------------------
 
 * Writing output ``.hdf5`` to disk is much faster now.
+
+0.6.6 (2017-09-27)
+------------------
+
+* HDF5 now compresses output to save diskspace and speed up the IO process.
+
+* Fixed a small bug with TAG interpolation.

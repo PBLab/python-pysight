@@ -53,7 +53,8 @@ def main_data_readout(gui):
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
                                censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
-                               df_photons=tag_bit_parser.gen_df(), num_of_channels=cur_file.num_of_channels)
+                               df_photons=tag_bit_parser.gen_df(), num_of_channels=cur_file.num_of_channels,
+                               tag_freq=float(gui.tag_freq.get()))
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there

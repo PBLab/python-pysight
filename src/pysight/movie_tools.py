@@ -162,6 +162,8 @@ class Movie(object):
                 for func in funcs_to_execute_during:
                     func(data=data_of_vol.hist, channel=chan, vol_num=idx)
 
+                print(f"Vol number {vol}")
+
         for func in funcs_to_execute_end:
             func()
 
@@ -194,7 +196,9 @@ class Movie(object):
         :param channel: Current spectral channel of data
         :param vol_num: Current volume
         """
+        print("Save starts")
         self.outputs['stack'][f'Channel {channel}'][...,vol_num] = data
+        print("Save ends")
 
     def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs):
         """
