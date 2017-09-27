@@ -174,6 +174,8 @@ class Movie(object):
                 tq.update(1)
             tq.close()
 
+                print(f"Vol number {vol}")
+
         for func in funcs_to_execute_end:
             func()
 

@@ -89,8 +89,8 @@ class OutputParser(object):
                 self.outputs['summed'] = [f.require_group('Summed Stack')
                                            .require_dataset(name=f'Channel {channel}',
                                                             shape=data_shape_summed,
-                                                            dtype=np.uint16,
-                                                            chunks=True,
+                                                            dtype=np.int8,
+                                                            chunks=data_shape_summed,
                                                             compression="gzip")
                                           for channel in range(1, self.num_of_channels + 1)]
                 for key, val in self.lst_metadata.items():
