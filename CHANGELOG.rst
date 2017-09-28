@@ -486,3 +486,8 @@ Changelog
 * Added a progress bar.
 
 * ``show_summed()`` works, ``show_stack()`` might not.
+
+0.6.8 (2017-09-28)
+------------------
+
+* Small bug fix in progress bar.

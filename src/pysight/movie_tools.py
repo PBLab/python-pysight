@@ -13,7 +13,6 @@ from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
-from progress.bar import ChargingBar
 from tqdm import tqdm
 
 
