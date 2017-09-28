@@ -522,6 +522,10 @@ class GUIApp(object):
         if True == self.memory.get(): output['memory'] = True
         if True == self.stack.get(): output['stack'] = True
 
+        if 'stack' in output:
+            if not 'summed' in output and not 'memory' in output:
+                warnings.warn("Performance Warning: Writing data to file might take a long time when the required"
+                              " output is only 'Full Stack'.")
         return output
 
 def verify_gui_input(gui):

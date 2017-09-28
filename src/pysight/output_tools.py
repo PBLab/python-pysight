@@ -37,7 +37,10 @@ class OutputParser(object):
         self.outputs = {}
         if not self.output_dict:
             return
-        self.outputs['memory'] = self.output_dict['memory']
+        try:
+            self.outputs['memory'] = self.output_dict['memory']
+        except KeyError:
+            pass
         f = self.__create_prelim_file()
         if f is not None:
             data_shape_full = self.determine_data_shape_full()
@@ -48,7 +51,7 @@ class OutputParser(object):
         if 'stack' in self.output_dict or 'summed' in self.output_dict:
             try:
                 fullfile = f'{self.filename[:-4]}.hdf5'
-                f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=200*1024**2, libver='latest')
+                f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=100*1024**2, libver='latest', w0=1)
             except PermissionError or OSError:
                 self.file_pointer_created = False
                 warnings.warn("Permission Error: Couldn't write data to disk.")
@@ -70,9 +73,9 @@ class OutputParser(object):
                 self.outputs['stack'] = [f.require_group('Full Stack')
                                           .require_dataset(name=f'Channel {channel}',
                                                            shape=data_shape_full,
-                                                           dtype=np.int16,
+                                                           dtype=np.uint8,
                                                            chunks=tuple(chunk_shape),
-                                                           compression="gzip")
+                                                           compression='gzip')
                                          for channel in range(1, self.num_of_channels + 1)]
 
                 for key, val in self.lst_metadata.items():
@@ -81,13 +84,12 @@ class OutputParser(object):
 
             except PermissionError or OSError:
                 self.file_pointer_created = False
-
         if 'summed' in self.output_dict:
             try:
                 self.outputs['summed'] = [f.require_group('Summed Stack')
                                            .require_dataset(name=f'Channel {channel}',
                                                             shape=data_shape_summed,
-                                                            dtype=np.int16,
+                                                            dtype=np.uint16,
                                                             chunks=data_shape_summed,
                                                             compression="gzip")
                                           for channel in range(1, self.num_of_channels + 1)]

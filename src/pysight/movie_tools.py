@@ -13,7 +13,9 @@ from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
-import h5py
+from progress.bar import ChargingBar
+from tqdm import tqdm
+
 
 def trunc_end_of_file(name) -> str:
     """
@@ -52,7 +54,6 @@ class Movie(object):
     stack           = attr.ib(init=False)
     summed_to_file  = attr.ib(init=False)
     all_tif_ptr     = attr.ib(init=False)
-    num_of_vols     = attr.ib(init=False)
 
     @property
     def bins_bet_pulses(self) -> int:
@@ -66,7 +67,6 @@ class Movie(object):
         """ All volumes start-times in the movie. """
 
         volume_times = np.unique(self.data.index.get_level_values('Frames')).astype(np.uint64)
-        self.num_of_vols = len(volume_times)
         if len(volume_times) > 1:
             diff_between_frames = np.median(np.diff(volume_times))
         else:
@@ -141,29 +141,55 @@ class Movie(object):
             self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}
             funcs_to_execute_during.append(self.__create_memory_output)
             funcs_to_execute_end.append(self.__convert_deque_to_arr)
+            if 'stack' in self.outputs:
+                funcs_to_execute_end.append(self.__save_stack_at_once)
+            if 'summed' in self.outputs:
+                funcs_to_execute_end.append(self.__save_summed_at_once)
 
-        if 'stack' in self.outputs:
-            self.outputs['stack'] = h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a').require_group('Full Stack')
-            funcs_to_execute_during.append(self.__save_stack_incr)
-            funcs_to_execute_end.append(self.__close_file)
+        else:
+            if 'stack' in self.outputs:
+                self.outputs['stack'] = h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+                                                        libver='latest', w0=1).require_group('Full Stack')
+                funcs_to_execute_during.append(self.__save_stack_incr)
+                funcs_to_execute_end.append(self.__close_file)
 
-        if 'summed' in self.outputs:
-            self.summed_to_file = {i: 0 for i in range(1, self.num_of_channels + 1)}
-            funcs_to_execute_during.append(self.__append_summed_data)
-            funcs_to_execute_end.append(self.__save_summed_file)
+            if 'summed' in self.outputs:
+                self.summed_to_file = {i: 0 for i in range(1, self.num_of_channels + 1)}
+                funcs_to_execute_during.append(self.__append_summed_data)
+                funcs_to_execute_end.append(self.__save_summed_file)
 
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
 
         # Actual body of function - execute the appended functions after generating each volume
         for chan in range(1, self.num_of_channels + 1):
+            tq = tqdm(total=len(self.list_of_volume_times)-1,
+                      desc=f"Processing volumes in channel {chan} / {self.num_of_channels}",
+                      unit="volume", leave=False)
             for idx, vol in enumerate(self.gen_of_volumes(channel_num=chan)):
                 data_of_vol.hist, data_of_vol.edges = vol.create_hist()
                 for func in funcs_to_execute_during:
                     func(data=data_of_vol.hist, channel=chan, vol_num=idx)
+                tq.update(1)
+            tq.close()
 
         for func in funcs_to_execute_end:
             func()
+
+    def __save_stack_at_once(self):
+        """ Save the entire in-memory stack into .hdf5 file """
+        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+                             libver='latest', w0=1) as f:
+            print("Saving full stack to disk.")
+            for channel in range(1, self.num_of_channels + 1):
+                f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
+
+    def __save_summed_at_once(self):
+        """ Save the netire in-memory summed data into .hdf5 file """
+        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+                             libver='latest', w0=1) as f:
+            for channel in range(1, self.num_of_channels + 1):
+                f["Summed Stack"][f"Channel {channel}"][...] = self.summed_mem[channel]
 
     def __close_file(self):
         """ Close the file pointer of the specific channel """
@@ -174,7 +200,7 @@ class Movie(object):
         dimension (0) containing the data.
         """
         for channel in range(1, self.num_of_channels + 1):
-            self.stack[channel] = np.stack(self.stack[channel])
+            self.stack[channel] = np.stack(self.stack[channel], axis=-1)
 
     def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs):
         """
@@ -185,7 +211,7 @@ class Movie(object):
         :param channel: Current spectral channel of data
         """
         self.stack[channel].append(data)
-        self.summed_mem[channel] += data
+        self.summed_mem[channel] += np.uint16(data)
 
     def __save_stack_incr(self, data: np.ndarray, channel: int, vol_num: int):
         """
@@ -202,7 +228,7 @@ class Movie(object):
         :param data: Data to be saved
         :param channel: Spectral channel of data to be saved
         """
-        self.summed_to_file[channel] += data
+        self.summed_to_file[channel] += np.uint16(data)
 
     def __save_summed_file(self):
         """
@@ -210,7 +236,8 @@ class Movie(object):
         :param channel:
         :return:
         """
-        with h5py.File(f'{self.name[:-4]}.hdf5', 'a', libver='latest') as f:
+        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+                             libver='latest', w0=1) as f:
             for channel in range(1, self.num_of_channels + 1):
                 f['Summed Stack'][f'Channel {channel}'][...] = self.summed_to_file[channel]
 
@@ -241,10 +268,16 @@ class Movie(object):
         """ Show the summed Movie """
 
         plt.figure()
-        if len(self.summed_mem[channel].shape) == 3:  # a FLIM image
-            plt.imshow(np.sum(self.summed_mem[channel], axis=-1), cmap='gray')
-        else:
-            plt.imshow(self.summed_mem[channel], cmap='gray')
+        try:
+            num_of_dims = len(self.summed_mem[channel].shape)
+            if num_of_dims > 2:
+                plt.imshow(np.sum(self.summed_mem[channel], axis=-(num_of_dims-2)),
+                           cmap='gray')
+            else:
+                plt.imshow(self.summed_mem[channel], cmap='gray')
+        except:
+            warnings.warn("Can't show summed image when memory output wasn't asked for.")
+
         plt.title(f'Channel number {channel}')
         plt.axis('off')
 
@@ -410,9 +443,9 @@ class Volume(object):
             if self.censor:
                 hist = self.__censor_correction(hist)
 
-            return hist.astype(np.int16), edges
+            return np.uint8(hist), edges
         else:
-            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.int16), (0, 0, 0)
+            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.uint8), (0, 0, 0)
 
     def __censor_correction(self, data) -> np.ndarray:
         """

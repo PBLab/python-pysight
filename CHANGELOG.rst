@@ -473,3 +473,16 @@ Changelog
 * Now compressing HDF5 files.
 
 * Fixed small bug in TAG implementation.
+
+0.6.7 (2017-09-28)
+------------------
+
+* Faster I/O.
+
+* Datasets are now ``uint8`` (full stack) and ``uint16`` (summed stack).
+
+* Allowing outputs without the "In Memory" requirement.
+
+* Added a progress bar.
+
+* ``show_summed()`` works, ``show_stack()`` might not.
