@@ -491,3 +491,12 @@ Changelog
 ------------------
 
 * Small bug fix in progress bar.
+
+0.6.9 (2017-09-29)
+------------------
+
+* Stacking the final array is now an order-of-magnitude faster - the first dimension is now considered `time`.
+
+* Fixed a bug with singleton dimensions.
+
+* Fixed a bug with no "In Memory" output.

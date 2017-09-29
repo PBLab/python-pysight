@@ -49,6 +49,7 @@ class Movie(object):
     exp_params      = attr.ib(default={}, validator=instance_of(dict))
     line_delta      = attr.ib(default=158000, validator=instance_of(int))
     use_sweeps      = attr.ib(default=False, validator=instance_of(bool))
+    cache_size      = attr.ib(default=10 * 1024**3, validator=instance_of(int))
     summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
     summed_to_file  = attr.ib(init=False)
@@ -147,15 +148,16 @@ class Movie(object):
 
         else:
             if 'stack' in self.outputs:
-                self.outputs['stack'] = h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+                self.outputs['stack'] = h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a',
+                                                        chunk_cache_mem_size=self.cache_size,
                                                         libver='latest', w0=1).require_group('Full Stack')
                 funcs_to_execute_during.append(self.__save_stack_incr)
                 funcs_to_execute_end.append(self.__close_file)
 
             if 'summed' in self.outputs:
-                self.summed_to_file = {i: 0 for i in range(1, self.num_of_channels + 1)}
+                self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
                 funcs_to_execute_during.append(self.__append_summed_data)
-                funcs_to_execute_end.append(self.__save_summed_file)
+                funcs_to_execute_end.append(self.__save_summed_at_once)
 
         VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
         data_of_vol = VolTuple
@@ -177,18 +179,18 @@ class Movie(object):
 
     def __save_stack_at_once(self):
         """ Save the entire in-memory stack into .hdf5 file """
-        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
-            print("Saving full stack to disk.")
+            print("Saving full stack to disk...")
             for channel in range(1, self.num_of_channels + 1):
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self):
         """ Save the netire in-memory summed data into .hdf5 file """
-        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
+        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
             for channel in range(1, self.num_of_channels + 1):
-                f["Summed Stack"][f"Channel {channel}"][...] = self.summed_mem[channel]
+                f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(self.summed_mem[channel])
 
     def __close_file(self):
         """ Close the file pointer of the specific channel """
@@ -199,7 +201,7 @@ class Movie(object):
         dimension (0) containing the data.
         """
         for channel in range(1, self.num_of_channels + 1):
-            self.stack[channel] = np.stack(self.stack[channel], axis=-1)
+            self.stack[channel] = np.squeeze(np.stack(self.stack[channel], axis=0))
 
     def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs):
         """
@@ -219,7 +221,7 @@ class Movie(object):
         :param channel: Current spectral channel of data
         :param vol_num: Current volume
         """
-        self.outputs['stack'][f'Channel {channel}'][...,vol_num] = data
+        self.outputs['stack'][f'Channel {channel}'][vol_num, ...] = np.squeeze(data)
 
     def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs):
         """
@@ -227,18 +229,7 @@ class Movie(object):
         :param data: Data to be saved
         :param channel: Spectral channel of data to be saved
         """
-        self.summed_to_file[channel] += np.uint16(data)
-
-    def __save_summed_file(self):
-        """
-        Save once
-        :param channel:
-        :return:
-        """
-        with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=100*1024**2,
-                             libver='latest', w0=1) as f:
-            for channel in range(1, self.num_of_channels + 1):
-                f['Summed Stack'][f'Channel {channel}'][...] = self.summed_to_file[channel]
+        self.summed_mem[channel] += np.uint16(data)
 
     def __print_outputs(self) -> None:
         """
