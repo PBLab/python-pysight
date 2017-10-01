@@ -5,7 +5,6 @@ __author__ = Hagai Hargil
 import attr
 from attr.validators import instance_of
 from pysight.movie_tools import trunc_end_of_file
-import h5py
 import numpy as np
 import warnings
 import h5py_cache
@@ -30,6 +29,7 @@ class OutputParser(object):
     reprate = attr.ib(default=80e6, validator=instance_of(float))
     lst_metadata = attr.ib(default={}, validator=instance_of(dict))
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
+    cache_size = attr.ib(default=10 * 1024**3, validator=instance_of(int))
     outputs = attr.ib(init=False)
 
     def run(self):
@@ -37,7 +37,10 @@ class OutputParser(object):
         self.outputs = {}
         if not self.output_dict:
             return
-        self.outputs['memory'] = self.output_dict['memory']
+        try:
+            self.outputs['memory'] = self.output_dict['memory']
+        except KeyError:
+            pass
         f = self.__create_prelim_file()
         if f is not None:
             data_shape_full = self.determine_data_shape_full()
@@ -48,7 +51,7 @@ class OutputParser(object):
         if 'stack' in self.output_dict or 'summed' in self.output_dict:
             try:
                 fullfile = f'{self.filename[:-4]}.hdf5'
-                f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=200*1024**2, libver='latest')
+                f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=self.cache_size, libver='latest', w0=1)
             except PermissionError or OSError:
                 self.file_pointer_created = False
                 warnings.warn("Permission Error: Couldn't write data to disk.")
@@ -62,16 +65,17 @@ class OutputParser(object):
         Generate files and add metadata to each group, write out the data in chunks
         f: File pointer
         """
-        data_shape_summed = data_shape_full[:-1]
+        data_shape_summed = data_shape_full[1:]
         chunk_shape = list(data_shape_full)
-        chunk_shape[-1] = 1
+        chunk_shape[0] = 1
         if 'stack' in self.output_dict:
             try:
                 self.outputs['stack'] = [f.require_group('Full Stack')
                                           .require_dataset(name=f'Channel {channel}',
                                                            shape=data_shape_full,
-                                                           dtype=np.int16,
-                                                           chunks=tuple(chunk_shape))
+                                                           dtype=np.uint8,
+                                                           chunks=tuple(chunk_shape),
+                                                           compression='gzip')
                                          for channel in range(1, self.num_of_channels + 1)]
 
                 for key, val in self.lst_metadata.items():
@@ -80,14 +84,13 @@ class OutputParser(object):
 
             except PermissionError or OSError:
                 self.file_pointer_created = False
-
         if 'summed' in self.output_dict:
             try:
                 self.outputs['summed'] = [f.require_group('Summed Stack')
                                            .require_dataset(name=f'Channel {channel}',
                                                             shape=data_shape_summed,
-                                                            dtype=np.int8,
-                                                            chunks=data_shape_summed,
+                                                            dtype=np.uint16,
+                                                            chunks=True,
                                                             compression="gzip")
                                           for channel in range(1, self.num_of_channels + 1)]
                 for key, val in self.lst_metadata.items():
@@ -114,9 +117,9 @@ class OutputParser(object):
         """ Return the tuple that describes the shape of the final dataset """
 
         # Dimension order: [X, Y, Z, LIFETIME, FRAME]
-        return np.squeeze(np.empty(shape=(self.x_pixels,
+        return np.squeeze(np.empty(shape=(self.num_of_frames,
+                                          self.x_pixels,
                                           self.y_pixels,
                                           self.z_pixels,
-                                          self.bins_bet_pulses,
-                                          self.num_of_frames),
+                                          self.bins_bet_pulses),
                                    dtype=np.int8)).shape

@@ -470,6 +470,33 @@ Changelog
 0.6.6 (2017-09-27)
 ------------------
 
-* HDF5 now compresses output to save diskspace and speed up the IO process.
+* Now compressing HDF5 files.
 
-* Fixed a small bug with TAG interpolation.
+* Fixed small bug in TAG implementation.
+
+0.6.7 (2017-09-28)
+------------------
+
+* Faster I/O.
+
+* Datasets are now ``uint8`` (full stack) and ``uint16`` (summed stack).
+
+* Allowing outputs without the "In Memory" requirement.
+
+* Added a progress bar.
+
+* ``show_summed()`` works, ``show_stack()`` might not.
+
+0.6.8 (2017-09-28)
+------------------
+
+* Small bug fix in progress bar.
+
+0.6.9 (2017-09-29)
+------------------
+
+* Stacking the final array is now an order-of-magnitude faster - the first dimension is now considered `time`.
+
+* Fixed a bug with singleton dimensions.
+
+* Fixed a bug with no "In Memory" output.
