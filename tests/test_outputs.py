@@ -25,6 +25,6 @@ class TestOutput(TestCase):
 
 
     def test_determine_shape(self):
-        shapes = [(512, 512, 16), (512, 512, 10, 8, 2), (512, 512, 2)]
+        shapes = [(512, 512, 16), (2, 512, 512, 10, 8), (2, 512, 512)]
         for shape, obj in zip(shapes, self.parser_objects):
             self.assertEqual(shape, obj.determine_data_shape_full())

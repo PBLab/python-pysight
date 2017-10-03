@@ -500,3 +500,12 @@ Changelog
 * Fixed a bug with singleton dimensions.
 
 * Fixed a bug with no "In Memory" output.
+
+0.6.10 (2017-10-03)
+-------------------
+
+* Fixed a bug occurring when TAG lens interpolation fails.
+
+* Discovered another bug with the interpolation process which is currently unresolved.
+
+* Fixed small issue with a TAG test function.

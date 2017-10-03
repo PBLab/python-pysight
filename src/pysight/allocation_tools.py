@@ -34,6 +34,7 @@ class Allocate(object):
     exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
     dict_of_data       = attr.ib(default={}, validator=instance_of(dict))
+    tag_interp_ok      = attr.ib(default=False, validator=instance_of(bool))
 
     def run(self):
         """ Pipeline of analysis """
@@ -93,8 +94,9 @@ class Allocate(object):
             pass
         else:
             print('Interpolating TAG lens data...')
-            self.df_photons = interpolate_tag(df_photons=self.df_photons, tag_data=tag, tag_freq=self.tag_freq,
-                                         binwidth=self.binwidth, tag_pulses=self.tag_pulses)
+            self.df_photons, self.tag_interp_ok = interpolate_tag(df_photons=self.df_photons, tag_data=tag,
+                                                                  tag_freq=self.tag_freq, binwidth=self.binwidth,
+                                                                  tag_pulses=self.tag_pulses)
             print('TAG lens interpolation finished.')
 
         # Deal with laser pulses interpolation

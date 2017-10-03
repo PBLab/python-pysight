@@ -62,8 +62,9 @@ def main_data_readout(gui):
                                                        .get_level_values('Frames')).astype(np.uint64)),
                            output_dict=gui.outputs, filename=gui.filename.get(),
                            x_pixels=gui.x_pixels.get(), y_pixels=gui.y_pixels.get(),
-                           z_pixels=gui.z_pixels.get(), num_of_channels=analyzed_struct.num_of_channels,
-                           flim=gui.flim.get(), binwidth=gui.binwidth.get(), reprate=gui.reprate.get(),
+                           z_pixels=gui.z_pixels.get() if analyzed_struct.tag_interp_ok else 1,
+                           num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
+                           binwidth=gui.binwidth.get(), reprate=gui.reprate.get(),
                            lst_metadata=cur_file.lst_metadata)
     outputs.run()
 
@@ -76,7 +77,7 @@ def main_data_readout(gui):
 
     # Create a movie object
     final_movie = Movie(data=data_for_movie, x_pixels=int(gui.x_pixels.get()),
-                        y_pixels=int(gui.y_pixels.get()), z_pixels=int(gui.z_pixels.get()),
+                        y_pixels=int(gui.y_pixels.get()), z_pixels=outputs.z_pixels,
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get() if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,

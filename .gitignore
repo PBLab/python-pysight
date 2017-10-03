@@ -10,6 +10,7 @@
 *.npy
 .ipynb_checkpoints
 *.hdf5
+*.h5
 
 
 # C extensions

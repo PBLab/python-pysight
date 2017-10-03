@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import warnings
 from numba import jit
+from typing import Tuple
 
 
 def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: float = 0,
@@ -40,7 +41,7 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
         warnings.warn('TAG Lens data was corrupted. Stack will be created without it.')
         return tag_data.values
 
-    counter_of_changes = 1
+    iteration_idx = 1
 
     # Iterate until TAG pulses are completely periodic
     while changed_ticks != 0:
@@ -54,12 +55,12 @@ def verify_periodicity(tag_data: pd.Series=None, tag_freq: float = 0, binwidth: 
         changed_ticks_old = changed_ticks
         changed_ticks = missing_ticks.shape[0]
 
-        if counter_of_changes > 100 or changed_ticks > changed_ticks_old:
+        if iteration_idx > 100 or changed_ticks > changed_ticks_old:
             warnings.warn('Something is wrong with the TAG interpolation, possibly an out-of-phase lens.\n\
                           Stopping interpolation process.')
             return tag_data.values
         else:
-            counter_of_changes += 1
+            iteration_idx += 1
 
     # Add pulses that didn't exist to make sure all photons indeed have a phase
     last_pulse = tag_data.iat[-1]
@@ -122,7 +123,7 @@ def define_phase(df_photons: pd.DataFrame=None, tag_data: pd.Series=None) -> pd.
 
 
 def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, tag_freq: float=None,
-                    binwidth: float=None, tag_pulses: int=None) -> pd.DataFrame:
+                    binwidth: float=None, tag_pulses: int=None) -> Tuple[pd.DataFrame, bool]:
     """
     If a TAG channel was defined determine each photon's phase and insert it into the main DataFrame.
     :param df_photons: DataFrame to be changed - TAG phase will be added as index
@@ -134,18 +135,20 @@ def interpolate_tag(df_photons: pd.DataFrame=None, tag_data: pd.Series=None, tag
     # TODO: Get rid of assumption that the TAG pulse comes at a phase of 0
     # TODO: Still only a single channel of data
 
+    tag_interp_ok = False
     tag_data = verify_periodicity(tag_data=tag_data, tag_freq=tag_freq, binwidth=binwidth, tag_pulses=tag_pulses)
     if isinstance(tag_data, pd.Series):
         df_photons = define_phase(df_photons=df_photons, tag_data=tag_data)
+        tag_interp_ok = True
     elif isinstance(tag_data, np.ndarray):
+        tag_interp_ok = False
         try:
             padded_tag = np.pad(tag_data, (df_photons.shape[0] - len(tag_data), 0), 'constant')
             df_photons['TAG'] = padded_tag
         except ValueError:  # more TAG pulses than events
             df_photons['TAG'] = tag_data[:df_photons.shape[0]]
 
-
-    return df_photons
+    return df_photons, tag_interp_ok
 
 
 
