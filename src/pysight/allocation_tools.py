@@ -6,10 +6,9 @@ import numpy as np
 import attr
 from typing import Dict, Tuple, List
 from numba import jit, int64, uint64
-import warnings
 from pysight.validation_tools import  rectify_photons_in_uneven_lines
+from pysight.tag_tools_v2 import TagPipeline
 from attr.validators import instance_of
-import sys
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks_cwt
 
@@ -94,9 +93,12 @@ class Allocate(object):
             pass
         else:
             print('Interpolating TAG lens data...')
-            self.df_photons, self.tag_interp_ok = interpolate_tag(df_photons=self.df_photons, tag_data=tag,
-                                                                  tag_freq=self.tag_freq, binwidth=self.binwidth,
-                                                                  tag_pulses=self.tag_pulses)
+            tag_pipe = TagPipeline(photons=self.df_photons, tag_pulses=tag, freq=self.tag_freq,
+                                   binwidth=self.binwidth, num_of_pulses=self.tag_pulses)
+            tag_pipe.run()
+            self.df_photons = tag_pipe.photons
+            self.tag_interp_ok = tag_pipe.finished_pipe
+
             print('TAG lens interpolation finished.')
 
         # Deal with laser pulses interpolation

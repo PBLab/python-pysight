@@ -60,11 +60,11 @@ class TagPeriodVerifier(object):
     """ Verify input to the TAG pipeline, and add missing pulses accordingly """
 
     tag = attr.ib(validator=instance_of(pd.Series))
-    last_photon = attr.ib(validator=instance_of(int))
+    last_photon = attr.ib(validator=instance_of(np.uint64))
     freq = attr.ib(default=189e3, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     jitter = attr.ib(default=0.05, validator=instance_of(float))  # Allowed jitter of signal, between 0 - 1
-    first_photon = attr.ib(default=0, validator=instance_of(int))
+    first_photon = attr.ib(default=0, validator=instance_of(np.uint64))
     allowed_corruption = attr.ib(default=0.3, validator=instance_of(float))
     success = attr.ib(init=False)
 
@@ -82,7 +82,7 @@ class TagPeriodVerifier(object):
         # Find the borders of the disordered periods
         start_idx, end_idx = self.__obtain_start_end_idx()
         # Add \ remove TAG pulses in each period
-        if (start_idx, end_idx) != (-1, -1):
+        if isinstance(start_idx, np.ndarray) and isinstance(end_idx, np.ndarray):
             self.__fix_tag_pulses(start_idx, end_idx)
             self.success = True
         else:
@@ -99,7 +99,7 @@ class TagPeriodVerifier(object):
         if np.sum(diffs)/len(diffs) > self.allowed_corruption:
             warnings.warn(f"Over {self.allowed_corruption * 100}% of TAG pulses were out-of-phase."
                           " Stopping TAG interpolation.")
-            return np.array([-1]), np.array([-1])
+            return (-1, -1)
 
         diff_of_diffs = diffs.diff()  # a vec containing 1 at the start
         #                               of a "bad" period, and -1 at its end
@@ -114,6 +114,7 @@ class TagPeriodVerifier(object):
 
         period = self.period  # avoid repetitive invocation of property
         new_data = []
+        items_to_discard = []
         start_iter_at = 0
         # If start contains a 0 - manually add TAG pulses
         if starts[0] == 0:
@@ -123,20 +124,24 @@ class TagPeriodVerifier(object):
                                                             step=-period,
                                                             dtype=np.int64), dtype=np.uint64),
                                        ignore_index=True)
-            items_to_discard = np.arange(starts[0], ends[0])
-            self.tag.drop(items_to_discard, inplace=True)
+            items_to_discard.append(np.arange(starts[0], ends[0]))
 
         for start_idx, end_idx in zip(starts[start_iter_at:], ends[start_iter_at:]):
             start_val = self.tag[start_idx]
             end_val = self.tag[end_idx]
-            new_data.append(np.arange(start=end_val-period, stop=start_val,
-                                      step=-period, dtype=np.uint64))
-            items_to_discard = np.arange(start_idx+1, end_idx)
-            self.tag.drop(items_to_discard, inplace=True)
+            if (end_val-start_val) - period > self.jitter*period:
+                new_data.append(np.arange(start=end_val-period, stop=start_val,
+                                          step=-period, dtype=np.uint64))
+            items_to_discard.append(np.arange(start_idx+1, end_idx))
 
+        flattened_items_to_discard = list(chain.from_iterable(items_to_discard))
+        self.tag.drop(flattened_items_to_discard, inplace=True)
         flattened_new_data = list(chain.from_iterable(new_data))
         self.tag = self.tag.append(pd.Series(flattened_new_data, dtype=np.uint64), ignore_index=True)\
                            .sort_values().reset_index(drop=True)
+        # Add the last TAG event manually
+        last_tag_val = self.tag.values[-1] + period
+        self.tag = self.tag.append(pd.Series(last_tag_val), ignore_index=True)
 
 @attr.s(slots=True)
 class TagPhaseAllocator(object):
@@ -153,7 +158,6 @@ class TagPhaseAllocator(object):
         photons = self.photons.abs_time.values.astype(float)
         photons[np.logical_not(relevant_bins)] = np.nan
         relevant_photons = np.compress(relevant_bins, photons)
-
         phase_vec = numba_find_phase(photons=relevant_photons, bins=np.compress(relevant_bins, bin_idx),
                                      raw_tag=self.tag.values)
         first_relevant_photon_idx = photons.shape[0] - relevant_photons.shape[0]
@@ -186,8 +190,8 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np
     phase_vec = np.zeros_like(photons, dtype=np.float32)
     tag_diff = np.diff(raw_tag)
 
-    for idx, bin in enumerate(bins) :  # values of indices that changed
-        phase_vec[idx] = (photons[idx] - raw_tag[bin - 1])/tag_diff[bin - 1]
+    for idx, cur_bin in enumerate(bins):  # values of indices that changed
+        phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
     phase_vec = np.sin(phase_vec * 2 * np.pi)
 
