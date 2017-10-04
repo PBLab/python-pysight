@@ -64,7 +64,7 @@ class TagPeriodVerifier(object):
     freq = attr.ib(default=189e3, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     jitter = attr.ib(default=0.05, validator=instance_of(float))  # Allowed jitter of signal, between 0 - 1
-    first_photon = attr.ib(default=0, validator=instance_of(np.uint64))
+    first_photon = attr.ib(default=np.int64(0), validator=instance_of(np.int64))
     allowed_corruption = attr.ib(default=0.3, validator=instance_of(float))
     success = attr.ib(init=False)
 
@@ -119,17 +119,16 @@ class TagPeriodVerifier(object):
         # If start contains a 0 - manually add TAG pulses
         if starts[0] == 0:
             start_iter_at = 1
-            self.tag = self.tag.append(pd.Series(np.arange(start=self.tag[ends[0]]-period,
-                                                            stop=self.first_photon-1,
-                                                            step=-period,
-                                                            dtype=np.int64), dtype=np.uint64),
-                                       ignore_index=True)
+            new_ser = pd.Series(np.arange(start=self.tag[ends[0]]-period,
+                                          stop=self.first_photon-1,
+                                          step=-period,
+                                          dtype=np.uint64))
+            self.tag = self.tag.append(new_ser, ignore_index=True).astype(np.uint64)
             items_to_discard.append(np.arange(starts[0], ends[0]))
-
         for start_idx, end_idx in zip(starts[start_iter_at:], ends[start_iter_at:]):
             start_val = self.tag[start_idx]
             end_val = self.tag[end_idx]
-            if (end_val-start_val) - period > self.jitter*period:
+            if np.abs(end_val-start_val) - period > self.jitter*period:
                 new_data.append(np.arange(start=end_val-period, stop=start_val,
                                           step=-period, dtype=np.uint64))
             items_to_discard.append(np.arange(start_idx+1, end_idx))
@@ -141,7 +140,8 @@ class TagPeriodVerifier(object):
                            .sort_values().reset_index(drop=True)
         # Add the last TAG event manually
         last_tag_val = self.tag.values[-1] + period
-        self.tag = self.tag.append(pd.Series(last_tag_val), ignore_index=True)
+        self.tag = self.tag.append(pd.Series(last_tag_val, dtype=np.uint64), ignore_index=True)
+        assert self.tag.dtype == np.uint64
 
 @attr.s(slots=True)
 class TagPhaseAllocator(object):

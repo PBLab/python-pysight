@@ -27,7 +27,7 @@ class TestTagPipeline(unittest.TestCase):
 
     def test_preservation_without_zero(self):
         photons = pd.DataFrame([10, 6531], columns=['abs_time'])
-        pipe = TagPipeline(photons=photons, tag_data=self.tag_data)
+        pipe = TagPipeline(photons=photons, tag_pulses=self.tag_data)
         returned = pd.Series([6530])
         self.assertSequenceEqual(returned.tolist(),
                                  pipe._TagPipeline__preserve_relevant_tag_pulses()
@@ -40,7 +40,7 @@ class TestTagPeriodVerifier(unittest.TestCase):
     freq = 189e3
     binwidth = 800e-12
     def_verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
-                                     last_photon=200 * 6530)
+                                     last_photon=np.uint64(200 * 6530))
 
     def test_bins_bet_pulses(self):
         self.assertEqual(6614, self.def_verifier.period)
@@ -49,15 +49,14 @@ class TestTagPeriodVerifier(unittest.TestCase):
         self.assertEqual(331, self.def_verifier.allowed_noise)
 
     def test_start_end_no_zero(self):
-        tag_data = pd.Series(np.arange(0, 100, 10))
+        tag_data = pd.Series(np.arange(0, 300, 10))
         tag_data.drop([0, 5, 6], inplace=True)
         tag_data = tag_data.append(pd.Series([3, 9, 25]))
         tag_data = tag_data.sort_values().reset_index(drop=True)
-        print(tag_data)
         freq = 0.1
         binwidth = 1.
         verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
-                                     last_photon=100)
+                                     last_photon=np.uint64(300))
         ret_start, ret_end = verifier._TagPeriodVerifier__obtain_start_end_idx()
         my_start = [0, 3, 6]
         my_end = [2, 5, 7]
@@ -65,17 +64,17 @@ class TestTagPeriodVerifier(unittest.TestCase):
         self.assertSequenceEqual(list(ret_end), my_end)
 
     def test_start_end_adding_zero(self):
-        tag_data = pd.Series(np.arange(5, 100, 10))
-        tag_data.drop([1, 5, 8, 9], inplace=True)
+        tag_data = pd.Series(np.arange(5, 300, 10))
+        tag_data.drop([1, 5, 7, 8], inplace=True)
         tag_data = tag_data.append(pd.Series([9, 27, 29, 31]))
         tag_data = tag_data.sort_values().reset_index(drop=True)
         freq = 0.1
         binwidth = 1.
         verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
-                                     last_photon=100)
+                                     last_photon=np.uint64(300))
         ret_start, ret_end = verifier._TagPeriodVerifier__obtain_start_end_idx()
         my_start = [0, 7]
-        my_end = [6, 8]
+        my_end = [6, 9]
         self.assertSequenceEqual(list(ret_start), my_start)
         self.assertSequenceEqual(list(ret_end), my_end)
 
@@ -87,29 +86,30 @@ class TestTagPeriodVerifier(unittest.TestCase):
         freq = 0.1
         binwidth = 1.
         verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
-                                     last_photon=100)
+                                     last_photon=np.uint64(100))
         my_start = [0, 3, 6]
         my_end = [2, 5, 7]
         verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
                                                     ends=my_end)
         self.assertSequenceEqual(list(verifier.tag.values),
-                                 list(np.arange(0, 100, 10)))
+                                 list(np.arange(0, 110, 10)))
 
     def test_fix_tag_pulses_no_zero_end_missing(self):
-        tag_data = pd.Series(np.arange(5, 100, 10, dtype=np.uint64))
-        tag_data.drop([1, 5, 8, 9], inplace=True)
+        tag_data = pd.Series(np.arange(5, 95, 10, dtype=np.uint64))
+        tag_data.drop([1, 5, 7, 8], inplace=True)
         tag_data = tag_data.append(pd.Series([9, 27, 29, 31], dtype=np.uint64))
         tag_data = tag_data.sort_values().reset_index(drop=True)
+        print(tag_data)
         freq = 0.1
         binwidth = 1.
         verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
-                                     last_photon=85)
+                                     last_photon=np.uint64(85))
         my_start = [0, 7]
-        my_end = [6, 8]
+        my_end = [6, 9]
         verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
                                                     ends=my_end)
         self.assertSequenceEqual(list(verifier.tag.values),
-                                 list(np.arange(5, 85, 10)))
+                                 list(np.arange(5, 65, 10)))
 
 
 class TestTagPhaseAllocator(unittest.TestCase):
