@@ -5,15 +5,116 @@ __author__ = Hagai Hargil
 import unittest
 import numpy as np
 import pandas as pd
+from pysight.tag_tools_v2 import TagPeriodVerifier, TagPhaseAllocator, \
+    TagPipeline, numba_digitize
 
-
-class TestTAGTools(unittest.TestCase):
+class TestTagPipeline(unittest.TestCase):
     """
     Tests for TAG analysis functions
     """
-    def test_tag_digitize(self):
-        from pysight.tag_tools import numba_digitize
 
+    tag_data = pd.Series(np.arange(0, 200 * 6530, 6530))
+    photons = pd.DataFrame([10, 100, 1000], columns=['abs_time'])
+    def_pipe = TagPipeline(photons=photons, tag_pulses=tag_data)
+
+    def test_preservation(self):
+        photons = pd.DataFrame([-1, 10, 6531], columns=['abs_time'])
+        pipe = TagPipeline(photons=photons, tag_pulses=self.tag_data)
+        returned = pd.Series([0, 6530])
+        self.assertSequenceEqual(returned.tolist(),
+                                 pipe._TagPipeline__preserve_relevant_tag_pulses()
+                                 .tolist())
+
+    def test_preservation_without_zero(self):
+        photons = pd.DataFrame([10, 6531], columns=['abs_time'])
+        pipe = TagPipeline(photons=photons, tag_data=self.tag_data)
+        returned = pd.Series([6530])
+        self.assertSequenceEqual(returned.tolist(),
+                                 pipe._TagPipeline__preserve_relevant_tag_pulses()
+                                 .tolist())
+
+class TestTagPeriodVerifier(unittest.TestCase):
+    """ Test the Verifier class """
+
+    tag_data = pd.Series(np.arange(0, 200 * 6530, 6530))
+    freq = 189e3
+    binwidth = 800e-12
+    def_verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=200 * 6530)
+
+    def test_bins_bet_pulses(self):
+        self.assertEqual(6614, self.def_verifier.period)
+
+    def test_allowed_noise(self):
+        self.assertEqual(331, self.def_verifier.allowed_noise)
+
+    def test_start_end_no_zero(self):
+        tag_data = pd.Series(np.arange(0, 100, 10))
+        tag_data.drop([0, 5, 6], inplace=True)
+        tag_data = tag_data.append(pd.Series([3, 9, 25]))
+        tag_data = tag_data.sort_values().reset_index(drop=True)
+        print(tag_data)
+        freq = 0.1
+        binwidth = 1.
+        verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=100)
+        ret_start, ret_end = verifier._TagPeriodVerifier__obtain_start_end_idx()
+        my_start = [0, 3, 6]
+        my_end = [2, 5, 7]
+        self.assertSequenceEqual(list(ret_start), my_start)
+        self.assertSequenceEqual(list(ret_end), my_end)
+
+    def test_start_end_adding_zero(self):
+        tag_data = pd.Series(np.arange(5, 100, 10))
+        tag_data.drop([1, 5, 8, 9], inplace=True)
+        tag_data = tag_data.append(pd.Series([9, 27, 29, 31]))
+        tag_data = tag_data.sort_values().reset_index(drop=True)
+        freq = 0.1
+        binwidth = 1.
+        verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=100)
+        ret_start, ret_end = verifier._TagPeriodVerifier__obtain_start_end_idx()
+        my_start = [0, 7]
+        my_end = [6, 8]
+        self.assertSequenceEqual(list(ret_start), my_start)
+        self.assertSequenceEqual(list(ret_end), my_end)
+
+    def test_fix_tag_pulses_adding_zero(self):
+        tag_data = pd.Series(np.arange(0, 100, 10))
+        tag_data.drop([0, 5, 6], inplace=True)
+        tag_data = tag_data.append(pd.Series([3, 9, 25]))
+        tag_data = tag_data.sort_values().reset_index(drop=True)
+        freq = 0.1
+        binwidth = 1.
+        verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=100)
+        my_start = [0, 3, 6]
+        my_end = [2, 5, 7]
+        verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
+                                                    ends=my_end)
+        self.assertSequenceEqual(list(verifier.tag.values),
+                                 list(np.arange(0, 100, 10)))
+
+    def test_fix_tag_pulses_no_zero_end_missing(self):
+        tag_data = pd.Series(np.arange(5, 100, 10, dtype=np.uint64))
+        tag_data.drop([1, 5, 8, 9], inplace=True)
+        tag_data = tag_data.append(pd.Series([9, 27, 29, 31], dtype=np.uint64))
+        tag_data = tag_data.sort_values().reset_index(drop=True)
+        freq = 0.1
+        binwidth = 1.
+        verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=85)
+        my_start = [0, 7]
+        my_end = [6, 8]
+        verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
+                                                    ends=my_end)
+        self.assertSequenceEqual(list(verifier.tag.values),
+                                 list(np.arange(5, 85, 10)))
+
+
+class TestTagPhaseAllocator(unittest.TestCase):
+
+    def test_tag_digitize(self):
         x = np.array([0.2, 6.4, 3.0, 1.6])
         bins = np.array([0.0, 1.0, 2.5, 4.0, 10.0])
 
@@ -22,27 +123,6 @@ class TestTAGTools(unittest.TestCase):
 
         self.assertTrue(np.array_equal(real_result, result))
 
-    def test_tag_verify(self):
-        from pysight.tag_tools import verify_periodicity
-
-        diff = 0.1897e6
-        jitter = 0.05
-        allowed_noise = np.ceil(jitter * 6550).astype(np.uint64)
-
-        full_vec = np.arange(0, 200 * 6530, 6530)
-        missing = [3, 17, 18, 49, 50, 51, 125, 129, 130, 165, 166, 169]
-        full_vec_with_miss = full_vec[:-10].copy()
-        full_vec_with_miss[missing] = -1
-        missing_vec = pd.Series(full_vec_with_miss[full_vec_with_miss != -1], dtype=np.uint64)
-        returned = verify_periodicity(tag_data=missing_vec, tag_freq=diff, binwidth=800e-12).astype(int)
-
-        full_vec_as_series = pd.Series(full_vec, dtype=np.uint64)
-        subtract = np.abs(full_vec_as_series.values[:-10] - returned.values[:-9])
-        subtract[subtract < allowed_noise] = 0
-
-        self.assertTrue(np.array_equal(subtract, np.zeros_like(full_vec[:-10])))
-
-        pass
 
     if __name__ == '__main__':
         unittest.main()
