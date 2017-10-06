@@ -48,6 +48,18 @@ class TestTagPeriodVerifier(unittest.TestCase):
     def test_allowed_noise(self):
         self.assertEqual(331, self.def_verifier.allowed_noise)
 
+    def test_start_end_no_issues(self):
+        tag_data = pd.Series(np.arange(0, 100, 10))
+        freq = 0.1
+        binwidth = 1.
+        verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
+                                     last_photon=np.uint64(100))
+        ret_start, ret_end = verifier._TagPeriodVerifier__obtain_start_end_idx()
+        my_start = np.array([], dtype=np.int64)
+        my_end = np.array([], dtype=np.int64)
+        self.assertEqual(my_start.tolist(), ret_start.tolist())
+        self.assertEqual(my_end.tolist(), ret_end.tolist())
+
     def test_start_end_no_zero(self):
         tag_data = pd.Series(np.arange(0, 300, 10))
         tag_data.drop([0, 5, 6], inplace=True)
@@ -92,24 +104,23 @@ class TestTagPeriodVerifier(unittest.TestCase):
         verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
                                                     ends=my_end)
         self.assertSequenceEqual(list(verifier.tag.values),
-                                 list(np.arange(0, 110, 10)))
+                                 list(np.arange(0, 100, 10)))
 
     def test_fix_tag_pulses_no_zero_end_missing(self):
         tag_data = pd.Series(np.arange(5, 95, 10, dtype=np.uint64))
         tag_data.drop([1, 5, 7, 8], inplace=True)
         tag_data = tag_data.append(pd.Series([9, 27, 29, 31], dtype=np.uint64))
         tag_data = tag_data.sort_values().reset_index(drop=True)
-        print(tag_data)
         freq = 0.1
         binwidth = 1.
         verifier = TagPeriodVerifier(tag=tag_data, freq=freq, binwidth=binwidth,
                                      last_photon=np.uint64(85))
         my_start = [0, 7]
-        my_end = [6, 9]
+        my_end = [6, 8]
         verifier._TagPeriodVerifier__fix_tag_pulses(starts=my_start,
                                                     ends=my_end)
         self.assertSequenceEqual(list(verifier.tag.values),
-                                 list(np.arange(5, 65, 10)))
+                                 list(np.arange(5, 75, 10)))
 
 
 class TestTagPhaseAllocator(unittest.TestCase):
@@ -117,12 +128,32 @@ class TestTagPhaseAllocator(unittest.TestCase):
     def test_tag_digitize(self):
         x = np.array([0.2, 6.4, 3.0, 1.6])
         bins = np.array([0.0, 1.0, 2.5, 4.0, 10.0])
-
         real_result = np.array([1, 4, 3, 2])
         result, _ = numba_digitize(x, bins)
-
         self.assertTrue(np.array_equal(real_result, result))
 
+    def test_allocate_phase_1(self):
+        photons = pd.DataFrame([0, 2*np.pi, 4*np.pi], columns=['abs_time'])
+        tag = pd.Series([0, 2*np.pi, 4*np.pi, 6*np.pi])
+        phaser = TagPhaseAllocator(photons, tag)
+        phaser.allocate_phase()
+        self.assertSequenceEqual([0, 0, 0], phaser.photons.Phase.tolist())
 
-    if __name__ == '__main__':
+    def test_allocate_phase_2(self):
+        photons = pd.DataFrame([np.pi, 3*np.pi, 5*np.pi], columns=['abs_time'])
+        tag = pd.Series([0, 2*np.pi, 4*np.pi, 6*np.pi])
+        phaser = TagPhaseAllocator(photons, tag)
+        phaser.allocate_phase()
+        for elem1, elem2 in zip([0, 0, 0], phaser.photons.Phase.tolist()):
+            self.assertAlmostEqual(elem1, elem2, 6)
+
+    def test_allocate_phase_3(self):
+        photons = pd.DataFrame([1, 2, 3], columns=['abs_time'])
+        tag = pd.Series([0, 2*np.pi, 4*np.pi, 6*np.pi])
+        phaser = TagPhaseAllocator(photons, tag)
+        phaser.allocate_phase()
+        for elem1, elem2 in zip([1, 2, 3], phaser.photons.Phase.tolist()):
+            self.assertAlmostEqual(np.sin(elem1), elem2, 6)
+
+if __name__ == '__main__':
         unittest.main()

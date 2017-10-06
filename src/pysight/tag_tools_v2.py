@@ -4,8 +4,8 @@ __author__ = Hagai Hargil
 import numpy as np
 import pandas as pd
 import warnings
-from numba import jit
-from typing import Tuple, Iterator
+from numba import jit, uint64
+from typing import Tuple, List
 import attr
 from attr.validators import instance_of
 from itertools import chain
@@ -25,7 +25,7 @@ class TagPipeline(object):
         """ Main pipeline """
         clean_tag = self.__preserve_relevant_tag_pulses().reset_index(drop=True)
         verifier = TagPeriodVerifier(tag=clean_tag, freq=self.freq/self.num_of_pulses,
-                                     binwidth=self.binwidth, first_photon=self.first_photon,
+                                     binwidth=self.binwidth, first_photon=np.int64(self.first_photon),
                                      last_photon=self.last_photon)
         verifier.verify()
         if verifier.success:
@@ -84,6 +84,7 @@ class TagPeriodVerifier(object):
         # Add \ remove TAG pulses in each period
         if isinstance(start_idx, np.ndarray) and isinstance(end_idx, np.ndarray):
             self.__fix_tag_pulses(start_idx, end_idx)
+            self.__add_last_event_manually()
             self.success = True
         else:
             self.success = False
@@ -112,7 +113,9 @@ class TagPeriodVerifier(object):
     def __fix_tag_pulses(self, starts: np.ndarray, ends: np.ndarray):
         """ Iterate over the disordered periods and add or remove pulses """
 
-        period = self.period  # avoid repetitive invocation of property
+        if len(starts) == 0:  # Nothing fix
+            return
+        period = self.period
         new_data = []
         items_to_discard = []
         start_iter_at = 0
@@ -122,24 +125,25 @@ class TagPeriodVerifier(object):
             new_ser = pd.Series(np.arange(start=self.tag[ends[0]]-period,
                                           stop=self.first_photon-1,
                                           step=-period,
-                                          dtype=np.uint64))
+                                          dtype=np.uint64), dtype=np.uint64)
             self.tag = self.tag.append(new_ser, ignore_index=True).astype(np.uint64)
             items_to_discard.append(np.arange(starts[0], ends[0]))
-        for start_idx, end_idx in zip(starts[start_iter_at:], ends[start_iter_at:]):
-            start_val = self.tag[start_idx]
-            end_val = self.tag[end_idx]
-            if np.abs(end_val-start_val) - period > self.jitter*period:
-                new_data.append(np.arange(start=end_val-period, stop=start_val,
-                                          step=-period, dtype=np.uint64))
-            items_to_discard.append(np.arange(start_idx+1, end_idx))
-
-        flattened_items_to_discard = list(chain.from_iterable(items_to_discard))
+        jitter = self.jitter
+        new_data, returned_items_to_discard = numba_iterate_over_disordered(tag=self.tag.values,
+                                                                            starts=starts[start_iter_at:],
+                                                                            ends=ends[start_iter_at:],
+                                                                            period=period,
+                                                                            jitter=jitter)
+        flattened_items_to_discard = list(chain.from_iterable(items_to_discard + returned_items_to_discard))
         self.tag.drop(flattened_items_to_discard, inplace=True)
         flattened_new_data = list(chain.from_iterable(new_data))
         self.tag = self.tag.append(pd.Series(flattened_new_data, dtype=np.uint64), ignore_index=True)\
                            .sort_values().reset_index(drop=True)
-        # Add the last TAG event manually
-        last_tag_val = self.tag.values[-1] + period
+        assert self.tag.dtype == np.uint64
+
+    def __add_last_event_manually(self):
+        """ Insert a 'fake' TAG event to encapsulate the last remaining photons """
+        last_tag_val = self.tag.values[-1] + self.period
         self.tag = self.tag.append(pd.Series(last_tag_val, dtype=np.uint64), ignore_index=True)
         assert self.tag.dtype == np.uint64
 
@@ -180,7 +184,7 @@ def numba_digitize(values: np.array, bins: np.array) -> np.array:
     return bins, relevant_bins
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True, parallel=True)
 def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np.array:
     """
     Find the phase [0, 2pi) of the photon for each event in `photons`.
@@ -194,5 +198,27 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np
         phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
     phase_vec = np.sin(phase_vec * 2 * np.pi)
-
     return phase_vec
+
+
+@jit(cache=True)
+def numba_iterate_over_disordered(tag: np.ndarray, starts: np.ndarray, ends: np.ndarray,
+                                  period: int, jitter: float) -> Tuple[List, List]:
+    """
+    Numba'd version of the main TAG iteration.
+    Currently not working in nopython due to some bugs with arange
+    """
+    new_data = []
+    items_to_discard = []
+    jitter_int = period * jitter
+    row_idx = 1
+    for start_idx, end_idx in zip(starts, ends):
+        start_val = tag[start_idx]
+        end_val = tag[end_idx]
+        if np.abs(end_val - start_val) - period > jitter_int:
+            l = np.arange(start=end_val - period, stop=start_val,
+                          step=-period, dtype=np.uint64)
+            new_data.append(l)
+        items_to_discard.append(np.arange(start_idx + 1, end_idx))
+        row_idx += 1
+    return (new_data, items_to_discard)
