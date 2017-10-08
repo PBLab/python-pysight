@@ -197,7 +197,7 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np
     for idx, cur_bin in enumerate(bins):  # values of indices that changed
         phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
-    phase_vec = np.sin(phase_vec * 2 * np.pi)
+    phase_vec = np.abs(np.sin(phase_vec * 2 * np.pi))
     return phase_vec
 
 

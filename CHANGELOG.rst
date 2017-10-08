@@ -523,3 +523,8 @@ Changelog
 * Fixed bidirectional image generation.
 
 * Default fill fraction is now 75% to better suit ScanImage's defaults.
+
+0.6.13 (2017-10-08)
+-------------------
+
+* The TAG phase is now between 0 and 1, generating non-cyclic volumes.
