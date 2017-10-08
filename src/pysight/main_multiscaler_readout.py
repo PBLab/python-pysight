@@ -48,7 +48,7 @@ def main_data_readout(gui):
     tag_bit_parser = ParseTAGBits(dict_of_data=tabulated_data.dict_of_data, photons=photon_df.gen_df(),
                                   use_tag_bits=gui.tag_bits.get(), bits_dict=gui.tag_bits_dict)
 
-    analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels,
+    analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels, bidir=gui.bidir.get(),
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),

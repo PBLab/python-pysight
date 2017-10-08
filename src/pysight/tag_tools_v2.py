@@ -184,7 +184,7 @@ def numba_digitize(values: np.array, bins: np.array) -> np.array:
     return bins, relevant_bins
 
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=True)
 def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np.array:
     """
     Find the phase [0, 2pi) of the photon for each event in `photons`.

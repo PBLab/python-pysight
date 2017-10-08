@@ -285,7 +285,7 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
         lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].values
         events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'abs_time'].values
         time_rel_line.iloc[uneven_lines.nonzero()[0]] = lines_to_subtract_from - events_to_subtract \
-            + (np.sin(phase) * lines[1])  # introduce phase delay between lines
+            + int(np.abs((np.sin(phase) * lines[1])))  # introduce phase delay between lines
         df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
 
     if not bidir and not keep_unidir:

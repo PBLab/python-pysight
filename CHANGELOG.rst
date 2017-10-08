@@ -509,3 +509,13 @@ Changelog
 * Discovered another bug with the interpolation process which is currently unresolved.
 
 * Fixed small issue with a TAG test function.
+
+0.6.11 (2017-10-06)
+-------------------
+
+* Complete re-write of TAG lens processing module.
+
+0.6.12 (2017-10-08)
+-------------------
+
+* Removed the experimental ``parallel`` feature from the Numba implementation.

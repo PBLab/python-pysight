@@ -331,11 +331,11 @@ class Volume(object):
         metadata = OrderedDict()
         jitter = 0.02  # 2% of jitter of the signals that creates volumes
 
-        # Volume metadata
+        # Volume metadata - rows
         volume_start: int = 0
         metadata['Volume'] = Struct(start=volume_start, end=self.end_time, num=self.x_pixels+1)
 
-        # y-axis metadata
+        # y-axis metadata - columns
         y_start, y_end = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
                                         fill_frac=self.fill_frac, delta=self.line_delta,
                                         sweeps=self.use_sweeps)
