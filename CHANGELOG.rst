@@ -519,3 +519,7 @@ Changelog
 -------------------
 
 * Removed the experimental ``parallel`` feature from the Numba implementation.
+
+* Fixed bidirectional image generation.
+
+* Default fill fraction is now 75% to better suit ScanImage's defaults.

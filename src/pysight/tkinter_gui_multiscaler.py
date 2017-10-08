@@ -311,7 +311,7 @@ class GUIApp(object):
     def __fill_frac(self, main_frame):
         """ Percentage of time mirrors spend "inside" the image """
 
-        self.fill_frac = DoubleVar(value=80.0)  # percent
+        self.fill_frac = DoubleVar(value=75.0)  # percent
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
         fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
