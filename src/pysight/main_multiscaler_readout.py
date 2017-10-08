@@ -110,8 +110,10 @@ def run_batch(foldername: str):
     import pathlib
     from pysight.tkinter_gui_multiscaler import GUIApp
     from pysight.tkinter_gui_multiscaler import verify_gui_input
-
-    path = pathlib.Path(foldername)
+    try:
+        path = pathlib.Path(foldername)
+    except TypeError:  # folder doesn't exist
+        raise UserWarning(f"Folder {foldername} doesn't exist.")
     all_lst_files = path.glob('*.lst')
 
     gui = GUIApp()
