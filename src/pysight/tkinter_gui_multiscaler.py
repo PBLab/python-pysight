@@ -223,7 +223,7 @@ class GUIApp(object):
 
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
-        self.tag_freq = StringVar(value=0.189e6)
+        self.tag_freq = StringVar(value=0.1898e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
         tag_label_entry.grid(column=6, row=9, sticky='ns')
 
