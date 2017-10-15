@@ -104,16 +104,23 @@ def run():
     return main_data_readout(gui)
 
 
-def run_batch(foldername: str):
+def run_batch(foldername: str, glob_str: str="*.lst"):
     """ Run all files in a folder, without saving any data """
 
     import pathlib
     from pysight.tkinter_gui_multiscaler import GUIApp
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
-    path = pathlib.Path(foldername)
-    all_lst_files = path.glob('*.lst')
+    try:
+        path = pathlib.Path(foldername)
+    except TypeError:  # folder doesn't exist
+        raise UserWarning(f"Folder {foldername} doesn't exist.")
+    all_lst_files = path.glob(glob_str)
+    print(f"run_batch found the following files (stop execution if something is amiss):")
+    for file in list(all_lst_files):
+        print(str(file))
 
+    all_lst_files = path.glob(glob_str)
     gui = GUIApp()
     gui.root.mainloop()
     verify_gui_input(gui)
@@ -125,4 +132,4 @@ def run_batch(foldername: str):
 
 if __name__ == '__main__':
     df, movie = run()
-    # run_batch(r"X:\Hagai\Multiscaler\12-9-17\For analysis\Calcium Imaging FOV2")
+    # run_batch(r"X:\Lior\Multiscaler data\27 September 2017\Pia", r"*bidir*.lst")
