@@ -131,5 +131,5 @@ def run_batch(foldername: str, glob_str: str="*.lst"):
 
 
 if __name__ == '__main__':
-    # df, movie = run()
-    run_batch(r"X:\Lior\Multiscaler data\27 September 2017\Pia", r"*bidir*.lst")
+    df, movie = run()
+    # run_batch(r"X:\Lior\Multiscaler data\27 September 2017\Pia", r"*bidir*.lst")
