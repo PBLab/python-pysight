@@ -89,8 +89,8 @@ class OutputParser(object):
                 self.outputs['summed'] = [f.require_group('Summed Stack')
                                            .require_dataset(name=f'Channel {channel}',
                                                             shape=data_shape_summed,
-                                                            dtype=np.int8,
-                                                            chunks=data_shape_summed,
+                                                            dtype=np.uint16,
+                                                            chunks=True,
                                                             compression="gzip")
                                           for channel in range(1, self.num_of_channels + 1)]
                 for key, val in self.lst_metadata.items():
@@ -107,9 +107,7 @@ class OutputParser(object):
     @property
     def bins_bet_pulses(self) -> int:
         if self.flim:
-            # CHANGED BY HAGAI 26.9.17 FOR LIOR'S GAMES TODO
-            # return int(np.ceil(1 / (self.reprate * self.binwidth)))
-            return 251
+            return int(np.ceil(1 / (self.reprate * self.binwidth)))
         else:
             return 1
 
