@@ -190,10 +190,7 @@ class Movie(object):
         with h5py_cache.File(f'{self.name[:-4]}.hdf5', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
             for channel in range(1, self.num_of_channels + 1):
-                # TODO Sort the stacks by number of photons in their flim dimension
-                to_save = np.sort(np.squeeze(self.summed_mem[channel]), axis=-1)
-                assert to_save.shape == (1024, 1024, 251)
-                f["Summed Stack"][f"Channel {channel}"][...] = to_save
+                f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(self.summed_mem[channel])
 
     def __close_file(self):
         """ Close the file pointer of the specific channel """
