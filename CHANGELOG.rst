@@ -528,3 +528,12 @@ Changelog
 -------------------
 
 * The TAG phase is now between 0 and 1, generating non-cyclic volumes.
+
+0.6.14 (2017-10-29)
+-------------------
+
+* Added a ``glob_str`` and ``recursive`` parameters to ``run_batch()``.
+
+* Added a ``DEBUG`` suffix to files generated when debugging.
+
+* Changed license to creative commons.

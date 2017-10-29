@@ -65,7 +65,7 @@ def main_data_readout(gui):
                            z_pixels=gui.z_pixels.get() if analyzed_struct.tag_interp_ok else 1,
                            num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                            binwidth=gui.binwidth.get(), reprate=gui.reprate.get(),
-                           lst_metadata=cur_file.lst_metadata)
+                           lst_metadata=cur_file.lst_metadata, debug=gui.debug.get())
     outputs.run()
 
     if gui.gating.get():
@@ -104,15 +104,34 @@ def run():
     return main_data_readout(gui)
 
 
-def run_batch(foldername: str):
-    """ Run all files in a folder, without saving any data """
+def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
+    """
+    Run PySight on all list files in the folder
+    :param foldername: Main folder to run the analysis on.
+    :param glob_str: String for the `glob` function to filter list files
+    :param recursive: Whether the search should be recursive.
+    :return: None
+    """
 
     import pathlib
     from pysight.tkinter_gui_multiscaler import GUIApp
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
     path = pathlib.Path(foldername)
-    all_lst_files = path.glob('*.lst')
+    if not path.exists():
+        raise UserWarning(f"Folder {foldername} doesn't exist.")
+    if recursive:
+        all_lst_files = path.rglob(glob_str)
+        print(f"Running PySight on the following files:")
+        for file in list(all_lst_files):
+            print(str(file))
+        all_lst_files = path.rglob(glob_str)
+    else:
+        all_lst_files = path.glob(glob_str)
+        print(f"Running PySight on the following files:")
+        for file in list(all_lst_files):
+            print(str(file))
+        all_lst_files = path.glob(glob_str)
 
     gui = GUIApp()
     gui.root.mainloop()
@@ -125,4 +144,4 @@ def run_batch(foldername: str):
 
 if __name__ == '__main__':
     df, movie = run()
-    # run_batch(r"X:\Hagai\Multiscaler\12-9-17\For analysis\Calcium Imaging FOV2")
+    # run_batch(foldername=r"/data", glob_str="*.lst", recursive=False)

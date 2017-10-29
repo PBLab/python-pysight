@@ -15,7 +15,7 @@ class FileIO(object):
     Manage pipeline of file IO process
     """
     filename                       = attr.ib(validator=instance_of(str))
-    debug                          = attr.ib(default=0, validator=instance_of(int))
+    debug                          = attr.ib(default=False, validator=instance_of(bool))
     input_start                    = attr.ib(default='Frames', validator=instance_of(str))
     input_stop1                    = attr.ib(default='PMT1', validator=instance_of(str))
     input_stop2                    = attr.ib(default='Lines', validator=instance_of(str))
@@ -70,7 +70,7 @@ class FileIO(object):
         return metadata
 
     def determine_num_of_items(self):
-        if self.debug == 0:
+        if self.debug == False:
             num_of_items = -1
             read_string = f'Reading file "{self.filename}"...'
         else:

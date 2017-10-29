@@ -182,12 +182,12 @@ class GUIApp(object):
 
     def __debug(self, main_frame):
         """ Read a smaller portion of data for debugging """
-        self.debug = IntVar()
+        self.debug = BooleanVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
         debug_check.grid(column=6, row=11, sticky='ns')
 
     def __mirror_phase(self, main_frame):
-        self.phase = DoubleVar(value=-2.6)
+        self.phase = DoubleVar(value=-2.7)
         phase_text = ttk.Label(main_frame, text='Mirror phase [rad]: ')
         phase_text.grid(column=6, row=5, sticky='w')
         phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
@@ -223,7 +223,7 @@ class GUIApp(object):
 
         tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
-        self.tag_freq = StringVar(value=0.1898e6)
+        self.tag_freq = StringVar(value=0.189e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
         tag_label_entry.grid(column=6, row=9, sticky='ns')
 
@@ -311,7 +311,7 @@ class GUIApp(object):
     def __fill_frac(self, main_frame):
         """ Percentage of time mirrors spend "inside" the image """
 
-        self.fill_frac = DoubleVar(value=75.0)  # percent
+        self.fill_frac = DoubleVar(value=72.0)  # percent
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
         fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)

@@ -8,6 +8,7 @@ from pysight.movie_tools import trunc_end_of_file
 import numpy as np
 import warnings
 import h5py_cache
+import os
 
 
 @attr.s(slots=True)
@@ -30,6 +31,7 @@ class OutputParser(object):
     lst_metadata = attr.ib(default={}, validator=instance_of(dict))
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024**3, validator=instance_of(int))
+    debug = attr.ib(default=False, validator=instance_of(bool))
     outputs = attr.ib(init=False)
 
     def run(self):
@@ -50,7 +52,9 @@ class OutputParser(object):
         """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
         if 'stack' in self.output_dict or 'summed' in self.output_dict:
             try:
-                fullfile = f'{self.filename[:-4]}.hdf5'
+                split = os.path.splitext(self.filename)[0]
+                debugged = '_DEBUG' if self.debug else ''
+                fullfile = f'{split + debugged}.hdf5'
                 f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=self.cache_size, libver='latest', w0=1)
             except PermissionError or OSError:
                 self.file_pointer_created = False
