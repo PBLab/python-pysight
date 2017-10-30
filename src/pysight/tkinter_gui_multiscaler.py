@@ -187,8 +187,8 @@ class GUIApp(object):
         debug_check.grid(column=6, row=11, sticky='ns')
 
     def __mirror_phase(self, main_frame):
-        self.phase = DoubleVar(value=-2.7)
-        phase_text = ttk.Label(main_frame, text='Mirror phase [rad]: ')
+        self.phase = DoubleVar(value=-2.78)
+        phase_text = ttk.Label(main_frame, text='Mirror phase [us]: ')
         phase_text.grid(column=6, row=5, sticky='w')
         phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
         phase_entry.grid(column=6, row=5, sticky='e')

@@ -271,23 +271,14 @@ def validate_laser_input(pulses, laser_freq: float, binwidth: float) -> pd.Serie
 
 
 def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool=True,
-                                    phase: float=0., keep_unidir: bool=False):
+                                    keep_unidir: bool=False):
     """
     "Deal" with photons in uneven lines. Unidir - if keep_unidir is false, will throw them away.
-    Bidir = flips them over.
+    Bidir = flips them over (in the Volume object)
     """
     uneven_lines = np.remainder(sorted_indices, 2)
     if bidir:
-        time_rel_line = pd.Series(range(df.shape[0]), dtype='int64', name='time_rel_line')
-        time_rel_line.loc[uneven_lines == 0] = df.loc[uneven_lines == 0, 'time_rel_line_pre_drop'].values
-        # Reverse the relative time of the photons belonging to the uneven lines,
-        # by subtracting their relative time from the start time of the next line
-        lines_to_subtract_from = lines.loc[sorted_indices[uneven_lines.astype(bool)] + 1].values
-        events_to_subtract = df.loc[np.logical_and(uneven_lines, 1), 'abs_time'].values
-        line_diff = lines[1] - lines[0]
-        time_rel_line.iloc[uneven_lines.nonzero()[0]] = lines_to_subtract_from - events_to_subtract \
-             + int(np.abs((np.sin(phase) * line_diff)))  # introduce phase delay between lines
-        df.insert(loc=len(df.columns), value=time_rel_line.values, column='time_rel_line')
+        df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
     if not bidir and not keep_unidir:
         df = df.iloc[uneven_lines != 1, :].copy()

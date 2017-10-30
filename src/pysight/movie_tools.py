@@ -254,7 +254,7 @@ class Movie(object):
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
 
-    def show_summed(self, channel: int) -> None:
+    def show_summed(self, channel: int=1) -> None:
         """ Show the summed Movie """
 
         plt.figure()
@@ -271,7 +271,7 @@ class Movie(object):
         plt.title(f'Channel number {channel}')
         plt.axis('off')
 
-    def show_stack(self, channel: int, slice_range: Iterable) -> None:
+    def show_stack(self, channel: int=1, slice_range: Iterable=range(10)) -> None:
         """ Show the stack of given slices """
         if 'time_rel_pulse' in self.data.columns:
             self.__show_stack_flim(channel=channel, slice_range=slice_range)
@@ -429,7 +429,8 @@ class Volume(object):
             assert len(list_of_data_columns) == data_to_be_hist.shape[1]
 
             hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
-
+            if self.bidir:
+                hist[1::2] = np.fliplr(hist[1::2])
             if self.censor:
                 hist = self.__censor_correction(hist)
 
@@ -469,6 +470,7 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fil
                    delta: int=158000, sweeps: bool=False):
     """
     Create the metadata for the y-axis.
+
     """
     lines_start: int = 0
 

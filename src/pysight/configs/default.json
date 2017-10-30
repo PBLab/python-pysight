@@ -5,11 +5,11 @@
     ],
     "input_start": [
         "PY_VAR1",
-        "Frames"
+        "PMT1"
     ],
     "input_stop1": [
         "PY_VAR2",
-        "PMT1"
+        "Empty"
     ],
     "input_stop2": [
         "PY_VAR3",
@@ -33,11 +33,11 @@
     ],
     "x_pixels": [
         "PY_VAR8",
-        512
+        1024
     ],
     "y_pixels": [
         "PY_VAR9",
-        512
+        1024
     ],
     "z_pixels": [
         "PY_VAR10",
@@ -45,11 +45,11 @@
     ],
     "debug": [
         "PY_VAR11",
-        0
+        false
     ],
     "phase": [
         "PY_VAR12",
-        -2.6
+        -2.78
     ],
     "fill_frac": [
         "PY_VAR13",
@@ -113,7 +113,7 @@
     ],
     "bidir": [
         "PY_VAR28",
-        false
+        true
     ],
     "keep_unidir": [
         "PY_VAR29",

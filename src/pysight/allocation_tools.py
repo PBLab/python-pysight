@@ -27,20 +27,23 @@ class Allocate(object):
     bidir              = attr.ib(default=False, validator=instance_of(bool))
     tag_freq           = attr.ib(default=189e3, validator=instance_of(float))
     tag_pulses         = attr.ib(default=1, validator=instance_of(int))
-    phase              = attr.ib(default=-2.6, validator=instance_of(float))
+    phase              = attr.ib(default=-2.78, validator=instance_of(float))
     keep_unidir        = attr.ib(default=False, validator=instance_of(bool))
     flim               = attr.ib(default=False, validator=instance_of(bool))
     exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
     dict_of_data       = attr.ib(default={}, validator=instance_of(dict))
     tag_interp_ok      = attr.ib(default=False, validator=instance_of(bool))
+    sorted_indices     = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of analysis """
         print('Channels of events found. Allocating photons to their frames and lines...')
         # Unidirectional scan - create fake lines
-        if not self.bidir:
-            self.add_unidirectional_lines()
+        if self.bidir:
+            self.__add_phase_offset_to_bidir_lines()
+        else:
+            self.__add_unidirectional_lines()
         self.allocate_photons()
         print('Relative times calculated. Creating Movie object...')
         # Censor correction addition:
@@ -71,12 +74,12 @@ class Allocate(object):
             self.df_photons = self.df_photons.iloc[positive_mask].copy()
             # relative time of each photon in accordance to the line\frame\laser pulse
             self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
-
+            self.sorted_indices = sorted_indices[sorted_indices >= 0]
             if 'Lines' == key:
                 self.df_photons = rectify_photons_in_uneven_lines(df=self.df_photons,
-                                                                  sorted_indices=sorted_indices[sorted_indices >= 0],
+                                                                  sorted_indices=self.sorted_indices,
                                                                   lines=self.dict_of_data['Lines'].loc[:, 'abs_time'],
-                                                                  bidir=self.bidir, phase=self.phase,
+                                                                  bidir=self.bidir,
                                                                   keep_unidir=self.keep_unidir)
 
             if 'Laser' != key:
@@ -155,11 +158,10 @@ class Allocate(object):
                 self.__requires_censoring(diffs2)
                 return True
 
-    def add_unidirectional_lines(self):
+    def __add_unidirectional_lines(self):
         """
-        For unidirectional scans fake line signals have to be inserted.
-        :param dict_of_data: All data
-        :return:
+        For unidirectional scans fake line signals have to be inserted for us to identify forward- and
+        back-phase photons.
         """
 
         length_of_lines = self.dict_of_data['Lines'].shape[0]
@@ -188,6 +190,13 @@ class Allocate(object):
             df.loc[chan, 'time_rel_pulse'] = np.uint8(rel_time_per_pulse)
 
         return df, rel_time
+
+    def __add_phase_offset_to_bidir_lines(self):
+        """
+        Uneven lines in a bidirectional scanning mode have to be offsetted.
+        """
+        phase_in_seconds = self.phase * 1e-6
+        self.dict_of_data['Lines'].abs_time.iloc[1::2] -= np.uint64(phase_in_seconds/self.binwidth)
 
 @jit(nopython=True, cache=True)
 def numba_sorted(arr: np.array) -> np.array:
