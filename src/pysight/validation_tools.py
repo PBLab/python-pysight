@@ -11,7 +11,7 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
                         num_of_frames: int=-1, binwidth: float=800e-12,
                         last_event_time: int=-1, line_freq: float=7930.0, bidir: bool=False,
                         delay_between_frames: float=0.0011355, use_sweeps: bool=False,
-                        max_sweep: int=65535, total_sweep_time: int=1):
+                        max_sweep: int=65535, total_sweep_time: int=1, bidir_phase: float=-2.79):
     """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
@@ -29,7 +29,8 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
     type_of_line_data = match_line_data_to_case(lines=dict_of_data.get('Lines'),
                                                 num_of_lines=num_of_lines,
                                                 keys=list(dict_of_data.keys()),
-                                                use_sweeps=use_sweeps)
+                                                use_sweeps=use_sweeps, bidir=bidir,
+                                                bidir_phase=bidir_phase, binwidth=binwidth)
 
     if 'corrupt' == type_of_line_data:
         # Data is corrupted, and no frame channel can help us.
@@ -55,14 +56,14 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
 
     elif 'valid' == type_of_line_data:
         # Data is valid. Check whether we need a 0-time line event
-        line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().median()
+        line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean()
         zeroth_line_delta = np.abs(dict_of_data['Lines'].loc[0, 'abs_time'] - line_delta)/line_delta
         if zeroth_line_delta < 0.05:
             dict_of_data['Lines'] = pd.DataFrame([[0] * len(cols_in_data)],
                                                  columns=cols_in_data,
                                                  dtype='uint64')\
                 .append(dict_of_data['Lines'], ignore_index=True)
-        return dict_of_data, line_delta
+        return dict_of_data, np.uint64(line_delta)
 
     elif 'from_scratch' == type_of_line_data:  # create our own line array
         line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
@@ -280,11 +281,11 @@ def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, 
     if bidir:
         df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
-    if not bidir and not keep_unidir:
+    elif not bidir and not keep_unidir:
         df = df.iloc[uneven_lines != 1, :].copy()
         df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
 
-    if not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
+    elif not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
         sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
         df.loc['Lines'] = lines.loc[sorted_indices].values
 
@@ -358,7 +359,8 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
 
 
 def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
-                            use_sweeps:bool=False) -> str:
+                            use_sweeps: bool=False, bidir: bool=False, binwidth: float=800e-12,
+                            bidir_phase: float=-2.79) -> str:
     """
     Enumerate all possibilities of line data and choose the right option
     :param lines: Line data
@@ -375,13 +377,14 @@ def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
         return 'sweeps-from-scratch'
 
     if 'Lines' in keys:
-        lines = lines.loc[:, 'abs_time']
+        lines = lines.loc[:, 'abs_time'].copy()
         # Verify that the input is not corrupt
         if lines.shape[0] < num_of_lines // 2:
             warnings.warn("Line data was corrupt as there were too few lines.\n"
                           "Simulating line data using GUI's parameters.")
             return 'corrupt'
-
+        if bidir:
+            lines = add_phase_to_bidir_lines(lines=lines, bidir_phase=bidir_phase, binwidth=binwidth)
         max_change_pct = lines[lines.diff().pct_change(periods=1) > 0.05]
         if len(max_change_pct) / lines.shape[0] > 0.1 and 'Frames' not in keys:
             warnings.warn("Line data was corrupt - the period didn't make sense.\n"
@@ -397,3 +400,18 @@ def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
 
     else:
         return 'from_scratch'
+
+def add_phase_to_bidir_lines(lines: pd.Series, bidir_phase: float=-2.79, binwidth: float=800e-12):
+    """
+    "Fix" temporarily the lines for them to pass the corruption check
+    :param lines: Lines after the phase change
+    :param bidir_phase:
+    :param binwidth:
+    :return: Lines "pre-fix" of phase change - their original form
+    """
+    phase_in_seconds = bidir_phase * 1e-6
+    if phase_in_seconds < 0:
+        lines.iloc[1::2] -= np.uint64(np.abs(phase_in_seconds / binwidth))
+    else:
+        lines.iloc[1::2] += np.uint64(phase_in_seconds / binwidth)
+    return lines

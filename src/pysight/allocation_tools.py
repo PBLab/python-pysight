@@ -41,7 +41,7 @@ class Allocate(object):
         print('Channels of events found. Allocating photons to their frames and lines...')
         # Unidirectional scan - create fake lines
         if self.bidir:
-            self.__add_phase_offset_to_bidir_lines()
+            pass
         else:
             self.__add_unidirectional_lines()
         self.allocate_photons()
@@ -56,7 +56,6 @@ class Allocate(object):
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
         """
-        from pysight.tag_tools import interpolate_tag
 
         # Preparations
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}

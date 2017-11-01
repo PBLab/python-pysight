@@ -36,6 +36,8 @@ class Tabulate(object):
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
     line_freq          = attr.ib(default=7900.0, validator=instance_of(float))
+    bidir              = attr.ib(default=False, validator=instance_of(bool))
+    bidir_phase        = attr.ib(default=-2.79, validator=instance_of(float))
     line_delta         = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -117,13 +119,15 @@ class Tabulate(object):
         if 'Frames' in dict_of_data:
             self.num_of_frames = dict_of_data['Frames'].shape[0] + 1  # account for first frame
 
+        if self.bidir:
+            dict_of_data['Lines'] = self.__add_phase_to_bidir_lines(dict_of_data['Lines'])
         # Validations
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data, self.line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
                                                             num_of_frames=self.num_of_frames, line_freq=self.line_freq,
-                                                            last_event_time=last_event_time,
+                                                            last_event_time=last_event_time, bidir=self.bidir,
                                                             cols_in_data=self.data_to_grab, use_sweeps=self.use_sweeps,
-                                                            max_sweep=df['sweep'].max(),
+                                                            max_sweep=df['sweep'].max(), bidir_phase=self.bidir_phase,
                                                             total_sweep_time=self.total_sweep_time)
         dict_of_data = validate_frame_input(dict_of_data=dict_of_data,
                                             num_of_lines=self.y_pixels, binwidth=self.binwidth,
@@ -258,3 +262,16 @@ class Tabulate(object):
             except AttributeError:  # No cols field since number of bits is a multiple of 8
                 # self.dict_of_slices_bin[key].data_as_
                 pass
+
+    def __add_phase_to_bidir_lines(self, lines: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add the phase to all returning-phase lines
+        :param lines: pd.DataFrame of the line signals
+        :return: pd.DataFrame
+        """
+        phase_in_seconds = self.bidir_phase * 1e-6
+        if phase_in_seconds < 0:
+            lines.abs_time.iloc[1::2] += np.uint64(np.abs(phase_in_seconds / self.binwidth))
+        else:
+            lines.abs_time.iloc[1::2] -= np.uint64(phase_in_seconds / self.binwidth)
+        return lines

@@ -41,7 +41,8 @@ def main_data_readout(gui):
                               use_tag_bits=gui.tag_bits.get(), use_sweeps=gui.sweeps_as_lines.get(),
                               time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
                               line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
-                              y_pixels=gui.y_pixels.get())
+                              y_pixels=gui.y_pixels.get(), bidir=gui.bidir.get(),
+                              bidir_phase=gui.phase.get())
     tabulated_data.run()
 
     photon_df = PhotonDF(dict_of_data=tabulated_data.dict_of_data)
