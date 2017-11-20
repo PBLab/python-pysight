@@ -55,7 +55,7 @@ def main_data_readout(gui):
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
                                censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
                                df_photons=tag_bit_parser.gen_df(), num_of_channels=cur_file.num_of_channels,
-                               tag_freq=float(gui.tag_freq.get()))
+                               tag_freq=float(gui.tag_freq.get()), tag_to_phase=True)
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there
@@ -85,7 +85,8 @@ def main_data_readout(gui):
                         outputs=outputs.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
-                        line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get())
+                        line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
+                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()))
 
     final_movie.run()
 
@@ -136,6 +137,7 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
 
     gui = GUIApp()
     gui.root.mainloop()
+    gui.filename.set('.lst')  # no need to choose a list file
     verify_gui_input(gui)
 
     for lst_file in all_lst_files:
@@ -145,4 +147,4 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
 
 if __name__ == '__main__':
     df, movie = run()
-    # run_batch(foldername=r"/data", glob_str="*.lst", recursive=False)
+    # run_batch(foldername=r"X:\Hagai", glob_str="*.lst", recursive=False)

@@ -49,7 +49,9 @@ class Movie(object):
     exp_params      = attr.ib(default={}, validator=instance_of(dict))
     line_delta      = attr.ib(default=158000, validator=instance_of(int))
     use_sweeps      = attr.ib(default=False, validator=instance_of(bool))
-    cache_size      = attr.ib(default=10 * 1024**3, validator=instance_of(int))
+    cache_size      = attr.ib(default=10*1024**3, validator=instance_of(int))
+    tag_as_phase    = attr.ib(default=True, validator=instance_of(bool))
+    tag_freq        = attr.ib(default=189e3, validator=instance_of(float))
     summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
     summed_to_file  = attr.ib(init=False)
@@ -114,14 +116,16 @@ class Movie(object):
                              reprate=self.reprate, binwidth=self.binwidth, empty=False,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta, use_sweeps=self.use_sweeps)
+                             line_delta=self.line_delta, use_sweeps=self.use_sweeps,
+                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
                              reprate=self.reprate, binwidth=self.binwidth, empty=True,
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta, use_sweeps=self.use_sweeps)
+                             line_delta=self.line_delta, use_sweeps=self.use_sweeps,
+                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
 
     def __create_outputs(self) -> None:
         """
@@ -302,7 +306,7 @@ class Movie(object):
 @attr.s(slots=True)
 class Volume(object):
     """
-    A Movie() is a sequence of volumes. Each volume contains frames in a plane.
+    A Movie() is a sequence of Volumes(). Each volume contains frames in a plane.
     """
     data           = attr.ib(validator=instance_of(pd.DataFrame))
     x_pixels       = attr.ib(default=512, validator=instance_of(int))
@@ -319,6 +323,8 @@ class Volume(object):
     censor         = attr.ib(default=False, validator=instance_of(bool))
     line_delta     = attr.ib(default=158000, validator=instance_of(int))
     use_sweeps     = attr.ib(default=False, validator=instance_of(bool))
+    tag_as_phase   = attr.ib(default=True, validator=instance_of(bool))
+    tag_freq       = attr.ib(default=189e3, validator=instance_of(float))
 
     @property
     def metadata(self) -> OrderedDict:
@@ -347,7 +353,7 @@ class Volume(object):
         # z-axis metadata
         if 'Phase' in self.data.columns:
             z_start = 0
-            z_end = 1
+            z_end = 1 if self.tag_as_phase else self.tag_period
             metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
 
         # Laser pulses metadata
@@ -363,6 +369,10 @@ class Volume(object):
                 metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
 
         return metadata
+
+    @property
+    def tag_period(self):
+        return int(np.ceil(1 / (self.tag_freq * self.binwidth)))
 
     def __create_hist_edges(self):
         """

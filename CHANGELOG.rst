@@ -542,4 +542,16 @@ Changelog
 
 * Improved bidirectional scanning performance and robustness by reworking its mechanism.
 
+0.6.15 (2017-11-05)
+-------------------
 
+* Better bidirectional support.
+
+0.6.16 (2017-11-20)
+-------------------
+
+* Support for non-phase allocation of TAG pulses.
+
+* Removal of old TAG module.
+
+* ``run_batch()`` works without choosing a mock list file.

@@ -14,11 +14,12 @@ from itertools import chain
 @attr.s(slots=True)
 class TagPipeline(object):
     """ Pipeline to interpolate TAG lens pulses """
-    photons = attr.ib(validator=instance_of(pd.DataFrame))
-    tag_pulses = attr.ib(validator=instance_of(pd.Series))
-    freq = attr.ib(default=189e3, validator=instance_of(float))  # Hz
-    binwidth = attr.ib(default=800e-12, validator=instance_of(float))  # Multiscaler binwidth
+    photons       = attr.ib(validator=instance_of(pd.DataFrame))
+    tag_pulses    = attr.ib(validator=instance_of(pd.Series))
+    freq          = attr.ib(default=189e3, validator=instance_of(float))  # Hz
+    binwidth      = attr.ib(default=800e-12, validator=instance_of(float))  # Multiscaler binwidth
     num_of_pulses = attr.ib(default=1, validator=instance_of(int))  # Number of pulses per TAG period
+    to_phase      = attr.ib(default=True, validator=instance_of(bool))  # compensate the sinusoidial pattern of TAG
     finished_pipe = attr.ib(init=False)
 
     def run(self):
@@ -30,7 +31,8 @@ class TagPipeline(object):
         verifier.verify()
         if verifier.success:
             phaser = TagPhaseAllocator(photons=self.photons, tag=verifier.tag,
-                                       pulses_per_period=self.num_of_pulses)
+                                       pulses_per_period=self.num_of_pulses,
+                                       to_phase=self.to_phase)
             phaser.allocate_phase()
             self.photons = phaser.photons
             self.finished_pipe = True
@@ -150,9 +152,10 @@ class TagPeriodVerifier(object):
 @attr.s(slots=True)
 class TagPhaseAllocator(object):
     """ Assign a phase to each photon """
-    photons = attr.ib(validator=instance_of(pd.DataFrame))
-    tag = attr.ib(validator=instance_of(pd.Series))
+    photons           = attr.ib(validator=instance_of(pd.DataFrame))
+    tag               = attr.ib(validator=instance_of(pd.Series))
     pulses_per_period = attr.ib(default=1, validator=instance_of(int))
+    to_phase          = attr.ib(default=True, validator=instance_of(bool))
 
     def allocate_phase(self):
         """ Using Numba functions allocate the proper phase to the photons """
@@ -163,7 +166,9 @@ class TagPhaseAllocator(object):
         photons[np.logical_not(relevant_bins)] = np.nan
         relevant_photons = np.compress(relevant_bins, photons)
         phase_vec = numba_find_phase(photons=relevant_photons, bins=np.compress(relevant_bins, bin_idx),
-                                     raw_tag=self.tag.values)
+                                     raw_tag=self.tag.values, to_phase=self.to_phase)
+        if not self.to_phase:
+            phase_vec = phase_vec.astype(np.uint16)
         first_relevant_photon_idx = photons.shape[0] - relevant_photons.shape[0]
         photons[first_relevant_photon_idx:] = phase_vec
 
@@ -185,7 +190,8 @@ def numba_digitize(values: np.array, bins: np.array) -> np.array:
 
 
 @jit(nopython=True)
-def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np.array:
+def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
+                     to_phase: bool) -> np.array:
     """
     Find the phase [0, 2pi) of the photon for each event in `photons`.
     :return: Numpy array with the size of photons containing the phases.
@@ -197,8 +203,11 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array) -> np
     for idx, cur_bin in enumerate(bins):  # values of indices that changed
         phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
-    phase_vec = np.abs(np.sin(phase_vec * 2 * np.pi))
-    return phase_vec
+    if to_phase:
+        phase_vec_float = np.abs(np.sin(phase_vec * 2 * np.pi))
+        return phase_vec_float.astype(np.float32)
+
+    return phase_vec.astype(np.float32)
 
 
 @jit(cache=True)
