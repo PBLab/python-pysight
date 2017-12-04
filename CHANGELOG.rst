@@ -555,3 +555,8 @@ Changelog
 * Removal of old TAG module.
 
 * ``run_batch()`` works without choosing a mock list file.
+
+0.6.17 (2017-12-04)
+-------------------
+
+* Fixed a bug with the filename of the DEBUGged version.

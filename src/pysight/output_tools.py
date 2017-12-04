@@ -56,6 +56,7 @@ class OutputParser(object):
                 debugged = '_DEBUG' if self.debug else ''
                 fullfile = f'{split + debugged}.hdf5'
                 f = h5py_cache.File(fullfile, 'w', chunk_cache_mem_size=self.cache_size, libver='latest', w0=1)
+                self.outputs['filename'] = fullfile
             except PermissionError or OSError:
                 self.file_pointer_created = False
                 warnings.warn("Permission Error: Couldn't write data to disk.")

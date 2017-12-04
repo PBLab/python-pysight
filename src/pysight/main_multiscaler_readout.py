@@ -109,9 +109,9 @@ def run():
 def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
     """
     Run PySight on all list files in the folder
-    :param foldername: Main folder to run the analysis on.
+    :param foldername: str - Main folder to run the analysis on.
     :param glob_str: String for the `glob` function to filter list files
-    :param recursive: Whether the search should be recursive.
+    :param recursive: bool - Whether the search should be recursive.
     :return: None
     """
 
@@ -140,10 +140,12 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
     gui.filename.set('.lst')  # no need to choose a list file
     verify_gui_input(gui)
 
-    for lst_file in all_lst_files:
-        gui.filename.set(str(lst_file))
-        df, movie = main_data_readout(gui)
-
+    try:
+        for lst_file in all_lst_files:
+            gui.filename.set(str(lst_file))
+            df, movie = main_data_readout(gui)
+    except TypeError as e:
+        print(e)
 
 if __name__ == '__main__':
     df, movie = run()
