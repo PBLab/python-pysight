@@ -1,19 +1,19 @@
 {
     "filename": [
         "PY_VAR0",
-        "C:/Users/Hagai/Documents/flies_23_11_17/vsd_start_pmt_stop2_lines_irght_lateral_horn_symmetric010.lst"
+        "C:/Users/Hagai/Documents/GitHub/python-pysight/Julis sample 4, 2x zoom, TAG OFF, 165 um deep - 1p power - unidirectional 3.86fps - 700 PMT gain - 124.lst"
     ],
     "input_start": [
         "PY_VAR1",
-        "PMT1"
+        "Lines"
     ],
     "input_stop1": [
         "PY_VAR2",
-        "Empty"
+        "PMT1"
     ],
     "input_stop2": [
         "PY_VAR3",
-        "Lines"
+        "Empty"
     ],
     "num_of_frames": [
         "PY_VAR4",
@@ -25,7 +25,7 @@
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "stack": [
         "PY_VAR7",
@@ -33,11 +33,11 @@
     ],
     "x_pixels": [
         "PY_VAR8",
-        512
+        2048
     ],
     "y_pixels": [
         "PY_VAR9",
-        512
+        2048
     ],
     "z_pixels": [
         "PY_VAR10",
@@ -113,7 +113,7 @@
     ],
     "bidir": [
         "PY_VAR28",
-        true
+        false
     ],
     "keep_unidir": [
         "PY_VAR29",
@@ -141,6 +141,6 @@
     ],
     "save_as": [
         "PY_VAR35",
-        "flies_23_11"
+        "jul"
     ]
 }

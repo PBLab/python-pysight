@@ -244,7 +244,7 @@ class Movie(object):
 
         print('======================================================= \nOutputs:\n--------')
         if 'stack' in self.outputs:
-            print(f'Stack file created with name "{self.name[:-4]}.hdf5", \ncontaining a data group named'
+            print(f'Stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
                   ' "Full Stack", with one dataset per channel.')
 
         if 'memory' in self.outputs:
@@ -252,7 +252,7 @@ class Movie(object):
                   'and in stacked form under `movie.summed_mem`.')
 
         if 'summed' in self.outputs:
-            print(f'Summed stack file created with name "{self.name[:-4]}.hdf5", \ncontaining a data group named'
+            print(f'Summed stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
                   ' "Summed Stack", with one dataset per channel.')
 
     def __nano_flim(self, data: np.ndarray) -> None:
@@ -400,7 +400,7 @@ class Volume(object):
         Generates the edges of the final histogram using the line signal from the data
         :return: np.array
         """
-        lines = self.data.index.get_level_values('Lines').categories.values
+        lines = self.data.index.get_level_values('Lines').categories.values - self.abs_start_time
         lines.sort()
         if len(lines) > 1:
             if len(lines) < self.x_pixels:

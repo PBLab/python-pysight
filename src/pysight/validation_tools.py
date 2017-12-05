@@ -383,19 +383,20 @@ def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
             warnings.warn("Line data was corrupt as there were too few lines.\n"
                           "Simulating line data using GUI's parameters.")
             return 'corrupt'
-        if bidir:
-            lines = add_phase_to_bidir_lines(lines=lines, bidir_phase=bidir_phase, binwidth=binwidth)
-        max_change_pct = lines[lines.diff().pct_change(periods=1) > 0.05]
-        if len(max_change_pct) / lines.shape[0] > 0.1 and 'Frames' not in keys:
+        change_thresh = 0.5
+        # if bidir:
+        #     lines = add_phase_to_bidir_lines(lines=lines, bidir_phase=bidir_phase, binwidth=binwidth)
+        max_change_pct = lines[lines.diff().pct_change(periods=1) > change_thresh]
+        if len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' not in keys:  # 0.1
             warnings.warn("Line data was corrupt - the period didn't make sense.\n"
                           f"{len(max_change_pct)} out of {lines.shape[0]} lines were mispositioned. "
                           "Simulating line data using GUI's parameters.")
             return 'corrupt'
 
-        elif len(max_change_pct) / lines.shape[0] > 0.1 and 'Frames' in keys:
+        elif len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' in keys:
             return 'rebuild'
 
-        elif len(max_change_pct) / lines.shape[0] < 0.1:
+        elif len(max_change_pct) / lines.shape[0] < change_thresh:
             return 'valid'
 
     else:

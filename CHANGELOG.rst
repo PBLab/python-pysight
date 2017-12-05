@@ -559,4 +559,11 @@ Changelog
 0.6.17 (2017-12-04)
 -------------------
 
-* Fixed a bug with the filename of the DEBUGged version.
+* Fixed a bug with the filename of the ``DEBUG``ged version.
+
+0.6.18 (2017-12-05)
+-------------------
+
+* Fixed a bug with bidirectional scanning.
+
+* Possible fix for data that don't have lines since the beginning of the experiment.

@@ -121,6 +121,7 @@ class Tabulate(object):
 
         if self.bidir:
             dict_of_data['Lines'] = self.__add_phase_to_bidir_lines(dict_of_data['Lines'])
+
         # Validations
         last_event_time = calc_last_event_time(dict_of_data=dict_of_data, lines_per_frame=self.y_pixels)
         dict_of_data, self.line_delta = validate_line_input(dict_of_data=dict_of_data, num_of_lines=self.y_pixels,
@@ -271,7 +272,7 @@ class Tabulate(object):
         """
         phase_in_seconds = self.bidir_phase * 1e-6
         if phase_in_seconds < 0:
-            lines.abs_time.iloc[1::2] += np.uint64(np.abs(phase_in_seconds / self.binwidth))
+            lines.abs_time.iloc[1::2] -= np.uint64(np.abs(phase_in_seconds / self.binwidth))
         else:
-            lines.abs_time.iloc[1::2] -= np.uint64(phase_in_seconds / self.binwidth)
+            lines.abs_time.iloc[1::2] += np.uint64(phase_in_seconds / self.binwidth)
         return lines
