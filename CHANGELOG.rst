@@ -567,3 +567,10 @@ Changelog
 * Fixed a bug with bidirectional scanning.
 
 * Possible fix for data that don't have lines since the beginning of the experiment.
+
+0.6.19 (2017-12-06)
+-------------------
+
+* Bug with lines allocation in the ``Volume`` object following an API change in pandas.
+
+* Allows for single frame experiments.

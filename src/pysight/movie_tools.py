@@ -400,7 +400,7 @@ class Volume(object):
         Generates the edges of the final histogram using the line signal from the data
         :return: np.array
         """
-        lines = self.data.index.get_level_values('Lines').categories.values - self.abs_start_time
+        lines = np.unique(self.data.index.get_level_values('Lines').values) - self.abs_start_time
         lines.sort()
         if len(lines) > 1:
             if len(lines) < self.x_pixels:

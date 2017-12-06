@@ -21,7 +21,6 @@ def main_data_readout(gui):
     from pysight.tag_bits_tools import ParseTAGBits
     import numpy as np
 
-
     # Read the file
     cur_file = FileIO(filename=gui.filename.get(), debug=gui.debug.get(), input_start=gui.input_start.get(),
                       input_stop1=gui.input_stop1.get(), input_stop2=gui.input_stop2.get(), binwidth=gui.binwidth.get(),
@@ -146,6 +145,7 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
             df, movie = main_data_readout(gui)
     except TypeError as e:
         print(e)
+
 
 if __name__ == '__main__':
     df, movie = run()
