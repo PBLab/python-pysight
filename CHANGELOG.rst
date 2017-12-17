@@ -574,3 +574,8 @@ Changelog
 * Bug with lines allocation in the ``Volume`` object following an API change in pandas.
 
 * Allows for single frame experiments.
+
+0.6.20 (2017-12-17)
+-------------------
+
+* Fixed a bug with TAG lens interpolation.

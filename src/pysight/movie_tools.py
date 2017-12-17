@@ -352,7 +352,7 @@ class Volume(object):
 
         # z-axis metadata
         if 'Phase' in self.data.columns:
-            z_start = 0
+            z_start = -1 if self.tag_as_phase else 0
             z_end = 1 if self.tag_as_phase else self.tag_period
             metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
 

@@ -171,7 +171,6 @@ class TagPhaseAllocator(object):
             phase_vec = phase_vec.astype(np.uint16)
         first_relevant_photon_idx = photons.shape[0] - relevant_photons.shape[0]
         photons[first_relevant_photon_idx:] = phase_vec
-
         self.photons['Phase'] = photons
         self.photons.dropna(how='any', inplace=True)
 
@@ -204,7 +203,7 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
         phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
     if to_phase:
-        phase_vec_float = np.abs(np.sin(phase_vec * 2 * np.pi))
+        phase_vec_float = np.sin(np.abs(phase_vec - 0.5) * 4 * np.pi)
         return phase_vec_float.astype(np.float32)
 
     return phase_vec.astype(np.float32)
