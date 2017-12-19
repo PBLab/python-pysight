@@ -5,6 +5,17 @@ from typing import Dict, List
 import pandas as pd
 import numpy as np
 import warnings
+from enum import Enum, auto
+
+
+class LineDataType(Enum):
+    CORRUPT = auto()
+    REBUILD = auto()
+    VALID = auto()
+    FROM_SCRATCH = auto()
+    SWEEPS_REBUILD = auto()
+    SWEEPS_FROM_SCRATCH = auto()
+    ADD = auto()
 
 
 def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: int=-1,
@@ -12,7 +23,11 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
                         last_event_time: int=-1, line_freq: float=7930.0, bidir: bool=False,
                         delay_between_frames: float=0.0011355, use_sweeps: bool=False,
                         max_sweep: int=65535, total_sweep_time: int=1, bidir_phase: float=-2.79):
-    """ Verify that the .lst input of lines exists and looks fine. Create one if there's no such input. """
+    """
+    Verify that the .lst input of lines exists and looks fine. Create one if there's no such input.
+    """
+    from pysight.line_process import LineProcess
+
     if num_of_lines == -1:
         raise ValueError('No number of lines input received.')
 
@@ -32,63 +47,18 @@ def validate_line_input(dict_of_data: Dict, cols_in_data: List, num_of_lines: in
                                                 use_sweeps=use_sweeps, bidir=bidir,
                                                 bidir_phase=bidir_phase, binwidth=binwidth)
 
-    if 'corrupt' == type_of_line_data:
-        # Data is corrupted, and no frame channel can help us.
-        line_delta = bins_bet_lines(line_freq=line_freq, binwidth=binwidth,
-                                    bidir=bidir)
-        dict_of_data['Lines'] = extrapolate_line_data(last_event=last_event_time,
-                                                      line_point=dict_of_data['Lines'].at[0, 'abs_time'],
-                                                      num_of_lines=num_of_lines,
-                                                      line_delta=line_delta,
-                                                      delay_between_frames=delay_between_frames,
-                                                      bidir=bidir, binwidth=binwidth,
-                                                      num_of_frames=num_of_frames)
-        return dict_of_data, line_delta
+    dict_of_data, line_delta = LineProcess(line_freq=line_freq, binwidth=binwidth,
+                                           bidir=bidir, last_event_time=last_event_time,
+                                           dict_of_data=dict_of_data,
+                                           num_of_lines=num_of_lines,
+                                           delay_between_frames=delay_between_frames,
+                                           num_of_frames=num_of_frames,
+                                           cols_in_data=cols_in_data, max_sweep=max_sweep,
+                                           total_sweep_time=total_sweep_time,
+                                           bidir_phase=bidir_phase)\
+        .process(type_of_line_data)
+    return dict_of_data, line_delta
 
-
-    elif 'rebuild' == type_of_line_data:
-        # Data is corrupted, but we can rebuild lines on top of the frame channel
-        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
-                                       num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
-        line_delta = last_event_time / (num_of_lines * int(num_of_frames))
-        return dict_of_data, line_delta
-
-    elif 'valid' == type_of_line_data:
-        # Data is valid. Check whether we need a 0-time line event
-        line_delta = dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean()
-        zeroth_line_delta = np.abs(dict_of_data['Lines'].loc[0, 'abs_time'] - line_delta)/line_delta
-        if zeroth_line_delta < 0.05:
-            dict_of_data['Lines'] = pd.DataFrame([[0] * len(cols_in_data)],
-                                                 columns=cols_in_data,
-                                                 dtype='uint64')\
-                .append(dict_of_data['Lines'], ignore_index=True)
-        return dict_of_data, np.uint64(line_delta)
-
-    elif 'from_scratch' == type_of_line_data:  # create our own line array
-        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
-                                       num_of_frames=num_of_frames)
-        dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
-        line_delta = last_event_time/(num_of_lines * int(num_of_frames))
-        return dict_of_data, line_delta
-
-    elif 'sweeps-rebuild' == type_of_line_data:  # create our own line array with the sweeps data
-        line_delta = 1 / line_freq if not bidir else 1 / (2 * line_freq)
-        num_of_frames = np.ceil(last_event_time / (line_delta / binwidth * num_of_lines))
-        line_array = create_line_array(last_event_time=last_event_time, num_of_lines=num_of_lines,
-                                       num_of_frames=num_of_frames, line_delta=line_delta/binwidth)
-        dict_of_data['Lines'] = pd.DataFrame(line_array, columns=['abs_time'], dtype='uint64')
-        return dict_of_data, int(line_delta / binwidth)
-
-    elif 'sweeps-from-scratch' == type_of_line_data:  # brand new line data
-        sweep_vec = np.arange(max_sweep + 1, dtype=np.uint64)
-        if len(sweep_vec) < 2:
-            warnings.warn("All data was registered to a single sweep. Line data will be completely simulated.")
-        else:
-            dict_of_data['Lines'] = pd.DataFrame(
-                sweep_vec * total_sweep_time,
-                columns=['abs_time'], dtype=np.uint64)
-        return dict_of_data, total_sweep_time
 
 def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, num_of_lines: int=-1,
                          last_event_time: int=-1):
@@ -116,66 +86,6 @@ def validate_frame_input(dict_of_data: Dict, binwidth, cols_in_data: List, num_o
     return dict_of_data
 
 
-def bins_bet_lines(line_freq: float=0, binwidth: float=0,
-                   bidir: bool=False) -> int:
-    """
-    Calculate the line difference in bins, according to the frequency
-    of the line signal.
-    :param line_freq: Frequency of lines in Hz. Regardless of bidirectional scanning.
-    :return: int - line delta
-    """
-    freq_in_bins = 1/(line_freq * binwidth)
-    return int(freq_in_bins / 2) if bidir else freq_in_bins
-
-
-def extrapolate_line_data(last_event: int, line_point: int=0,
-                          line_delta: int=0, num_of_lines: int=1,
-                          delay_between_frames: float=0.0011355,
-                          bidir: bool=False, binwidth: float=800e-12,
-                          num_of_frames: int=1) -> pd.DataFrame:
-    """
-    From a single line signal extrapolate the presumed line data vector. The line frequency is doubled
-    the original frequency. If needed, events will be discarded later.
-    :param last_event: The last moment of the experiment
-    :param line_delta: Bins between subsequent lines.
-    :param line_point: Start interpolation from this point.
-    :param num_of_lines: Number of lines in a frame.
-    :param delay_between_frames: Time (in sec) between frames.
-    :param bidir: Whether the scan was bidirectional.
-    :param binwidth: Binwidth of multiscaler in seconds.
-    :return: pd.DataFrame of line data
-    """
-    # Verify input
-    if line_point / line_delta > num_of_lines:  # The first recorded line came very late
-        line_point = 0
-
-    # Create the matrix containing the duplicate frame data
-    delay_between_frames_in_bins = int(delay_between_frames / binwidth)
-    time_of_frame = line_delta * num_of_lines \
-                    + delay_between_frames_in_bins
-    num_of_frames = max(int(np.floor(last_event / time_of_frame)), 1)
-    time_of_frame_mat = np.tile(time_of_frame * np.arange(num_of_frames), (num_of_lines, 1))
-
-    # Create the matrix containing the duplicate line data
-    line_vec = np.arange(start=line_point, stop=line_delta*num_of_lines, step=line_delta,
-                         dtype=np.uint64)
-    line_vec = np.r_[np.flip(np.arange(start=line_point, stop=0, step=-line_delta,
-                               dtype=np.uint64)[1:], axis=0), line_vec]
-    # Check if 0 should be included
-    if line_vec[0] - line_delta == 0:
-        line_vec = np.r_[0, line_vec]
-
-    line_mat = np.tile(line_vec.reshape(len(line_vec), 1), (1, num_of_frames))
-
-    # Add them up
-    assert len(line_mat) > 0
-    assert len(time_of_frame_mat) > 0
-    final_mat = line_mat + time_of_frame_mat
-    line_vec_final = np.ravel(final_mat, order='F')
-
-    return pd.DataFrame(line_vec_final, columns=['abs_time'], dtype=np.uint64)
-
-
 def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
                        pixels: int=None) -> np.ndarray:
     """Create a pandas Series of start-of-frame times"""
@@ -197,28 +107,6 @@ def create_frame_array(lines: pd.Series=None, last_event_time: int=None,
         array_of_frames = lines.iloc[0 : int(num_of_recorded_lines-unnecess_lines) : pixels]
 
     return np.array(array_of_frames)
-
-
-def create_line_array(last_event_time: int=None, num_of_lines=None, num_of_frames=None,
-                      line_delta: float=0.0) -> np.ndarray:
-    """Create a pandas Series of start-of-line times"""
-
-    if (last_event_time is None) or (num_of_lines is None) or (num_of_frames is None):
-        raise ValueError('Wrong input detected.')
-
-    if (num_of_lines <= 0) or (num_of_frames <= 0):
-        raise ValueError('Number of lines and frames has to be positive.')
-
-    if last_event_time <= 0:
-        raise ValueError('Last event time is zero or negative.')
-
-    total_lines = num_of_lines * int(num_of_frames)
-    if line_delta == 0.0:
-        line_array = np.arange(start=0, stop=last_event_time, step=last_event_time/total_lines, dtype=np.uint64)
-    else:
-        line_array = np.arange(start=0, stop=last_event_time, step=line_delta, dtype=np.uint64)
-    return line_array
-
 
 def validate_created_data_channels(dict_of_data: Dict):
     """
@@ -360,7 +248,7 @@ def calc_last_event_time(dict_of_data: Dict, lines_per_frame: int=-1):
 
 def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
                             use_sweeps: bool=False, bidir: bool=False, binwidth: float=800e-12,
-                            bidir_phase: float=-2.79) -> str:
+                            bidir_phase: float=-2.79) -> LineDataType:
     """
     Enumerate all possibilities of line data and choose the right option
     :param lines: Line data
@@ -370,37 +258,19 @@ def match_line_data_to_case(lines: pd.Series, keys: list, num_of_lines: int=512,
     :return: String of the specific case. Either: 'corrupt', 'rebuild', 'valid', 'from_scratch',
     'sweeps-rebuild' or 'sweeps-from-scratch'.
     """
+
     if use_sweeps and 'Lines' in keys:
-        return 'sweeps-rebuild'
+        return LineDataType.SWEEPS_REBUILD
 
     if use_sweeps and not 'Lines' in keys:
-        return 'sweeps-from-scratch'
+        return LineDataType.SWEEPS_FROM_SCRATCH
 
     if 'Lines' in keys:
-        lines = lines.loc[:, 'abs_time'].copy()
-        # Verify that the input is not corrupt
-        if lines.shape[0] < num_of_lines // 2:
-            warnings.warn("Line data was corrupt as there were too few lines.\n"
-                          "Simulating line data using GUI's parameters.")
-            return 'corrupt'
-        change_thresh = 0.5
-        # if bidir:
-        #     lines = add_phase_to_bidir_lines(lines=lines, bidir_phase=bidir_phase, binwidth=binwidth)
-        max_change_pct = lines[lines.diff().pct_change(periods=1) > change_thresh]
-        if len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' not in keys:  # 0.1
-            warnings.warn("Line data was corrupt - the period didn't make sense.\n"
-                          f"{len(max_change_pct)} out of {lines.shape[0]} lines were mispositioned. "
-                          "Simulating line data using GUI's parameters.")
-            return 'corrupt'
-
-        elif len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' in keys:
-            return 'rebuild'
-
-        elif len(max_change_pct) / lines.shape[0] < change_thresh:
-            return 'valid'
-
+        return find_line_case(lines=lines.loc[:, 'abs_time'].copy(),
+                              num_of_lines=num_of_lines, keys=keys)
     else:
-        return 'from_scratch'
+        return LineDataType.FROM_SCRATCH
+
 
 def add_phase_to_bidir_lines(lines: pd.Series, bidir_phase: float=-2.79, binwidth: float=800e-12):
     """
@@ -416,3 +286,39 @@ def add_phase_to_bidir_lines(lines: pd.Series, bidir_phase: float=-2.79, binwidt
     else:
         lines.iloc[1::2] += np.uint64(phase_in_seconds / binwidth)
     return lines
+
+
+def find_line_case(lines: pd.Series, num_of_lines: int,
+                   keys:list,) -> LineDataType:
+    """
+    Match the right way to process lines when a line signal was recorded.
+    :param lines: Line data
+    :param num_of_lines: The number of lines per frame
+    :param keys: Input data signals
+    :return: LineDataType
+    """
+    # Verify that the input is not corrupt
+    if lines.shape[0] < num_of_lines // 2:
+        warnings.warn("Line data was corrupt as there were too few lines.\n"
+                      "Simulating line data using GUI's parameters.")
+        return LineDataType.CORRUPT
+
+    change_thresh = 0.5
+    max_change_pct = lines[lines.diff().pct_change(periods=1) > change_thresh]
+    mean_max_change = np.diff(max_change_pct.diff().index.values).mean()
+
+    if len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' not in keys:  # 0.1
+        warnings.warn("Line data was corrupt - the period didn't make sense.\n"
+                      f"{len(max_change_pct)} out of {lines.shape[0]} lines were mispositioned. "
+                      "Simulating line data using GUI's parameters.")
+        return LineDataType.CORRUPT
+
+    elif len(max_change_pct) / lines.shape[0] > change_thresh and 'Frames' in keys:
+        return LineDataType.REBUILD
+
+    elif 0.95 < mean_max_change / num_of_lines < 1.05 and max_change_pct.diff().index[0] != num_of_lines:
+        # Lines were missing from the start of the recording, but otherwise the data is clean
+        return LineDataType.ADD
+
+    elif len(max_change_pct) / lines.shape[0] < change_thresh:
+        return LineDataType.VALID

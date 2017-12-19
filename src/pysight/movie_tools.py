@@ -31,6 +31,7 @@ class Movie(object):
     A holder for Volume objects to be displayed consecutively.
     """
     data            = attr.ib()
+    lines           = attr.ib()
     reprate         = attr.ib(default=80e6, validator=instance_of(float))
     x_pixels        = attr.ib(default=512, validator=instance_of(int))
     y_pixels        = attr.ib(default=512, validator=instance_of(int))
@@ -110,6 +111,7 @@ class Movie(object):
         list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(key=(current_time, channel_num), level=('Frames', 'Channel'), drop_level=False)
+            lines = self.lines.loc[(self.lines >= current_time) & (self.lines < list_of_frames[idx+1])]
             if not cur_data.empty:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
                              z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
@@ -117,7 +119,8 @@ class Movie(object):
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
                              line_delta=self.line_delta, use_sweeps=self.use_sweeps,
-                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
+                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq,
+                             lines=lines)
             else:
                 yield Volume(data=cur_data, x_pixels=self.x_pixels,
                              y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
@@ -125,7 +128,8 @@ class Movie(object):
                              end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
                              bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
                              line_delta=self.line_delta, use_sweeps=self.use_sweeps,
-                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
+                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq,
+                             lines=lines)
 
     def __create_outputs(self) -> None:
         """
@@ -309,6 +313,7 @@ class Volume(object):
     A Movie() is a sequence of Volumes(). Each volume contains frames in a plane.
     """
     data           = attr.ib(validator=instance_of(pd.DataFrame))
+    lines          = attr.ib(validator=instance_of(pd.Series))
     x_pixels       = attr.ib(default=512, validator=instance_of(int))
     y_pixels       = attr.ib(default=512, validator=instance_of(int))
     z_pixels       = attr.ib(default=1, validator=instance_of(int))
@@ -342,7 +347,7 @@ class Volume(object):
         metadata['Volume'] = Struct(start=volume_start, end=self.end_time, num=self.x_pixels+1)
 
         # y-axis metadata - columns
-        y_start, y_end = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
+        y_start, y_end = metadata_ydata(data=self.lines, jitter=jitter, bidir=self.bidir,
                                         fill_frac=self.fill_frac, delta=self.line_delta,
                                         sweeps=self.use_sweeps)
         if y_end == 1:  # single pixel in frame
@@ -400,15 +405,14 @@ class Volume(object):
         Generates the edges of the final histogram using the line signal from the data
         :return: np.array
         """
-        lines = np.unique(self.data.index.get_level_values('Lines').values) - self.abs_start_time
-        lines.sort()
+        lines = self.lines.sort_values()
         if len(lines) > 1:
             if len(lines) < self.x_pixels:
                 raise ValueError(f'Not enough line events in volume number {self.number}.\n'
                                  f'Only {len(lines)} were recorded.')
             else:
                 mean_diff = np.diff(lines).mean()
-                return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
+                return np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_diff], dtype='uint64')]
         else:  # single pixel frames, perhaps
             return np.r_[lines, lines + self.end_time]
 
@@ -480,12 +484,11 @@ def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fil
                    delta: int=158000, sweeps: bool=False):
     """
     Create the metadata for the y-axis.
-
+    :param data: Recorded lines
     """
     lines_start: int = 0
 
-    unique_indices: np.ndarray = np.unique(data.index.get_level_values('Lines'))
-    if unique_indices.shape[0] <= 1:
+    if data.shape[0] <= 1:
         lines_end = 1
         return lines_start, lines_end
 

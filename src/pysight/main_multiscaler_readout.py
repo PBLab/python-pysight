@@ -52,7 +52,7 @@ def main_data_readout(gui):
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
-                               censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
+                               censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data.copy(),
                                df_photons=tag_bit_parser.gen_df(), num_of_channels=cur_file.num_of_channels,
                                tag_freq=float(gui.tag_freq.get()), tag_to_phase=True)
     analyzed_struct.run()
@@ -85,7 +85,8 @@ def main_data_readout(gui):
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
-                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()))
+                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()),
+                        lines=tabulated_data.dict_of_data['Lines'].abs_time,)
 
     final_movie.run()
 

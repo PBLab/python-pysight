@@ -4,6 +4,7 @@ __author__ = Hagai Hargil
 
 from unittest import TestCase
 from pysight.validation_tools import *
+from pysight.line_process import *
 
 
 class TestFrame(TestCase):
@@ -12,6 +13,8 @@ class TestFrame(TestCase):
     """
     import pandas as pd
     import numpy as np
+
+    lp = LineProcess()
 
     def test_last_event_empty_dict(self):
         dict_of_data = dict()
@@ -82,28 +85,29 @@ class TestFrame(TestCase):
                          120)
 
     def tets_bins_bet_lines(self):
+
         line_freq = 10
         binwidth = 0.01
         bidir = False
-        self.assertEqual(10, bins_bet_lines(line_freq=line_freq,
-                                            binwidth=binwidth,
-                                            bidir=bidir))
+        lp2 = LineProcess(line_freq=line_freq, binwidth=binwidth, bidir=bidir)
+        self.assertEqual(10, lp2._LineProcess__bins_bet_lines())
 
     def test_bins_bet_lines_bidir(self):
         line_freq = 10
         binwidth = 0.01
         bidir = True
-        self.assertEqual(5, bins_bet_lines(line_freq=line_freq,
-                                            binwidth=binwidth,
-                                            bidir=bidir))
+        lp2 = LineProcess(line_freq=line_freq, binwidth=binwidth, bidir=bidir)
+        self.assertEqual(5, lp2._LineProcess__bins_bet_lines())
 
     def test_extrapolate_without_zero(self):
         line_point = 9
         last_event_time = 15
         line_delta = 2
         num_of_lines = last_event_time // line_delta
-        returned_lines = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
-                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        lp2 = LineProcess(last_event_time=last_event_time,
+                          num_of_lines=num_of_lines)
+        returned_lines = lp2._LineProcess__extrapolate_line_data(line_point=line_point,
+                                                                 line_delta=line_delta)
         real_lines = np.arange(1, 15, step=2, dtype=np.uint64)
         self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
 
@@ -112,8 +116,10 @@ class TestFrame(TestCase):
         last_event_time = 15
         line_delta = 1
         num_of_lines = last_event_time // line_delta
-        returned_lines = extrapolate_line_data(last_event=last_event_time, line_point=line_point,
-                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        lp2 = LineProcess(last_event_time=last_event_time,
+                          num_of_lines=num_of_lines)
+        returned_lines = lp2._LineProcess__extrapolate_line_data(line_point=line_point,
+                                                                     line_delta=line_delta)
         real_lines = np.arange(0, 15, dtype=np.uint64)
         self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
 
@@ -121,8 +127,9 @@ class TestFrame(TestCase):
         last_event_time = 15
         line_delta = 1
         num_of_lines = last_event_time // line_delta
-        returned_lines = extrapolate_line_data(last_event=last_event_time,
-                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        lp2 = LineProcess(last_event_time=last_event_time,
+                          num_of_lines=num_of_lines)
+        returned_lines = lp2._LineProcess__extrapolate_line_data(line_delta=line_delta, line_point=0)
         real_lines = np.arange(0, 15, dtype=np.uint64)
         self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
 
@@ -130,7 +137,9 @@ class TestFrame(TestCase):
         last_event_time = 15
         line_delta = 2
         num_of_lines = last_event_time // line_delta + 1
-        returned_lines = extrapolate_line_data(last_event=last_event_time,
-                                               line_delta=line_delta, num_of_lines=num_of_lines)
+        lp2 = LineProcess(last_event_time=last_event_time,
+                          num_of_lines=num_of_lines)
+        returned_lines = lp2._LineProcess__extrapolate_line_data(line_point=0,
+                                                                     line_delta=line_delta)
         real_lines = np.arange(0, 15, step=2, dtype=np.uint64)
         self.assertSequenceEqual(returned_lines['abs_time'].tolist(), real_lines.tolist())
