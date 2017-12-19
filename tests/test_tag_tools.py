@@ -155,7 +155,7 @@ class TestTagPhaseAllocator(unittest.TestCase):
         phaser = TagPhaseAllocator(photons, tag)
         phaser.allocate_phase()
         normed_result = photons.abs_time / (2 * np.pi)
-        true_result = np.sin(normed_result * 2 * np.pi).astype(np.float32)
+        true_result = np.sin(np.abs(normed_result - 0.5) * 4 * np.pi).astype(np.float32)
         for elem1, elem2 in zip(true_result.tolist(), phaser.photons.Phase.tolist()):
             self.assertAlmostEqual(elem1, elem2, 6)
 

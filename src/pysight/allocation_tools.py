@@ -166,7 +166,7 @@ class Allocate(object):
         """
 
         length_of_lines = self.dict_of_data['Lines'].shape[0]
-        new_line_arr = np.zeros(length_of_lines * 2 - 1, dtype=np.uint64)
+        new_line_arr = np.zeros(length_of_lines * 2 - 1)
         new_line_arr[::2] = self.dict_of_data['Lines'].loc[:, 'abs_time'].values
         new_line_arr[1::2] = self.dict_of_data['Lines'].loc[:, 'abs_time'] \
                                  .rolling(window=2).mean()[1:]
