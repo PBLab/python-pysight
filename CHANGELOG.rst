@@ -579,3 +579,23 @@ Changelog
 -------------------
 
 * Fixed a bug with TAG lens interpolation.
+
+0.6.21 (2017-12-19)
+-------------------
+
+* More work on TAG interpolation.
+
+0.6.22 (2017-12-19)
+-------------------
+
+* Added interpolation for missing line signals.
+
+0.6.23 (2017-12-20)
+-------------------
+
+* Fixed bugs with interpolations and TAG signals.
+
+0.6.24 (2017-12-20)
+-------------------
+
+* Deals with more edge-cases in missing line signals.

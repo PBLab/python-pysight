@@ -432,6 +432,12 @@ class Volume(object):
         diffs = lines.diff()
         mean_val = diffs.mean()
         rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
+        if len(lines)-1 in rel_idx:  # last lines are missing
+            needed_lines = 1 + (self.x_pixels+1 - (len(lines)+len(rel_idx)))
+            lines = lines[:-1].append(pd.Series(np.linspace(start=lines.iloc[-2] + mean_val,
+                                                            stop=lines.iloc[-2]+(needed_lines+1 * mean_val),
+                                                            num=needed_lines, dtype=np.uint64)))
+            rel_idx = rel_idx[rel_idx != len(diffs)-1]
         if np.abs((diffs.iloc[1] - mean_val) / mean_val) > CHANGE_DIFF:  # first line came late
             rel_idx = np.r_[rel_idx, 1]
         if len(rel_idx) > 0:
