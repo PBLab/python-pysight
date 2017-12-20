@@ -1,7 +1,7 @@
 {
     "filename": [
         "PY_VAR0",
-        ""
+        "X:/Lior/Multiscaler data/18 December 2017/Flies/Droso4PTL-TAG-189k62p-4p5xZoom512px-5-5-5-10-stimuli-FOV3Bihemispheric-009.lst"
     ],
     "input_start": [
         "PY_VAR1",
@@ -9,7 +9,7 @@
     ],
     "input_stop1": [
         "PY_VAR2",
-        "Empty"
+        "TAG Lens"
     ],
     "input_stop2": [
         "PY_VAR3",
@@ -45,7 +45,7 @@
     ],
     "debug": [
         "PY_VAR11",
-        false
+        true
     ],
     "phase": [
         "PY_VAR12",
@@ -73,7 +73,7 @@
     ],
     "tag_offset": [
         "PY_VAR18",
-        90
+        0
     ],
     "tag_bits": [
         "PY_VAR19",
@@ -145,6 +145,6 @@
     ],
     "save_as": [
         "PY_VAR36",
-        "default"
+        "fly_18"
     ]
 }

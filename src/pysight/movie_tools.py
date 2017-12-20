@@ -402,15 +402,48 @@ class Volume(object):
         """
         lines = np.unique(self.data.index.get_level_values('Lines').values) - self.abs_start_time
         lines.sort()
-        if len(lines) > 1:
-            if len(lines) < self.x_pixels:
-                raise ValueError(f'Not enough line events in volume number {self.number}.\n'
-                                 f'Only {len(lines)} were recorded.')
-            else:
+        num_of_lines = len(lines)
+        ALLOWED_THRESHOLD = 0.05  # percent
+        if num_of_lines > 1:
+            if np.abs(1 - (num_of_lines / self.x_pixels)) > ALLOWED_THRESHOLD:  # line signal was too corrupt in the volume
+                warnings.warn(f'Non-matching number of line events in volume number {self.number}.\n'
+                              f'{num_of_lines} lines were recorded, while {self.x_pixels} were required.')
+                self.empty = True
+
+            if num_of_lines >= self.x_pixels:
                 mean_diff = np.diff(lines).mean()
                 return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
+
+            else:  # lines signal is corrupt, but we can save it
+                lines = self.__rectify_line_sig(pd.Series(lines))
+                return lines
+
         else:  # single pixel frames, perhaps
             return np.r_[lines, lines + self.end_time]
+
+    def __rectify_line_sig(self, lines: pd.Series) -> np.ndarray:
+        """
+        Rectify a semi-broken line signal.
+        :return: Rectified lines
+        """
+        delta = self.x_pixels - len(lines)
+        CHANGE_DIFF = 0.05  # percent
+        diffs = lines.diff()
+        mean_val = diffs.mean()
+        rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
+        if len(rel_idx) > 0:
+            for val in rel_idx:
+                missing_lines = int(np.around(diffs[val] / mean_val)) - 1
+                for line in range(missing_lines):
+                    lines = lines.append(pd.Series(np.linspace(start=lines[rel_idx - 1] + mean_val, stop=lines[rel_idx],
+                                                               endpoint=False, num=missing_lines, dtype=np.uint64)))
+        else:  # first lines are missing
+            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines[0], num=delta,
+                                                       endpoint=False, dtype=np.uint64)))
+
+        lines = lines.sort_values().reset_index(drop=True)
+        lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val], dtype='uint64')]
+        return lines
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
@@ -419,9 +452,8 @@ class Volume(object):
         """
 
         list_of_data_columns = []
-
+        list_of_edges, num_of_dims = self.__create_hist_edges()
         if not self.empty:
-            list_of_edges, num_of_dims = self.__create_hist_edges()
             list_of_data_columns.append(self.data['time_rel_frames'].values)
             list_of_data_columns.append(self.data['time_rel_line'].values)
             try:

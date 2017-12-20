@@ -20,6 +20,7 @@ class TagPipeline(object):
     binwidth      = attr.ib(default=800e-12, validator=instance_of(float))  # Multiscaler binwidth
     num_of_pulses = attr.ib(default=1, validator=instance_of(int))  # Number of pulses per TAG period
     to_phase      = attr.ib(default=True, validator=instance_of(bool))  # compensate the sinusoidial pattern of TAG
+    offset        = attr.ib(default=0, validator=instance_of(int))  # offset the TAG phase [degrees]
     finished_pipe = attr.ib(init=False)
 
     def run(self):
@@ -32,7 +33,7 @@ class TagPipeline(object):
         if verifier.success:
             phaser = TagPhaseAllocator(photons=self.photons, tag=verifier.tag,
                                        pulses_per_period=self.num_of_pulses,
-                                       to_phase=self.to_phase)
+                                       to_phase=self.to_phase, offset=self.offset)
             phaser.allocate_phase()
             self.photons = phaser.photons
             self.finished_pipe = True
@@ -156,6 +157,13 @@ class TagPhaseAllocator(object):
     tag               = attr.ib(validator=instance_of(pd.Series))
     pulses_per_period = attr.ib(default=1, validator=instance_of(int))
     to_phase          = attr.ib(default=True, validator=instance_of(bool))
+    offset            = attr.ib(default=0, validator=instance_of(int))
+    TAG_DRIVER_OFFSET = attr.ib(default=90, validator=instance_of(int))
+
+    @property
+    def offset_rad(self):
+        """ Convert degrees to radians """
+        return (self.offset + self.TAG_DRIVER_OFFSET) * np.pi / 180
 
     def allocate_phase(self):
         """ Using Numba functions allocate the proper phase to the photons """
@@ -166,7 +174,7 @@ class TagPhaseAllocator(object):
         photons[np.logical_not(relevant_bins)] = np.nan
         relevant_photons = np.compress(relevant_bins, photons)
         phase_vec = numba_find_phase(photons=relevant_photons, bins=np.compress(relevant_bins, bin_idx),
-                                     raw_tag=self.tag.values, to_phase=self.to_phase)
+                                     raw_tag=self.tag.values, to_phase=self.to_phase, offset=self.offset_rad)
         if not self.to_phase:
             phase_vec = phase_vec.astype(np.uint16)
         first_relevant_photon_idx = photons.shape[0] - relevant_photons.shape[0]
@@ -188,9 +196,9 @@ def numba_digitize(values: np.array, bins: np.array) -> np.array:
     return bins, relevant_bins
 
 
-@jit(nopython=True)
+@jit(nopython=True, cache=True)
 def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
-                     to_phase: bool) -> np.array:
+                     to_phase: bool, offset: float) -> np.array:
     """
     Find the phase [0, 2pi) of the photon for each event in `photons`.
     :return: Numpy array with the size of photons containing the phases.
@@ -203,7 +211,7 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
         phase_vec[idx] = (photons[idx] - raw_tag[cur_bin - 1])/tag_diff[cur_bin - 1]
 
     if to_phase:
-        phase_vec_float = np.sin(phase_vec * 2 * np.pi)
+        phase_vec_float = np.sin(phase_vec * 2 * np.pi + offset)
         return phase_vec_float.astype(np.float32)
 
     return phase_vec.astype(np.float32)

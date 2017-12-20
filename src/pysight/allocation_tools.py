@@ -35,6 +35,7 @@ class Allocate(object):
     dict_of_data       = attr.ib(default={}, validator=instance_of(dict))
     tag_interp_ok      = attr.ib(default=False, validator=instance_of(bool))
     tag_to_phase       = attr.ib(default=True, validator=instance_of(bool))
+    tag_offset         = attr.ib(default=0, validator=instance_of(int))
     sorted_indices     = attr.ib(init=False)
 
     def run(self):
@@ -98,7 +99,7 @@ class Allocate(object):
             print('Interpolating TAG lens data...')
             tag_pipe = TagPipeline(photons=self.df_photons, tag_pulses=tag, freq=self.tag_freq,
                                    binwidth=self.binwidth, num_of_pulses=self.tag_pulses,
-                                   to_phase=self.tag_to_phase)
+                                   to_phase=self.tag_to_phase, offset=self.tag_offset)
             tag_pipe.run()
             self.df_photons = tag_pipe.photons
             self.tag_interp_ok = tag_pipe.finished_pipe

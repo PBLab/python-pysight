@@ -1,7 +1,7 @@
 {
     "filename": [
         "PY_VAR0",
-        "X:/Lior/Multiscaler data/18 December 2017/Flies/Droso2PTL-TAG189kHz50p-12xZoom512px-FOV2-5-5-5-10-stimuli013.lst"
+        "X:/Lior/Multiscaler data/13 December 2017/Mouse/FOV1/StartPMT1_850mVStop1TAG189k62pStop2Lines512pxUniMouseFOV1_2xZoom50umHigher90pPower024GoodDynamics.lst"
     ],
     "input_start": [
         "PY_VAR1",
@@ -25,7 +25,7 @@
     ],
     "memory": [
         "PY_VAR6",
-        false
+        true
     ],
     "stack": [
         "PY_VAR7",
@@ -45,7 +45,7 @@
     ],
     "debug": [
         "PY_VAR11",
-        false
+        true
     ],
     "phase": [
         "PY_VAR12",
@@ -53,7 +53,7 @@
     ],
     "fill_frac": [
         "PY_VAR13",
-        71.0
+        72.0
     ],
     "reprate": [
         "PY_VAR14",
@@ -71,76 +71,80 @@
         "PY_VAR17",
         1
     ],
-    "tag_bits": [
+    "tag_offset": [
         "PY_VAR18",
+        0
+    ],
+    "tag_bits": [
+        "PY_VAR19",
         false
     ],
     "bits_grp_1_start": [
-        "PY_VAR19",
+        "PY_VAR20",
         1
     ],
     "bits_grp_1_end": [
-        "PY_VAR20",
+        "PY_VAR21",
         3
     ],
     "bits_grp_2_start": [
-        "PY_VAR21",
+        "PY_VAR22",
         4
     ],
     "bits_grp_2_end": [
-        "PY_VAR22",
-        6
+        "PY_VAR23",
+        5
     ],
     "bits_grp_3_start": [
-        "PY_VAR23",
-        7
+        "PY_VAR24",
+        6
     ],
     "bits_grp_3_end": [
-        "PY_VAR24",
+        "PY_VAR25",
         16
     ],
     "bits_grp_1_label": [
-        "PY_VAR25",
-        "None"
+        "PY_VAR26",
+        "Power"
     ],
     "bits_grp_2_label": [
-        "PY_VAR26",
-        "None"
-    ],
-    "bits_grp_3_label": [
         "PY_VAR27",
         "None"
     ],
-    "bidir": [
+    "bits_grp_3_label": [
         "PY_VAR28",
-        false
+        "None"
     ],
-    "keep_unidir": [
+    "bidir": [
         "PY_VAR29",
         false
     ],
-    "gating": [
+    "keep_unidir": [
         "PY_VAR30",
         false
     ],
-    "flim": [
+    "gating": [
         "PY_VAR31",
-        false
+        true
     ],
-    "censor": [
+    "flim": [
         "PY_VAR32",
         false
     ],
-    "line_freq": [
+    "censor": [
         "PY_VAR33",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR34",
         7930.0
     ],
     "sweeps_as_lines": [
-        "PY_VAR34",
+        "PY_VAR35",
         false
     ],
     "save_as": [
-        "PY_VAR35",
-        "tag_18-12"
+        "PY_VAR36",
+        "tag_10"
     ]
 }

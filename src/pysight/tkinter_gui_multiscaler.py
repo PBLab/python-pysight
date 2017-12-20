@@ -221,7 +221,7 @@ class GUIApp(object):
     def __tag_lens(self, main_frame):
         """ TAG lens nominal frequency """
 
-        tag_label = ttk.Label(main_frame, text='TAG nominal frequency [Hz]\nand number of pulses')
+        tag_label = ttk.Label(main_frame, text='TAG nominal freq. [Hz]\nn. of pulses and offset [deg]')
         tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = DoubleVar(value=0.189e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
@@ -231,6 +231,11 @@ class GUIApp(object):
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
         tag_pulses_entry.grid(column=6, row=9, sticky='e')
         tag_pulses_entry.config(state='disabled')
+
+        self.tag_offset = IntVar(value=0)
+        self.tag_offset_entry = ttk.Entry(main_frame, textvariable=self.tag_offset, width=3)
+        self.tag_offset_entry.grid(column=6, row=9, sticky='w')
+        self.tag_offset_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
         """ TAG bits """
@@ -337,8 +342,10 @@ class GUIApp(object):
         list_of_values = [self.input_start.get(), self.input_stop1.get(), self.input_stop2.get()]
         if 'TAG Lens' in list_of_values:
             self.z_pixels_entry.config(state='normal')
+            self.tag_offset_entry.config(state='normal')
         else:
             self.z_pixels_entry.config(state='disabled')
+            self.tag_offset_entry.config(state='disabled')
 
     def __bi_dir(self, main_frame):
         """ Checkbox for bi-directional scan """
