@@ -406,13 +406,14 @@ class Volume(object):
         ALLOWED_THRESHOLD = 0.05  # percent
         if num_of_lines > 1:
             if np.abs(1 - (num_of_lines / self.x_pixels)) > ALLOWED_THRESHOLD:  # line signal was too corrupt in the volume
-                warnings.warn(f'Non-matching number of line events in volume number {self.number}.\n'
+                if num_of_lines >= self.x_pixels:
+                    mean_diff = np.diff(lines).mean()
+                    return np.r_[
+                        lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype=np.uint64)]
+
+                warnings.warn(f'\nNon-matching number of line events in volume number {self.number}.\n'
                               f'{num_of_lines} lines were recorded, while {self.x_pixels} were required.')
                 self.empty = True
-
-            if num_of_lines >= self.x_pixels:
-                mean_diff = np.diff(lines).mean()
-                return np.r_[lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype='uint64')]
 
             else:  # lines signal is corrupt, but we can save it
                 lines = self.__rectify_line_sig(pd.Series(lines))
@@ -431,19 +432,18 @@ class Volume(object):
         diffs = lines.diff()
         mean_val = diffs.mean()
         rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
-        if np.abs((diffs[1] - mean_val) / mean_val) > CHANGE_DIFF:
+        if np.abs((diffs.iloc[1] - mean_val) / mean_val) > CHANGE_DIFF:  # first line came late
             rel_idx = np.r_[rel_idx, 1]
         if len(rel_idx) > 0:
             for val in rel_idx:
                 missing_lines = int(np.around(diffs[val] / mean_val)) - 1
-                for line in range(missing_lines):
-                    lines = lines.append(pd.Series(np.linspace(start=lines.iloc[val - 1] + mean_val,
-                                                               stop=lines.iloc[val], endpoint=False,
-                                                               num=missing_lines, dtype=np.uint64)))
-        else:  # lines weren't recorded from the get-go
-            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
-                                                       num=delta, dtype=np.uint64)))
+                lines = lines.append(pd.Series(np.linspace(start=lines.iloc[val - 1] + mean_val,
+                                                           stop=lines.iloc[val], endpoint=False,
+                                                           num=missing_lines, dtype=np.uint64)))
 
+        if len(lines) != self.x_pixels:  # lines weren't recorded from the get-go
+            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
+                                                       num=np.abs(self.x_pixels - len(lines)), dtype=np.uint64)))
         lines = lines.sort_values().reset_index(drop=True)
         lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val],
                                                            dtype=np.uint64)]
