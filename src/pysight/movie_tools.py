@@ -435,7 +435,7 @@ class Volume(object):
         if len(lines)-1 in rel_idx:  # last lines are missing
             needed_lines = 1 + (self.x_pixels+1 - (len(lines)+len(rel_idx)))
             lines = lines[:-1].append(pd.Series(np.linspace(start=lines.iloc[-2] + mean_val,
-                                                            stop=lines.iloc[-2]+(needed_lines+1 * mean_val),
+                                                            stop=lines.iloc[-2]+((needed_lines+1) * mean_val),
                                                             num=needed_lines, dtype=np.uint64)))
             rel_idx = rel_idx[rel_idx != len(diffs)-1]
         if np.abs((diffs.iloc[1] - mean_val) / mean_val) > CHANGE_DIFF:  # first line came late
@@ -448,8 +448,16 @@ class Volume(object):
                                                            num=missing_lines, dtype=np.uint64)))
 
         if len(lines) != self.x_pixels:  # lines weren't recorded from the get-go
-            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
-                                                       num=np.abs(self.x_pixels - len(lines)), dtype=np.uint64)))
+            if lines.iloc[0] == 0:  # we'll append at the end
+                lines = lines.sort_values().reset_index(drop=True)
+                needed_lines = np.abs(self.x_pixels - len(lines))
+                lines = lines.append(pd.Series(np.linspace(start=lines.iloc[-1] + mean_val,
+                                                           stop=lines.iloc[-1] + (needed_lines + 1) * mean_val,
+                                                           endpoint=False,
+                                                           num=needed_lines, dtype=np.uint64)))
+            else:
+                lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
+                                                           num=np.abs(self.x_pixels - len(lines)), dtype=np.uint64)))
         lines = lines.sort_values().reset_index(drop=True)
         lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val],
                                                            dtype=np.uint64)]
@@ -489,6 +497,9 @@ class Volume(object):
             return np.uint8(hist), edges
         else:
             return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.uint8), (0, 0, 0)
+
+    def create_tag_bins(self) -> np.ndarray:
+        pass
 
     def __censor_correction(self, data) -> np.ndarray:
         """

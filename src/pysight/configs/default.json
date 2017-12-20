@@ -73,7 +73,7 @@
     ],
     "tag_offset": [
         "PY_VAR18",
-        90
+        0
     ],
     "tag_bits": [
         "PY_VAR19",
@@ -137,7 +137,7 @@
     ],
     "line_freq": [
         "PY_VAR34",
-        7930.0
+        7900.0
     ],
     "sweeps_as_lines": [
         "PY_VAR35",

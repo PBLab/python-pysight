@@ -599,3 +599,8 @@ Changelog
 -------------------
 
 * Deals with more edge-cases in missing line signals.
+
+0.6.25 (2017-12-20)
+-------------------
+
+* Even more edge-case handling.
