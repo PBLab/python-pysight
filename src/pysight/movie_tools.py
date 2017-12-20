@@ -431,18 +431,22 @@ class Volume(object):
         diffs = lines.diff()
         mean_val = diffs.mean()
         rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
+        if np.abs((diffs[1] - mean_val) / mean_val) > CHANGE_DIFF:
+            rel_idx = np.r_[rel_idx, 1]
         if len(rel_idx) > 0:
             for val in rel_idx:
                 missing_lines = int(np.around(diffs[val] / mean_val)) - 1
                 for line in range(missing_lines):
-                    lines = lines.append(pd.Series(np.linspace(start=lines[rel_idx - 1] + mean_val, stop=lines[rel_idx],
-                                                               endpoint=False, num=missing_lines, dtype=np.uint64)))
-        else:  # first lines are missing
-            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines[0], num=delta,
-                                                       endpoint=False, dtype=np.uint64)))
+                    lines = lines.append(pd.Series(np.linspace(start=lines.iloc[val - 1] + mean_val,
+                                                               stop=lines.iloc[val], endpoint=False,
+                                                               num=missing_lines, dtype=np.uint64)))
+        else:  # lines weren't recorded from the get-go
+            lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
+                                                       num=delta, dtype=np.uint64)))
 
         lines = lines.sort_values().reset_index(drop=True)
-        lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val], dtype='uint64')]
+        lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val],
+                                                           dtype=np.uint64)]
         return lines
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
