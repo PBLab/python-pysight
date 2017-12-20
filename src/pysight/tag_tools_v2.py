@@ -169,7 +169,7 @@ class TagPhaseAllocator(object):
         """ Using Numba functions allocate the proper phase to the photons """
         bin_idx, relevant_bins = numba_digitize(self.photons.abs_time.values,
                                                 self.tag.values)
-
+        relevant_bins[bin_idx >= len(self.tag)] = False
         photons = self.photons.abs_time.values.astype(float)
         photons[np.logical_not(relevant_bins)] = np.nan
         relevant_photons = np.compress(relevant_bins, photons)
