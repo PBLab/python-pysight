@@ -605,7 +605,9 @@ Changelog
 
 * Even more edge-case handling.
 
-0.6.26 (2017-12-XX)
+0.6.26 (2017-12-21)
 -------------------
 
 * Missing line signals take mirror phase into account.
+
+* Fixes for MScan system.
