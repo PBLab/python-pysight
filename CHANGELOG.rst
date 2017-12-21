@@ -604,3 +604,8 @@ Changelog
 -------------------
 
 * Even more edge-case handling.
+
+0.6.26 (2017-12-XX)
+-------------------
+
+* Missing line signals take mirror phase into account.

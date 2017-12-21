@@ -38,7 +38,7 @@ class Movie(object):
     name            = attr.ib(default='Movie', validator=instance_of(str),
                               convert=trunc_end_of_file)
     binwidth        = attr.ib(default=800e-12, validator=instance_of(float))
-    fill_frac       = attr.ib(default=80.0, validator=instance_of(float))
+    fill_frac       = attr.ib(default=71.0, validator=instance_of(float))
     big_tiff        = attr.ib(default=True, validator=instance_of(bool))
     bidir           = attr.ib(default=True, validator=instance_of(bool))
     num_of_channels = attr.ib(default=1, validator=instance_of(int))
@@ -52,6 +52,7 @@ class Movie(object):
     cache_size      = attr.ib(default=10*1024**3, validator=instance_of(int))
     tag_as_phase    = attr.ib(default=True, validator=instance_of(bool))
     tag_freq        = attr.ib(default=189e3, validator=instance_of(float))
+    mirror_phase    = attr.ib(default=-2.71, validator=instance_of(float))
     summed_mem      = attr.ib(init=False)
     stack           = attr.ib(init=False)
     summed_to_file  = attr.ib(init=False)
@@ -110,22 +111,13 @@ class Movie(object):
         list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(key=(current_time, channel_num), level=('Frames', 'Channel'), drop_level=False)
-            if not cur_data.empty:
-                yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
-                             z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
-                             reprate=self.reprate, binwidth=self.binwidth, empty=False,
-                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta, use_sweeps=self.use_sweeps,
-                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
-            else:
-                yield Volume(data=cur_data, x_pixels=self.x_pixels,
-                             y_pixels=self.y_pixels, z_pixels=self.z_pixels, number=idx,
-                             reprate=self.reprate, binwidth=self.binwidth, empty=True,
-                             end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                             bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                             line_delta=self.line_delta, use_sweeps=self.use_sweeps,
-                             tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq)
+            yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
+                         z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
+                         reprate=self.reprate, binwidth=self.binwidth, empty=True if cur_data.empty else False,
+                         end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
+                         bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
+                         line_delta=self.line_delta, use_sweeps=self.use_sweeps,
+                         tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq, mirror_phase=self.mirror_phase)
 
     def __create_outputs(self) -> None:
         """
@@ -325,6 +317,7 @@ class Volume(object):
     use_sweeps     = attr.ib(default=False, validator=instance_of(bool))
     tag_as_phase   = attr.ib(default=True, validator=instance_of(bool))
     tag_freq       = attr.ib(default=189e3, validator=instance_of(float))
+    mirror_phase   = attr.ib(default=-2.76, validator=instance_of(float))  # phase for scanning mirrors
 
     @property
     def metadata(self) -> OrderedDict:
@@ -428,12 +421,25 @@ class Volume(object):
         :return: Rectified lines
         """
         delta = self.x_pixels - len(lines)
-        CHANGE_DIFF = 0.05  # percent
-        diffs = lines.diff()
+        phase_in_seconds = self.mirror_phase * 1e-6
+        CHANGE_DIFF = 0.12  # x100 percent, fits the MScan system as well
+        lines_to_diff = lines.copy()
+        lines_to_diff.iloc[1::2] -= np.uint64(phase_in_seconds/self.binwidth)
+        diffs = lines_to_diff.diff()
         mean_val = diffs.mean()
         rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
+        if rel_idx.shape[0] > 0.2 * self.x_pixels:  # too many missing lines
+            warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
+            # self.empty = True
+            return np.arange(self.x_pixels + 1)
+
         if len(lines)-1 in rel_idx:  # last lines are missing
             needed_lines = 1 + (self.x_pixels+1 - (len(lines)+len(rel_idx)))
+            if needed_lines < 1:
+                warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
+                # self.empty = True
+                return np.arange(self.x_pixels + 1)
+
             lines = lines[:-1].append(pd.Series(np.linspace(start=lines.iloc[-2] + mean_val,
                                                             stop=lines.iloc[-2]+((needed_lines+1) * mean_val),
                                                             num=needed_lines, dtype=np.uint64)))

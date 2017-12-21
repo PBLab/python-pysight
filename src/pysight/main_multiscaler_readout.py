@@ -85,7 +85,7 @@ def main_data_readout(gui):
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
-                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()))
+                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()), mirror_phase=gui.phase.get())
 
     final_movie.run()
 
