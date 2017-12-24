@@ -611,3 +611,12 @@ Changelog
 * Missing line signals take mirror phase into account.
 
 * Fixes for MScan system.
+
+0.6.27 (2017-12-24)
+-------------------
+
+* Separated handling of unidir and bidir corrupt line signals.
+
+* Refactored line signal handling module.
+
+* Added multiple tests to line signal handling.

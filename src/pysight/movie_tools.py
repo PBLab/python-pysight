@@ -14,6 +14,7 @@ from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
 from tqdm import tqdm
+from pysight.rectify_lines import LineRectifier
 
 
 def trunc_end_of_file(name) -> str:
@@ -378,7 +379,17 @@ class Volume(object):
         if self.empty is not True:
             for num_of_dims, key in enumerate(metadata, 1):
                 if 'Volume' == key:
-                    list_of_edges.append(self.__create_line_array())
+                    try:
+                        list_of_edges.append(
+                            LineRectifier(lines=np.unique(self.data.index.get_level_values('Lines').values)\
+                                                - self.abs_start_time,
+                                          x_pixels=self.x_pixels,
+                                          bidir=self.bidir,
+                                          end_time=self.end_time).rectify()
+                                            )
+                    except ValueError:  # problem with line correction\interpolation
+                        warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
+                        list_of_edges.append(np.arange(self.x_pixels + 1))
                 else:
                     list_of_edges.append(create_linspace(start=metadata[key].start,
                                                          stop=metadata[key].end,
@@ -387,87 +398,6 @@ class Volume(object):
             return list_of_edges, num_of_dims
         else:
             return list(np.ones(len(metadata)))
-
-    def __create_line_array(self):
-        """
-        Generates the edges of the final histogram using the line signal from the data
-        :return: np.array
-        """
-        lines = np.unique(self.data.index.get_level_values('Lines').values) - self.abs_start_time
-        lines.sort()
-        num_of_lines = len(lines)
-        ALLOWED_THRESHOLD = 0.05  # percent
-        if num_of_lines > 1:
-            if np.abs(1 - (num_of_lines / self.x_pixels)) > ALLOWED_THRESHOLD:  # line signal was too corrupt in the volume
-                if num_of_lines >= self.x_pixels:
-                    mean_diff = np.diff(lines).mean()
-                    return np.r_[
-                        lines[:self.x_pixels], np.array([lines[self.x_pixels - 1] + mean_diff], dtype=np.uint64)]
-
-                warnings.warn(f'\nNon-matching number of line events in volume number {self.number}.\n'
-                              f'{num_of_lines} lines were recorded, while {self.x_pixels} were required.')
-                self.empty = True
-
-            else:  # lines signal is corrupt, but we can save it
-                lines = self.__rectify_line_sig(pd.Series(lines))
-                return lines
-
-        else:  # single pixel frames, perhaps
-            return np.r_[lines, lines + self.end_time]
-
-    def __rectify_line_sig(self, lines: pd.Series) -> np.ndarray:
-        """
-        Rectify a semi-broken line signal.
-        :return: Rectified lines
-        """
-        delta = self.x_pixels - len(lines)
-        phase_in_seconds = self.mirror_phase * 1e-6
-        CHANGE_DIFF = 0.12  # x100 percent, fits the MScan system as well
-        lines_to_diff = lines.copy()
-        lines_to_diff.iloc[1::2] -= np.uint64(phase_in_seconds/self.binwidth)
-        diffs = lines_to_diff.diff()
-        mean_val = diffs.mean()
-        rel_idx = np.where(diffs.pct_change(periods=1) > CHANGE_DIFF)[0]
-        if rel_idx.shape[0] > 0.2 * self.x_pixels:  # too many missing lines
-            warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
-            # self.empty = True
-            return np.arange(self.x_pixels + 1)
-
-        if len(lines)-1 in rel_idx:  # last lines are missing
-            needed_lines = 1 + (self.x_pixels+1 - (len(lines)+len(rel_idx)))
-            if needed_lines < 1:
-                warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
-                # self.empty = True
-                return np.arange(self.x_pixels + 1)
-
-            lines = lines[:-1].append(pd.Series(np.linspace(start=lines.iloc[-2] + mean_val,
-                                                            stop=lines.iloc[-2]+((needed_lines+1) * mean_val),
-                                                            num=needed_lines, dtype=np.uint64)))
-            rel_idx = rel_idx[rel_idx != len(diffs)-1]
-        if np.abs((diffs.iloc[1] - mean_val) / mean_val) > CHANGE_DIFF:  # first line came late
-            rel_idx = np.r_[rel_idx, 1]
-        if len(rel_idx) > 0:
-            for val in rel_idx:
-                missing_lines = int(np.around(diffs[val] / mean_val)) - 1
-                lines = lines.append(pd.Series(np.linspace(start=lines.iloc[val - 1] + mean_val,
-                                                           stop=lines.iloc[val], endpoint=False,
-                                                           num=missing_lines, dtype=np.uint64)))
-
-        if len(lines) != self.x_pixels:  # lines weren't recorded from the get-go
-            if lines.iloc[0] == 0:  # we'll append at the end
-                lines = lines.sort_values().reset_index(drop=True)
-                needed_lines = np.abs(self.x_pixels - len(lines))
-                lines = lines.append(pd.Series(np.linspace(start=lines.iloc[-1] + mean_val,
-                                                           stop=lines.iloc[-1] + (needed_lines + 1) * mean_val,
-                                                           endpoint=False,
-                                                           num=needed_lines, dtype=np.uint64)))
-            else:
-                lines = lines.append(pd.Series(np.linspace(start=1, stop=lines.iloc[0], endpoint=False,
-                                                           num=np.abs(self.x_pixels - len(lines)), dtype=np.uint64)))
-        lines = lines.sort_values().reset_index(drop=True)
-        lines = np.r_[lines.iloc[:self.x_pixels], np.array([lines.iloc[self.x_pixels - 1] + mean_val],
-                                                           dtype=np.uint64)]
-        return lines
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """

@@ -1,0 +1,150 @@
+{
+    "filename": [
+        "PY_VAR0",
+        "X:/Hagai/Multiscaler/21-12-17/flies_21_12_17/fly4_gevi/start_pmt_stop1_puff_stop2_lines_512px013.lst"
+    ],
+    "input_start": [
+        "PY_VAR1",
+        "PMT1"
+    ],
+    "input_stop1": [
+        "PY_VAR2",
+        "Empty"
+    ],
+    "input_stop2": [
+        "PY_VAR3",
+        "Lines"
+    ],
+    "num_of_frames": [
+        "PY_VAR4",
+        1
+    ],
+    "summed": [
+        "PY_VAR5",
+        true
+    ],
+    "memory": [
+        "PY_VAR6",
+        true
+    ],
+    "stack": [
+        "PY_VAR7",
+        true
+    ],
+    "x_pixels": [
+        "PY_VAR8",
+        512
+    ],
+    "y_pixels": [
+        "PY_VAR9",
+        512
+    ],
+    "z_pixels": [
+        "PY_VAR10",
+        10
+    ],
+    "debug": [
+        "PY_VAR11",
+        true
+    ],
+    "phase": [
+        "PY_VAR12",
+        10.0
+    ],
+    "fill_frac": [
+        "PY_VAR13",
+        76.0
+    ],
+    "reprate": [
+        "PY_VAR14",
+        80300000.0
+    ],
+    "binwidth": [
+        "PY_VAR15",
+        8e-10
+    ],
+    "tag_freq": [
+        "PY_VAR16",
+        189000.0
+    ],
+    "tag_pulses": [
+        "PY_VAR17",
+        1
+    ],
+    "tag_offset": [
+        "PY_VAR18",
+        0
+    ],
+    "tag_bits": [
+        "PY_VAR19",
+        false
+    ],
+    "bits_grp_1_start": [
+        "PY_VAR20",
+        1
+    ],
+    "bits_grp_1_end": [
+        "PY_VAR21",
+        3
+    ],
+    "bits_grp_2_start": [
+        "PY_VAR22",
+        4
+    ],
+    "bits_grp_2_end": [
+        "PY_VAR23",
+        5
+    ],
+    "bits_grp_3_start": [
+        "PY_VAR24",
+        6
+    ],
+    "bits_grp_3_end": [
+        "PY_VAR25",
+        16
+    ],
+    "bits_grp_1_label": [
+        "PY_VAR26",
+        "Power"
+    ],
+    "bits_grp_2_label": [
+        "PY_VAR27",
+        "None"
+    ],
+    "bits_grp_3_label": [
+        "PY_VAR28",
+        "None"
+    ],
+    "bidir": [
+        "PY_VAR29",
+        true
+    ],
+    "keep_unidir": [
+        "PY_VAR30",
+        false
+    ],
+    "gating": [
+        "PY_VAR31",
+        false
+    ],
+    "flim": [
+        "PY_VAR32",
+        false
+    ],
+    "censor": [
+        "PY_VAR33",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR34",
+        8000.0
+    ],
+    "sweeps_as_lines": [
+        "PY_VAR35",
+        false
+    ],
+    "save_as": [
+        "PY_VAR36",
+        "fly_21_12"
+    ]
+}
