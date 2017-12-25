@@ -49,11 +49,11 @@
     ],
     "phase": [
         "PY_VAR12",
-        -2.78
+        2.2
     ],
     "fill_frac": [
         "PY_VAR13",
-        72.0
+        71.2
     ],
     "reprate": [
         "PY_VAR14",
@@ -105,7 +105,7 @@
     ],
     "bits_grp_1_label": [
         "PY_VAR26",
-        "Power"
+        "None"
     ],
     "bits_grp_2_label": [
         "PY_VAR27",
@@ -125,7 +125,7 @@
     ],
     "gating": [
         "PY_VAR31",
-        true
+        false
     ],
     "flim": [
         "PY_VAR32",

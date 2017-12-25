@@ -5,14 +5,14 @@ import numpy as np
 import pandas as pd
 import attr
 from attr.validators import instance_of
-import warnings
 from enum import Enum, auto
+
 
 class LineSignalType(Enum):
     VALID_UNIDIR = auto()
     VALID_BIDIR  = auto()
     EXTRA_LINES  = auto()
-    SINGLE_PIXEL  = auto()
+    SINGLE_PIXEL = auto()
 
 
 @attr.s(slots=True)
@@ -52,7 +52,6 @@ class LineRectifier:
             LineSignalType.SINGLE_PIXEL: self.__single_pixel,
 
         }
-
 
     def __assess_line_sig(self) -> LineSignalType:
         """
@@ -121,12 +120,15 @@ class LineRectifier:
             return self.__rectify_lines(lines=lines, diffs=diff1, mean_val=diff1.mean(),
                                         rel_idx=rel_idx)
 
-        if len(rel_idx) % 2 != 0:  # every misplaced line should have a start and an end
-            raise ValueError
+        # if len(rel_idx) % 2 != 0:  # every misplaced line should have a start and an end
+        #     raise ValueError
         idx_to_throw = np.array([], dtype=np.int64)
-        for idx, _ in enumerate(rel_idx[::2]):
-            idx_to_throw = np.concatenate((idx_to_throw,
-                                          np.arange(rel_idx[idx*2], rel_idx[idx*2+1] + 1)))
+        if rel_idx.shape[0] > 1:
+            for idx, _ in enumerate(rel_idx[::2]):
+                idx_to_throw = np.concatenate((idx_to_throw,
+                                              np.arange(rel_idx[idx*2], rel_idx[idx*2+1] + 1)))
+        else:
+            idx_to_throw = rel_idx.copy()
 
         final_rel_idx = rel_idx[::2]
         # Double jumps of rows missing

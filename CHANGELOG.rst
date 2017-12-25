@@ -620,3 +620,15 @@ Changelog
 * Refactored line signal handling module.
 
 * Added multiple tests to line signal handling.
+
+0.6.28 (2017-12-25)
+-------------------
+
+* Better handling of line signal.
+
+0.6.29 (2017-12-25)
+-------------------
+
+* Code cleanups.
+
+* More adjustments to line handling in bidirectional mode.
