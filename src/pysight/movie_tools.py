@@ -380,6 +380,8 @@ class Volume(object):
             for num_of_dims, key in enumerate(metadata, 1):
                 if 'Volume' == key:
                     try:
+                        if self.number == 25:
+                            print(1)
                         list_of_edges.append(
                             LineRectifier(lines=np.unique(self.data.index.get_level_values('Lines').values)\
                                                 - self.abs_start_time,

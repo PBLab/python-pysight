@@ -117,43 +117,42 @@ class LineRectifier:
         diffs = lines.rolling(2).sum().diff()
         diffs[1] = diffs.mean()
         rel_idx = np.where(np.abs(diffs.pct_change(periods=1)) > self.ALLOWED_THRESHOLD)[0]
-        assert len(rel_idx) % 2 == 0  # every misplaced line should have a start and an end
+        if len(rel_idx) == 0:
+            return self.__rectify_lines(lines=lines, diffs=diff1, mean_val=diff1.mean(),
+                                        rel_idx=rel_idx)
+
+        if len(rel_idx) % 2 != 0:  # every misplaced line should have a start and an end
+            raise ValueError
         idx_to_throw = np.array([], dtype=np.int64)
         for idx, _ in enumerate(rel_idx[::2]):
             idx_to_throw = np.concatenate((idx_to_throw,
                                           np.arange(rel_idx[idx*2], rel_idx[idx*2+1] + 1)))
 
-        # Check for multiline spacing
-        for idx in np.where(np.diff(rel_idx)[::2] > 4)[0]:
-            indices_to_concat = [rel_idx[idx] + (rel_idx[idx+1]-rel_idx[idx])//2]
-            indices_to_concat += [indices_to_concat[0] + 1]
-            rel_idx = np.concatenate((rel_idx, np.array(indices_to_concat, dtype=np.int64)))
-        rel_idx.sort()
-        # Check for 2-line spacing
-        two_line_space = False
-        rel_diff_4 = np.diff(rel_idx)[::2] == 4
-        if sum(rel_diff_4) > 0:
-            two_line_space = True
-
-        # Check for 1-line spacing
-        one_line_space = False
-        rel_diff_2 = np.diff(rel_idx[::2]) == 2
-        if sum(rel_diff_2) > 0:
-            one_line_space = True
-
-        if two_line_space:
-            rel_diff_4 = np.concatenate((rel_diff_4, np.array([False])))
-            for idx in np.where(rel_diff_4)[0]:  # edge case
-                rel_idx[idx + 1] -= 2
-
-            final_rel_idx = rel_idx
-        else:
-            final_rel_idx = rel_idx[::2]
-
-        if one_line_space:
-            rel_diff_2 = np.concatenate((rel_diff_2, np.array([False])))
-            for idx in np.where(rel_diff_2)[0]:  # edge case
+        final_rel_idx = rel_idx[::2]
+        # Double jumps of rows missing
+        rel_diff = np.diff(final_rel_idx) == 2
+        if rel_diff.shape[0] > 0 and sum(rel_diff) > 0:
+            for idx in np.where(np.concatenate((rel_diff, np.array([False]))))[0]:  # edge case
                 final_rel_idx[idx + 1] -= 1
+
+        # Check for multiline double spacing
+        double = np.where(np.diff(rel_idx)[::2] == 4)[0]
+        if len(double) > 0:
+            for idx in double:
+                indices_to_concat = [place for place in range(rel_idx[idx]+1, rel_idx[idx+1])]
+                new_rel_idx = np.concatenate((rel_idx[:idx+1], rel_idx[idx+2:],
+                                              np.array(indices_to_concat, dtype=np.int64)))
+        else:
+            new_rel_idx = sorted(rel_idx)[::2]
+        final_rel_idx = np.unique(np.concatenate((final_rel_idx, new_rel_idx)))
+
+        # Check for multiline triple spacing
+        for idx in np.where(np.diff(rel_idx)[::2] == 5)[0]:
+            indices_to_concat = [place for place in range(rel_idx[idx] + 1, rel_idx[idx + 1])]
+            rel_idx = np.concatenate((rel_idx, np.array(indices_to_concat, dtype=np.int64)))
+        else:
+            rel_idx.sort()
+            final_rel_idx = np.unique(np.concatenate((final_rel_idx, rel_idx)))
 
         mean_val = diff1.drop(idx_to_throw).mean()
         return self.__rectify_lines(lines=lines, diffs=diff1, mean_val=mean_val,

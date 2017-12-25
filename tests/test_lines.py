@@ -297,7 +297,7 @@ class TestLineRectifier(TestCase):
         self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
 
     def test_missing_with_two_lines_and_one_ok_unidir(self):
-        raw_lines = np.arange(start=0, stop=2500, step=50, dtype=np.uint64)
+        raw_lines = np.arange(start=0, stop=2500, step=10, dtype=np.uint64)
         num_lines = len(raw_lines[:-1])
         del_lines = np.delete(raw_lines, [3, 6, 9, 11])
         rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines,
@@ -305,9 +305,25 @@ class TestLineRectifier(TestCase):
         self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
 
     def test_missing_with_two_lines_and_one_ok_bidir(self):
-        raw_lines = np.arange(start=0, stop=2500, step=50, dtype=np.uint64)
+        raw_lines = np.arange(start=0, stop=2500, step=10, dtype=np.uint64)
         num_lines = len(raw_lines[:-1])
         del_lines = np.delete(raw_lines, [3, 6, 9, 11])
+        rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines,
+                             bidir=True)
+        self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
+
+    def test_missing_with_two_lines_or_one_ok_unidir(self):
+        raw_lines = np.arange(start=0, stop=2500, step=50, dtype=np.uint64)
+        num_lines = len(raw_lines[:-1])
+        del_lines = np.delete(raw_lines, [3, 6, 11])
+        rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines,
+                             bidir=False)
+        self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
+
+    def test_missing_with_two_lines_or_one_ok_bidir(self):
+        raw_lines = np.arange(start=0, stop=2500, step=50, dtype=np.uint64)
+        num_lines = len(raw_lines[:-1])
+        del_lines = np.delete(raw_lines, [3, 6, 11])
         rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines,
                              bidir=True)
         self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
