@@ -125,8 +125,11 @@ class LineRectifier:
         idx_to_throw = np.array([], dtype=np.int64)
         if rel_idx.shape[0] > 1:
             for idx, _ in enumerate(rel_idx[::2]):
-                idx_to_throw = np.concatenate((idx_to_throw,
-                                              np.arange(rel_idx[idx*2], rel_idx[idx*2+1] + 1)))
+                try:
+                    idx_to_throw = np.concatenate((idx_to_throw,
+                                                  np.arange(rel_idx[idx*2], rel_idx[idx*2+1] + 1)))
+                except IndexError:
+                    idx_to_throw = np.concatenate((idx_to_throw, rel_idx[-1]))
         else:
             idx_to_throw = rel_idx.copy()
 
@@ -138,7 +141,7 @@ class LineRectifier:
                 final_rel_idx[idx + 1] -= 1
 
         # Check for multiline double spacing
-        double = np.where(np.diff(rel_idx)[::2] == 4)[0]
+        double: np.ndarray = np.where(np.diff(rel_idx)[::2] == 4)[0]
         if len(double) > 0:
             for idx in double:
                 indices_to_concat = [place for place in range(rel_idx[idx]+1, rel_idx[idx+1])]
@@ -149,12 +152,14 @@ class LineRectifier:
         final_rel_idx = np.unique(np.concatenate((final_rel_idx, new_rel_idx)))
 
         # Check for multiline triple spacing
-        for idx in np.where(np.diff(rel_idx)[::2] == 5)[0]:
-            indices_to_concat = [place for place in range(rel_idx[idx] + 1, rel_idx[idx + 1])]
-            rel_idx = np.concatenate((rel_idx, np.array(indices_to_concat, dtype=np.int64)))
+        triple: np.ndarray = np.where(np.diff(rel_idx)[::2] == 5)[0]
+        if len(triple) > 0:
+            for idx in triple:
+                indices_to_concat = [place for place in range(rel_idx[idx] + 1, rel_idx[idx + 1])]
+                rel_idx = np.concatenate((rel_idx, np.array(indices_to_concat, dtype=np.int64)))
         else:
             rel_idx.sort()
-            final_rel_idx = np.unique(np.concatenate((final_rel_idx, rel_idx)))
+        final_rel_idx = np.unique(np.concatenate((final_rel_idx, rel_idx)))
 
         mean_val = diff1.drop(idx_to_throw).mean()
         return self.__rectify_lines(lines=lines, diffs=diff1, mean_val=mean_val,

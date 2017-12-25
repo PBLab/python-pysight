@@ -632,3 +632,10 @@ Changelog
 * Code cleanups.
 
 * More adjustments to line handling in bidirectional mode.
+
+0.6.30 (2017-12-25)
+-------------------
+
+* Fixed another bug with the line handling.
+
+* Fixed a bug with a missing PMT channel.

@@ -41,7 +41,7 @@ def main_data_readout(gui):
                               time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
                               line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
                               y_pixels=gui.y_pixels.get(), bidir=gui.bidir.get(),
-                              bidir_phase=gui.phase.get())
+                              bidir_phase=gui.phase.get(), num_of_channels=cur_file.num_of_channels)
     tabulated_data.run()
 
     photon_df = PhotonDF(dict_of_data=tabulated_data.dict_of_data)
@@ -53,7 +53,7 @@ def main_data_readout(gui):
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
                                censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
-                               df_photons=tag_bit_parser.gen_df(), num_of_channels=cur_file.num_of_channels,
+                               df_photons=tag_bit_parser.gen_df(), num_of_channels=tabulated_data.num_of_channels,
                                tag_freq=float(gui.tag_freq.get()), tag_to_phase=True, tag_offset=gui.tag_offset.get())
     analyzed_struct.run()
 

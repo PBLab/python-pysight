@@ -38,6 +38,7 @@ class Tabulate(object):
     line_freq          = attr.ib(default=7900.0, validator=instance_of(float))
     bidir              = attr.ib(default=False, validator=instance_of(bool))
     bidir_phase        = attr.ib(default=-2.79, validator=instance_of(float))
+    num_of_channels    = attr.ib(default=3, validator=instance_of(int))
     line_delta         = attr.ib(init=False)
     dict_of_data       = attr.ib(init=False)
     data_to_grab       = attr.ib(init=False)
@@ -234,7 +235,14 @@ class Tabulate(object):
         if actual_data_channels != set(self.dict_of_inputs.values()):
             warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
                           f"The list files contains data in the following channels: {actual_data_channels}.")
-
+            thrown_channels = 0
+            keys_to_pop = []
+            for key, item in self.dict_of_inputs.items():
+                if item not in actual_data_channels:
+                    keys_to_pop.append(key)
+                    thrown_channels += 1
+            self.num_of_channels -= thrown_channels
+            [self.dict_of_inputs.pop(key) for key in keys_to_pop]
         assert np.all(df['abs_time'].values >= 0)
 
         return df
