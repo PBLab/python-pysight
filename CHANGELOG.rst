@@ -655,3 +655,8 @@ Changelog
 * Documentation update.
 
 * Fixes for single-photon bug.
+
+0.6.33 (2017-12-26)
+-------------------
+
+* Hotfix to ``attrs`` problem in ``setup.py``.
