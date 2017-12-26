@@ -87,7 +87,7 @@ class LineRectifier:
         Dumbed down case of a single-pixel frame
         :return:
         """
-        return np.r_[self.lines, self.lines + self.end_time]
+        return np.linspace(self.lines[0], self.end_time, num=self.x_pixels+1, endpoint=True)
 
     def __preprocess_unidir_lines(self) -> np.ndarray:
         """

@@ -42,9 +42,7 @@ class Allocate(object):
         """ Pipeline of analysis """
         print('Channels of events found. Allocating photons to their frames and lines...')
         # Unidirectional scan - create fake lines
-        if self.bidir:
-            pass
-        else:
+        if not self.bidir:
             self.__add_unidirectional_lines()
         self.allocate_photons()
         print('Relative times calculated. Creating Movie object...')

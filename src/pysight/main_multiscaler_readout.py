@@ -143,7 +143,7 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
         for lst_file in all_lst_files:
             gui.filename.set(str(lst_file))
             try:
-                df, movie = main_data_readout(gui)
+                main_data_readout(gui)
             except:
                 print(f"File {str(lst_file)} returned an error. Moving onwards.")
     except TypeError as e:

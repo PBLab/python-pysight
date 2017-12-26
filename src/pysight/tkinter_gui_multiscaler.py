@@ -54,7 +54,7 @@ class GUIApp(object):
         main_frame['borderwidth'] = 2
         style = ttk.Style()
         style.theme_use('clam')
-        self.normal_font = tkfont.Font(family='Helvetica', size=12)
+        self.normal_font = tkfont.Font(family='Helvetica', size=10)
         self.bold_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
 
         # Run widgets

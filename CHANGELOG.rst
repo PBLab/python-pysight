@@ -645,7 +645,7 @@ Changelog
 
 * Bug fix for empty volumes with multichannel support.
 
-0.6.32 (2017-12-XX)
+0.6.32 (2017-12-26)
 -------------------
 
 * Trial with Numba and setuptools.
@@ -653,3 +653,5 @@ Changelog
 * Type annotations.
 
 * Documentation update.
+
+* Fixes for single-photon bug.
