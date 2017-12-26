@@ -368,6 +368,10 @@ class Volume(object):
     def tag_period(self):
         return int(np.ceil(1 / (self.tag_freq * self.binwidth)))
 
+    @property
+    def dimensions_iterable(self):
+        return [self.x_pixels, self.y_pixels, self.z_pixels, int(np.ceil(1 / (self.reprate * self.binwidth)))]
+
     def __create_hist_edges(self):
         """
         Create three vectors that will create the grid of the frame. Uses Numba internal function for optimization.
@@ -376,7 +380,7 @@ class Volume(object):
         metadata = self.metadata
         list_of_edges = []
 
-        if self.empty is not True:
+        if not self.empty:
             for num_of_dims, key in enumerate(metadata, 1):
                 if 'Volume' == key:
                     try:
@@ -397,7 +401,7 @@ class Volume(object):
 
             return list_of_edges, num_of_dims
         else:
-            return list(np.ones(len(metadata)))
+            return [], len(metadata)
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
@@ -432,10 +436,7 @@ class Volume(object):
 
             return np.uint8(hist), edges
         else:
-            return np.zeros((self.x_pixels, self.y_pixels, self.z_pixels), dtype=np.uint8), (0, 0, 0)
-
-    def create_tag_bins(self) -> np.ndarray:
-        pass
+            return np.zeros(self.dimensions_iterable[:num_of_dims], dtype=np.uint8), (0, 0, 0)
 
     def __censor_correction(self, data) -> np.ndarray:
         """

@@ -639,3 +639,8 @@ Changelog
 * Fixed another bug with the line handling.
 
 * Fixed a bug with a missing PMT channel.
+
+0.6.31 (2017-12-26)
+-------------------
+
+* Bug fix for empty volumes with multichannel support.
