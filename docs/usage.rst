@@ -23,7 +23,7 @@ To use PySight do one of the following:
     globstr: str = ''  # a glob-pattern string to filter files to parse. Default is '*.lst'
     recursive: bool = False  # Boolean whether to iterate over nested folders in the main folder
 
-    main_multiscaler_readout.run_batch(foldername=foldername, globstr=globstr, recursive=recursive)
+    data_record = main_multiscaler_readout.run_batch(foldername=foldername, globstr=globstr, recursive=recursive)
 
 These command will open a GUI in which you'll have to choose a ``.lst`` file to parse.
 

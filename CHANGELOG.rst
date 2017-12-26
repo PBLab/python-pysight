@@ -660,3 +660,10 @@ Changelog
 -------------------
 
 * Hotfix to ``attrs`` problem in ``setup.py``.
+
+0.6.34 (2017-12-26)
+-------------------
+
+* Changed output of ``run_batch`` to a DataFrame.
+
+* Refactored ``tabulation_tools``.

@@ -4,6 +4,7 @@
 __author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
 """
+import pandas as pd
 
 
 def main_data_readout(gui):
@@ -19,6 +20,7 @@ def main_data_readout(gui):
     from pysight.gating_tools import GatedDetection
     from pysight.photon_df_tools import PhotonDF
     from pysight.tag_bits_tools import ParseTAGBits
+    from pysight.distribute_data import DistributeData
     import numpy as np
 
     # Read the file
@@ -32,27 +34,34 @@ def main_data_readout(gui):
     # dict_of_slices_bin = timepatch_switch.ChoiceManagerBinary().process(cur_file.timepatch)  # Not supported
 
     # Process events into dataframe
-    tabulated_data = Tabulate(timepatch=cur_file.timepatch, data_range=cur_file.data_range,
-                              dict_of_inputs=cur_file.dict_of_input_channels, data=cur_file.data,
-                              is_binary=cur_file.is_binary, num_of_frames=gui.num_of_frames.get(),
-                              laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
+    tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
+                              dict_of_inputs=cur_file.dict_of_input_channels,
+                              is_binary=cur_file.is_binary, use_tag_bits=gui.tag_bits.get(),
                               dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
-                              use_tag_bits=gui.tag_bits.get(), use_sweeps=gui.sweeps_as_lines.get(),
                               time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
-                              line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
-                              y_pixels=gui.y_pixels.get(), bidir=gui.bidir.get(),
-                              bidir_phase=gui.phase.get(), num_of_channels=cur_file.num_of_channels)
+                              num_of_channels=cur_file.num_of_channels, )
     tabulated_data.run()
 
-    photon_df = PhotonDF(dict_of_data=tabulated_data.dict_of_data)
-    tag_bit_parser = ParseTAGBits(dict_of_data=tabulated_data.dict_of_data, photons=photon_df.gen_df(),
+    separated_data = DistributeData(df=tabulated_data.df_after_timepatch, num_of_frames=gui.num_of_frames.get(),
+                                    laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
+                                    use_tag_bits=gui.tag_bits.get(), use_sweeps=gui.sweeps_as_lines.get(),
+                                    time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
+                                    line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
+                                    y_pixels=gui.y_pixels.get(), bidir=gui.bidir.get(),
+                                    bidir_phase=gui.phase.get(), num_of_channels=tabulated_data.num_of_channels,
+                                    dict_of_inputs=tabulated_data.dict_of_inputs, data_range=cur_file.data_range,
+                                    )
+    separated_data.run()
+
+    photon_df = PhotonDF(dict_of_data=separated_data.dict_of_data)
+    tag_bit_parser = ParseTAGBits(dict_of_data=separated_data.dict_of_data, photons=photon_df.gen_df(),
                                   use_tag_bits=gui.tag_bits.get(), bits_dict=gui.tag_bits_dict)
 
     analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels, bidir=gui.bidir.get(),
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
-                               censor=gui.censor.get(), dict_of_data=tabulated_data.dict_of_data,
+                               censor=gui.censor.get(), dict_of_data=separated_data.dict_of_data,
                                df_photons=tag_bit_parser.gen_df(), num_of_channels=tabulated_data.num_of_channels,
                                tag_freq=float(gui.tag_freq.get()), tag_to_phase=True, tag_offset=gui.tag_offset.get())
     analyzed_struct.run()
@@ -84,7 +93,7 @@ def main_data_readout(gui):
                         outputs=outputs.outputs, censor=gui.censor.get(),
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
-                        line_delta=int(tabulated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
+                        line_delta=int(separated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
                         tag_as_phase=True, tag_freq=float(gui.tag_freq.get()), mirror_phase=gui.phase.get())
 
     final_movie.run()
@@ -105,20 +114,22 @@ def run():
     return main_data_readout(gui)
 
 
-def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
+def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> pd.DataFrame:
     """
     Run PySight on all list files in the folder
     :param foldername: str - Main folder to run the analysis on.
     :param glob_str: String for the `glob` function to filter list files
     :param recursive: bool - Whether the search should be recursive.
-    :return: None
+    :return pd.DataFrame: Record of analyzed data
     """
 
     import pathlib
     from pysight.tkinter_gui_multiscaler import GUIApp
     from pysight.tkinter_gui_multiscaler import verify_gui_input
+    import numpy as np
 
     path = pathlib.Path(foldername)
+    num_of_files = 0
     if not path.exists():
         raise UserWarning(f"Folder {foldername} doesn't exist.")
     if recursive:
@@ -126,28 +137,41 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False):
         print(f"Running PySight on the following files:")
         for file in list(all_lst_files):
             print(str(file))
+            num_of_files += 1
         all_lst_files = path.rglob(glob_str)
     else:
         all_lst_files = path.glob(glob_str)
         print(f"Running PySight on the following files:")
         for file in list(all_lst_files):
             print(str(file))
+            num_of_files += 1
         all_lst_files = path.glob(glob_str)
 
+    data_columns = ['fname', 'done', 'error']
+    data_record = pd.DataFrame(np.zeros((num_of_files, 3)), columns=data_columns)  # store result of PySight
     gui = GUIApp()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
     verify_gui_input(gui)
 
     try:
-        for lst_file in all_lst_files:
+        for idx, lst_file in enumerate(all_lst_files):
             gui.filename.set(str(lst_file))
+            data_record.loc[idx, 'fname'] = str(lst_file)
             try:
                 main_data_readout(gui)
-            except:
+            except BaseException as e:
                 print(f"File {str(lst_file)} returned an error. Moving onwards.")
+                data_record.loc[idx, 'done'] = False
+                data_record.loc[idx, 'error'] = repr(e)
+            else:
+                data_record.loc[idx, 'done'] = True
+                data_record.loc[idx, 'error'] = None
     except TypeError as e:
-        print(e)
+        print(repr(e))
+
+    print(f"Summary of batch processing:\n{data_record}")
+    return data_record
 
 
 if __name__ == '__main__':
