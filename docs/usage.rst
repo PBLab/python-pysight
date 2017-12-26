@@ -73,3 +73,5 @@ Limitations
 * List (``.lst``) files have to be saved in ``ASCII`` format, and not binary.
 
 * The code currently supports only three input channels.
+
+* Timepatch ``3`` is currently unsupported.

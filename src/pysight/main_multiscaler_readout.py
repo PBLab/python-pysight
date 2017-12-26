@@ -176,4 +176,4 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> 
 
 if __name__ == '__main__':
     df, movie = run()
-    # run_batch(foldername=r"X:\Hagai", glob_str="*.lst", recursive=False)
+    # data = run_batch(foldername="", glob_str="*.lst", recursive=False)

@@ -26,19 +26,24 @@ class Tabulate(object):
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
     num_of_channels    = attr.ib(default=3, validator=instance_of(int))
+    edge               = attr.ib(init=False)
+    channel            = attr.ib(init=False)
+    list_of_losts      = attr.ib(init=False)
     df_after_timepatch = attr.ib(init=False)
-
 
     def run(self):
         """ Pipeline of analysis """
         if self.is_binary:
-            self.df_after_timepatch = self.tabulate_input_binary()
+            self.df_after_timepatch = self.__tabulate_input_binary()
         else:
-            self.df_after_timepatch = self.tabulate_input_hex()
+            self.__preparations_hex()
+            self.__tabulate_input_hex()
+            self.df_after_timepatch = self.__reformat_data_hex()
+            self.__check_user_inputs()
         print('Sorted dataframe created. Starting setting the proper data channel distribution...')
 
     @staticmethod
-    def hex_to_bin_dict():
+    def hex_to_bin_dict() -> Dict:
         """
         Create a simple dictionary that maps a hex input into a 4 letter binary output.
         :return: dict
@@ -64,33 +69,37 @@ class Tabulate(object):
             }
         return diction
 
-    def process_chan_edge(self, struct_of_data) -> Tuple[np.ndarray, np.ndarray]:
+    def __process_chan_edge(self, struct_of_data) -> Tuple[np.ndarray, np.ndarray]:
         """
         Simple processing scheme for the channel and edge data.
         """
         bin_array = np.array(iter_string_hex_to_bin("".join(struct_of_data.data)))
-        edge      = self.slice_string_arrays(bin_array, start=0, end=1)
-        channel   = self.slice_string_arrays(bin_array, start=1, end=4)
+        edge = self.__slice_string_arrays(bin_array, start=0, end=1)
+        channel = self.__slice_string_arrays(bin_array, start=1, end=4)
 
         return edge, channel
 
-    def tabulate_input_hex(self) -> pd.DataFrame:
+    def __preparations_hex(self) -> None:
         """
-        Reformat the read hex data into a dataframe.
+        "Set up the stage" for the tabulation process
+        :return None:
         """
-
         if len(self.data) == 0:
             raise IOError('List file contained zero events.')
 
         for key in list(self.dict_of_slices_hex.keys())[1:]:
-            self.dict_of_slices_hex[key].data = self.slice_string_arrays(self.data, self.dict_of_slices_hex[key].start,
-                                                                         self.dict_of_slices_hex[key].end)
-
+            self.dict_of_slices_hex[key].data = self.__slice_string_arrays(self.data,
+                                                                           self.dict_of_slices_hex[key].start,
+                                                                           self.dict_of_slices_hex[key].end)
         if not self.use_tag_bits:
             self.dict_of_slices_hex.pop('tag', None)
 
+    def __tabulate_input_hex(self) -> None:
+        """
+        Reformat the read hex data into a dataframe.
+        """
         # Channel and edge information
-        edge, channel = self.process_chan_edge(self.dict_of_slices_hex.pop('chan_edge'))
+        self.edge, self.channel = self.__process_chan_edge(self.dict_of_slices_hex.pop('chan_edge'))
         # TODO: Timepatch == '3' is not supported because of this loop.
 
         if self.dict_of_slices_hex['lost'] is True:
@@ -99,13 +108,13 @@ class Tabulate(object):
                     list_with_lost = iter_string_hex_to_bin("".join(self.dict_of_slices_hex[key].data))
                     step_size = self.dict_of_slices_hex[key].end - self.dict_of_slices_hex[key].start
                     if key == 'tag':
-                        list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_tag(list_with_lost,
-                                                                                                 step_size,
-                                                                                                 len(self.data))
+                        self.list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_tag(list_with_lost,
+                                                                                                      step_size,
+                                                                                                      len(self.data))
                     else:
-                        list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_np(list_with_lost,
-                                                                                                step_size,
-                                                                                                len(self.data))
+                        self.list_of_losts, self.dict_of_slices_hex[key].processed = get_lost_bit_np(list_with_lost,
+                                                                                                     step_size,
+                                                                                                     len(self.data))
                 else:
                     if key == 'tag':
                         self.dict_of_slices_hex[key].processed = convert_hex_to_bin(self.dict_of_slices_hex[key].data)
@@ -118,9 +127,13 @@ class Tabulate(object):
                 else:
                     self.dict_of_slices_hex[key].processed = convert_hex_to_int(self.dict_of_slices_hex[key].data)
 
-        # Reformat data
-        df = pd.DataFrame(channel, columns=['channel'], dtype='category')
-        df['edge'] = edge
+    def __reformat_data_hex(self) -> pd.DataFrame:
+        """
+        Place the data in an organized DataFrame
+        :return pd.DataFrame:
+        """
+        df = pd.DataFrame(self.channel, columns=['channel'], dtype='category')
+        df['edge'] = self.edge
         df['edge'] = df['edge'].astype('category')
 
         try:
@@ -129,9 +142,9 @@ class Tabulate(object):
             pass
 
         try:
-            df['lost'] = list_of_losts  # TODO: Currently the LOST bit is meaningless
+            df['lost'] = self.list_of_losts  # TODO: Currently the LOST bit is meaningless
             df['lost'] = df['lost'].astype('category')
-        except NameError:
+        except AttributeError:  # no data lost bit recorded
             pass
 
         df['abs_time'] = np.uint64(0)
@@ -149,9 +162,17 @@ class Tabulate(object):
         else:
             df['abs_time'] = self.dict_of_slices_hex['time_rel_sweep'].processed
 
-        # Before sorting all photons make sure that no input is missing from the user. If it's missing
-        # the code will ignore this channel, but not raise an exception
-        actual_data_channels = set(df['channel'].cat.categories.values)
+        return df
+
+    def __check_user_inputs(self):
+        """
+        Assert that the channels that the user believe were recorded are actually there.
+        Before sorting all photons make sure that no input is missing from the user. If it's missing
+        the code will ignore this channel, but not raise an exception
+        :return:
+        """
+
+        actual_data_channels = set(self.df_after_timepatch['channel'].cat.categories.values)
         if actual_data_channels != set(self.dict_of_inputs.values()):
             warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
                           f"The list files contains data in the following channels: {actual_data_channels}.")
@@ -163,12 +184,10 @@ class Tabulate(object):
                     thrown_channels += 1
             self.num_of_channels -= thrown_channels
             [self.dict_of_inputs.pop(key) for key in keys_to_pop]
-        assert np.all(df['abs_time'].values >= 0)
-
-        return df
+        assert np.all(self.df_after_timepatch['abs_time'].values >= 0)  # safety check
 
     @staticmethod
-    def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
+    def __slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
         """
         Slice an array of strings efficiently.
         Based on http://stackoverflow.com/questions/39042214/how-can-i-slice-each-element-of-a-numpy-array-of-strings
@@ -177,7 +196,7 @@ class Tabulate(object):
         b = arr.view('U1').reshape(len(arr), -1)[:, start:end]
         return np.fromstring(b.tostring(), dtype='U' + str(end - start))
 
-    def tabulate_input_binary(self) -> pd.DataFrame:
+    def __tabulate_input_binary(self):
         """
         Reformat the read binary data into a dataframe.
         """
