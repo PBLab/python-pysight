@@ -87,16 +87,18 @@ setup(
     cmdclass = {'build_ext': CustomBuildExtCommand},
     install_requires=[
         'numpy >= 1.13',
-        'matplotlib >= 2.0',
-        'pandas >= 0.20',
-        'attrs >= 17.0',
-        'cython >= 0.24',
+        'matplotlib >= 2.1',
+        'pandas >= 0.21',
+        'attrs >= 17.30',
+        'cython >= 0.27',
         'tables',
-        'scipy',
+        'scipy >= 1',
         'scikit-learn',
         'h5py',
         'h5py-cache',
-        'tqdm'
+        'tqdm',
+        'numba',
+
     ],
     extras_require={
     },

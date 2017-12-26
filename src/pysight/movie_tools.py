@@ -8,7 +8,7 @@ from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Tuple, Iterable, Dict
+from typing import List, Iterator, Tuple, Iterable, Dict, Generator
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
@@ -89,12 +89,12 @@ class Movie(object):
         photons_per_pulse = {}
         if self.num_of_channels == 1:
             photons_per_pulse[1] = self.data.shape[0] / num_of_pulses
-            return photons_per_pulse
         else:
             for chan in range(self.num_of_channels):
                 photons_per_pulse[chan] = self.data.loc[chan]
+        return photons_per_pulse
 
-    def run(self):
+    def run(self) -> None:
         """
         Main pipeline for the movie object
         :return:
@@ -103,7 +103,7 @@ class Movie(object):
         self.__print_outputs()
         print("Movie object created, analysis done.")
 
-    def gen_of_volumes(self, channel_num: int) -> Iterator:
+    def gen_of_volumes(self, channel_num: int) -> Generator:
         """
         Populate the deque containing the volumes as a generator.
         Creates a list for each channel in the data. Channels start with 1.
@@ -174,7 +174,7 @@ class Movie(object):
         for func in funcs_to_execute_end:
             func()
 
-    def __save_stack_at_once(self):
+    def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
         with h5py_cache.File(f'{self.outputs["filename"]}', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
@@ -182,25 +182,25 @@ class Movie(object):
             for channel in range(1, self.num_of_channels + 1):
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
-    def __save_summed_at_once(self):
+    def __save_summed_at_once(self) -> None:
         """ Save the netire in-memory summed data into .hdf5 file """
         with h5py_cache.File(f'{self.outputs["filename"]}', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
             for channel in range(1, self.num_of_channels + 1):
                 f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(self.summed_mem[channel])
 
-    def __close_file(self):
+    def __close_file(self) -> None:
         """ Close the file pointer of the specific channel """
         self.outputs['stack'].file.close()
 
-    def __convert_deque_to_arr(self):
+    def __convert_deque_to_arr(self) -> None:
         """ Convert a deque with a bunch of frames into a single numpy array with an extra
         dimension (0) containing the data.
         """
         for channel in range(1, self.num_of_channels + 1):
             self.stack[channel] = np.squeeze(np.stack(self.stack[channel], axis=0))
 
-    def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs):
+    def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs) -> None:
         """
         If the user desired, create two memory constructs -
         A summed array of all images (for a specific channel), and a stack containing
@@ -211,7 +211,7 @@ class Movie(object):
         self.stack[channel].append(data)
         self.summed_mem[channel] += np.uint16(data)
 
-    def __save_stack_incr(self, data: np.ndarray, channel: int, vol_num: int):
+    def __save_stack_incr(self, data: np.ndarray, channel: int, vol_num: int) -> None:
         """
         Save incrementally new data to an open file on the disk
         :param data: Data to save
@@ -220,7 +220,7 @@ class Movie(object):
         """
         self.outputs['stack'][f'Channel {channel}'][vol_num, ...] = np.squeeze(data)
 
-    def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs):
+    def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs) -> None:
         """
         Create a summed variable later to be saved as the channel's data
         :param data: Data to be saved
@@ -275,7 +275,7 @@ class Movie(object):
         else:
             self.__show_stack_no_flim(channel=channel, slice_range=slice_range)
 
-    def __show_stack_no_flim(self, channel: int, slice_range: Iterable):
+    def __show_stack_no_flim(self, channel: int, slice_range: Iterable) -> None:
         """ Show the slices from the generated stack """
 
         img = None
@@ -288,7 +288,7 @@ class Movie(object):
             plt.pause(0.1)
             plt.draw()
 
-    def __show_stack_flim(self, channel: int, slice_range: Iterable):
+    def __show_stack_flim(self, channel: int, slice_range: Iterable) -> None:
         """ Show the slices from the generated stack that contains FLIM data """
 
         for frame in slice_range:
@@ -365,14 +365,14 @@ class Volume(object):
         return metadata
 
     @property
-    def tag_period(self):
+    def tag_period(self) -> int:
         return int(np.ceil(1 / (self.tag_freq * self.binwidth)))
 
     @property
-    def dimensions_iterable(self):
+    def dimensions_iterable(self) -> List:
         return [self.x_pixels, self.y_pixels, self.z_pixels, int(np.ceil(1 / (self.reprate * self.binwidth)))]
 
-    def __create_hist_edges(self):
+    def __create_hist_edges(self) -> Tuple[List, int]:
         """
         Create three vectors that will create the grid of the frame. Uses Numba internal function for optimization.
         :return: Tuple of np.array
@@ -467,7 +467,7 @@ def create_linspace(start, stop, num):
 
 
 def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fill_frac: float=0,
-                   delta: int=158000, sweeps: bool=False):
+                   delta: int=158000, sweeps: bool=False) -> Tuple[int, int]:
     """
     Create the metadata for the y-axis.
 

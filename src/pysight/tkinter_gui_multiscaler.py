@@ -4,6 +4,7 @@ __author__ = Hagai Hargil
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import font as tkfont
 import json
 from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
@@ -53,6 +54,8 @@ class GUIApp(object):
         main_frame['borderwidth'] = 2
         style = ttk.Style()
         style.theme_use('clam')
+        self.normal_font = tkfont.Font(family='Helvetica', size=12)
+        self.bold_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
 
         # Run widgets
         self.__browse_file(main_frame)
@@ -96,7 +99,7 @@ class GUIApp(object):
 
     def __input_channels(self, main_frame):
         # Comboboxes
-        input_channels_label = ttk.Label(main_frame, text='Input Channels')
+        input_channels_label = ttk.Label(main_frame, text='Input Channels', font=self.bold_font)
         input_channels_label.grid(column=1, row=0, sticky='ns')
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
@@ -116,17 +119,17 @@ class GUIApp(object):
         mb3['values'] = self.tuple_of_data_sources
 
         # Labels
-        input_channel_1 = ttk.Label(main_frame, text='START')
+        input_channel_1 = ttk.Label(main_frame, text='START', font=self.normal_font)
         input_channel_1.grid(column=1, row=1, sticky='ns')
-        input_channel_2 = ttk.Label(main_frame, text='STOP1')
+        input_channel_2 = ttk.Label(main_frame, text='STOP1', font=self.normal_font)
         input_channel_2.grid(column=1, row=2, sticky='ns')
-        input_channel_3 = ttk.Label(main_frame, text='STOP2')
+        input_channel_3 = ttk.Label(main_frame, text='STOP2', font=self.normal_font)
         input_channel_3.grid(column=1, row=3, sticky='ns')
 
     def __num_of_frames(self, main_frame):
 
         # Number of frames in the data
-        frame_label = ttk.Label(main_frame, text='Number of frames')
+        frame_label = ttk.Label(main_frame, text='Number of frames', font=self.normal_font)
         frame_label.grid(column=0, row=1, sticky='ns')
 
         self.num_of_frames = IntVar(value=1)
@@ -144,7 +147,7 @@ class GUIApp(object):
 
     def __outputs(self, main_frame):
         """ Wanted outputs """
-        outputs_label = ttk.Label(main_frame, text='Outputs:')
+        outputs_label = ttk.Label(main_frame, text='Outputs:', font=self.bold_font)
         outputs_label.grid(column=0, row=3, sticky='w')
 
         self.summed = BooleanVar(value=False)
@@ -159,13 +162,13 @@ class GUIApp(object):
 
     def __image_size(self, main_frame):
         # Define image sizes
-        image_size_label = ttk.Label(main_frame, text='Image Size')
+        image_size_label = ttk.Label(main_frame, text='Image Size', font=self.bold_font)
         image_size_label.grid(column=6, row=0, sticky='ns')
-        x_size_label = ttk.Label(main_frame, text='X')
+        x_size_label = ttk.Label(main_frame, text='X', font=self.normal_font)
         x_size_label.grid(column=6, row=1, sticky='w')
-        y_size_label = ttk.Label(main_frame, text='Y')
+        y_size_label = ttk.Label(main_frame, text='Y', font=self.normal_font)
         y_size_label.grid(column=6, row=1, sticky='ns')
-        z_size_label = ttk.Label(main_frame, text='Z')
+        z_size_label = ttk.Label(main_frame, text='Z', font=self.normal_font)
         z_size_label.grid(column=6, row=1, sticky='e')
 
         self.x_pixels = IntVar(value=512)
@@ -221,7 +224,7 @@ class GUIApp(object):
     def __tag_lens(self, main_frame):
         """ TAG lens nominal frequency """
 
-        tag_label = ttk.Label(main_frame, text='TAG nominal freq. [Hz]\nn. of pulses and offset [deg]')
+        tag_label = ttk.Label(main_frame, text='  TAG nominal freq. [Hz]\noffset [deg]        n. pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
         self.tag_freq = DoubleVar(value=0.189e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
@@ -240,7 +243,7 @@ class GUIApp(object):
     def __tag_bits(self, main_frame):
         """ TAG bits """
 
-        tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation')
+        tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation', font=self.bold_font)
         tag_bits_label.grid(column=1, row=5, sticky='ns')
 
         self.tag_bits = BooleanVar(value=False)

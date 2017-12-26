@@ -15,16 +15,26 @@ To use PySight do one of the following:
 
     python /path/to/pysight/dir/main_multiscaler_readout.py
 
+3. For batch processing of multiple list files::
 
-This command will open a GUI in which you'll have to choose a ``.lst`` file to parse.
+    from pysight import main_multiscaler_readout
 
-If you use option #1, The algorithm will create the pandas DataFrame ``df`` containing all data, and a ``movie`` object with allocated data. The output options are:
+    foldername: str = r'/path/to/folder/with/list/files'
+    globstr: str = ''  # a glob-pattern string to filter files to parse. Default is '*.lst'
+    recursive: bool = False  # Boolean whether to iterate over nested folders in the main folder
 
-* ``single`` - The algorithm will create a single ``n``-dimensional matrix that is the sum of all photon events in the list file. Each dimension corresponds to a recorded physical axis - frames, lines, laser pulse, etc. The variable is called ``movie.summed``.
-* ``array`` - Full-blown array containing all available data in separate frames\volumes, no aggregation like in ``single``. Access it from the ``.hist`` field of the generated object.
-* ``tiff`` - Outputs a ``.tif`` file with the same name as the file, in the same folder.
+    main_multiscaler_readout.run_batch(foldername=foldername, globstr=globstr, recursive=recursive)
 
-Obviously, if you run the script from the command line (option #2) you can only interact with the ``.tif`` file.
+These command will open a GUI in which you'll have to choose a ``.lst`` file to parse.
+
+If you use option #1, The algorithm will create the pandas DataFrame ``df`` containing all data, and a ``movie`` object with allocated data.
+Outputs come in the form of in-memory numpy arrays and ``.hdf5`` compressed multidimensional files. The output options are:
+
+* **In Memory** - The returned objects contain all photons and generated histograms. Use it if you wish to further process the data in Python. Access the data with the ``.hist`` field of the movie object.
+* **Full Stack** - PySight will save to disk a multidimensional histogram, one per spectral channel, with all of the events recorded. Dimensions are [t, x, y, z, tau].
+* **Summed Stack** - PySight will sum the t dimension of the Full Stack to received a summed projection over time of the entire experiment.
+
+Obviously, if you run the script from the command line (option #2) or in batch mode you can only interact with the final ``.hdf5`` files.
 
 GUI Options
 -----------
@@ -35,13 +45,13 @@ Running **PySight** will open GUI seen above.
 
 Choosing a ``.lst`` file for analysis is done with the *Browse* button, located at the top-left corner of the GUI.
 
-The *Input Channels* option allows you to specify what was the input device to all three of the analog inputs of the multiscaler.
+The *Input Channels* option allows you to specify what was the input device to all three (supported) of the analog inputs of the multiscaler.
 Note that at least one of these fields must be a ``PMT1`` entry.
 
-To the right, *Image Size* determines the shape of the output matrix from the algorithm.
+To the right, *Image Size* determines the shape of the output matrix from the algorithm. The X dimension corresponds to the line signal, and it should fit the original signal fed into the multiscaler.
 Below it you can check whether the mirrors acquired data in a bi-directional fashion.
 You should also specify, in case data was acquired uni-directionally, whether the algorithm should keep the photons arriving during that returning phase.
-Below, specify the phase delay of the scanners and fill fraction, to cancel pixel-shift and remove the non-linear area of the image, located in the edges.
+Below, specify the phase delay of the scanners and fill fraction, to cancel pixel-shift and remove the non-linear area of the image, located in the edges. Phase delay is only used in bidirectional mode.
 
 At the bottom part of the GUI you can load a specific ``.json`` file to be used as a config file. A default ``default.json`` file is shipped with the package,
 but other files can be saved and loaded easily, to allow easier use of the GUI. The full filename is also saved.
@@ -62,4 +72,4 @@ Limitations
 
 * List (``.lst``) files have to be saved in ``ASCII`` format, and not binary.
 
-* The code currently supports only three input channels, and a single PMT channel.
+* The code currently supports only three input channels.
