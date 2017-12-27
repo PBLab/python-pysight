@@ -64,8 +64,8 @@ class Allocate(object):
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
-            sorted_indices = numba_search_sorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
-                                                 self.df_photons.loc[:, 'abs_time'].values)
+            sorted_indices = np.searchsorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
+                                             self.df_photons.loc[:, 'abs_time'].values) - 1
             self.df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
             # but this .iloc method is amazingly faster than .loc
             positive_mask = sorted_indices >= 0
