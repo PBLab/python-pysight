@@ -21,6 +21,7 @@ def main_data_readout(gui):
     from pysight.photon_df_tools import PhotonDF
     from pysight.tag_bits_tools import ParseTAGBits
     from pysight.distribute_data import DistributeData
+    from pysight.validation_tools import SignalValidator
     import numpy as np
 
     # Read the file
@@ -42,16 +43,20 @@ def main_data_readout(gui):
                               num_of_channels=cur_file.num_of_channels, )
     tabulated_data.run()
 
-    separated_data = DistributeData(df=tabulated_data.df_after_timepatch, num_of_frames=gui.num_of_frames.get(),
-                                    laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
-                                    use_tag_bits=gui.tag_bits.get(), use_sweeps=gui.sweeps_as_lines.get(),
-                                    time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
-                                    line_freq=gui.line_freq.get(), x_pixels=gui.x_pixels.get(),
-                                    y_pixels=gui.y_pixels.get(), bidir=gui.bidir.get(),
-                                    bidir_phase=gui.phase.get(), num_of_channels=tabulated_data.num_of_channels,
-                                    dict_of_inputs=tabulated_data.dict_of_inputs, data_range=cur_file.data_range,
-                                    )
+    separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
+                                    dict_of_inputs=tabulated_data.dict_of_inputs,
+                                    use_tag_bits=gui.tag_bits.get(), )
     separated_data.run()
+
+    validated_data = SignalValidator(dict_of_data=separated_data.dict_of_data, num_of_frames=gui.num_of_frames.get(),
+                                    binwidth=float(gui.binwidth.get()), use_sweeps=gui.sweeps_as_lines.get(),
+                                    delay_between_frames=float(gui.frame_delay.get()),
+                                    data_to_grab=separated_data.data_to_grab, line_freq=gui.line_freq.get(),
+                                    num_of_lines=gui.x_pixels.get(), bidir=gui.bidir.get(),
+                                    bidir_phase=gui.phase.get(), image_soft=gui.imaging_software.get(),
+                                    )
+
+    validated_data.run()
 
     photon_df = PhotonDF(dict_of_data=separated_data.dict_of_data)
     tag_bit_parser = ParseTAGBits(dict_of_data=separated_data.dict_of_data, photons=photon_df.gen_df(),
@@ -90,11 +95,12 @@ def main_data_readout(gui):
                         reprate=float(gui.reprate.get()), name=gui.filename.get(),
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get() if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
-                        outputs=outputs.outputs, censor=gui.censor.get(),
+                        outputs=outputs.outputs, censor=gui.censor.get(), mirror_phase=gui.phase.get(),
+                        lines=validated_data.dict_of_data['Lines'].abs_time,
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
-                        line_delta=int(separated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
-                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()), mirror_phase=gui.phase.get())
+                        line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
+                        tag_as_phase=True, tag_freq=float(gui.tag_freq.get()), )
 
     final_movie.run()
 

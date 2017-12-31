@@ -13,7 +13,7 @@ from attr.validators import instance_of
 @attr.s(slots=True)
 class Tabulate(object):
     """
-    Prepare lst files so that they could be imaged using later modules.
+    Place all data in a pandas' DataFrame after sorting out each bit's meaning
     """
     # TODO: Variable documentation
     dict_of_inputs     = attr.ib(validator=instance_of(dict))

@@ -32,6 +32,7 @@ class Movie(object):
     A holder for Volume objects to be displayed consecutively.
     """
     data            = attr.ib()
+    lines           = attr.ib(validator=instance_of(pd.Series))
     reprate         = attr.ib(default=80e6, validator=instance_of(float))
     x_pixels        = attr.ib(default=512, validator=instance_of(int))
     y_pixels        = attr.ib(default=512, validator=instance_of(int))
@@ -112,7 +113,8 @@ class Movie(object):
         list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
         for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
             cur_data = self.data.xs(key=(current_time, channel_num), level=('Frames', 'Channel'), drop_level=False)
-            yield Volume(data=cur_data, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
+            cur_lines = self.lines[(self.lines >= current_time) & (self.lines <list_of_frames[idx + 1])]
+            yield Volume(data=cur_data, lines=cur_lines, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
                          z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
                          reprate=self.reprate, binwidth=self.binwidth, empty=True if cur_data.empty else False,
                          end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
@@ -302,6 +304,7 @@ class Volume(object):
     A Movie() is a sequence of Volumes(). Each volume contains frames in a plane.
     """
     data           = attr.ib(validator=instance_of(pd.DataFrame))
+    lines          = attr.ib(validator=instance_of(pd.Series))
     x_pixels       = attr.ib(default=512, validator=instance_of(int))
     y_pixels       = attr.ib(default=512, validator=instance_of(int))
     z_pixels       = attr.ib(default=1, validator=instance_of(int))
@@ -385,8 +388,7 @@ class Volume(object):
                 if 'Volume' == key:
                     try:
                         list_of_edges.append(
-                            LineRectifier(lines=np.unique(self.data.index.get_level_values('Lines').values)\
-                                                - self.abs_start_time,
+                            LineRectifier(lines=self.lines - self.abs_start_time,
                                           x_pixels=self.x_pixels,
                                           bidir=self.bidir,
                                           end_time=self.end_time).rectify()

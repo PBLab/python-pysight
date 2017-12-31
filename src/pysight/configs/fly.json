@@ -1,11 +1,11 @@
 {
     "debug": [
         "PY_VAR0",
-        false
+        true
     ],
     "phase": [
         "PY_VAR1",
-        -2.78
+        10.0
     ],
     "reprate": [
         "PY_VAR2",
@@ -13,7 +13,7 @@
     ],
     "gating": [
         "PY_VAR3",
-        true
+        false
     ],
     "binwidth": [
         "PY_VAR4",
@@ -33,11 +33,11 @@
     ],
     "fill_frac": [
         "PY_VAR8",
-        72.0
+        76.0
     ],
     "bidir": [
         "PY_VAR9",
-        false
+        true
     ],
     "keep_unidir": [
         "PY_VAR10",
@@ -65,15 +65,15 @@
     ],
     "filename": [
         "PY_VAR16",
-        ""
+        "X:/Hagai/Multiscaler/21-12-17/flies_21_12_17/fly4_gevi/start_pmt_stop1_puff_stop2_lines_512px003.lst"
     ],
     "input_start": [
         "PY_VAR17",
-        "Frames"
+        "PMT1"
     ],
     "input_stop1": [
         "PY_VAR18",
-        "PMT1"
+        "PMT2"
     ],
     "input_stop2": [
         "PY_VAR19",
@@ -85,11 +85,11 @@
     ],
     "summed": [
         "PY_VAR21",
-        false
+        true
     ],
     "memory": [
         "PY_VAR22",
-        false
+        true
     ],
     "stack": [
         "PY_VAR23",
@@ -105,7 +105,7 @@
     ],
     "z_pixels": [
         "PY_VAR26",
-        1
+        10
     ],
     "tag_bits": [
         "PY_VAR27",
@@ -147,12 +147,12 @@
         "PY_VAR36",
         "None"
     ],
-    "image_sys": [
+    "imaging_software": [
         "PY_VAR37",
         "ScanImage"
     ],
     "save_as": [
         "PY_VAR38",
-        "default"
+        "fly"
     ]
 }

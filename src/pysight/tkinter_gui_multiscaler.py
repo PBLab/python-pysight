@@ -13,6 +13,7 @@ import time
 import attr
 from attr.validators import instance_of
 import warnings
+from enum import Enum
 
 
 def is_positive(instance, attribute, value):
@@ -23,6 +24,11 @@ def is_positive(instance, attribute, value):
 def end_is_greater(instance, attribute, value):
     if value < instance.start:
         return ValueError("TAG Bit 'end' value has to be equal or greater to 'start'.")
+
+
+class ImagingSoftware(Enum):
+    SCANIMAGE = 'ScanImage'
+    MSCAN = 'MScan'
 
 
 @attr.s(slots=True)
@@ -56,27 +62,17 @@ class GUIApp(object):
         style.theme_use('clam')
         self.normal_font = tkfont.Font(family='Helvetica', size=10)
         self.bold_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
+        self.__create_vars()
 
         # Run widgets
         self.__browse_file(main_frame)
+        self.__advanced_win(main_frame)
         self.__input_channels(main_frame)
         self.__num_of_frames(main_frame)
         self.__outputs(main_frame)
         self.__image_size(main_frame)
-        self.__debug(main_frame)
-        self.__mirror_phase(main_frame)
-        self.__fill_frac(main_frame)
-        self.__reprate(main_frame)
-        self.__binwidth(main_frame)
-        self.__tag_lens(main_frame)
         self.__tag_bits(main_frame)
-        self.__bi_dir(main_frame)
-        self.__keep_unidir_events(main_frame)
-        self.__gating(main_frame)
-        self.__flim(main_frame)
-        self.__censor(main_frame)
-        self.__line_freq(main_frame)
-        self.__sweeps_as_lines(main_frame)
+        self.__imaging_software(main_frame)
 
         # Only saving\loading functions after this point
         self.__save_cfg(main_frame)
@@ -86,16 +82,42 @@ class GUIApp(object):
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy)
         quit_button.grid(row=12, column=2, sticky='ns')
-
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
+
         self.root.wait_window()
+
+    def __create_vars(self):
+        self.debug = BooleanVar(value=False)
+        self.phase = DoubleVar(value=-2.78)
+        self.reprate = DoubleVar(value=80.3e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
+        self.gating = BooleanVar(value=False)  # difference between pulse and arrival to sample
+        self.binwidth = DoubleVar(value=800e-12)
+        self.tag_freq = DoubleVar(value=0.189e6)
+        self.tag_pulses = IntVar(value=1)
+        self.tag_offset = IntVar(value=0)
+        self.fill_frac = DoubleVar(value=72.0)  # percent
+        self.bidir = BooleanVar(value=False)
+        self.keep_unidir = BooleanVar(value=False)
+        self.flim: BooleanVar = BooleanVar(value=False)
+        self.censor: BooleanVar = BooleanVar(value=False)
+        self.line_freq = DoubleVar(value=7930.0)  # Hz
+        self.sweeps_as_lines = BooleanVar(value=False)
+        self.frame_delay = DoubleVar(value=0.001)  # sec
 
     def __browse_file(self, main_frame):
         self.filename = StringVar(value="")
-
         browse_button = ttk.Button(main_frame, text="Browse", command=self.__browsefunc)
         browse_button.grid(column=0, row=0, sticky='ns')
+
+    def __imaging_software(self, main_frame):
+        imaging_software_label = ttk.Label(main_frame, text='Imaging System', font=self.normal_font)
+        imaging_software_label.grid(row=5, column=5, sticky='ns')
+        self.imaging_software = StringVar()
+        cb_image = ttk.Combobox(main_frame, textvariable=self.imaging_software, width=10)
+        cb_image.grid(row=5, column=6, sticky='ns')
+        cb_image.set(ImagingSoftware.SCANIMAGE.value)
+        cb_image['values'] = [item.value for item in ImagingSoftware]
 
     def __input_channels(self, main_frame):
         # Comboboxes
@@ -130,11 +152,11 @@ class GUIApp(object):
 
         # Number of frames in the data
         frame_label = ttk.Label(main_frame, text='Number of frames', font=self.normal_font)
-        frame_label.grid(column=0, row=1, sticky='ns')
+        frame_label.grid(column=6, row=3, sticky='ns')
 
         self.num_of_frames = IntVar(value=1)
         self.num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames, width=3)
-        self.num_frames_entry.grid(column=0, row=2, sticky='ns')
+        self.num_frames_entry.grid(column=7, row=3, sticky='ns')
         self.num_frames_entry.config(state='disabled')
 
         # Disable number of frames unless all inputs but one are empty
@@ -185,12 +207,10 @@ class GUIApp(object):
 
     def __debug(self, main_frame):
         """ Read a smaller portion of data for debugging """
-        self.debug = BooleanVar()
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
         debug_check.grid(column=6, row=11, sticky='ns')
 
     def __mirror_phase(self, main_frame):
-        self.phase = DoubleVar(value=-2.78)
         phase_text = ttk.Label(main_frame, text='Mirror phase [us]: ')
         phase_text.grid(column=6, row=5, sticky='w')
         phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
@@ -201,13 +221,10 @@ class GUIApp(object):
 
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
         laser1_label.grid(column=0, row=9, sticky='w')
-
-        self.reprate = DoubleVar(value=80.3e6)  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
         reprate_entry.grid(column=1, row=9, sticky='w')
 
     def __gating(self, main_frame):
-        self.gating = BooleanVar(value=True)  # difference between pulse and arrival to sample
         self.gating_check = ttk.Checkbutton(main_frame, text='With Gating?', variable=self.gating)
         self.gating_check.grid(column=3, row=9, sticky='w')
         self.gating_check.config(state='disabled')
@@ -217,7 +234,6 @@ class GUIApp(object):
 
         binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
         binwidth_label.grid(column=0, row=10, sticky='ns')
-        self.binwidth = DoubleVar(value=800e-12)
         binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
         binwidth_entry.grid(column=1, row=10, sticky='ns')
 
@@ -226,16 +242,13 @@ class GUIApp(object):
 
         tag_label = ttk.Label(main_frame, text='  TAG nominal freq. [Hz]\noffset [deg]        n. pulses')
         tag_label.grid(column=6, row=8, sticky='ns')
-        self.tag_freq = DoubleVar(value=0.189e6)
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
         tag_label_entry.grid(column=6, row=9, sticky='ns')
 
-        self.tag_pulses = IntVar(value=1)
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
         tag_pulses_entry.grid(column=6, row=9, sticky='e')
         tag_pulses_entry.config(state='disabled')
 
-        self.tag_offset = IntVar(value=0)
         self.tag_offset_entry = ttk.Entry(main_frame, textvariable=self.tag_offset, width=3)
         self.tag_offset_entry.grid(column=6, row=9, sticky='w')
         self.tag_offset_entry.config(state='disabled')
@@ -265,7 +278,7 @@ class GUIApp(object):
 
         bits_grp_1 = ttk.Combobox(main_frame, textvariable=self.bits_grp_1_label, width=10)
         bits_grp_1.grid(column=0, row=6, sticky='e')
-        bits_grp_1.set('Power')
+        bits_grp_1.set('None')
         bits_grp_1['values'] = self.tag_bits_group_options
 
         bits_grp_2 = ttk.Combobox(main_frame, textvariable=self.bits_grp_2_label, width=10)
@@ -319,7 +332,6 @@ class GUIApp(object):
     def __fill_frac(self, main_frame):
         """ Percentage of time mirrors spend "inside" the image """
 
-        self.fill_frac = DoubleVar(value=72.0)  # percent
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
         fill_frac_text.grid(column=6, row=6, sticky='w')
         fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
@@ -345,15 +357,14 @@ class GUIApp(object):
         list_of_values = [self.input_start.get(), self.input_stop1.get(), self.input_stop2.get()]
         if 'TAG Lens' in list_of_values:
             self.z_pixels_entry.config(state='normal')
-            self.tag_offset_entry.config(state='normal')
+            # self.tag_offset_entry.config(state='normal')
         else:
             self.z_pixels_entry.config(state='disabled')
-            self.tag_offset_entry.config(state='disabled')
+            # self.tag_offset_entry.config(state='disabled')
 
-    def __bi_dir(self, main_frame):
+    def __bidir(self, main_frame):
         """ Checkbox for bi-directional scan """
 
-        self.bidir = BooleanVar(value=False)
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
         bidir_check.grid(column=6, row=3, sticky='ns')
         self.bidir.trace('w', self.__check_if_bidir)
@@ -366,8 +377,8 @@ class GUIApp(object):
 
     def __keep_unidir_events(self, main_frame):
         """ Checkbox to see if events taken in the returning phase of a resonant mirror should be kept. """
-        self.keep_unidir = BooleanVar(value=False)
-        self.keep_unidir_check = ttk.Checkbutton(main_frame, text='Keep unidirectional?', variable=self.keep_unidir)
+        self.keep_unidir_check = ttk.Checkbutton(main_frame, text='Keep unidirectional?',
+                                                 variable=self.keep_unidir)
         self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
         self.keep_unidir_check.config(state='disabled')
 
@@ -378,7 +389,6 @@ class GUIApp(object):
         received starts an event of 8 pulses, with the next recorded pulse being the 9th.
         :param main_frame: ttk.Frame
         """
-        self.flim: BooleanVar = BooleanVar(value=False)
         flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
                                                       variable=self.flim,
                                                       text='FLIM?')
@@ -390,7 +400,6 @@ class GUIApp(object):
         If FLIM is active, this checkbox enables the use of censor correction on the generated images.
         :param main_frame: ttk.Frame
         """
-        self.censor: BooleanVar = BooleanVar(value=False)
         self.censor_check: ttk.Checkbutton = ttk.Checkbutton(main_frame, variable=self.censor,
                                                              text='Censor Correction')
         self.censor_check.grid(row=10, column=2, sticky='e')
@@ -407,7 +416,6 @@ class GUIApp(object):
 
     def __line_freq(self, main_frame):
         """ Frequency of the line scanning mirror """
-        self.line_freq = DoubleVar(value=7930.0)  # Hz
         line_freq_label = ttk.Label(main_frame, text="Line freq [Hz]: ")
         line_freq_label.grid(row=7, column=6, sticky='w')
         line_freq_entry = ttk.Entry(main_frame, textvariable=self.line_freq, width=8)
@@ -415,10 +423,37 @@ class GUIApp(object):
 
     def __sweeps_as_lines(self, main_frame):
         """ Use the sweeps as lines for the image generation """
-        self.sweeps_as_lines = BooleanVar(value=False)
         sweeps_cb = ttk.Checkbutton(main_frame, variable=self.sweeps_as_lines,
                                       text='Sweeps as lines?')
         sweeps_cb.grid(row=10, column=3, sticky='ns')
+
+    def __advanced_win(self, main_frame):
+        advanced_but = ttk.Button(main_frame, text="Advanced", command=self.__open_advanced)
+        advanced_but.grid(row=11, column=6, sticky='ns')
+
+    def __open_advanced(self, *args):
+        self.advanced_win = Toplevel(self.root)
+        self.__gating(self.advanced_win)
+        self.__flim(self.advanced_win)
+        self.__censor(self.advanced_win)
+        self.__sweeps_as_lines(self.advanced_win)
+        self.__debug(self.advanced_win)
+        self.__mirror_phase(self.advanced_win)
+        self.__fill_frac(self.advanced_win)
+        self.__reprate(self.advanced_win)
+        self.__binwidth(self.advanced_win)
+        self.__keep_unidir_events(self.advanced_win)
+        self.__bidir(self.advanced_win)
+        self.__check_if_bidir(self.advanced_win)
+        self.__tag_lens(self.advanced_win)
+        self.__frame_delay(self.advanced_win)
+        self.__line_freq(self.advanced_win)
+
+    def __frame_delay(self, main_frame):
+        frame_delay_label = ttk.Label(main_frame, text="Frame delay [sec]: ")
+        frame_delay_label.grid(row=1, column=1, sticky='w')
+        frame_delay_entry = ttk.Entry(main_frame, textvariable=self.frame_delay, width=8)
+        frame_delay_entry.grid(row=1, column=2, sticky='ns')
 
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT ########
 
@@ -649,6 +684,18 @@ def verify_gui_input(gui):
 
     if 'Laser' in channel_inputs and gui.flim.get() == 1:
         raise UserWarning("Can't have both a laser channel active and the FLIM checkboxed ticked.")
+
+    if not gui.imaging_software.get().upper() in [name for name, member in ImagingSoftware.__members__.items()]:
+        raise UserWarning("Must use existing options in the Imaging Software entry.")
+
+    if not isinstance(gui.frame_delay.get(), float):
+        raise UserWarning("Frame delay must be a float.")
+
+    if gui.frame_delay.get() < 0:
+        raise UserWarning("Frame delay must be a positive float.")
+
+    if gui.frame_delay.get() > 10:
+        raise UserWarning("Frame delay is the number of seconds between subsequent frames.")
 
 
 if __name__ == '__main__':

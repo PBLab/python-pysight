@@ -667,3 +667,8 @@ Changelog
 * Changed output of ``run_batch`` to a DataFrame.
 
 * Refactored ``tabulation_tools``.
+
+0.7.0 (2017-12-XX)
+------------------
+
+* Refactoring and additions to GUI, including new choices between imaging systems.
