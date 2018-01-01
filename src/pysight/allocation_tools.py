@@ -6,7 +6,6 @@ import numpy as np
 import attr
 from typing import Dict, Tuple, List
 from numba import jit, int64, uint64
-from pysight.validation_tools import  rectify_photons_in_uneven_lines
 from pysight.tag_tools_v2 import TagPipeline
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
@@ -75,11 +74,7 @@ class Allocate(object):
             self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
             self.sorted_indices = sorted_indices[sorted_indices >= 0]
             if 'Lines' == key:
-                self.df_photons = rectify_photons_in_uneven_lines(df=self.df_photons,
-                                                                  sorted_indices=self.sorted_indices,
-                                                                  lines=self.dict_of_data['Lines'].loc[:, 'abs_time'],
-                                                                  bidir=self.bidir,
-                                                                  keep_unidir=self.keep_unidir)
+                self.__rectify_photons_in_uneven_lines()
 
             if 'Laser' != key:
                 self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype('category')
@@ -197,6 +192,31 @@ class Allocate(object):
         """
         phase_in_seconds = self.phase * 1e-6
         self.dict_of_data['Lines'].abs_time.iloc[1::2] -= np.uint64(phase_in_seconds/self.binwidth)
+
+    def __rectify_photons_in_uneven_lines(self):
+        """
+        "Deal" with photons in uneven lines. Unidir - if keep_unidir is false, will throw them away.
+        Bidir = flips them over (in the Volume object)
+        """
+        uneven_lines = np.remainder(self.sorted_indices, 2)
+        if self.bidir:
+            self.df_photons.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
+
+        elif not self.bidir and not self.keep_unidir:
+            self.df_photons = self.df_photons.iloc[uneven_lines != 1, :].copy()
+            self.df_photons.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
+            self.dict_of_data['Lines'] = self.dict_of_data['Lines'].iloc[::2, :].copy().reset_index()
+
+        elif not self.bidir and self.keep_unidir:  # Unify the excess rows and photons in them into the previous row
+            self.sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
+            self.df_photons.loc['Lines'] = self.dict_of_data['Lines'].loc[self.sorted_indices, 'abs_time'].values
+            self.dict_of_data['Lines'] = self.dict_of_data['Lines'].iloc[::2, :].copy().reset_index()
+        try:
+            self.df_photons.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
+        except ValueError:  # column label doesn't exist
+            pass
+        self.df_photons = self.df_photons.loc[self.df_photons.loc[:, 'time_rel_line'] >= 0, :]
+
 
 @jit(nopython=True, cache=True)
 def numba_sorted(arr: np.array) -> np.array:

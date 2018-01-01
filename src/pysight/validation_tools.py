@@ -587,29 +587,3 @@ class SignalValidator:
         else:
             lines.iloc[1::2] += np.uint64(phase_in_seconds / self.binwidth)
         return lines
-
-def rectify_photons_in_uneven_lines(df: pd.DataFrame, sorted_indices: np.array, lines: pd.Series, bidir: bool=True,
-                                    keep_unidir: bool=False):
-    """
-    "Deal" with photons in uneven lines. Unidir - if keep_unidir is false, will throw them away.
-    Bidir = flips them over (in the Volume object)
-    """
-    uneven_lines = np.remainder(sorted_indices, 2)
-    if bidir:
-        df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
-
-    elif not bidir and not keep_unidir:
-        df = df.iloc[uneven_lines != 1, :].copy()
-        df.rename(columns={'time_rel_line_pre_drop': 'time_rel_line'}, inplace=True)
-
-    elif not bidir and keep_unidir:  # Unify the excess rows and photons in them into the previous row
-        sorted_indices[np.logical_and(uneven_lines, 1)] -= 1
-        df.loc['Lines'] = lines.loc[sorted_indices].values
-
-    try:
-        df.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
-    except ValueError:  # column label doesn't exist
-        pass
-    df = df.loc[df.loc[:, 'time_rel_line'] >= 0, :]
-
-    return df

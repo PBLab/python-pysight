@@ -58,15 +58,15 @@ def main_data_readout(gui):
 
     validated_data.run()
 
-    photon_df = PhotonDF(dict_of_data=separated_data.dict_of_data)
-    tag_bit_parser = ParseTAGBits(dict_of_data=separated_data.dict_of_data, photons=photon_df.gen_df(),
+    photon_df = PhotonDF(dict_of_data=validated_data.dict_of_data)
+    tag_bit_parser = ParseTAGBits(dict_of_data=validated_data.dict_of_data, photons=photon_df.gen_df(),
                                   use_tag_bits=gui.tag_bits.get(), bits_dict=gui.tag_bits_dict)
 
     analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels, bidir=gui.bidir.get(),
                                laser_freq=float(gui.reprate.get()), binwidth=float(gui.binwidth.get()),
                                tag_pulses=int(gui.tag_pulses.get()), phase=gui.phase.get(),
                                keep_unidir=gui.keep_unidir.get(), flim=gui.flim.get(),
-                               censor=gui.censor.get(), dict_of_data=separated_data.dict_of_data,
+                               censor=gui.censor.get(), dict_of_data=validated_data.dict_of_data,
                                df_photons=tag_bit_parser.gen_df(), num_of_channels=tabulated_data.num_of_channels,
                                tag_freq=float(gui.tag_freq.get()), tag_to_phase=True, tag_offset=gui.tag_offset.get())
     analyzed_struct.run()
@@ -96,7 +96,7 @@ def main_data_readout(gui):
                         binwidth=float(gui.binwidth.get()), bidir=gui.bidir.get(),
                         fill_frac=gui.fill_frac.get() if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
                         outputs=outputs.outputs, censor=gui.censor.get(), mirror_phase=gui.phase.get(),
-                        lines=validated_data.dict_of_data['Lines'].abs_time,
+                        lines=analyzed_struct.dict_of_data['Lines'].abs_time,
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim.get(),
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines.get(),
