@@ -61,7 +61,7 @@
     ],
     "frame_delay": [
         "PY_VAR15",
-        0.001
+        3e-05
     ],
     "filename": [
         "PY_VAR16",
@@ -73,7 +73,7 @@
     ],
     "input_stop1": [
         "PY_VAR18",
-        "PMT2"
+        "Empty"
     ],
     "input_stop2": [
         "PY_VAR19",
@@ -105,7 +105,7 @@
     ],
     "z_pixels": [
         "PY_VAR26",
-        10
+        1
     ],
     "tag_bits": [
         "PY_VAR27",
@@ -149,7 +149,7 @@
     ],
     "imaging_software": [
         "PY_VAR37",
-        "ScanImage"
+        "MScan"
     ],
     "save_as": [
         "PY_VAR38",

@@ -220,8 +220,9 @@ class SignalValidator:
         lines_mat, rel_idx, end_of_frames_idx, last_idx_of_row, rel_idx_non_end_frame = \
             self.__calc_line_parameters_si(lines=lines)
         theo_lines, delta = self.__gen_line_model_si(lines=lines, rel_idx=rel_idx, end_of_frames_idx=end_of_frames_idx)
-        lines = self.__diff_mat_analysis_si(y=theo_lines, lines_mat=lines_mat, last_idx=last_idx_of_row,
-                                             delta=delta, rel_idx=rel_idx_non_end_frame)
+        lines_mat = self.__diff_mat_analysis_si(y=theo_lines, lines_mat=lines_mat, last_idx=last_idx_of_row,
+                                                delta=delta, rel_idx=rel_idx_non_end_frame)
+        lines = self.__finalize_lines_si(lines_mat=lines_mat)
         if self.bidir:
             lines = self.__add_phase_to_bidir_lines(lines=lines)
         self.dict_of_data['Lines'] = pd.DataFrame(lines, dtype=np.uint64, columns=['abs_time'])
@@ -264,6 +265,8 @@ class SignalValidator:
         start_time_of_frames = np.concatenate((np.array([0], dtype=np.uint64), start_time_of_frames[:-1])) \
             .reshape((end_of_frames_idx.shape[0], 1))
         lines_mat -= start_time_of_frames
+        if 'Frames' not in self.dict_of_data:
+            self.dict_of_data['Frames'] = pd.DataFrame(start_time_of_frames.ravel(), columns=['abs_time'])
 
         for row, last_idx in enumerate(last_idx_of_row):
             lines_mat[row, last_idx:] = 0
@@ -322,19 +325,20 @@ class SignalValidator:
 
     def __finalize_lines_mscan(self, lines, delta):
         """ Sample the lines so that they're "silent" between frames """
-        lines_between_frames = int(np.rint(self.delay_between_frames / (delta * self.binwidth)))
+        lines_between_frames = int(np.rint(self.frame_delay / delta))
+        print(lines_between_frames)
         start_of_frame_idx = np.arange(start=0, stop=len(lines),
                                        step=self.num_of_lines + lines_between_frames,
                                        dtype=np.uint64)
         end_of_frame_idx = start_of_frame_idx + self.num_of_lines
         exact_lines = [lines[slice(start, end)] for start, end in zip(start_of_frame_idx, end_of_frame_idx)]
         exact_lines = np.array(list(chain.from_iterable(exact_lines)), dtype=np.uint64)
-        self.num_of_frames = int(len(exact_lines) / self.num_of_lines)
+        self.num_of_frames = len(end_of_frame_idx)
 
         return pd.Series(exact_lines, dtype=np.uint64)
 
     def __diff_mat_analysis_si(self, y: np.ndarray, lines_mat: np.ndarray, last_idx: np.ndarray,
-                               delta: int, rel_idx: np.ndarray) -> pd.Series:
+                               delta: int, rel_idx: np.ndarray) -> np.ndarray:
         """
         Check for missing\extra lines in the matrix of lines
         :param diff_mat: np.ndarray
@@ -348,9 +352,9 @@ class SignalValidator:
             num_of_missing_lines = last_idx[frame_num] - self.num_of_lines
             if num_of_missing_lines < 0:
                 for miss in missing_vals_cols[missing_vals_rows == frame_num]:
-                    lines_mat[frame_num, :] = np.concatenate((lines_mat[:miss],
+                    lines_mat[frame_num, :] = np.concatenate((lines_mat[frame_num, :miss],
                                                               np.atleast_1d(y[frame_num, miss]),
-                                                              lines_mat[miss:-1]))
+                                                              lines_mat[frame_num, miss:-1]))
             elif num_of_missing_lines > 0:
                 cur_missing_cols = missing_vals_cols.copy()
                 while cur_missing_cols.shape[0] > 0:
@@ -360,7 +364,14 @@ class SignalValidator:
                     diff_line = np.abs(np.subtract(lines_mat[frame_num, :], y[frame_num, :], dtype=np.int64))
                     cur_missing_cols = np.where(diff_line > delta / 20)[0]
 
-        return pd.Series(lines_mat, dtype=np.uint64)
+        return lines_mat
+
+    def __finalize_lines_si(self, lines_mat: np.ndarray) -> pd.Series:
+        """ Add back the start-of-frame times to the lines """
+        frames_mat = np.array(self.dict_of_data['Frames']).reshape((len(self.dict_of_data['Frames']), 1))
+        frames_mat = np.tile(frames_mat, (1, self.num_of_lines))
+        lines_mat = lines_mat[:, :self.num_of_lines] + frames_mat
+        return pd.Series(lines_mat.ravel())
 
     def __corrupt(self) -> Tuple[Dict, int]:
         """

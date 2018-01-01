@@ -388,7 +388,7 @@ class Volume(object):
                 if 'Volume' == key:
                     try:
                         list_of_edges.append(
-                            LineRectifier(lines=self.lines - self.abs_start_time,
+                            LineRectifier(lines=self.lines.values - self.abs_start_time,
                                           x_pixels=self.x_pixels,
                                           bidir=self.bidir,
                                           end_time=self.end_time).rectify()

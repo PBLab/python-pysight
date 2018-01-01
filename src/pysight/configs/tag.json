@@ -65,7 +65,7 @@
     ],
     "filename": [
         "PY_VAR16",
-        "X:/Hagai/Multiscaler/21-12-17/flies_21_12_17/fly4_gevi/start_pmt_stop1_puff_stop2_lines_512px003.lst"
+        "C:/Users/Hagai/Documents/GitHub/python-pysight/start_pmt1_stop1_lines_stop2_tag_820nm_unidir_189khz_amplitude28p_power_60p_300umdeep_1xzoom_005.lst"
     ],
     "input_start": [
         "PY_VAR17",
@@ -73,11 +73,11 @@
     ],
     "input_stop1": [
         "PY_VAR18",
-        "Empty"
+        "Lines"
     ],
     "input_stop2": [
         "PY_VAR19",
-        "Lines"
+        "TAG Lens"
     ],
     "num_of_frames": [
         "PY_VAR20",
@@ -97,15 +97,15 @@
     ],
     "x_pixels": [
         "PY_VAR24",
-        512
+        1024
     ],
     "y_pixels": [
         "PY_VAR25",
-        512
+        1024
     ],
     "z_pixels": [
         "PY_VAR26",
-        1
+        10
     ],
     "tag_bits": [
         "PY_VAR27",
@@ -149,7 +149,7 @@
     ],
     "imaging_software": [
         "PY_VAR37",
-        "MScan"
+        "ScanImage"
     ],
     "save_as": [
         "PY_VAR38",
