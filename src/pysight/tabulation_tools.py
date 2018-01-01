@@ -40,7 +40,7 @@ class Tabulate(object):
             self.__tabulate_input_hex()
             self.df_after_timepatch = self.__reformat_data_hex()
             self.__check_user_inputs()
-        print('Sorted dataframe created. Starting setting the proper data channel distribution...')
+        print('Sorted dataframe created. Starting to set the proper data channel distribution...')
 
     @staticmethod
     def hex_to_bin_dict() -> Dict:

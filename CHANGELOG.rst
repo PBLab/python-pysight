@@ -685,3 +685,17 @@ Changelog
 * More tests to new SignalValidator class.
 
 * Bug fix for the validation process.
+
+* Making progress on multiprocessing support.
+
+0.7.2 (2018-1-1)
+----------------
+
+* Minor bug fixes.
+
+0.7.3 (2018-1-1)
+----------------
+
+* Bug fixes to ``run_batch``.
+
+* New function ``mp_batch(foldername, glob_str)`` for parallel processing of a folder of list files.

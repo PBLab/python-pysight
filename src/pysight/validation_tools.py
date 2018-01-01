@@ -270,7 +270,7 @@ class SignalValidator:
         """ Generate general parameters of the given acquisition """
         change_thresh = 0.3
         rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
-        delta = np.uint64(lines.drop(rel_idx).diff().median())
+        delta = np.uint64(lines.drop(rel_idx).diff().mean())
         return rel_idx[::2], delta
 
     def __gen_line_model_mscan(self, lines: pd.Series, m: np.uint64) -> np.ndarray:
@@ -278,6 +278,11 @@ class SignalValidator:
         const = lines.iloc[0]
         x = np.arange(start=0, stop=len(lines), dtype=np.uint64)
         y = m * x + const
+        if len(lines) > 5000:  # correct simulated lines
+            idx_range = np.arange(5000, len(lines), step=5000, dtype=np.uint64)
+            for idx in idx_range:
+                x = np.arange(0, len(lines)-idx, dtype=np.uint64)
+                y[idx:] = m * x + lines.iloc[idx]
 
         # MScan's lines are evenly separated
         first_diff = np.uint64(lines.iloc[10:110].diff()[1::2].median())
@@ -307,14 +312,20 @@ class SignalValidator:
     def __diff_vec_analysis_mscan(self, y: np.ndarray, lines: pd.Series,
                                   delta: np.uint64) -> pd.Series:
         diff_vec = np.abs(np.subtract(y, lines, dtype=np.int64))
-        new_lines = np.concatenate((lines, np.zeros(len(lines) // 2, dtype=np.uint64)))
         missing_val = np.where(diff_vec > delta / 20)[0]
         while missing_val.shape[0] > 0:
-            new_lines = np.concatenate((new_lines[:missing_val[0]],
-                                        y[missing_val[0]],
-                                        new_lines[missing_val[0]:]))
+            if np.abs(diff_vec[missing_val[0]] - delta)/delta < 0.1:  # double line
+                lines = np.concatenate((lines[:missing_val[0]],
+                                        lines[missing_val[0]+1:]))
+            else:
+                lines = np.concatenate((lines[:missing_val[0]],
+                                        np.atleast_1d(y[missing_val[0]]),
+                                        lines[missing_val[0]:]))
+            # Restart the loop
+            y = self.__gen_line_model_mscan(pd.Series(lines), delta)
+            diff_vec = np.abs(np.subtract(y, lines, dtype=np.int64))
             missing_val = np.where(diff_vec > delta / 20)[0]
-        return pd.Series(new_lines)
+        return pd.Series(lines)
 
     def __finalize_lines_mscan(self, lines, delta):
         """ Sample the lines so that they're "silent" between frames """
