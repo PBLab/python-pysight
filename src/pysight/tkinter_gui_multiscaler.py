@@ -51,7 +51,7 @@ class GUIApp(object):
     """
     def __init__(self):
         self.root = Tk()
-        self.root.title("Multiscaler Readout and Display")
+        self.root.title("PySight GUI | Choose a list file to analyze...")
         self.root.rowconfigure(16, weight=1)
         self.root.columnconfigure(16, weight=1)
         main_frame = ttk.Frame(self.root, width=1000, height=1300)
@@ -80,12 +80,19 @@ class GUIApp(object):
         self.__load_last_used_cfg(main_frame)
 
         # Define the last quit button and wrap up GUI
-        quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy)
+        quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy,
+                                 underline=0)
         quit_button.grid(row=13, column=4, sticky='ns')
+
+        self.root.bind("s", self.__dest)
+        self.root.bind("<Return>", self.__dest)
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
 
         self.root.wait_window()
+
+    def __dest(self, event):
+        self.root.destroy()
 
     def __create_vars(self):
         self.debug = BooleanVar(value=False)
@@ -115,7 +122,7 @@ class GUIApp(object):
         browse_entry.grid(column=1, row=file_row, sticky='we', columnspan=4)
 
     def __imaging_software(self, main_frame):
-        imaging_software_label = ttk.Label(main_frame, text='Imaging System', font=self.bold_font)
+        imaging_software_label = ttk.Label(main_frame, text='Imaging Software', font=self.bold_font)
         imaging_software_label.grid(row=1, column=4, sticky='ns')
         self.imaging_software = StringVar()
         cb_image = ttk.Combobox(main_frame, textvariable=self.imaging_software, width=10)
@@ -134,11 +141,11 @@ class GUIApp(object):
         self.tuple_of_data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=1, row=inputs_row+1, sticky='w')
-        mb1.set('Frames')
+        mb1.set('PMT1')
         mb1['values'] = self.tuple_of_data_sources
         mb2 = ttk.Combobox(main_frame, textvariable=self.input_stop1, width=10)
         mb2.grid(column=1, row=inputs_row+2, sticky='w')
-        mb2.set('PMT1')
+        mb2.set('Empty')
         mb2['values'] = self.tuple_of_data_sources
         mb3 = ttk.Combobox(main_frame, textvariable=self.input_stop2, width=10)
         mb3.grid(column=1, row=inputs_row+3, sticky='w')
@@ -215,49 +222,49 @@ class GUIApp(object):
     def __debug(self, main_frame):
         """ Read a smaller portion of data for debugging """
         debug_check = ttk.Checkbutton(main_frame, text='Debug?', variable=self.debug)
-        debug_check.grid(column=6, row=11, sticky='ns')
+        debug_check.grid(column=2, row=7, sticky='ns')
 
     def __mirror_phase(self, main_frame):
         phase_text = ttk.Label(main_frame, text='Mirror phase [us]: ')
-        phase_text.grid(column=6, row=5, sticky='w')
-        phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=5)
-        phase_entry.grid(column=6, row=5, sticky='e')
+        phase_text.grid(column=0, row=1, sticky='w')
+        phase_entry = ttk.Entry(main_frame, textvariable=self.phase, width=8)
+        phase_entry.grid(column=0, row=1, sticky='e')
 
     def __reprate(self, main_frame):
         """ Laser repetition rate"""
 
         laser1_label = ttk.Label(main_frame, text='Laser rep. rate (FLIM) [Hz]')
-        laser1_label.grid(column=0, row=9, sticky='w')
+        laser1_label.grid(column=2, row=6, sticky='ns')
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
-        reprate_entry.grid(column=1, row=9, sticky='w')
+        reprate_entry.grid(column=3, row=6, sticky='ns')
 
     def __gating(self, main_frame):
         self.gating_check = ttk.Checkbutton(main_frame, text='With Gating?', variable=self.gating)
-        self.gating_check.grid(column=3, row=9, sticky='w')
+        self.gating_check.grid(column=2, row=5, sticky='ns')
         self.gating_check.config(state='disabled')
 
     def __binwidth(self, main_frame):
         """ Binwidth of Multiscaler (for FLIM) """
 
-        binwidth_label = ttk.Label(main_frame, text='Binwidth of Multiscaler [sec]')
-        binwidth_label.grid(column=0, row=10, sticky='ns')
-        binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=10)
-        binwidth_entry.grid(column=1, row=10, sticky='ns')
+        binwidth_label = ttk.Label(main_frame, text='Multiscaler binwidth [sec]')
+        binwidth_label.grid(column=2, row=1, sticky='ns')
+        binwidth_entry = ttk.Entry(main_frame, textvariable=self.binwidth, width=9)
+        binwidth_entry.grid(column=3, row=1, sticky='ns')
 
     def __tag_lens(self, main_frame):
         """ TAG lens nominal frequency """
-
-        tag_label = ttk.Label(main_frame, text='  TAG nominal freq. [Hz]\noffset [deg]        n. pulses')
-        tag_label.grid(column=6, row=8, sticky='ns')
+        tag_row = 7
+        tag_label = ttk.Label(main_frame, text='     TAG nominal freq. [Hz]\noffset [deg]                   n. pulses')
+        tag_label.grid(column=0, row=tag_row, columnspan=2, sticky='w')
         tag_label_entry = ttk.Entry(main_frame, textvariable=self.tag_freq, width=10)
-        tag_label_entry.grid(column=6, row=9, sticky='ns')
+        tag_label_entry.grid(column=0, row=tag_row+1, sticky='ns')
 
         tag_pulses_entry = ttk.Entry(main_frame, textvariable=self.tag_pulses, width=3)
-        tag_pulses_entry.grid(column=6, row=9, sticky='e')
+        tag_pulses_entry.grid(column=0, row=tag_row+1, sticky='e')
         tag_pulses_entry.config(state='disabled')
 
         self.tag_offset_entry = ttk.Entry(main_frame, textvariable=self.tag_offset, width=3)
-        self.tag_offset_entry.grid(column=6, row=9, sticky='w')
+        self.tag_offset_entry.grid(column=0, row=tag_row+1, sticky='w')
         self.tag_offset_entry.config(state='disabled')
 
     def __tag_bits(self, main_frame):
@@ -340,9 +347,9 @@ class GUIApp(object):
         """ Percentage of time mirrors spend "inside" the image """
 
         fill_frac_text = ttk.Label(main_frame, text='Fill fraction [%]: ')
-        fill_frac_text.grid(column=6, row=6, sticky='w')
-        fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=4)
-        fill_frac_entry.grid(column=6, row=6, sticky='e')
+        fill_frac_text.grid(column=0, row=4, sticky='w')
+        fill_frac_entry = ttk.Entry(main_frame, textvariable=self.fill_frac, width=8)
+        fill_frac_entry.grid(column=0, row=4, sticky='e')
 
     def __browsefunc(self):
         if self.filename.get() != '':
@@ -373,7 +380,7 @@ class GUIApp(object):
         """ Checkbox for bi-directional scan """
 
         bidir_check = ttk.Checkbutton(main_frame, text='Bi-directional scan', variable=self.bidir)
-        bidir_check.grid(column=6, row=3, sticky='ns')
+        bidir_check.grid(column=0, row=5, sticky='ns')
         self.bidir.trace('w', self.__check_if_bidir)
 
     def __check_if_bidir(self, *args):
@@ -386,7 +393,7 @@ class GUIApp(object):
         """ Checkbox to see if events taken in the returning phase of a resonant mirror should be kept. """
         self.keep_unidir_check = ttk.Checkbutton(main_frame, text='Keep unidirectional?',
                                                  variable=self.keep_unidir)
-        self.keep_unidir_check.grid(column=6, row=4, sticky='ns')
+        self.keep_unidir_check.grid(column=0, row=6, sticky='ns')
         self.keep_unidir_check.config(state='disabled')
 
     def __flim(self, main_frame):
@@ -399,7 +406,7 @@ class GUIApp(object):
         flim_check: ttk.Checkbutton = ttk.Checkbutton(main_frame,
                                                       variable=self.flim,
                                                       text='FLIM?')
-        flim_check.grid(row=9, column=2, sticky='w')
+        flim_check.grid(row=2, column=2, sticky='ns')
         self.flim.trace('w', self.__check_if_flim)
 
     def __censor(self, main_frame):
@@ -409,7 +416,7 @@ class GUIApp(object):
         """
         self.censor_check: ttk.Checkbutton = ttk.Checkbutton(main_frame, variable=self.censor,
                                                              text='Censor Correction')
-        self.censor_check.grid(row=10, column=2, sticky='e')
+        self.censor_check.grid(row=3, column=2, sticky='ns')
         self.censor_check.config(state='disabled')
 
     def __check_if_flim(self, *args):
@@ -424,15 +431,15 @@ class GUIApp(object):
     def __line_freq(self, main_frame):
         """ Frequency of the line scanning mirror """
         line_freq_label = ttk.Label(main_frame, text="Line freq [Hz]: ")
-        line_freq_label.grid(row=7, column=6, sticky='w')
+        line_freq_label.grid(row=3, column=0, sticky='w')
         line_freq_entry = ttk.Entry(main_frame, textvariable=self.line_freq, width=8)
-        line_freq_entry.grid(row=7, column=6, sticky='e')
+        line_freq_entry.grid(row=3, column=0, sticky='e')
 
     def __sweeps_as_lines(self, main_frame):
         """ Use the sweeps as lines for the image generation """
         sweeps_cb = ttk.Checkbutton(main_frame, variable=self.sweeps_as_lines,
                                       text='Sweeps as lines?')
-        sweeps_cb.grid(row=10, column=3, sticky='ns')
+        sweeps_cb.grid(row=4, column=2, sticky='ns')
 
     def __advanced_win(self, main_frame):
         advanced_but = ttk.Button(main_frame, text="Advanced", command=self.__open_advanced)
@@ -445,35 +452,37 @@ class GUIApp(object):
         frame['borderwidth'] = 2
         style = ttk.Style()
         style.theme_use('clam')
-        self.__setup_advanced_frane(frame)
+        self.__setup_advanced_frame(frame)
         self.__gating(frame)
         self.__flim(frame)
-        self.__censor(self.advanced_win)
-        self.__sweeps_as_lines(self.advanced_win)
-        self.__debug(self.advanced_win)
-        self.__mirror_phase(self.advanced_win)
-        self.__fill_frac(self.advanced_win)
-        self.__reprate(self.advanced_win)
-        self.__binwidth(self.advanced_win)
-        self.__keep_unidir_events(self.advanced_win)
-        self.__bidir(self.advanced_win)
-        self.__check_if_bidir(self.advanced_win)
-        self.__tag_lens(self.advanced_win)
-        self.__frame_delay(self.advanced_win)
-        self.__line_freq(self.advanced_win)
+        self.__censor(frame)
+        self.__sweeps_as_lines(frame)
+        self.__debug(frame)
+        self.__mirror_phase(frame)
+        self.__fill_frac(frame)
+        self.__reprate(frame)
+        self.__binwidth(frame)
+        self.__keep_unidir_events(frame)
+        self.__bidir(frame)
+        self.__check_if_bidir(frame)
+        self.__tag_lens(frame)
+        self.__frame_delay(frame)
+        self.__line_freq(frame)
+        for child in frame.winfo_children():
+            child.grid_configure(padx=3, pady=2)
 
     def __setup_advanced_frame(self, frame):
-        scan_lab = ttk.Label(frame, text='Scanner Settings')
+        scan_lab = ttk.Label(frame, text='       Scanner Settings', font=self.bold_font)
         scan_lab.grid(row=0, column=0, sticky='ns')
 
-        hardware_lab = ttk.Label(frame, text='Hardware Settings')
+        hardware_lab = ttk.Label(frame, text='               Hardware Settings', font=self.bold_font)
         hardware_lab.grid(row=0, column=2, sticky='ns')
 
     def __frame_delay(self, main_frame):
         frame_delay_label = ttk.Label(main_frame, text="Frame delay [sec]: ")
-        frame_delay_label.grid(row=1, column=1, sticky='w')
+        frame_delay_label.grid(row=2, column=0, sticky='w')
         frame_delay_entry = ttk.Entry(main_frame, textvariable=self.frame_delay, width=8)
-        frame_delay_entry.grid(row=1, column=2, sticky='ns')
+        frame_delay_entry.grid(row=2, column=0, sticky='e')
 
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT ########
 

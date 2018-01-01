@@ -37,7 +37,7 @@ class SignalValidator:
     delay_between_frames = attr.ib(default=0.0011355, validator=instance_of(float))
     use_sweeps = attr.ib(default=False, validator=instance_of(bool))
     bidir_phase = attr.ib(default=-2.7, validator=instance_of(float))
-    image_soft = attr.ib(default=ImagingSoftware.SCANIMAGE, validator=instance_of(str))
+    image_soft = attr.ib(default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str))
     handle_line_cases = attr.ib(init=False)
     last_event_time = attr.ib(init=False)
     max_sweep = attr.ib(init=False)
@@ -93,7 +93,8 @@ class SignalValidator:
 
         self.__validate_created_data_channels()
 
-    def __pairwise(self, iterable):
+    @staticmethod
+    def __pairwise(iterable):
         """From itertools: s -> (s0,s1), (s1,s2), (s2, s3), ..."""
         a, b = tee(iterable)
         next(b, None)
@@ -120,14 +121,6 @@ class SignalValidator:
         :param self.num_of_lines: Lines per frame.
         :return: int
         """
-
-        # Basic assertions
-        if self.num_of_lines < 1:
-            raise ValueError('No lines per frame value received, or value was corrupt.')
-
-        if 'PMT1' not in self.dict_of_data:
-            raise ValueError('No PMT1 channel in self.dict_of_data.')
-
         ##
         if 'Frames' in self.dict_of_data:
             last_frame_time = self.dict_of_data['Frames'].loc[:, 'abs_time'].iloc[-1]
@@ -277,17 +270,17 @@ class SignalValidator:
         """ Generate general parameters of the given acquisition """
         change_thresh = 0.3
         rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
-        delta = np.uint64(lines.drop(rel_idx).diff().mean())
+        delta = np.uint64(lines.drop(rel_idx).diff().median())
         return rel_idx[::2], delta
 
-    def __gen_line_model_mscan(self, lines: pd.Series, m: np.uint64) -> Tuple[np.ndarray, np.uint64]:
+    def __gen_line_model_mscan(self, lines: pd.Series, m: np.uint64) -> np.ndarray:
         """ Using linear approximation generate a model for the "correct" line signal """
         const = lines.iloc[0]
         x = np.arange(start=0, stop=len(lines), dtype=np.uint64)
         y = m * x + const
 
         # MScan's lines are evenly separated
-        first_diff = np.uint64(lines.iloc[:100].diff()[1::2].mean())
+        first_diff = np.uint64(lines.iloc[10:110].diff()[1::2].median())
         delta_diff = np.int32((m - first_diff) / 2)
         if first_diff < m:
             y[1::2] -= delta_diff
@@ -311,7 +304,7 @@ class SignalValidator:
         y = np.concatenate((y, np.zeros_like(y)), axis=1)
         return y, m
 
-    def __diff_vec_analysis_mscan(self, y: np.ndarray, lines: np.ndarray,
+    def __diff_vec_analysis_mscan(self, y: np.ndarray, lines: pd.Series,
                                   delta: np.uint64) -> pd.Series:
         diff_vec = np.abs(np.subtract(y, lines, dtype=np.int64))
         new_lines = np.concatenate((lines, np.zeros(len(lines) // 2, dtype=np.uint64)))

@@ -13,7 +13,7 @@
     ],
     "gating": [
         "PY_VAR3",
-        true
+        false
     ],
     "binwidth": [
         "PY_VAR4",
@@ -69,11 +69,11 @@
     ],
     "input_start": [
         "PY_VAR17",
-        "Frames"
+        "PMT1"
     ],
     "input_stop1": [
         "PY_VAR18",
-        "PMT1"
+        "Empty"
     ],
     "input_stop2": [
         "PY_VAR19",
@@ -85,11 +85,11 @@
     ],
     "summed": [
         "PY_VAR21",
-        false
+        true
     ],
     "memory": [
         "PY_VAR22",
-        false
+        true
     ],
     "stack": [
         "PY_VAR23",
@@ -147,7 +147,7 @@
         "PY_VAR36",
         "None"
     ],
-    "image_sys": [
+    "imaging_software": [
         "PY_VAR37",
         "ScanImage"
     ],

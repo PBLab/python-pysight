@@ -3,33 +3,34 @@ __author__ = Hagai Hargil
 """
 
 from unittest import TestCase
-from pysight.validation_tools import *
+from pysight.validation_tools import SignalValidator
+import pandas as pd
+import numpy as np
 
 
 class TestFrame(TestCase):
     """
     Tests for the validation functions
     """
-    import pandas as pd
-    import numpy as np
-
-    def test_last_event_empty_dict(self):
-        dict_of_data = dict()
-        lines_per_frame = 1
-        with self.assertRaises(ValueError):
-            calc_last_event_time(dict_of_data, lines_per_frame)
-
-    def test_last_event_wrong_lines(self):
-        dict_of_data = {'PMT1': pd.DataFrame([1, 2, 3], columns=['abs_time'])}
-        lines_per_frame = 0
-        with self.assertRaises(ValueError):
-            calc_last_event_time(dict_of_data, lines_per_frame)
+    dict_of_data = dict(PMT1=pd.DataFrame([1, 10, 20, 30], columns=['abs_time']),
+                        Lines=pd.DataFrame([0, 5, 10, 15, 20, 25, 30, 35]), columns=['abs_time'])
+    vlad = SignalValidator(dict_of_data)
 
     def test_last_event_only_pmt(self):
         dict_of_data = {'PMT1': pd.DataFrame([1, 5, 3], columns=['abs_time'])}
-        lines_per_frame = 1
-        self.assertEqual(calc_last_event_time(dict_of_data, lines_per_frame),
-                         5)
+        last = SignalValidator(dict_of_data)._SignalValidator__calc_last_event_time()
+        self.assertEqual(last, 5)
+
+    def test_last_event_two_pmts(self):
+        dict_of_data = {'PMT1': pd.DataFrame([1, 5, 3], columns=['abs_time']),
+                        'PMT2': pd.DataFrame([1, 2, 3], columns=['abs_time'])}
+        last = SignalValidator(dict_of_data)._SignalValidator__calc_last_event_time()
+        self.assertEqual(last, 5)
+
+    def test_pairwise(self):
+        dict_of_data = {}
+        iter = SignalValidator(dict_of_data)._SignalValidator__pairwise([1, 2, 3, 4])
+        self.assertSequenceEqual([(1, 2), (2, 3), (3, 4)], list(iter))
 
     def test_last_event_with_frames(self):
         frame_data = pd.DataFrame([0, 100], columns=['abs_time'])
@@ -39,6 +40,7 @@ class TestFrame(TestCase):
         lines_per_frame = 1
         self.assertEqual(calc_last_event_time(dict_of_data, lines_per_frame),
                          200)
+
 
     def test_last_event_with_single_frame(self):
         frame_data = pd.DataFrame([100], columns=['abs_time'])

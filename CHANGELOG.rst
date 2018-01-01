@@ -668,7 +668,20 @@ Changelog
 
 * Refactored ``tabulation_tools``.
 
-0.7.0 (2017-12-XX)
+0.7.0 (2018-1-1)
 ------------------
 
 * Refactoring and additions to GUI, including new choices between imaging systems.
+
+* Better UI and UX.
+
+* Not all tests pass.
+
+0.7.1 (2018-1-1)
+----------------
+
+* GUI is now startable with "S" key and \ or "Enter".
+
+* More tests to new SignalValidator class.
+
+* Bug fix for the validation process.
