@@ -326,7 +326,6 @@ class SignalValidator:
     def __finalize_lines_mscan(self, lines, delta):
         """ Sample the lines so that they're "silent" between frames """
         lines_between_frames = int(np.rint(self.frame_delay / delta))
-        print(lines_between_frames)
         start_of_frame_idx = np.arange(start=0, stop=len(lines),
                                        step=self.num_of_lines + lines_between_frames,
                                        dtype=np.uint64)

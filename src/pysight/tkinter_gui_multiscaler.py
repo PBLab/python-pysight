@@ -43,7 +43,6 @@ class TagBits(object):
                                           is_positive,
                                           end_is_greater])
 
-
 class GUIApp(object):
     """
     Main GUI for the multiscaler code.
@@ -53,15 +52,16 @@ class GUIApp(object):
     def __init__(self):
         self.root = Tk()
         self.root.title("Multiscaler Readout and Display")
-        self.root.rowconfigure(6, weight=1)
-        self.root.columnconfigure(6, weight=1)
-        main_frame = ttk.Frame(self.root, width=1000, height=1000)
+        self.root.rowconfigure(16, weight=1)
+        self.root.columnconfigure(16, weight=1)
+        main_frame = ttk.Frame(self.root, width=1000, height=1300)
         main_frame.grid(column=0, row=0)
         main_frame['borderwidth'] = 2
         style = ttk.Style()
         style.theme_use('clam')
         self.normal_font = tkfont.Font(family='Helvetica', size=10)
         self.bold_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
+        self.config_row = 11
         self.__create_vars()
 
         # Run widgets
@@ -81,7 +81,7 @@ class GUIApp(object):
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy)
-        quit_button.grid(row=12, column=2, sticky='ns')
+        quit_button.grid(row=13, column=4, sticky='ns')
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
 
@@ -106,57 +106,62 @@ class GUIApp(object):
         self.frame_delay = DoubleVar(value=0.001)  # sec
 
     def __browse_file(self, main_frame):
+        file_row=0
         self.filename = StringVar(value="")
         browse_button = ttk.Button(main_frame, text="Browse", command=self.__browsefunc)
-        browse_button.grid(column=0, row=0, sticky='ns')
+        browse_button.grid(column=0, row=file_row, sticky='ns')
+
+        browse_entry = ttk.Entry(main_frame, textvariable=self.filename, width=80)
+        browse_entry.grid(column=1, row=file_row, sticky='we', columnspan=4)
 
     def __imaging_software(self, main_frame):
-        imaging_software_label = ttk.Label(main_frame, text='Imaging System', font=self.normal_font)
-        imaging_software_label.grid(row=5, column=5, sticky='ns')
+        imaging_software_label = ttk.Label(main_frame, text='Imaging System', font=self.bold_font)
+        imaging_software_label.grid(row=1, column=4, sticky='ns')
         self.imaging_software = StringVar()
         cb_image = ttk.Combobox(main_frame, textvariable=self.imaging_software, width=10)
-        cb_image.grid(row=5, column=6, sticky='ns')
+        cb_image.grid(row=2, column=4, sticky='ns')
         cb_image.set(ImagingSoftware.SCANIMAGE.value)
         cb_image['values'] = [item.value for item in ImagingSoftware]
 
     def __input_channels(self, main_frame):
         # Comboboxes
-        input_channels_label = ttk.Label(main_frame, text='Input Channels', font=self.bold_font)
-        input_channels_label.grid(column=1, row=0, sticky='ns')
+        inputs_row = 1
+        input_channels_label = ttk.Label(main_frame, text='Input Channels                         ', font=self.bold_font)
+        input_channels_label.grid(column=0, row=inputs_row, columnspan=2)
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
         self.tuple_of_data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
-        mb1.grid(column=2, row=1, sticky='w')
+        mb1.grid(column=1, row=inputs_row+1, sticky='w')
         mb1.set('Frames')
         mb1['values'] = self.tuple_of_data_sources
         mb2 = ttk.Combobox(main_frame, textvariable=self.input_stop1, width=10)
-        mb2.grid(column=2, row=2, sticky='w')
+        mb2.grid(column=1, row=inputs_row+2, sticky='w')
         mb2.set('PMT1')
         mb2['values'] = self.tuple_of_data_sources
         mb3 = ttk.Combobox(main_frame, textvariable=self.input_stop2, width=10)
-        mb3.grid(column=2, row=3, sticky='w')
+        mb3.grid(column=1, row=inputs_row+3, sticky='w')
         mb3.set('Lines')
         mb3['values'] = self.tuple_of_data_sources
 
         # Labels
         input_channel_1 = ttk.Label(main_frame, text='START', font=self.normal_font)
-        input_channel_1.grid(column=1, row=1, sticky='ns')
+        input_channel_1.grid(column=0, row=inputs_row+1, sticky='ns')
         input_channel_2 = ttk.Label(main_frame, text='STOP1', font=self.normal_font)
-        input_channel_2.grid(column=1, row=2, sticky='ns')
+        input_channel_2.grid(column=0, row=inputs_row+2, sticky='ns')
         input_channel_3 = ttk.Label(main_frame, text='STOP2', font=self.normal_font)
-        input_channel_3.grid(column=1, row=3, sticky='ns')
+        input_channel_3.grid(column=0, row=inputs_row+3, sticky='ns')
 
     def __num_of_frames(self, main_frame):
 
         # Number of frames in the data
         frame_label = ttk.Label(main_frame, text='Number of frames', font=self.normal_font)
-        frame_label.grid(column=6, row=3, sticky='ns')
+        frame_label.grid(column=2, row=4, sticky='w')
 
         self.num_of_frames = IntVar(value=1)
         self.num_frames_entry = ttk.Entry(main_frame, textvariable=self.num_of_frames, width=3)
-        self.num_frames_entry.grid(column=7, row=3, sticky='ns')
+        self.num_frames_entry.grid(column=2, row=4, sticky='e')
         self.num_frames_entry.config(state='disabled')
 
         # Disable number of frames unless all inputs but one are empty
@@ -169,40 +174,42 @@ class GUIApp(object):
 
     def __outputs(self, main_frame):
         """ Wanted outputs """
-        outputs_label = ttk.Label(main_frame, text='Outputs:', font=self.bold_font)
-        outputs_label.grid(column=0, row=3, sticky='w')
+        outputs_row = 6
+        outputs_label = ttk.Label(main_frame, text='Outputs', font=self.bold_font)
+        outputs_label.grid(column=4, row=outputs_row-1, sticky='ns')
 
         self.summed = BooleanVar(value=False)
         summed_array = ttk.Checkbutton(main_frame, text='Summed Stack', variable=self.summed)
-        summed_array.grid(column=0, row=4, sticky='w')
+        summed_array.grid(column=4, row=outputs_row, sticky='ns')
         self.memory = BooleanVar(value=False)
         in_memory = ttk.Checkbutton(main_frame, text='In Memory', variable=self.memory)
-        in_memory.grid(column=2, row=4, sticky='ns')
+        in_memory.grid(column=4, row=outputs_row+1, sticky='ns')
         self.stack = BooleanVar(value=True)
         tif = ttk.Checkbutton(main_frame, text='Full Stack', variable=self.stack)
-        tif.grid(column=1, row=4, sticky='ns')
+        tif.grid(column=4, row=outputs_row+2, sticky='ns')
 
     def __image_size(self, main_frame):
         # Define image sizes
+        image_size_row = 1
         image_size_label = ttk.Label(main_frame, text='Image Size', font=self.bold_font)
-        image_size_label.grid(column=6, row=0, sticky='ns')
+        image_size_label.grid(column=2, row=image_size_row, sticky='ns', columnspan=1)
         x_size_label = ttk.Label(main_frame, text='X', font=self.normal_font)
-        x_size_label.grid(column=6, row=1, sticky='w')
+        x_size_label.grid(column=2, row=image_size_row+1, sticky='w')
         y_size_label = ttk.Label(main_frame, text='Y', font=self.normal_font)
-        y_size_label.grid(column=6, row=1, sticky='ns')
+        y_size_label.grid(column=2, row=image_size_row+1, sticky='ns')
         z_size_label = ttk.Label(main_frame, text='Z', font=self.normal_font)
-        z_size_label.grid(column=6, row=1, sticky='e')
+        z_size_label.grid(column=2, row=image_size_row+1, sticky='e')
 
         self.x_pixels = IntVar(value=512)
         self.y_pixels = IntVar(value=512)
         self.z_pixels = IntVar(value=1)
 
         x_pixels_entry = ttk.Entry(main_frame, textvariable=self.x_pixels, width=5)
-        x_pixels_entry.grid(column=6, row=2, sticky='w')
+        x_pixels_entry.grid(column=2, row=image_size_row+2, sticky='w')
         y_pixels_entry = ttk.Entry(main_frame, textvariable=self.y_pixels, width=5)
-        y_pixels_entry.grid(column=6, row=2, sticky='ns')
+        y_pixels_entry.grid(column=2, row=image_size_row+2, sticky='ns')
         self.z_pixels_entry = ttk.Entry(main_frame, textvariable=self.z_pixels, width=5)
-        self.z_pixels_entry.grid(column=6, row=2, sticky='e')
+        self.z_pixels_entry.grid(column=2, row=image_size_row+2, sticky='e')
         self.z_pixels_entry.config(state='disabled')
 
     def __debug(self, main_frame):
@@ -255,13 +262,13 @@ class GUIApp(object):
 
     def __tag_bits(self, main_frame):
         """ TAG bits """
-
+        tag_bits_row = 6
         tag_bits_label = ttk.Label(main_frame, text='TAG Bits Allocation', font=self.bold_font)
-        tag_bits_label.grid(column=1, row=5, sticky='ns')
+        tag_bits_label.grid(column=1, row=tag_bits_row, sticky='ns')
 
         self.tag_bits = BooleanVar(value=False)
         tag_bit_check = ttk.Checkbutton(main_frame, text='Use?', variable=self.tag_bits)
-        tag_bit_check.grid(column=2, row=5, sticky='ns')
+        tag_bit_check.grid(column=2, row=tag_bits_row, sticky='w')
 
         self.bits_grp_1_start = IntVar(value=1)
         self.bits_grp_1_end = IntVar(value=3)
@@ -277,46 +284,46 @@ class GUIApp(object):
         self.tag_bits_group_options = ("Power", "Slow axis", "Fast axis", "Z axis", "None")
 
         bits_grp_1 = ttk.Combobox(main_frame, textvariable=self.bits_grp_1_label, width=10)
-        bits_grp_1.grid(column=0, row=6, sticky='e')
+        bits_grp_1.grid(column=0, row=tag_bits_row+1, sticky='e')
         bits_grp_1.set('None')
         bits_grp_1['values'] = self.tag_bits_group_options
 
         bits_grp_2 = ttk.Combobox(main_frame, textvariable=self.bits_grp_2_label, width=10)
-        bits_grp_2.grid(column=0, row=7, sticky='e')
+        bits_grp_2.grid(column=0, row=tag_bits_row+2, sticky='e')
         bits_grp_2.set('None')
         bits_grp_2['values'] = self.tag_bits_group_options
 
         bits_grp_3 = ttk.Combobox(main_frame, textvariable=self.bits_grp_3_label, width=10)
-        bits_grp_3.grid(column=0, row=8, sticky='e')
+        bits_grp_3.grid(column=0, row=tag_bits_row+3, sticky='e')
         bits_grp_3.set('None')
         bits_grp_3['values'] = self.tag_bits_group_options
 
         bits_grp_1_start_lab = ttk.Label(main_frame, text='Start')
-        bits_grp_1_start_lab.grid(column=1, row=6, sticky='w')
+        bits_grp_1_start_lab.grid(column=1, row=tag_bits_row+1, sticky='w')
         bits_grp_1_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_1_start, width=3)
-        bits_grp_1_start_ent.grid(column=1, row=6, sticky='ns')
+        bits_grp_1_start_ent.grid(column=1, row=tag_bits_row+1, sticky='ns')
         bits_grp_1_end_lab = ttk.Label(main_frame, text='End')
-        bits_grp_1_end_lab.grid(column=1, row=6, sticky='e')
+        bits_grp_1_end_lab.grid(column=1, row=tag_bits_row+1, sticky='e')
         bits_grp_1_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_1_end, width=3)
-        bits_grp_1_end_ent.grid(column=2, row=6, sticky='w')
+        bits_grp_1_end_ent.grid(column=2, row=tag_bits_row+1, sticky='w')
 
         bits_grp_2_start_lab = ttk.Label(main_frame, text='Start')
-        bits_grp_2_start_lab.grid(column=1, row=7, sticky='w')
+        bits_grp_2_start_lab.grid(column=1, row=tag_bits_row+2, sticky='w')
         bits_grp_2_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_2_start, width=3)
-        bits_grp_2_start_ent.grid(column=1, row=7, sticky='ns')
+        bits_grp_2_start_ent.grid(column=1, row=tag_bits_row+2, sticky='ns')
         bits_grp_2_end_lab = ttk.Label(main_frame, text='End')
-        bits_grp_2_end_lab.grid(column=1, row=7, sticky='e')
+        bits_grp_2_end_lab.grid(column=1, row=tag_bits_row+2, sticky='e')
         bits_grp_2_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_2_end, width=3)
-        bits_grp_2_end_ent.grid(column=2, row=7, sticky='w')
+        bits_grp_2_end_ent.grid(column=2, row=tag_bits_row+2, sticky='w')
 
         bits_grp_3_start_lab = ttk.Label(main_frame, text='Start')
-        bits_grp_3_start_lab.grid(column=1, row=8, sticky='w')
+        bits_grp_3_start_lab.grid(column=1, row=tag_bits_row+3, sticky='w')
         bits_grp_3_start_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_3_start, width=3)
-        bits_grp_3_start_ent.grid(column=1, row=8, sticky='ns')
+        bits_grp_3_start_ent.grid(column=1, row=tag_bits_row+3, sticky='ns')
         bits_grp_3_end_lab = ttk.Label(main_frame, text='End')
-        bits_grp_3_end_lab.grid(column=1, row=8, sticky='e')
+        bits_grp_3_end_lab.grid(column=1, row=tag_bits_row+3, sticky='e')
         bits_grp_3_end_ent = ttk.Entry(main_frame, textvariable=self.bits_grp_3_end, width=3)
-        bits_grp_3_end_ent.grid(column=2, row=8, sticky='w')
+        bits_grp_3_end_ent.grid(column=2, row=tag_bits_row+3, sticky='w')
 
         self.tag_bits_dict = {}
         self.tag_bits_dict = {0: TagBits(value=self.bits_grp_1_label.get(),
@@ -429,12 +436,18 @@ class GUIApp(object):
 
     def __advanced_win(self, main_frame):
         advanced_but = ttk.Button(main_frame, text="Advanced", command=self.__open_advanced)
-        advanced_but.grid(row=11, column=6, sticky='ns')
+        advanced_but.grid(row=10, column=4, sticky='ns')
 
     def __open_advanced(self, *args):
         self.advanced_win = Toplevel(self.root)
-        self.__gating(self.advanced_win)
-        self.__flim(self.advanced_win)
+        frame = ttk.Frame(self.advanced_win, width=300, height=300)
+        frame.grid(column=0, row=0)
+        frame['borderwidth'] = 2
+        style = ttk.Style()
+        style.theme_use('clam')
+        self.__setup_advanced_frane(frame)
+        self.__gating(frame)
+        self.__flim(frame)
         self.__censor(self.advanced_win)
         self.__sweeps_as_lines(self.advanced_win)
         self.__debug(self.advanced_win)
@@ -449,6 +462,13 @@ class GUIApp(object):
         self.__frame_delay(self.advanced_win)
         self.__line_freq(self.advanced_win)
 
+    def __setup_advanced_frame(self, frame):
+        scan_lab = ttk.Label(frame, text='Scanner Settings')
+        scan_lab.grid(row=0, column=0, sticky='ns')
+
+        hardware_lab = ttk.Label(frame, text='Hardware Settings')
+        hardware_lab.grid(row=0, column=2, sticky='ns')
+
     def __frame_delay(self, main_frame):
         frame_delay_label = ttk.Label(main_frame, text="Frame delay [sec]: ")
         frame_delay_label.grid(row=1, column=1, sticky='w')
@@ -459,13 +479,15 @@ class GUIApp(object):
 
     def __save_cfg(self, main_frame):
         """ A button to write a .json with current configs """
+        config_label = ttk.Label(main_frame, text='Configuration File', font=self.bold_font)
+        config_label.grid(column=1, row=self.config_row, sticky='ns')
         self.save_as: StringVar = StringVar(value='default')
         save_label = ttk.Label(main_frame, text='Config file name to save:')
-        save_label.grid(column=0, row=11, sticky='w')
-        save_entry = ttk.Entry(main_frame, textvariable=self.save_as, width=10)
-        save_entry.grid(column=1, row=11, sticky='w')
+        save_label.grid(column=0, row=self.config_row+1, sticky='ns', columnspan=2, padx=10)
+        save_entry = ttk.Entry(main_frame, textvariable=self.save_as, width=8)
+        save_entry.grid(column=1, row=self.config_row+1, sticky='e')
         save_button = ttk.Button(main_frame, text="Save cfg", command=self.__callback_save_cur_cfg)
-        save_button.grid(column=2, row=11, sticky='w')
+        save_button.grid(column=1, row=self.config_row+2, sticky='w')
 
     def __callback_save_cur_cfg(self) -> None:
         """
@@ -498,7 +520,7 @@ class GUIApp(object):
         """
         self.cfg_filename: StringVar = StringVar(value='default')
         load_button: Button = ttk.Button(main_frame, text="Load cfg", command=self.__browsecfg)
-        load_button.grid(column=3, row=11, sticky='w')
+        load_button.grid(column=1, row=self.config_row+2, sticky='e')
 
     def __browsecfg(self):
         self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
