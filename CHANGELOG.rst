@@ -700,7 +700,7 @@ Changelog
 
 * New function ``mp_batch(foldername, glob_str)`` for parallel processing of a folder of list files.
 
-0.7.4 (2018-01-XX)
+0.8.0 (2018-01-XX)
 -----------------
 
 * Added ``recursive`` and ``n_proc`` keywords to ``mp_batch``, and changed return type to ``None``.

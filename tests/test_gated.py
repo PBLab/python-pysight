@@ -5,7 +5,7 @@ __author__ = Hagai Hargil
 import unittest
 import pandas as pd
 import numpy as np
-from pysight.gating_tools import GatedDetection
+from pysight.nd_hist_generator.gating_tools import GatedDetection
 
 
 class TestGatedDetection(unittest.TestCase):

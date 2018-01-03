@@ -18,9 +18,7 @@ class Allocate(object):
     Create pipeline of analysis of lst files.
     """
     # TODO: Variable documentation
-    dict_of_inputs     = attr.ib(validator=instance_of(dict))
     df_photons         = attr.ib(validator=instance_of(pd.DataFrame))
-    num_of_channels    = attr.ib(default=1, validator=instance_of(int))
     laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
     bidir              = attr.ib(default=False, validator=instance_of(bool))
@@ -50,6 +48,10 @@ class Allocate(object):
             self.dict_of_data['Laser'] = 0
             # if self.use_sweeps:
             #     out = self.train_dataset()
+
+    @property
+    def num_of_channels(self):
+        return sum([1 for key in self.dict_of_data.keys() if 'PMT' in key])
 
     def allocate_photons(self):
         """

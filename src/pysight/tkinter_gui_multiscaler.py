@@ -352,11 +352,12 @@ class GuiAppLst(object):
         fill_frac_entry.grid(column=0, row=4, sticky='e')
 
     def __browsefunc(self):
+        filetypes = [('List files', '*.lst'), ('Pickle files', '*.p')]
         if self.filename.get() != '':
-            self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
+            self.filename.set(filedialog.askopenfilename(filetypes=filetypes, title='Choose a list\pickle file',
                                                      initialdir=str(Path(self.filename.get()).parent)))
         else:
-            self.filename.set(filedialog.askopenfilename(filetypes=[('List files', '*.lst')], title='Choose a list file',
+            self.filename.set(filedialog.askopenfilename(filetypes=filetypes, title='Choose a list\pickle file',
                                                      initialdir='.'))
 
     def __check_if_empty(self, *args):
@@ -611,8 +612,8 @@ def verify_gui_input(gui):
         raise ValueError('Number of frames has to be a positive number.')
 
     filename = gui.filename.get()
-    if not filename.endswith('.lst'):
-        raise BrokenPipeError('Please choose a list (*.lst) file for analysis.')
+    if not filename.endswith('.lst') or not filename.endswith('.p'):
+        raise BrokenPipeError('Please choose a list (*.lst) or pickle (*.p) file for analysis.')
 
     if channel_inputs > data_sources:
         raise ValueError('Wrong inputs in channels. Please choose a value from the list.')

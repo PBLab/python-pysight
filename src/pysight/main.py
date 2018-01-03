@@ -18,40 +18,49 @@ def main_data_readout(gui):
     from pysight.nd_hist_generator.movie_tools import Movie
     from pysight.ascii_list_file_parser import timepatch_switch
     from pysight.nd_hist_generator.output_tools import OutputParser
-    from pysight.gating_tools import GatedDetection
+    from pysight.nd_hist_generator.gating_tools import GatedDetection
     from pysight.nd_hist_generator.photon_df_tools import PhotonDF
     from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
     from pysight.ascii_list_file_parser.distribute_data import DistributeData
     from pysight.nd_hist_generator.validation_tools import SignalValidator
     import numpy as np
+    import pickle
 
     # Read the file
-    cur_file = FileIO(filename=gui.filename, debug=gui.debug, input_start=gui.input_start,
-                      input_stop1=gui.input_stop1, input_stop2=gui.input_stop2, binwidth=gui.binwidth,
-                      use_sweeps=gui.sweeps_as_lines)
-    cur_file.run()
+    if gui.filename.endswith('.lst'):
+        cur_file = FileIO(filename=gui.filename, debug=gui.debug, input_start=gui.input_start,
+                          input_stop1=gui.input_stop1, input_stop2=gui.input_stop2, binwidth=gui.binwidth,
+                          use_sweeps=gui.sweeps_as_lines)
+        cur_file.run()
 
-    # Create input structures
-    dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
-    # dict_of_slices_bin = timepatch_switch.ChoiceManagerBinary().process(cur_file.timepatch)  # Not supported
+        # Create input structures
+        dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
+        # dict_of_slices_bin = timepatch_switch.ChoiceManagerBinary().process(cur_file.timepatch)  # Not supported
 
-    # Process events into dataframe
-    tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
-                              dict_of_inputs=cur_file.dict_of_input_channels,
-                              is_binary=cur_file.is_binary, use_tag_bits=gui.tag_bits,
-                              dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
-                              time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
-                              num_of_channels=cur_file.num_of_channels, )
-    tabulated_data.run()
+        # Process events into dataframe
+        tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
+                                  dict_of_inputs=cur_file.dict_of_input_channels,
+                                  is_binary=cur_file.is_binary, use_tag_bits=gui.tag_bits,
+                                  dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
+                                  time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
+                                  num_of_channels=cur_file.num_of_channels, )
+        tabulated_data.run()
 
-    separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
-                                    dict_of_inputs=tabulated_data.dict_of_inputs,
-                                    use_tag_bits=gui.tag_bits, )
-    separated_data.run()
+        separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
+                                        dict_of_inputs=tabulated_data.dict_of_inputs,
+                                        use_tag_bits=gui.tag_bits, )
+        separated_data.run()
 
 ####### START OF "PUBLIC API" ##########
+    try:
+        dict_of_data = separated_data.dict_of_data
+        lst_metadata = cur_file.lst_metadata
+    except NameError:
+        with open(gui.filename, 'rb') as f:
+            dict_of_data = pickle.load(f)
+        lst_metadata = dict()
 
-    validated_data = SignalValidator(dict_of_data=separated_data.dict_of_data, num_of_frames=gui.num_of_frames,
+    validated_data = SignalValidator(dict_of_data=dict_of_data, num_of_frames=gui.num_of_frames,
                                     binwidth=float(gui.binwidth), use_sweeps=gui.sweeps_as_lines,
                                     delay_between_frames=float(gui.frame_delay),
                                     data_to_grab=separated_data.data_to_grab, line_freq=gui.line_freq,
@@ -65,13 +74,13 @@ def main_data_readout(gui):
     tag_bit_parser = ParseTAGBits(dict_of_data=validated_data.dict_of_data, photons=photon_df.gen_df(),
                                   use_tag_bits=gui.tag_bits, bits_dict=gui.tag_bits_dict)
 
-    analyzed_struct = Allocate(dict_of_inputs=cur_file.dict_of_input_channels, bidir=gui.bidir,
+    analyzed_struct = Allocate(bidir=gui.bidir, tag_offset=gui.tag_offset,
                                laser_freq=float(gui.reprate), binwidth=float(gui.binwidth),
                                tag_pulses=int(gui.tag_pulses), phase=gui.phase,
                                keep_unidir=gui.keep_unidir, flim=gui.flim,
                                censor=gui.censor, dict_of_data=validated_data.dict_of_data,
-                               df_photons=tag_bit_parser.gen_df(), num_of_channels=tabulated_data.num_of_channels,
-                               tag_freq=float(gui.tag_freq), tag_to_phase=True, tag_offset=gui.tag_offset)
+                               df_photons=tag_bit_parser.gen_df(),
+                               tag_freq=float(gui.tag_freq), tag_to_phase=True, )
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there
@@ -82,7 +91,7 @@ def main_data_readout(gui):
                            z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
                            num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim,
                            binwidth=gui.binwidth, reprate=gui.reprate,
-                           lst_metadata=cur_file.lst_metadata, debug=gui.debug)
+                           lst_metadata=lst_metadata, debug=gui.debug)
     outputs.run()
 
     if gui.gating:
@@ -144,7 +153,7 @@ def tkinter_to_object(gui):
     return GUIClass(**dic)
 
 
-def run_lst_full():
+def run():
     """
     Run the entire script with a list file as input.
     """
@@ -259,6 +268,6 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
 
 
 if __name__ == '__main__':
-    df, movie = run_lst_full()
+    df, movie = run()
     # data = run_batch(foldername="", glob_str="*.lst", recursive=False)
     # mp_batch(r'C:\Users\Hagai\Documents\GitHub\python-pysight')
