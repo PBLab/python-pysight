@@ -1,7 +1,7 @@
 """
 __author__ = Hagai Hargil
 """
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
 import warnings

@@ -4,9 +4,9 @@ __author__ = Hagai Hargil
 import pandas as pd
 import numpy as np
 import attr
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple
 import warnings
-from pysight.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
+from pysight.ascii_list_file_parser.apply_df_funcs import get_lost_bit_np, get_lost_bit_tag, iter_string_hex_to_bin, convert_hex_to_int, convert_hex_to_bin
 from attr.validators import instance_of
 
 

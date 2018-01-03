@@ -4,7 +4,7 @@ __author__: Hagai Hargil
 """
 from collections import OrderedDict
 import numpy as np
-from typing import Dict, List
+from typing import List
 
 class ChoiceManagerHex:
 
@@ -264,7 +264,7 @@ class ChoiceManagerHex:
         :param slices:
         :return:
         """
-        from pysight.movie_tools import Struct
+        from pysight.nd_hist_generator.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
         keys = ['lost', 'tag', 'sweep', 'time_rel_sweep', 'chan_edge']
 
@@ -541,7 +541,7 @@ class ChoiceManagerBinary:
         :param slices:
         :return:
         """
-        from pysight.movie_tools import Struct
+        from pysight.nd_hist_generator.movie_tools import Struct
         slice_dict: OrderedDict = OrderedDict()
         keys: List[str] = ['lost', 'tag', 'sweep', 'time_rel_sweep', 'edge', 'chan']
 

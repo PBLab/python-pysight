@@ -3,7 +3,7 @@ __author__ = Hagai Hargil
 """
 
 from unittest import TestCase
-from pysight.validation_tools import SignalValidator
+from pysight.nd_hist_generator.validation_tools import SignalValidator
 import pandas as pd
 import numpy as np
 

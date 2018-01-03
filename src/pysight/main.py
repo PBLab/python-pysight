@@ -12,17 +12,17 @@ def main_data_readout(gui):
     """
     Main function that reads the lst file and processes its data.
     """
-    from pysight.fileIO_tools import FileIO
-    from pysight.tabulation_tools import Tabulate
-    from pysight.allocation_tools import Allocate
-    from pysight.movie_tools import Movie
-    from pysight import timepatch_switch
-    from pysight.output_tools import OutputParser
+    from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+    from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
+    from pysight.nd_hist_generator.allocation_tools import Allocate
+    from pysight.nd_hist_generator.movie_tools import Movie
+    from pysight.ascii_list_file_parser import timepatch_switch
+    from pysight.nd_hist_generator.output_tools import OutputParser
     from pysight.gating_tools import GatedDetection
-    from pysight.photon_df_tools import PhotonDF
-    from pysight.tag_bits_tools import ParseTAGBits
-    from pysight.distribute_data import DistributeData
-    from pysight.validation_tools import SignalValidator
+    from pysight.nd_hist_generator.photon_df_tools import PhotonDF
+    from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
+    from pysight.ascii_list_file_parser.distribute_data import DistributeData
+    from pysight.nd_hist_generator.validation_tools import SignalValidator
     import numpy as np
 
     # Read the file
@@ -48,6 +48,8 @@ def main_data_readout(gui):
                                     dict_of_inputs=tabulated_data.dict_of_inputs,
                                     use_tag_bits=gui.tag_bits, )
     separated_data.run()
+
+####### START OF "PUBLIC API" ##########
 
     validated_data = SignalValidator(dict_of_data=separated_data.dict_of_data, num_of_frames=gui.num_of_frames,
                                     binwidth=float(gui.binwidth), use_sweeps=gui.sweeps_as_lines,
@@ -135,28 +137,28 @@ class GUIClass:
 def tkinter_to_object(gui):
     """
     Convert a tkinter instance into a pickable dictionary
-    :param gui: GUIApp
+    :param gui: GuiAppLst
     :return: namedtuple
     """
     dic = {key: val.get() for key, val in gui.__dict__.items() if 'Var' in repr(val)}
     return GUIClass(**dic)
 
 
-def run():
+def run_lst_full():
     """
-    Run the entire script.
+    Run the entire script with a list file as input.
     """
-    from pysight.tkinter_gui_multiscaler import GUIApp
+    from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
-    gui = GUIApp()
+    gui = GuiAppLst()
     gui.root.mainloop()
     verify_gui_input(gui)
     gui_as_object = tkinter_to_object(gui)
     return main_data_readout(gui_as_object)
 
 
-def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> pd.DataFrame:
+def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> pd.DataFrame:
     """
     Run PySight on all list files in the folder
     :param foldername: str - Main folder to run the analysis on.
@@ -166,7 +168,7 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> 
     """
 
     import pathlib
-    from pysight.tkinter_gui_multiscaler import GUIApp
+    from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
     import numpy as np
 
@@ -191,7 +193,7 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> 
 
     data_columns = ['fname', 'done', 'error']
     data_record = pd.DataFrame(np.zeros((num_of_files, 3)), columns=data_columns)  # store result of PySight
-    gui = GUIApp()
+    gui = GuiAppLst()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
     verify_gui_input(gui)
@@ -227,7 +229,7 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
     :return: None
     """
     import pathlib
-    from pysight.tkinter_gui_multiscaler import GUIApp
+    from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
     import multiprocessing as mp
 
@@ -243,7 +245,7 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
         print(str(file))
 
     all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
-    gui = GUIApp()
+    gui = GuiAppLst()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
     verify_gui_input(gui)
@@ -257,6 +259,6 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
 
 
 if __name__ == '__main__':
-    df, movie = run()
-    # dat[a = run_batch(foldername="", glob_str="*.lst", recursive=False)
+    df, movie = run_lst_full()
+    # data = run_batch(foldername="", glob_str="*.lst", recursive=False)
     # mp_batch(r'C:\Users\Hagai\Documents\GitHub\python-pysight')

@@ -3,7 +3,7 @@ __author__ = Hagai Hargil
 """
 import unittest
 from os import sep
-from pysight.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser.fileIO_tools import FileIO
 
 
 class TestFileIOTools(unittest.TestCase):

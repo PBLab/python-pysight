@@ -4,7 +4,7 @@ __author__ = Hagai Hargil
 import attr
 from attr.validators import instance_of
 import pandas as pd
-from pysight.apply_df_funcs import convert_bin_to_int
+from pysight.ascii_list_file_parser.apply_df_funcs import convert_bin_to_int
 import numpy as np
 
 

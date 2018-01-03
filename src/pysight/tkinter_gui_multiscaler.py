@@ -43,7 +43,7 @@ class TagBits(object):
                                           is_positive,
                                           end_is_greater])
 
-class GUIApp(object):
+class GuiAppLst(object):
     """
     Main GUI for the multiscaler code.
     Note - class variables should contain "entry" in their name if they point

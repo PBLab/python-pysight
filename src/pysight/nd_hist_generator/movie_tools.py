@@ -8,13 +8,13 @@ from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Iterator, Tuple, Iterable, Dict, Generator
+from typing import List, Tuple, Iterable, Dict, Generator
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
 from tqdm import tqdm
-from pysight.rectify_lines import LineRectifier
+from pysight.nd_hist_generator.rectify_lines import LineRectifier
 
 
 def trunc_end_of_file(name) -> str:

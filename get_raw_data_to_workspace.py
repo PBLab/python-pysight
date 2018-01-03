@@ -2,12 +2,12 @@
 __author__ = Hagai Hargil
 """
 from pysight.tkinter_gui_multiscaler import GUIApp, verify_gui_input
-from pysight.fileIO_tools import FileIO
-from pysight.tabulation_tools import Tabulate
-from pysight.allocation_tools import Allocate
-from pysight.tag_bits_tools import ParseTAGBits
-from pysight.photon_df_tools import PhotonDF
-from pysight import timepatch_switch
+from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
+from pysight.nd_hist_generator.allocation_tools import Allocate
+from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
+from pysight.nd_hist_generator.photon_df_tools import PhotonDF
+from pysight.ascii_list_file_parser import timepatch_switch
 import matplotlib.pyplot as plt
 
 

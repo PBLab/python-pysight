@@ -704,3 +704,9 @@ Changelog
 -----------------
 
 * Added ``recursive`` and ``n_proc`` keywords to ``mp_batch``, and changed return type to ``None``.
+
+* Changed source tree structure.
+
+* Renamed main function ``run`` into ``run_lst_full``.
+
+* Renamed ``run_batch`` to ``run_batch_lst``.

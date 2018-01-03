@@ -5,11 +5,10 @@ import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of
-from pysight.movie_tools import Volume, Movie
+from pysight.nd_hist_generator.movie_tools import Volume, Movie
 from collections import deque, namedtuple
 from typing import Tuple, Union
-from numba import jit, uint64, uint8, int64
-import sys
+from numba import jit, uint8, int64
 
 
 @attr.s(slots=True)

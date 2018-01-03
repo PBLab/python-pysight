@@ -6,7 +6,7 @@ import numpy as np
 import attr
 from typing import Dict, Tuple, List
 from numba import jit, int64, uint64
-from pysight.tag_tools_v2 import TagPipeline
+from pysight.nd_hist_generator.tag_tools_v2 import TagPipeline
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks_cwt

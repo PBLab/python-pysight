@@ -4,11 +4,11 @@ __author__ = Hagai Hargil
 
 
 import unittest
-from pysight.censor_tools import CensorCorrection
-from pysight.censor_tools import CensoredVolume
-from pysight.movie_tools import Movie, Volume
+from pysight.nd_hist_generator.censor_tools import CensorCorrection
+from pysight.nd_hist_generator.censor_tools import CensoredVolume
+from pysight.nd_hist_generator.movie_tools import Movie, Volume
 import pandas as pd
-from collections import deque, namedtuple
+from collections import namedtuple
 import numpy as np
 
 

@@ -2,9 +2,8 @@ import unittest
 import pandas as pd
 import numpy as np
 from os import sep
-from pysight.allocation_tools import Allocate
-from pysight.fileIO_tools import FileIO
-from pysight import timepatch_switch
+from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser import timepatch_switch
 
 
 class TestAllocationTools(unittest.TestCase):
