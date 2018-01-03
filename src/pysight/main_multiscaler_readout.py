@@ -217,23 +217,32 @@ def run_batch(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> 
     return data_record
 
 
-def mp_batch(foldername, glob_str='*lst'):
+def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
+    """
+    Run several instances of PySight using the multiprocessing module.
+    :param foldername: Folder to scan
+    :param glob_str: Glob string to filter files
+    :param recursive: Whether to scan subdirectories as well
+    :param n_proc: Number of processes to use (None means all)
+    :return: None
+    """
     import pathlib
     from pysight.tkinter_gui_multiscaler import GUIApp
     from pysight.tkinter_gui_multiscaler import verify_gui_input
     import multiprocessing as mp
 
     path = pathlib.Path(foldername)
-    num_of_files = 0
     if not path.exists():
         raise UserWarning(f"Folder {foldername} doesn't exist.")
-    all_lst_files = path.glob(glob_str)
+    if recursive:
+        all_lst_files = path.rglob(glob_str)
+    else:
+        all_lst_files = path.glob(glob_str)
     print(f"Running PySight on the following files:")
     for file in list(all_lst_files):
         print(str(file))
-        num_of_files += 1
-    all_lst_files = path.glob(glob_str)
 
+    all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
     gui = GUIApp()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
@@ -243,12 +252,11 @@ def mp_batch(foldername, glob_str='*lst'):
         g = tkinter_to_object(gui)
         g.filename = str(file)
         all_guis.append(g)
-    pool = mp.Pool()
-    rec = pool.map(main_data_readout, all_guis)
-    return rec
+    pool = mp.Pool(n_proc)
+    pool.map(main_data_readout, all_guis)
 
 
 if __name__ == '__main__':
     df, movie = run()
     # dat[a = run_batch(foldername="", glob_str="*.lst", recursive=False)
-    # res = mp_batch(r'C:\Users\Hagai\Documents\GitHub\python-pysight')
+    # mp_batch(r'C:\Users\Hagai\Documents\GitHub\python-pysight')

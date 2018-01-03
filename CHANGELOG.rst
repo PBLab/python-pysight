@@ -668,7 +668,7 @@ Changelog
 
 * Refactored ``tabulation_tools``.
 
-0.7.0 (2018-1-1)
+0.7.0 (2018-01-01)
 ------------------
 
 * Refactoring and additions to GUI, including new choices between imaging systems.
@@ -677,8 +677,8 @@ Changelog
 
 * Not all tests pass.
 
-0.7.1 (2018-1-1)
-----------------
+0.7.1 (2018-01-01)
+------------------
 
 * GUI is now startable with "S" key and \ or "Enter".
 
@@ -688,14 +688,19 @@ Changelog
 
 * Making progress on multiprocessing support.
 
-0.7.2 (2018-1-1)
-----------------
+0.7.2 (2018-01-01)
+------------------
 
 * Minor bug fixes.
 
-0.7.3 (2018-1-1)
-----------------
+0.7.3 (2018-01-01)
+------------------
 
 * Bug fixes to ``run_batch``.
 
 * New function ``mp_batch(foldername, glob_str)`` for parallel processing of a folder of list files.
+
+0.7.4 (2018-01-XX)
+-----------------
+
+* Added ``recursive`` and ``n_proc`` keywords to ``mp_batch``, and changed return type to ``None``.
