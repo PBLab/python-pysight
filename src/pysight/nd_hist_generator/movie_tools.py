@@ -14,7 +14,7 @@ from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
 from tqdm import tqdm
-from pysight.nd_hist_generator.rectify_lines import LineRectifier
+from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 
 
 def trunc_end_of_file(name) -> str:

@@ -2,7 +2,7 @@
 __author__ = Hagai Hargil
 """
 from unittest import TestCase
-from pysight.nd_hist_generator.rectify_lines import LineRectifier
+from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 import numpy as np
 
 

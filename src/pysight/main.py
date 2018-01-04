@@ -22,9 +22,10 @@ def main_data_readout(gui):
     from pysight.nd_hist_generator.photon_df_tools import PhotonDF
     from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
     from pysight.ascii_list_file_parser.distribute_data import DistributeData
-    from pysight.nd_hist_generator.validation_tools import SignalValidator
+    from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
     import numpy as np
     import pickle
+
 
     # Read the file
     if gui.filename.endswith('.lst'):
@@ -150,6 +151,7 @@ def tkinter_to_object(gui):
     :return: namedtuple
     """
     dic = {key: val.get() for key, val in gui.__dict__.items() if 'Var' in repr(val)}
+    dic['tuple_of_data_sources'] = gui.tuple_of_data_sources
     return GUIClass(**dic)
 
 
@@ -162,8 +164,8 @@ def run():
 
     gui = GuiAppLst()
     gui.root.mainloop()
-    verify_gui_input(gui)
     gui_as_object = tkinter_to_object(gui)
+    verify_gui_input(gui_as_object)
     return main_data_readout(gui_as_object)
 
 
@@ -205,8 +207,8 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False)
     gui = GuiAppLst()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
-    verify_gui_input(gui)
     named_gui = tkinter_to_object(gui)
+    verify_gui_input(named_gui)
 
     try:
         for idx, lst_file in enumerate(all_lst_files):
@@ -257,7 +259,7 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
     gui = GuiAppLst()
     gui.root.mainloop()
     gui.filename.set('.lst')  # no need to choose a list file
-    verify_gui_input(gui)
+    verify_gui_input(tkinter_to_object(gui))
     all_guis = []
     for file in all_lst_files:
         g = tkinter_to_object(gui)
