@@ -5,13 +5,12 @@ from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
 import attr
-from attr.validators import instance_of
-from ..line_signal_validators.validation_tools import SignalValidator
+from itertools import tee
 
 
 @attr.s(slots=True)
 class ScanImageLineValidator:
-    sig_val = attr.ib(validator=instance_of(SignalValidator))
+    sig_val = attr.ib()  # SignalValidator
 
     def __getattr__(self, item):
         return getattr(self.sig_val, item)
@@ -111,3 +110,10 @@ class ScanImageLineValidator:
             lines_mat[row, last_idx:] = 0
 
         return lines_mat, rel_idx, end_of_frames_idx, last_idx_of_row, rel_idx_non_end_frame
+
+    @staticmethod
+    def __pairwise(iterable):
+        """From itertools: s -> (s0,s1), (s1,s2), (s2, s3), ..."""
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)

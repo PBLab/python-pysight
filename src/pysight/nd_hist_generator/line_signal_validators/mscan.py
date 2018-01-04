@@ -5,14 +5,12 @@ from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
 import attr
-from attr.validators import instance_of
-from itertools import tee, chain
-from ..line_signal_validators.validation_tools import SignalValidator
+from itertools import chain
 
 
 @attr.s(slots=True)
 class MScanLineValidator:
-    sig_val = attr.ib(validator=instance_of(SignalValidator))
+    sig_val = attr.ib()  # SignalValidator
 
     def __getattr__(self, item):
         return getattr(self.sig_val, item)
@@ -90,6 +88,6 @@ class MScanLineValidator:
         end_of_frame_idx = start_of_frame_idx + self.num_of_lines
         exact_lines = [lines[slice(start, end)] for start, end in zip(start_of_frame_idx, end_of_frame_idx)]
         exact_lines = np.array(list(chain.from_iterable(exact_lines)), dtype=np.uint64)
-        self.num_of_frames = len(end_of_frame_idx)
+        self.sig_val.num_of_frames = len(end_of_frame_idx)
 
         return pd.Series(exact_lines, dtype=np.uint64)

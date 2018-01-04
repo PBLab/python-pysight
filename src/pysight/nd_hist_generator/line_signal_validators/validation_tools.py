@@ -9,7 +9,6 @@ import attr
 from attr.validators import instance_of
 from enum import Enum
 from pysight.tkinter_gui_multiscaler import ImagingSoftware
-from itertools import tee, chain
 from ..line_signal_validators.scanimage import ScanImageLineValidator
 from ..line_signal_validators.mscan import MScanLineValidator
 
@@ -94,13 +93,6 @@ class SignalValidator:
             pass
 
         self.__validate_created_data_channels()
-
-    @staticmethod
-    def __pairwise(iterable):
-        """From itertools: s -> (s0,s1), (s1,s2), (s2, s3), ..."""
-        a, b = tee(iterable)
-        next(b, None)
-        return zip(a, b)
 
     def __bins_bet_lines(self) -> int:
         """
