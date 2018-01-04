@@ -142,8 +142,8 @@ class SignalValidator:
 
             elif num_of_lines_recorded < self.num_of_lines * (div+1):
                 missing_lines = self.num_of_lines - mod
-                line_diff = int(self.dict_of_data['Lines'].loc[:, 'abs_time'].diff().mean())
-                return int(self.dict_of_data['Lines'].loc[:, 'abs_time'].iloc[-1] +\
+                line_diff = int(self.dict_of_data['Lines'].iloc[:, 0].diff().mean())
+                return int(self.dict_of_data['Lines'].iloc[:, 0].iloc[-1] +\
                     ((missing_lines+1) * line_diff))
 
         # Just PMT data
@@ -278,8 +278,7 @@ class SignalValidator:
 
     def __extrapolate_line_data(self, line_point: int=0) -> pd.DataFrame:
         """
-        From a single line signal extrapolate the presumed line data vector. The line frequency is doubled
-        the original frequency. If needed, events will be discarded later.
+        From a single line signal extrapolate the presumed line data vector. The line frequency is double
         the original frequency. If needed, events will be discarded later.
         :param line_point: Start interpolation from this point.
         :return: pd.DataFrame of line data
