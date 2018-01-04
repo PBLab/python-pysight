@@ -16,11 +16,6 @@ class TestFrame(TestCase):
                         Lines=pd.DataFrame([0, 5, 10, 15, 20, 25, 30, 35]), columns=['abs_time'])
     vlad = SignalValidator(dict_of_data)
 
-    # def test_pairwise(self):
-    #     dict_of_data = {}
-    #     iter = SignalValidator(dict_of_data)._SignalValidator__pairwise([1, 2, 3, 4])
-    #     self.assertSequenceEqual([(1, 2), (2, 3), (3, 4)], list(iter))
-
     def test_last_event_only_pmt(self):
         dict_of_data = {'PMT1': pd.DataFrame([1, 5, 3], columns=['abs_time'])}
         last = SignalValidator(dict_of_data)._SignalValidator__calc_last_event_time()
