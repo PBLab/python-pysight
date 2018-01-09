@@ -74,7 +74,7 @@ class MScanLineValidator:
                                         np.atleast_1d(y[missing_val[0]]),
                                         lines[missing_val[0]:]))
             # Restart the loop
-            y = self.__gen_line_model_mscan(pd.Series(lines), delta)
+            y = self.__gen_line_model(pd.Series(lines), delta)
             diff_vec = np.abs(np.subtract(y, lines, dtype=np.int64))
             missing_val = np.where(diff_vec > delta / 20)[0]
         return pd.Series(lines)

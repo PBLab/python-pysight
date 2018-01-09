@@ -51,7 +51,7 @@ class GuiAppLst(object):
     """
     def __init__(self):
         self.root = Tk()
-        self.root.title("PySight GUI | Choose a list file to analyze...")
+        self.root.title("PySight \uFF5C  PBLab \uFF5C 2018")
         self.root.rowconfigure(16, weight=1)
         self.root.columnconfigure(16, weight=1)
         main_frame = ttk.Frame(self.root, width=1000, height=1300)

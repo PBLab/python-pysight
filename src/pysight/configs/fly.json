@@ -65,7 +65,7 @@
     ],
     "filename": [
         "PY_VAR16",
-        "X:/Hagai/Multiscaler/21-12-17/flies_21_12_17/fly4_gevi/start_pmt_stop1_puff_stop2_lines_512px013.lst"
+        "D:/Hagai_9_1_18/fly1/mushroom/start_pmt_stop1_puff_stop2_lines_fly1_mushroom_body_006.lst"
     ],
     "input_start": [
         "PY_VAR17",
@@ -97,7 +97,7 @@
     ],
     "x_pixels": [
         "PY_VAR24",
-        512
+        64
     ],
     "y_pixels": [
         "PY_VAR25",
