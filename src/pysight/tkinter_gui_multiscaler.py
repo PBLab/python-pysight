@@ -80,11 +80,9 @@ class GuiAppLst(object):
         self.__load_last_used_cfg(main_frame)
 
         # Define the last quit button and wrap up GUI
-        quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy,
-                                 underline=0)
+        quit_button = ttk.Button(main_frame, text='Start', command=self.root.destroy)
         quit_button.grid(row=13, column=4, sticky='ns')
 
-        self.root.bind("s", self.__dest)
         self.root.bind("<Return>", self.__dest)
         for child in main_frame.winfo_children():
             child.grid_configure(padx=3, pady=2)

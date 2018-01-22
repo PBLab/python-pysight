@@ -39,6 +39,7 @@ class SignalValidator:
     use_sweeps = attr.ib(default=False, validator=instance_of(bool))
     bidir_phase = attr.ib(default=-2.7, validator=instance_of(float))
     image_soft = attr.ib(default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str))
+    change_thresh = attr.ib(default=0.3, validator=instance_of(float))
     handle_line_cases = attr.ib(init=False)
     last_event_time = attr.ib(init=False)
     max_sweep = attr.ib(init=False)
@@ -104,16 +105,14 @@ class SignalValidator:
         freq_in_bins = 1 / (self.line_freq * self.binwidth)
         return int(freq_in_bins / 2) if self.bidir else freq_in_bins
 
-    def __calc_last_event_time(self):
+    def __calc_last_event_time(self) -> int:
         """
         Find the last event time for the experiment. Logic as follows:
         No lines \ frames data given: Last event time is the last photon time.
         Only lines data given: The last start-of-frame time is created, and the difference between subsequent frames
         in the data is added.
         Frames data exists: The last frame time plus the difference between subsequent frames is the last event time.
-        :param dict_of_data: Dictionary of data.
-        :param self.num_of_lines: Lines per frame.
-        :return: int
+        :return int: Last event time
         """
         ##
         if 'Frames' in self.dict_of_data:

@@ -22,7 +22,8 @@ class MScanLineValidator:
         """
         lines = self.dict_of_data['Lines'].loc[:, 'abs_time'].copy()
         rel_idx, delta = self.__calc_line_parameters(lines=lines)
-        if len(rel_idx) > 0:
+        lines, rel_idx, delta = self.__filter_extra_lines(lines=lines, delta=delta)
+        if len(rel_idx) > 0:  # missing lines, not just extra
             theo_lines = self.__gen_line_model(lines=lines, m=delta)
             lines = self.__diff_vec_analysis(lines=lines, y=theo_lines, delta=delta)
         lines = self.__finalize_lines(lines=lines, delta=delta)
@@ -34,18 +35,50 @@ class MScanLineValidator:
 
     def __calc_line_parameters(self, lines: pd.Series) -> Tuple[np.ndarray, np.uint64]:
         """ Generate general parameters of the given acquisition """
-        change_thresh = 0.3
-        rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
-        delta = np.uint64(lines.drop(rel_idx).diff().mean())
+        rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > self.change_thresh)[0]
+        delta = np.uint64(lines.drop(rel_idx).reindex(np.arange(len(lines))).interpolate().diff().mean())
         return rel_idx[::2], delta
+
+    def __filter_extra_lines(self, lines: pd.Series, delta: int) -> Tuple[pd.Series, pd.Series, int]:
+        """
+        Kick out excess line signals
+        :param lines:
+        :param delta:
+        :return: Tuple of valid lines, missing lines and new delta of lines
+        """
+        diffs = lines.diff()
+        rel_idx = np.where(np.abs(diffs.pct_change(periods=1)) > self.change_thresh)[0]
+        recurring = np.where(np.diff(rel_idx) == 1)[0]
+        idx_to_keep = np.ones_like(rel_idx, dtype=bool)
+
+        for idx, _ in enumerate(recurring[1:], 1):
+            try:
+                if recurring[idx] - recurring[idx-1] == 1:
+                    idx_to_keep[recurring[idx] + 1] = False
+            except IndexError:
+                pass
+
+        rel_idx_new = pd.Series(rel_idx[idx_to_keep][::2], dtype=np.uint64)
+        missing_lines = []
+        extra_lines = []
+
+        for idx in rel_idx_new:
+            if diffs[idx] < (delta/2):  # excess lines
+                extra_lines.append(idx)
+            else:
+                missing_lines.append(idx)
+
+        valid_lines = lines.drop(extra_lines).reset_index(drop=True)
+        delta = int(valid_lines.drop(missing_lines).diff().mean())
+        return valid_lines, pd.Series(missing_lines), delta
 
     def __gen_line_model(self, lines: pd.Series, m: np.uint64) -> np.ndarray:
         """ Using linear approximation generate a model for the "correct" line signal """
         const = lines.iloc[0]
         x = np.arange(start=0, stop=len(lines), dtype=np.uint64)
         y = m * x + const
-        if len(lines) > 5000:  # correct simulated lines
-            idx_range = np.arange(5000, len(lines), step=5000, dtype=np.uint64)
+        if len(lines) > 1500:  # correct simulated lines
+            idx_range = np.arange(1500, len(lines), step=1500, dtype=np.uint64)
             for idx in idx_range:
                 x = np.arange(0, len(lines)-idx, dtype=np.uint64)
                 y[idx:] = m * x + lines.iloc[idx]
