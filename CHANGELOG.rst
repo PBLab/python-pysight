@@ -700,13 +700,15 @@ Changelog
 
 * New function ``mp_batch(foldername, glob_str)`` for parallel processing of a folder of list files.
 
-0.8.0 (2018-01-XX)
+0.8.0 (2018-02-XX)
 -----------------
 
 * Added ``recursive`` and ``n_proc`` keywords to ``mp_batch``, and changed return type to ``None``.
 
-* Changed source tree structure.
-
-* Renamed main function ``run`` into ``run_lst_full``.
+* Changed source tree structure for better clarity.
 
 * Renamed ``run_batch`` to ``run_batch_lst``.
+
+* More internal improvements.
+
+* Z-axis bins range is equal, i.e. each bin spans the same axial distance in microns.

@@ -119,7 +119,6 @@ class TagPeriodVerifier(object):
         if len(starts) == 0:  # Nothing fix
             return
         period = self.period
-        new_data = []
         items_to_discard = []
         start_iter_at = 0
         # If start contains a 0 - manually add TAG pulses
@@ -232,8 +231,8 @@ def numba_iterate_over_disordered(tag: np.ndarray, starts: np.ndarray, ends: np.
         start_val = tag[start_idx]
         end_val = tag[end_idx]
         if np.abs(end_val - start_val) - period > jitter_int:
-            l = np.arange(start=end_val - period, stop=start_val,
-                          step=-period, dtype=np.uint64)
+            l = np.arange(end_val - period, start_val,
+                          -period, np.uint64)
             new_data.append(l)
         items_to_discard.append(np.arange(start_idx + 1, end_idx))
         row_idx += 1

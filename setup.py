@@ -98,6 +98,7 @@ setup(
         'h5py-cache',
         'tqdm',
         'numba',
+        'ansimarkup',
 
     ],
     extras_require={

@@ -323,49 +323,16 @@ class Volume(object):
     tag_freq       = attr.ib(default=189e3, validator=instance_of(float))
     mirror_phase   = attr.ib(default=-2.76, validator=instance_of(float))  # phase for scanning mirrors
 
+
     @property
-    def metadata(self) -> OrderedDict:
-        """
-        Creates the metadata of the volume to be created, to be used for creating the actual images
-        using histograms. Metadata can include the first photon arrival time, start and end of volume, etc.
-        :return: Dictionary of all needed metadata.
-        """
-
-        metadata = OrderedDict()
-        jitter = 0.02  # 2% of jitter of the signals that creates volumes
-
-        # Volume metadata - rows
-        volume_start: int = 0
-        metadata['Volume'] = Struct(start=volume_start, end=self.end_time, num=self.x_pixels+1)
-
-        # y-axis metadata - columns
-        y_start, y_end = metadata_ydata(data=self.data, jitter=jitter, bidir=self.bidir,
-                                        fill_frac=self.fill_frac, delta=self.line_delta,
-                                        sweeps=self.use_sweeps)
-        if y_end == 1:  # single pixel in frame
-            metadata['Y'] = Struct(start=y_start, end=self.end_time, num=self.y_pixels + 1)
-        else:
-            metadata['Y'] = Struct(start=y_start, end=y_end, num=self.y_pixels + 1)
-
-        # z-axis metadata
+    def num_of_dims(self) -> int:
+        """ Number of data dimensions """
+        added_dims = 0
         if 'Phase' in self.data.columns:
-            z_start = -1 if self.tag_as_phase else 0
-            z_end = 1 if self.tag_as_phase else self.tag_period
-            metadata['Z'] = Struct(start=z_start, end=z_end, num=self.z_pixels + 1)
-
-        # Laser pulses metadata
+            added_dims += 1
         if 'time_rel_pulse' in self.data.columns:
-            try:
-                laser_start = 0
-                laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
-                metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
-            except ZeroDivisionError:
-                laser_start = 0
-                warnings.warn('No laser reprate provided. Assuming 80.3 MHz.')
-                laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(np.uint8)
-                metadata['Laser'] = Struct(start=laser_start, end=laser_end, num=laser_end + 1)
-
-        return metadata
+            added_dims += 1
+        return 2 + added_dims
 
     @property
     def tag_period(self) -> int:
@@ -380,30 +347,48 @@ class Volume(object):
         Create three vectors that will create the grid of the frame. Uses Numba internal function for optimization.
         :return: Tuple of np.array
         """
-        metadata = self.metadata
         list_of_edges = []
-
         if not self.empty:
-            for num_of_dims, key in enumerate(metadata, 1):
-                if 'Volume' == key:
-                    try:
-                        list_of_edges.append(
-                            LineRectifier(lines=self.lines.values - self.abs_start_time,
-                                          x_pixels=self.x_pixels,
-                                          bidir=self.bidir,
-                                          end_time=self.end_time).rectify()
-                                            )
-                    except ValueError:  # problem with line correction\interpolation
-                        warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
-                        list_of_edges.append(np.arange(self.x_pixels + 1))
-                else:
-                    list_of_edges.append(create_linspace(start=metadata[key].start,
-                                                         stop=metadata[key].end,
-                                                         num=metadata[key].num))
+            # Volume edges
+            try:
+                list_of_edges.append(
+                    LineRectifier(lines=self.lines.values - self.abs_start_time,
+                                  x_pixels=self.x_pixels,
+                                  bidir=self.bidir,
+                                  end_time=self.end_time).rectify()
+                )
+            except ValueError:  # problem with line correction\interpolation
+                warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
+                list_of_edges.append(np.arange(self.x_pixels + 1))
+            # Column edges
+            y_start, y_end = metadata_ydata(data=self.data, jitter=0.02, bidir=self.bidir,
+                                            fill_frac=self.fill_frac, delta=self.line_delta,
+                                            sweeps=self.use_sweeps)
+            list_of_edges.append(np.linspace(start=y_start,
+                                             stop=self.end_time if y_end == 1 else y_end,
+                                             num=self.y_pixels+1, endpoint=True)[1:])
 
-            return list_of_edges, num_of_dims
+            # Z edges
+            if 'Phase' in self.data.columns:
+                list_of_edges.append(self.__linspace_along_sine())
+
+            # Laser pulses edges
+            if 'time_rel_pulse' in self.data.columns:
+                laser_start = 0
+                try:
+                    laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
+                except ZeroDivisionError:
+                    warnings.warn('No laser reprate provided. Assuming 80.3 MHz.')
+                    laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(np.uint8)
+
+                list_of_edges.append(np.linspace(start=laser_start,
+                                                 stop=laser_end,
+                                                 num=laser_end+1,
+                                                 endpoint=True)[1:])
+
+            return list_of_edges, self.num_of_dims
         else:
-            return [], len(metadata)
+            return [], self.num_of_dims
 
     def create_hist(self) -> Tuple[np.ndarray, Iterable]:
         """
@@ -451,6 +436,30 @@ class Volume(object):
         squeezed = np.squeeze(data[split[0], split[1], :])
         return data
 
+    def __linspace_along_sine(self) -> np.ndarray:
+        """
+        Find the points that are evenly spaced along a sine function between pi/2 and 3*pi/2
+        :return: Array of bin edges
+        """
+        lower_bound = -1 if self.tag_as_phase else 0
+        upper_bound = 1 if self.tag_as_phase else self.tag_period
+        pts = []
+        relevant_idx = []
+
+        bin_edges = np.linspace(upper_bound, lower_bound, self.z_pixels+1, endpoint=True)[1:, np.newaxis]
+        dx = 0.00001
+        x = np.arange(np.pi/2, 3*np.pi/2+dx, step=dx, dtype=np.float64)
+        sinx = np.sin(x)
+        locs = np.where(np.isclose(sinx, bin_edges, atol=1e-05))
+        vals, first_idx, count = np.unique(locs[0], return_index=True, return_counts=True)
+        assert len(vals) == len(bin_edges)
+        for first_idx, count in zip(first_idx, count):
+            idx_to_append = locs[1][first_idx + count // 2]
+            relevant_idx.append(idx_to_append)
+            pts.append(sinx[idx_to_append])
+
+        return np.array(pts)
+
 
 def validate_number_larger_than_zero(instance, attribute, value: int=0):
     """
@@ -459,13 +468,6 @@ def validate_number_larger_than_zero(instance, attribute, value: int=0):
 
     if value >= instance.attribute:
         raise ValueError(f"{attribute} has to be larger than {value}.")
-
-
-@jit((float64[:](int64, uint64, uint64)), nopython=True, cache=True)
-def create_linspace(start, stop, num):
-    linspaces = np.linspace(start, stop, num)
-    assert np.all(np.diff(linspaces) > 0)
-    return linspaces
 
 
 def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fill_frac: float=0,

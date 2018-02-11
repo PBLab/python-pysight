@@ -6,6 +6,8 @@ Created on Thu Oct 13 09:37:02 2016
 """
 import pandas as pd
 import warnings
+import colorama
+colorama.init()
 
 
 def main_data_readout(gui):

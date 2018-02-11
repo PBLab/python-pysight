@@ -16,3 +16,4 @@ h5py
 h5py-cache
 tqdm
 numba
+ansimarkup
