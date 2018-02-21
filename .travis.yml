@@ -1,5 +1,6 @@
 language: python
-python: '3.6'
+python:
+  - "3.6"
 sudo: false
 env:
   global:
@@ -20,6 +21,7 @@ install:
   - easy_install --version
   - pip --version
   - tox --version
+  - pip install pysight
 script:
   - tox -v
 after_failure:

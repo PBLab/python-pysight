@@ -9,8 +9,8 @@ from pysight.ascii_list_file_parser.fileIO_tools import FileIO
 class TestFileIOTools(unittest.TestCase):
     """ Tests for new multiscaler readout functions """
 
-    list_of_file_names = ['tests_data' + sep + 'data_for_tests_1.lst',
-                          'tests_data' + sep + 'data_for_tests_2.lst']
+    list_of_file_names = ['tests' + sep + 'tests_data' + sep + 'data_for_tests_1.lst',
+                          'tests' + sep + 'tests_data' + sep + 'data_for_tests_2.lst']
     file_io_objects = []
     for file in list_of_file_names:
         cur_obj = FileIO(file, debug=False, input_start='Frames',

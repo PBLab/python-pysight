@@ -712,3 +712,5 @@ Changelog
 * More internal improvements.
 
 * Z-axis bins range is equal, i.e. each bin spans the same axial distance in microns.
+
+* Travis CI is back on.
