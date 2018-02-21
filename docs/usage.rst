@@ -51,7 +51,7 @@ Obviously, if you run the script from the command line (option #2) or in batch m
 GUI Options
 -----------
 .. image:: gui.png
-   :scale: 50
+   :scale: 25
 
 Running **PySight** will open GUI seen above.
 
