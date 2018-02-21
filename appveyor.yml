@@ -5,14 +5,14 @@ cache:
 init:
   - ps: echo $env:TOXENV
   - ps: ls C:\Python*
-#install:
-#  - r'C:\Python36-x64\Scripts\virtualenv --version'
-#  - r'C:\Python36-x64\Scripts\easy_install --version'
-#  - r'C:\Python36-x64\Scripts\pip --version'
-#  - r'C:\Python36-x64\Scripts\tox --version'
-#  - r'C:\Python36-x64\Scripts\pip install pysight'
+install:
+  - r'C:\Python36-x64\Scripts\virtualenv --version'
+  - r'C:\Python36-x64\Scripts\easy_install --version'
+  - r'C:\Python36-x64\Scripts\pip --version'
+  - r'C:\Python36-x64\Scripts\tox --version'
+  - r'C:\Python36-x64\Scripts\pip install pysight'
 test_script:
-  - '%WITH_COMPILER% %PYTHON_HOME%\Scripts\tox'
+  - '%APPVEYORBUILD_FOLDER%\tox'
 on_failure:
   - ps: dir "env:"
   - ps: get-content .tox\*\log\*
