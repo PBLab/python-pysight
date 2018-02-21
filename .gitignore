@@ -75,3 +75,5 @@ docs/_build
 .appveyor.token
 *.bak
 src/pysight/__pycache__/
+!/tests/tests_data/1.lst
+!/tests/tests_data/2.lst

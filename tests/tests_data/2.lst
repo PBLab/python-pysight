@@ -1,0 +1,100 @@
+[MPA4A] 535
+range=8064
+periods=2
+fstchan=54
+holdafter=0
+sweepmode=31c8080
+swpreset=65000       
+prena=4
+syncout=8
+fdac=0
+rxdelay=0
+cycles=1
+sequences=1
+tagbits=15
+dac0=35999
+dac1=a444
+dac2=2037
+dac3=2037
+dac4=2037
+dac5=2037
+rtpreset=0.015       
+digio=600
+digval=0
+autoinc=1 
+savedata=3 
+mpafmt=asc
+sephead=0 
+fmt=asc
+smoothpts=5 
+[CHN1]
+REPORT-FILE from 06/14/2017 20:59:30.953  written 06/14/2017 20:59:30
+cmline0=06/14/2017 20:59:30.953 
+cmline1=A1
+range=8064
+active=1
+bitshift=0
+cftfak=2580100
+evpreset=10          
+roimin=0
+roimax=8064
+caloff=345.600000
+calfact=0.800000
+calfact2=0
+calfact3=0
+calunit=nsec
+caluse=1 
+[CHN2]
+REPORT-FILE from 06/14/2017 20:59:30.953  written 06/14/2017 20:59:30
+cmline0=06/14/2017 20:59:30.953 
+cmline1=A2
+range=8064
+active=1
+bitshift=0
+cftfak=2580100
+evpreset=10          
+roimin=0
+roimax=8064
+caloff=345.600000
+calfact=0.800000
+calfact2=0
+calfact3=0
+calunit=nsec
+caluse=1 
+[CHN3]
+REPORT-FILE from 06/14/2017 20:59:30.953  written 06/14/2017 20:59:30
+cmline0=06/14/2017 20:59:30.953 
+cmline1=A3
+range=8064
+active=1
+bitshift=0
+cftfak=2580100
+evpreset=10          
+roimin=0
+roimax=8064
+caloff=345.600000
+calfact=0.800000
+calfact2=0
+calfact3=0
+calunit=nsec
+caluse=1 
+;MPA4 #535
+time_patch=5b
+;datalength=8 bytes
+;bit0..2: channel# 1..6 ( 3 bit)
+;bit3: edge 0=up / 1=dn ( 1 bit)
+;bit4 ..31: timedata    (28 bit), max sweep length 0.216 s
+;bit32..47: sweeps      (16 bit)
+;bit48..62: tag0..tag14 (15 bit)
+;bit63:     data_lost   ( 1 bit)
+[DATA]
+0dda000100000006
+0dda000100001b2a
+0dda000100001c49
+0dda000100001c1a
+0dda000100001c71
+0dda000100001d1a
+0dda000100001d49
+0dda000100001d41
+0dda000100001e0a
+0dda000100001f19

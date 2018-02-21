@@ -21,11 +21,11 @@ Overview
 
 .. |travis| image:: https://travis-ci.org/HagaiHargil/python-pysight.svg?branch=master
     :alt: Travis-CI Build Status
-    :target: https://travis-ci.org/HagaiHargil/python-pysight
+    :target: https://travis-ci.org/PBLab/python-pysight
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/HagaiHargil/python-pysight?branch=master&svg=true
     :alt: AppVeyor Build Status
-    :target: https://ci.appveyor.com/project/HagaiHargil/python-pysight
+    :target: https://ci.appveyor.com/project/PBLab/python-pysight
 
 .. |codecov| image:: https://codecov.io/github/HagaiHargil/python-pysight/coverage.svg?branch=master
     :alt: Coverage Status
