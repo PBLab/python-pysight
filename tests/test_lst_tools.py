@@ -19,7 +19,7 @@ from pysight.ascii_list_file_parser import timepatch_switch
 #                               columns=['abs_time', 'edge', 'sweep', 'time_rel_sweep'])
 #     }
 #     dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
-#     cur_file = FileIO(filename='tests' + sep + 'tests_data' + sep + 'data_for_tests_1.lst')
+#     cur_file = FileIO(filename='tests' + sep + 'tests_data' + sep + '1.lst')
 #     cur_file.run()
 #     dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
 
