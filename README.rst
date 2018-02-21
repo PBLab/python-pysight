@@ -1,5 +1,5 @@
 .. image:: docs/pysight_logo.png
-   :scale: 10%
+   :scale: 25
 .. start-badges
 
 .. list-table::
