@@ -2,15 +2,6 @@ language: python
 python:
   - "3.6"
 sudo: false
-env:
-  global:
-    - LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
-    - SEGFAULT_SIGNALS=all
-  matrix:
-    - TOXENV=check
-    - TOXENV=docs
-    - TOXENV=py35,report,codecov
-    - TOXENV=py36,report,codecov
 before_install:
   - python --version
   - uname -a
