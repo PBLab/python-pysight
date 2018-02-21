@@ -12,7 +12,7 @@ init:
 #  - r'C:\Python36-x64\Scripts\tox --version'
 #  - r'C:\Python36-x64\Scripts\pip install pysight'
 test_script:
-  - '%APPVEYORBUILD_FOLDER%\tox'
+  - 'tox'
 on_failure:
   - ps: dir "env:"
   - ps: get-content .tox\*\log\*
