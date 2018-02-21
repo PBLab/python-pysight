@@ -3,9 +3,16 @@ build: off
 cache:
   - '%LOCALAPPDATA%\pip\Cache'
 matrix:
-  - PYTHON: "C:\\Python36"
-    PYTHON_VERSION: "3.6.3"
+  - TOXENV: py36
+    PYTHON_HOME: C:\Python36
+    PYTHON_VERSION: "3.6"
     PYTHON_ARCH: "64"
+
+  - TOXENV: py36
+    PYTHON_HOME: C:\Python36
+    PYTHON_VERSION: '3.6'
+    PYTHON_ARCH: '32'
+
 init:
   - ps: echo $env:TOXENV
   - ps: ls C:\Python*
