@@ -2,7 +2,6 @@
 __author__ = Hagai Hargil
 """
 import unittest
-from os import sep
 from pysight.ascii_list_file_parser.fileIO_tools import FileIO
 import pathlib
 
@@ -10,8 +9,8 @@ import pathlib
 class TestFileIOTools(unittest.TestCase):
     """ Tests for new multiscaler readout functions """
 
-    list_of_file_names = [pathlib.Path(r'tests/tests_data/1.lst'),
-                          pathlib.Path(r'tests/tests_data/2.lst')]
+    list_of_file_names = [str(pathlib.Path(r'./tests/tests_data/1.lst').absolute()),
+                          str(pathlib.Path(r'./tests/tests_data/2.lst').absolute())]
     file_io_objects = []
     for file in list_of_file_names:
         cur_obj = FileIO(file, debug=False, input_start='Frames',

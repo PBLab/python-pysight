@@ -6,11 +6,11 @@ init:
   - ps: echo $env:TOXENV
   - ps: ls C:\Python*
 install:
-  - '%PYTHON_HOME%\Scripts\virtualenv --version'
-  - '%PYTHON_HOME%\Scripts\easy_install --version'
-  - '%PYTHON_HOME%\Scripts\pip --version'
-  - '%PYTHON_HOME%\Scripts\tox --version'
-  - '%PYTHON_HOME%\Scripts\pip install pysight'
+  - r'C:\Python36-x64\Scripts\virtualenv --version'
+  - r'C:\Python36-x64\Scripts\easy_install --version'
+  - r'C:\Python36-x64\Scripts\pip --version'
+  - r'C:\Python36-x64\Scripts\tox --version'
+  - r'C:\Python36-x64\Scripts\pip install pysight'
 test_script:
   - '%WITH_COMPILER% %PYTHON_HOME%\Scripts\tox'
 on_failure:
