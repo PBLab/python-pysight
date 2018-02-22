@@ -17,6 +17,7 @@ It's usually good habit to create a new environment for new projects. At the com
 Users who already installed Python
 ----------------------------------
 In a virtual environment simply install PySight::
+
     pip install pysight
 
 The "Usage" page provides more details on the operation of PySight.
