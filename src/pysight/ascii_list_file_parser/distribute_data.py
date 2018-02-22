@@ -12,7 +12,6 @@ from attr.validators import instance_of
 class DistributeData:
     """
     Separates the channel-specific data to their own channels
-    # ABOUT TO BE REFACTORED
     """
     df = attr.ib(validator=instance_of(pd.DataFrame))
     dict_of_inputs = attr.ib(validator=instance_of(dict))
