@@ -44,7 +44,7 @@ class TestFileIOTools(unittest.TestCase):
         self.assertEqual(list_of_real_time_patch, list_of_returned_time_patch)
 
     def test_check_start_of_data_value(self):
-        list_of_real_start_loc = [1647, 1477]
+        list_of_real_start_loc = [1749, 1567]
         list_of_returned_locs = []
         for oname in self.file_io_objects:
             list_of_returned_locs.append(oname.start_of_data_pos)
