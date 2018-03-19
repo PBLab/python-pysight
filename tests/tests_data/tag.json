@@ -65,7 +65,7 @@
     ],
     "filename": [
         "PY_VAR16",
-        "./tests_data/tag.lst"
+        "tests/tests_data/tag.lst"
     ],
     "input_start": [
         "PY_VAR17",
