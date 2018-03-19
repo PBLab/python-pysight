@@ -65,6 +65,8 @@ Installation and Documentation
 
 ``pip install pysight``
 
+Current version: 0.8.0
+
 Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed instructions.
 
 If you have questions, come visit us at our `Gitter channel. <https://gitter.im/python-pysight/Lobby>`_
