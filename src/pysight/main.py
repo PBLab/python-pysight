@@ -165,6 +165,20 @@ def tkinter_to_object(gui: Union[GuiAppLst, dict]):
         return GUIClass(**dic)
 
 
+def convert_json_to_input_dict(cfg_fname):
+    """ Convert a config file to a usable dictionary """
+    if not isinstance(cfg_fname, str):
+        raise TypeError
+
+    try:
+        with open(cfg_fname) as f:
+            gui = json.load(f)
+        gui = {key: val[1] for key, val in gui.items()}
+        return gui
+    except:
+        raise TypeError
+
+
 def run(cfg_file=None):
     """
     Run the entire script with a list file as input.
@@ -173,9 +187,7 @@ def run(cfg_file=None):
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
     if cfg_file:
-        with open(cfg_file) as f:
-            gui = json.load(f)
-        gui = {key: val[1] for key, val in gui.items()}
+        gui = convert_json_to_input_dict(cfg_file)
     else:
         gui = GuiAppLst()
         gui.root.mainloop()
@@ -184,12 +196,14 @@ def run(cfg_file=None):
     return main_data_readout(gui_as_object)
 
 
-def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False) -> pd.DataFrame:
+def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False,
+                  cfg_fname: str='') -> pd.DataFrame:
     """
     Run PySight on all list files in the folder
     :param foldername: str - Main folder to run the analysis on.
     :param glob_str: String for the `glob` function to filter list files
     :param recursive: bool - Whether the search should be recursive.
+    :param cfg_fname: str - Name of config file to use
     :return pd.DataFrame: Record of analyzed data
     """
 
@@ -219,10 +233,14 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False)
 
     data_columns = ['fname', 'done', 'error']
     data_record = pd.DataFrame(np.zeros((num_of_files, 3)), columns=data_columns)  # store result of PySight
-    gui = GuiAppLst()
-    gui.root.mainloop()
-    gui.filename.set('.lst')  # no need to choose a list file
-    named_gui = tkinter_to_object(gui)
+    try:
+        cfg_dict = convert_json_to_input_dict(cfg_fname)
+        named_gui = tkinter_to_object(cfg_dict)
+    except TypeError:
+        gui = GuiAppLst()
+        gui.root.mainloop()
+        gui.filename.set('.lst')  # no need to choose a list file
+        named_gui = tkinter_to_object(gui)
     verify_gui_input(named_gui)
 
     try:
@@ -245,13 +263,15 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False)
     return data_record
 
 
-def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
+def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
+             cfg_fname: str=''):
     """
     Run several instances of PySight using the multiprocessing module.
     :param foldername: Folder to scan
     :param glob_str: Glob string to filter files
     :param recursive: Whether to scan subdirectories as well
     :param n_proc: Number of processes to use (None means all)
+    :param cfg_fname: str - Configuration file name
     :return: None
     """
     import pathlib
@@ -269,13 +289,16 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
         print(str(file))
 
     all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
-    gui = GuiAppLst()
-    gui.root.mainloop()
-    gui.filename.set('.lst')  # no need to choose a list file
-    verify_gui_input(tkinter_to_object(gui))
+    try:
+        gui = convert_json_to_input_dict(cfg_fname)
+    except TypeError:
+        gui = GuiAppLst()
+        gui.root.mainloop()
+        gui.filename.set('.lst')  # no need to choose a list file
+    g = tkinter_to_object(gui)
+    verify_gui_input(g)
     all_guis = []
     for file in all_lst_files:
-        g = tkinter_to_object(gui)
         g.filename = str(file)
         all_guis.append(g)
     pool = mp.Pool(n_proc)

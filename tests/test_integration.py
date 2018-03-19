@@ -22,9 +22,6 @@ class TestEntirePipeline(TestCase):
             self.assertTrue(np.all(movie.summed_mem[1].ravel() ==
                                    np.array(f['/Summed Stack/Channel 1']).ravel()))
 
-        root = tkinter.Tk()
-        root.destroy()
-
     def test_mscan_pipeline(self):
         cfg_file = str(next(pathlib.Path('.').rglob('*fly.json')).absolute())
         data_file = str(next(pathlib.Path('.').rglob('*fly.hdf5')).absolute())
