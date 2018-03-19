@@ -12,7 +12,8 @@ install:
   - easy_install --version
   - pip --version
   - tox --version
-  - pip install pysight
+  - cd PBLab/python-pysight
+    python setup.py build_ext --inplace
 script:
   - tox -v
 after_failure:
