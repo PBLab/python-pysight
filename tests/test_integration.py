@@ -33,7 +33,11 @@ class TestEntirePipeline(TestCase):
             self.assertTrue(np.all(movie.summed_mem[1].ravel() ==
                                    np.array(f['/Summed Stack/Channel 1']).ravel()))
 
+    def test_tag_pipeline(self):
+        cfg_file = str(next(pathlib.Path('.').rglob('*tag.json')).absolute())
+        data_file = str(next(pathlib.Path('.').rglob('*tag.hdf5')).absolute())
+        df, movie = run(cfg_file)
+        with h5py.File(data_file) as f:
+            self.assertTrue(np.all(movie.summed_mem[1].ravel() ==
+                                   np.array(f['/Summed Stack/Channel 1']).ravel()))
 
-
-if __name__ == '__main__':
-    TestEntirePipeline().test_standard_pipeline()

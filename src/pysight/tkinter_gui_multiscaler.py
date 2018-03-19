@@ -12,7 +12,6 @@ from os import sep, utime
 import time
 import attr
 from attr.validators import instance_of
-import warnings
 from enum import Enum
 
 

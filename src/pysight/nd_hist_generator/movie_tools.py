@@ -446,7 +446,7 @@ class Volume(object):
         pts = []
         relevant_idx = []
 
-        bin_edges = np.linspace(upper_bound, lower_bound, self.z_pixels+1, endpoint=True)[1:, np.newaxis]
+        bin_edges = np.linspace(lower_bound, upper_bound, self.z_pixels+1, endpoint=True)[:, np.newaxis]
         dx = 0.00001
         x = np.arange(np.pi/2, 3*np.pi/2+dx, step=dx, dtype=np.float64)
         sinx = np.sin(x)
