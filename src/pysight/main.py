@@ -4,9 +4,13 @@
 __author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
 """
+from typing import Union
+import json
 import pandas as pd
 import warnings
 import colorama
+from pysight.tkinter_gui_multiscaler import GuiAppLst
+from pysight.tkinter_gui_multiscaler import verify_gui_input
 colorama.init()
 
 
@@ -136,9 +140,9 @@ class GUIClass:
         """
         output = {}
 
-        if True == self.summed: output['summed'] = True
-        if True == self.memory: output['memory'] = True
-        if True == self.stack: output['stack'] = True
+        if self.summed is True: output['summed'] = True
+        if self.memory is True: output['memory'] = True
+        if self.stack is True: output['stack'] = True
 
         if 'stack' in output:
             if not 'summed' in output and not 'memory' in output:
@@ -146,26 +150,35 @@ class GUIClass:
                               " output is only 'Full Stack'.")
         return output
 
-def tkinter_to_object(gui):
+def tkinter_to_object(gui: Union[GuiAppLst, dict]):
     """
     Convert a tkinter instance into a pickable dictionary
     :param gui: GuiAppLst
     :return: namedtuple
     """
-    dic = {key: val.get() for key, val in gui.__dict__.items() if 'Var' in repr(val)}
-    dic['tuple_of_data_sources'] = gui.tuple_of_data_sources
-    return GUIClass(**dic)
+    if isinstance(gui, dict):
+        gui['tuple_of_data_sources'] = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
+        return GUIClass(**gui)
+    else:
+        dic = {key: val.get() for key, val in gui.__dict__.items() if 'Var' in repr(val)}
+        dic['tuple_of_data_sources'] = gui.tuple_of_data_sources
+        return GUIClass(**dic)
 
 
-def run():
+def run(cfg_file=None):
     """
     Run the entire script with a list file as input.
     """
     from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
-    gui = GuiAppLst()
-    gui.root.mainloop()
+    if cfg_file:
+        with open(cfg_file) as f:
+            gui = json.load(f)
+        gui = {key: val[1] for key, val in gui.items()}
+    else:
+        gui = GuiAppLst()
+        gui.root.mainloop()
     gui_as_object = tkinter_to_object(gui)
     verify_gui_input(gui_as_object)
     return main_data_readout(gui_as_object)
@@ -242,8 +255,6 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
     :return: None
     """
     import pathlib
-    from pysight.tkinter_gui_multiscaler import GuiAppLst
-    from pysight.tkinter_gui_multiscaler import verify_gui_input
     import multiprocessing as mp
 
     path = pathlib.Path(foldername)
@@ -273,5 +284,3 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None):
 
 if __name__ == '__main__':
     df, movie = run()
-    # data = run_batch(foldername="", glob_str="*.lst", recursive=False)
-    # mp_batch(r'C:\Users\Hagai\Documents\GitHub\python-pysight')

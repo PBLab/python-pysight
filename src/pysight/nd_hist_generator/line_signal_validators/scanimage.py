@@ -88,10 +88,12 @@ class ScanImageLineValidator:
         """ Generate general parameters of the given acquisition """
         change_thresh = 0.3
         rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
+        if len(rel_idx) == 0:
+            raise UserWarning('Data contained signals only from the first frame.')
+
         end_of_frames = rel_idx > 5
         end_of_frames_idx = rel_idx[end_of_frames][::2]  # scanimage specific
         rel_idx_non_end_frame = rel_idx[np.logical_not(end_of_frames)]
-        time_between_frames = np.uint64(lines.diff()[end_of_frames_idx].median())
         idx_list = [slice(st, sp) for st, sp in self.__pairwise([0] + list(end_of_frames_idx))]
         lines_mat = np.zeros((len(idx_list), self.num_of_lines * 2), dtype=np.uint64)
         last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)

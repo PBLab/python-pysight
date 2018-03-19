@@ -11,7 +11,7 @@ Overview
     :align: center
 
     * - docs
-      - |docs|
+      - |docs| |gitter|
     * - tests
       - | |travis| |codecov|
     * - package
@@ -21,6 +21,10 @@ Overview
 .. |docs| image:: https://readthedocs.org/projects/python-pysight/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pysight
     :alt: Documentation Status
+
+.. |gitter| image:: https://badges.gitter.im/python-pysight/gitter.png
+			:target:  https://gitter.im/python-pysight/Lobby
+			:alt: Gitter Chat
 
 .. |travis| image:: https://travis-ci.org/PBLab/python-pysight.svg?branch=master
     :alt: Travis-CI Build Status
@@ -62,6 +66,9 @@ Installation and Documentation
 ``pip install pysight``
 
 Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed instructions.
+
+If you have questions, come visit us at our `Gitter channel. <https://gitter.im/python-pysight/Lobby>`_
+
 
 References
 ==========

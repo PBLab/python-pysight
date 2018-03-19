@@ -714,3 +714,7 @@ Changelog
 * Z-axis bins range is equal, i.e. each bin spans the same axial distance in microns.
 
 * Travis CI is back on.
+
+* Added option to run PySight with a predetermined config file: ``main.run(cfg_file='/path/to/file.json')``.
+
+* New integration tests.

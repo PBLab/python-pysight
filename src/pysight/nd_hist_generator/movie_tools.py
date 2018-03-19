@@ -31,7 +31,7 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-    data            = attr.ib()
+    data            = attr.ib()  # pd.DataFrame
     lines           = attr.ib(validator=instance_of(pd.Series))
     reprate         = attr.ib(default=80e6, validator=instance_of(float))
     x_pixels        = attr.ib(default=512, validator=instance_of(int))
@@ -349,7 +349,7 @@ class Volume(object):
         """
         list_of_edges = []
         if not self.empty:
-            # Volume edges
+            # Volume (row) edges
             try:
                 list_of_edges.append(
                     LineRectifier(lines=self.lines.values - self.abs_start_time,
@@ -366,7 +366,7 @@ class Volume(object):
                                             sweeps=self.use_sweeps)
             list_of_edges.append(np.linspace(start=y_start,
                                              stop=self.end_time if y_end == 1 else y_end,
-                                             num=self.y_pixels+1, endpoint=True)[1:])
+                                             num=self.y_pixels+1, endpoint=True))
 
             # Z edges
             if 'Phase' in self.data.columns:

@@ -1,7 +1,7 @@
 {
     "debug": [
         "PY_VAR0",
-        true
+        false
     ],
     "phase": [
         "PY_VAR1",
@@ -65,7 +65,7 @@
     ],
     "filename": [
         "PY_VAR16",
-        ""
+        "./tests_data/fly.lst"
     ],
     "input_start": [
         "PY_VAR17",
@@ -85,7 +85,7 @@
     ],
     "summed": [
         "PY_VAR21",
-        true
+        false
     ],
     "memory": [
         "PY_VAR22",
@@ -93,7 +93,7 @@
     ],
     "stack": [
         "PY_VAR23",
-        true
+        false
     ],
     "x_pixels": [
         "PY_VAR24",
@@ -153,6 +153,6 @@
     ],
     "save_as": [
         "PY_VAR38",
-        "fly"
+        "fly2"
     ]
 }

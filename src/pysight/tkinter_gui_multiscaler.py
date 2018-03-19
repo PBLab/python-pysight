@@ -50,7 +50,9 @@ class GuiAppLst(object):
     to an entry TTK object. Also, no variable should contain "root" in its name.
     """
     def __init__(self):
+
         self.root = Tk()
+        self._data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
         self.root.title("PySight \uFF5C  PBLab \uFF5C 2018")
         self.root.rowconfigure(16, weight=1)
         self.root.columnconfigure(16, weight=1)
@@ -136,7 +138,7 @@ class GuiAppLst(object):
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
-        self.tuple_of_data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
+        self.tuple_of_data_sources = self._data_sources
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=1, row=inputs_row+1, sticky='w')
         mb1.set('PMT1')
@@ -530,10 +532,13 @@ class GuiAppLst(object):
         load_button: Button = ttk.Button(main_frame, text="Load cfg", command=self.__browsecfg)
         load_button.grid(column=1, row=self.config_row+2, sticky='e')
 
-    def __browsecfg(self):
-        self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
-                                                         title='Choose a configuration file',
-                                                         initialdir=str(Path(__file__).parent / 'configs')))
+    def __browsecfg(self, new_cfg=None):
+        if not new_cfg:
+            self.cfg_filename.set(filedialog.askopenfilename(filetypes=[('Config files', '*.json')],
+                                                             title='Choose a configuration file',
+                                                             initialdir=str(Path(__file__).parent / 'configs')))
+        else:
+            self.cfg_filename.set(new_cfg)
         with open(self.cfg_filename.get(), 'r') as f:
             self.config = json.load(f)
             utime(self.cfg_filename.get(), (time.time(), time.time()))
@@ -713,4 +718,4 @@ def verify_gui_input(gui):
 
 
 if __name__ == '__main__':
-    app = GUIApp()
+    app = GUIAppLst()

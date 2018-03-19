@@ -20,4 +20,6 @@ In a virtual environment simply install PySight::
 
     pip install pysight
 
+In some environments you may be required to install ``numpy`` before installing PySight.
+
 The "Usage" page provides more details on the operation of PySight.
