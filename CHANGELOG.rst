@@ -723,3 +723,9 @@ Changelog
 ------------------
 
 * Bug fix in ``setup.py``.
+
+0.8.2 (2018-04-XX)
+------------------
+
+* Unified configuration file keyword to be ``cfg_file``.
+
