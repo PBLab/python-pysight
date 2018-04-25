@@ -12,7 +12,15 @@ import logging
 @attr.s(slots=True)
 class FileIO(object):
     """
-    Manage pipeline of file IO process
+    Manage pipeline of file IO process.
+    Inputs:
+        :param filename str: List file name
+        :param debug bool: Run a debug build (limited number of lines for quick execution of the entire pipeline)
+        :param input_start str: Data type in analog channel 'START' (6)
+        :param input_stop1 str: Data type in analog channel 'STOP1' (1)
+        :param input_stop2 str: Data type in analog channel 'STOP2' (2)
+        :param binwidth float: Multiscaler resolution in seconds (100-800 picoseconds)
+        :param use_sweeps bool: Use the sweeps counter as a new frame indicator (dev mode)
     """
     filename                       = attr.ib(validator=instance_of(str))
     debug                          = attr.ib(default=False, validator=instance_of(bool))
@@ -35,7 +43,7 @@ class FileIO(object):
     num_of_channels                = attr.ib(init=False)
 
     def run(self):
-        # Open file and find the needed parameters
+        """ Open file and find the needed parameters """
         self.determine_binary()
         metadata: str = self.__get_metadata()
         self.timepatch: str = self.get_timepatch(metadata)
@@ -106,7 +114,7 @@ class FileIO(object):
         return dict_of_data_length
 
     @staticmethod
-    def hex_to_bin_dict():
+    def hex_to_bin_dict() -> Dict:
         """
         Create a simple dictionary that maps a hex input into a 4 letter binary output.
         :return: dict

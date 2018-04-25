@@ -7,7 +7,10 @@ import numpy as np
 from typing import List
 
 class ChoiceManagerHex:
-
+    """
+    Switch-like helper class. Contains the type of information
+    held in each bit of a single event from the multiscaler, for all timepatches.
+    """
     def __init__(self):
         self.__choice_table = \
         {

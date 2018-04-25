@@ -14,8 +14,18 @@ from attr.validators import instance_of
 class Tabulate(object):
     """
     Place all data in a pandas' DataFrame after sorting out each bit's meaning
+    Inputs:
+        :param dict_of_inputs dict: Mapping of inputs to signal type
+        :param data np.ndarray: Raw data from list file
+        :param dict_of_slices_hex dict: The role of each bit in the data per timepatch used
+        :param dict_of_slices_bin dict: Unused
+        :param data_range int: Length in bins of a single sweep
+        :param is_binary bool: Whether the list file is a binary one
+        :param use_tag_bits bool: Are the TAG bits needed for image generation in this timepatch
+        :param time_after_sweep int: How long does the multiscaler wait after a sweep
+        :param acq_delay int: How long does the multiscaler wait before start of experiment
+        :param num_of_channel int: Number of active channels
     """
-    # TODO: Variable documentation
     dict_of_inputs     = attr.ib(validator=instance_of(dict))
     data               = attr.ib(validator=instance_of(np.ndarray))
     dict_of_slices_hex = attr.ib(validator=instance_of(dict))
@@ -34,7 +44,8 @@ class Tabulate(object):
     def run(self):
         """ Pipeline of analysis """
         if self.is_binary:
-            self.df_after_timepatch = self.__tabulate_input_binary()
+            raise NotImplementedError('Binary files are currently not implemented. Contact package author for updates.')
+            # self.df_after_timepatch = self.__tabulate_input_binary()
         else:
             self.__preparations_hex()
             self.__tabulate_input_hex()
@@ -95,9 +106,7 @@ class Tabulate(object):
             self.dict_of_slices_hex.pop('tag', None)
 
     def __tabulate_input_hex(self) -> None:
-        """
-        Reformat the read hex data into a dataframe.
-        """
+        """ Reformat the read hex data into a dataframe """
         # Channel and edge information
         self.edge, self.channel = self.__process_chan_edge(self.dict_of_slices_hex.pop('chan_edge'))
         # TODO: Timepatch == '3' is not supported because of this loop.
@@ -169,7 +178,6 @@ class Tabulate(object):
         Assert that the channels that the user believe were recorded are actually there.
         Before sorting all photons make sure that no input is missing from the user. If it's missing
         the code will ignore this channel, but not raise an exception
-        :return:
         """
 
         actual_data_channels = set(self.df_after_timepatch['channel'].cat.categories.values)
@@ -197,16 +205,5 @@ class Tabulate(object):
         return np.fromstring(b.tostring(), dtype='U' + str(end - start))
 
     def __tabulate_input_binary(self):
-        """
-        Reformat the read binary data into a dataframe.
-        """
-        num_of_lines = self.data.shape[0]
-
-        for key in self.dict_of_slices_bin:
-            cur_data = self.data[:, self.dict_of_slices_bin[key].start:self.dict_of_slices_bin[key].end]
-            try:
-                zero_arr = np.zeros(num_of_lines, self.dict_of_slices_bin[key].cols)
-
-            except AttributeError:  # No cols field since number of bits is a multiple of 8
-                # self.dict_of_slices_bin[key].data_as_
-                pass
+        """ Reformat the read binary data into a dataframe. """
+        pass

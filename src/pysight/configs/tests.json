@@ -1,0 +1,158 @@
+{
+    "debug": [
+        "PY_VAR0",
+        false
+    ],
+    "phase": [
+        "PY_VAR1",
+        -2.78
+    ],
+    "reprate": [
+        "PY_VAR2",
+        80300000.0
+    ],
+    "gating": [
+        "PY_VAR3",
+        false
+    ],
+    "binwidth": [
+        "PY_VAR4",
+        8e-10
+    ],
+    "tag_freq": [
+        "PY_VAR5",
+        189000.0
+    ],
+    "tag_pulses": [
+        "PY_VAR6",
+        1
+    ],
+    "tag_offset": [
+        "PY_VAR7",
+        0
+    ],
+    "fill_frac": [
+        "PY_VAR8",
+        72.0
+    ],
+    "bidir": [
+        "PY_VAR9",
+        false
+    ],
+    "keep_unidir": [
+        "PY_VAR10",
+        false
+    ],
+    "flim": [
+        "PY_VAR11",
+        false
+    ],
+    "censor": [
+        "PY_VAR12",
+        false
+    ],
+    "line_freq": [
+        "PY_VAR13",
+        7930.0
+    ],
+    "sweeps_as_lines": [
+        "PY_VAR14",
+        false
+    ],
+    "frame_delay": [
+        "PY_VAR15",
+        0.001
+    ],
+    "filename": [
+        "PY_VAR16",
+        "C:/Users/Hagai/Documents/GitHub/python-pysight/power_40p7_512unidir_gain900_thresh18mv_start_pmt1_stop1_lines_calcium_002.lst"
+    ],
+    "input_start": [
+        "PY_VAR17",
+        "PMT1"
+    ],
+    "input_stop1": [
+        "PY_VAR18",
+        "Lines"
+    ],
+    "input_stop2": [
+        "PY_VAR19",
+        "Empty"
+    ],
+    "num_of_frames": [
+        "PY_VAR20",
+        1
+    ],
+    "summed": [
+        "PY_VAR21",
+        true
+    ],
+    "memory": [
+        "PY_VAR22",
+        true
+    ],
+    "stack": [
+        "PY_VAR23",
+        true
+    ],
+    "x_pixels": [
+        "PY_VAR24",
+        512
+    ],
+    "y_pixels": [
+        "PY_VAR25",
+        512
+    ],
+    "z_pixels": [
+        "PY_VAR26",
+        1
+    ],
+    "tag_bits": [
+        "PY_VAR27",
+        false
+    ],
+    "bits_grp_1_start": [
+        "PY_VAR28",
+        1
+    ],
+    "bits_grp_1_end": [
+        "PY_VAR29",
+        3
+    ],
+    "bits_grp_2_start": [
+        "PY_VAR30",
+        4
+    ],
+    "bits_grp_2_end": [
+        "PY_VAR31",
+        5
+    ],
+    "bits_grp_3_start": [
+        "PY_VAR32",
+        6
+    ],
+    "bits_grp_3_end": [
+        "PY_VAR33",
+        16
+    ],
+    "bits_grp_1_label": [
+        "PY_VAR34",
+        "None"
+    ],
+    "bits_grp_2_label": [
+        "PY_VAR35",
+        "None"
+    ],
+    "bits_grp_3_label": [
+        "PY_VAR36",
+        "None"
+    ],
+    "imaging_software": [
+        "PY_VAR37",
+        "ScanImage"
+    ],
+    "save_as": [
+        "PY_VAR38",
+        "tests"
+    ]
+}

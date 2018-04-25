@@ -4,35 +4,35 @@
 __author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
 """
-from typing import Union
+from typing import Union, Tuple
 import json
 import pandas as pd
 import warnings
 import colorama
+import numpy as np
+import pickle
+colorama.init()
+
+from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
+from pysight.nd_hist_generator.allocation_tools import Allocate
+from pysight.nd_hist_generator.movie_tools import Movie
+from pysight.ascii_list_file_parser import timepatch_switch
+from pysight.nd_hist_generator.output_tools import OutputParser
+from pysight.nd_hist_generator.gating_tools import GatedDetection
+from pysight.nd_hist_generator.photon_df_tools import PhotonDF
+from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
+from pysight.ascii_list_file_parser.distribute_data import DistributeData
+from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
 from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
-colorama.init()
 
 
 def main_data_readout(gui):
     """
     Main function that reads the lst file and processes its data.
+    Should not be run independently - only from other "run_X" functions.
     """
-    from pysight.ascii_list_file_parser.fileIO_tools import FileIO
-    from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
-    from pysight.nd_hist_generator.allocation_tools import Allocate
-    from pysight.nd_hist_generator.movie_tools import Movie
-    from pysight.ascii_list_file_parser import timepatch_switch
-    from pysight.nd_hist_generator.output_tools import OutputParser
-    from pysight.nd_hist_generator.gating_tools import GatedDetection
-    from pysight.nd_hist_generator.photon_df_tools import PhotonDF
-    from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
-    from pysight.ascii_list_file_parser.distribute_data import DistributeData
-    from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
-    import numpy as np
-    import pickle
-
-
     # Read the file
     if gui.filename.endswith('.lst'):
         cur_file = FileIO(filename=gui.filename, debug=gui.debug, input_start=gui.input_start,
@@ -127,6 +127,7 @@ def main_data_readout(gui):
 
 
 class GUIClass:
+    """ Helper class to create intermediate representation of the GUI's content """
     def __init__(self, **entries):
         self.__dict__.update(entries)
         self.tag_bits_dict = dict(bits_grp_1_label=entries['bits_grp_1_label'],
@@ -135,9 +136,7 @@ class GUIClass:
 
     @property
     def outputs(self):
-        """
-        Create a dictionary with the wanted user outputs.
-        """
+        """ Create a dictionary with the wanted user outputs. """
         output = {}
 
         if self.summed is True: output['summed'] = True
@@ -150,12 +149,8 @@ class GUIClass:
                               " output is only 'Full Stack'.")
         return output
 
-def tkinter_to_object(gui: Union[GuiAppLst, dict]):
-    """
-    Convert a tkinter instance into a pickable dictionary
-    :param gui: GuiAppLst
-    :return: namedtuple
-    """
+def tkinter_to_object(gui: Union[GuiAppLst, dict]) -> GUIClass:
+    """ Convert a tkinter instance into a pickable dictionary """
     if isinstance(gui, dict):
         gui['tuple_of_data_sources'] = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
         return GUIClass(**gui)
@@ -179,10 +174,8 @@ def convert_json_to_input_dict(cfg_fname):
         raise TypeError
 
 
-def run(cfg_file=None):
-    """
-    Run the entire script with a list file as input.
-    """
+def run(cfg_file: str=None) -> Tuple[pd.DataFrame, Movie]:
+    """ Run PySight. Supply an existing configuration filename optionally, otherwise a GUI will open. """
     from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 
