@@ -6,6 +6,7 @@ from __future__ import print_function
 import io
 import os
 import re
+import pathlib
 from glob import glob
 from os.path import basename
 from os.path import dirname
@@ -85,10 +86,10 @@ setup(
     cmdclass = {'build_ext': CustomBuildExtCommand},
     install_requires=[
         'numpy >= 1.14',
-        'matplotlib >= 2.1',
+        'matplotlib >= 2.2',
         'pandas >= 0.22',
-        'attrs >= 17.3',
-        'cython >= 0.27',
+        'attrs >= 17.4',
+        'cython >= 0.28',
         'tables',
         'scipy >= 1',
         'scikit-learn',
@@ -113,5 +114,7 @@ setup(
         for root, _, _ in os.walk('src')
         for path in glob(join(root, '*.pyx' if Cython else '*.c'))
     ],
-    data_files=['src' + os.sep + 'pysight' + os.sep + 'configs' + os.sep + 'default.json']
+    data_files=['src' + os.sep + 'pysight' + os.sep + 'configs' + os.sep + 'default.json',
+                str(pathlib.Path('./mcs6a_settings_files/pre_test_2d_a.set')),
+                str(pathlib.Path('./mcs6a_settings_files/pre_test_3d_a.set'))]
 )

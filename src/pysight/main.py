@@ -26,6 +26,7 @@ from pysight.ascii_list_file_parser.distribute_data import DistributeData
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
 from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
+from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 
 
 def main_data_readout(gui):
@@ -109,6 +110,9 @@ def main_data_readout(gui):
     data_for_movie = gated.data if gui.gating else analyzed_struct.df_photons
 
     # Create a movie object
+    volume_chunks = VolumeGenerator(data=data_for_movie, data_shape=outputs.data_shape)
+    volume_chunks.run()
+
     final_movie = Movie(data=data_for_movie, x_pixels=int(gui.x_pixels),
                         y_pixels=int(gui.y_pixels), z_pixels=outputs.z_pixels,
                         reprate=float(gui.reprate), name=gui.filename,

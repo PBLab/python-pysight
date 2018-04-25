@@ -33,6 +33,7 @@ class OutputParser(object):
     cache_size = attr.ib(default=10 * 1024**3, validator=instance_of(int))
     debug = attr.ib(default=False, validator=instance_of(bool))
     outputs = attr.ib(init=False)
+    data_shape = attr.ib(init=False)  # (num_of_frames, x, y, z, tau)
 
     def run(self):
         """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
@@ -45,8 +46,8 @@ class OutputParser(object):
             pass
         f = self.__create_prelim_file()
         if f is not None:
-            data_shape_full = self.determine_data_shape_full()
-            self.__populate_hdf(f, data_shape_full=data_shape_full)
+            self.data_shape = self.determine_data_shape_full()
+            self.__populate_hdf(f)
 
     def __create_prelim_file(self):
         """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
@@ -65,19 +66,19 @@ class OutputParser(object):
         else:
             return
 
-    def __populate_hdf(self, f, data_shape_full):
+    def __populate_hdf(self, f):
         """
         Generate files and add metadata to each group, write out the data in chunks
         f: File pointer
         """
-        data_shape_summed = data_shape_full[1:]
-        chunk_shape = list(data_shape_full)
+        data_shape_summed = self.data_shape[1:]
+        chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
         if 'stack' in self.output_dict:
             try:
                 self.outputs['stack'] = [f.require_group('Full Stack')
                                           .require_dataset(name=f'Channel {channel}',
-                                                           shape=data_shape_full,
+                                                           shape=self.data_shape,
                                                            dtype=np.uint8,
                                                            chunks=tuple(chunk_shape),
                                                            compression='gzip')
@@ -121,11 +122,11 @@ class OutputParser(object):
 
         # Dimension order: [X, Y, Z, LIFETIME, FRAME]
         shape = np.squeeze(np.empty(shape=(self.num_of_frames,
-                                          self.x_pixels,
-                                          self.y_pixels,
-                                          self.z_pixels,
-                                          self.bins_bet_pulses),
-                                   dtype=np.int8)).shape
+                                           self.x_pixels,
+                                           self.y_pixels,
+                                           self.z_pixels,
+                                           self.bins_bet_pulses),
+                                    dtype=np.int8)).shape
         if self.num_of_frames == 1:  # Edge case in which the single frame is "squeezed out"
             return (1,) + shape
         return shape

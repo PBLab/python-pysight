@@ -16,15 +16,15 @@ def gen_data_df():
         x pixels
         y pixels
     """
-    photons = np.arange(0, 1000, dtype=np.int64)
+    photons = np.arange(0, 1000, dtype=np.uint64)
     channel = np.ones_like(photons)
-    lines = np.arange(0, 1000, step=10, dtype=np.int64)
+    lines = np.arange(0, 1000, step=10, dtype=np.uint64)
     x_pix = int(len(photons) / len(lines))
     ones_lines = np.ones((1, int(len(photons) / len(lines))),
-                         dtype=np.int64)
-    frames = np.arange(0, 1000, step=100, dtype=np.int64)
+                         dtype=np.uint64)
+    frames = np.arange(0, 1000, step=100, dtype=np.uint64)
     ones_frames = np.ones((1, int(len(photons) / len(frames))),
-                          dtype=np.int64)
+                          dtype=np.uint64)
     lines = (np.atleast_2d(lines).T @ ones_lines).ravel()
     frames = (np.atleast_2d(frames).T @ ones_frames).ravel()
     assert len(lines) == len(frames) == len(photons)
