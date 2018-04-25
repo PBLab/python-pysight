@@ -9,8 +9,8 @@ import pathlib
 class TestFileIOTools(unittest.TestCase):
     """ Tests for new multiscaler readout functions """
 
-    list_of_file_names = [str(next(pathlib.Path('.').rglob('*1.lst')).absolute()),
-                          str(next(pathlib.Path('.').rglob('*2.lst')).absolute())]
+    list_of_file_names = [str(next(pathlib.Path('tests/').rglob('*1.lst')).absolute()),
+                          str(next(pathlib.Path('tests/').rglob('*2.lst')).absolute())]
     file_io_objects = []
     for file in list_of_file_names:
         cur_obj = FileIO(file, debug=False, input_start='Frames',

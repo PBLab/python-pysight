@@ -6,7 +6,6 @@ from attr.validators import instance_of
 import numpy as np
 import attr
 import re
-import logging
 
 
 @attr.s(slots=True)
@@ -371,8 +370,8 @@ class FileIO(object):
         # If a user assumes an input exists, but it doesn't - raise an error
         recorded = self.list_of_recorded_data_channels.count(True)
         input_chans = len(self.dict_of_input_channels)
-        if recorded< input_chans:
-            raise UserWarning(f'Wrong number of user inputs ({input_chans})' +
+        if recorded < input_chans:
+            raise UserWarning(f'Wrong number of user inputs ({input_chans}) ' +
                               f'compared to number of actual inputs ' +
                               f'({recorded}) to the multiscaler.')
 
