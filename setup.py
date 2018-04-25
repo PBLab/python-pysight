@@ -102,8 +102,8 @@ setup(
     extras_require={
     },
     setup_requires=[
-        'cython',
-    ] if Cython else [],
+        'cython', 'numpy'
+    ] if Cython else ['numpy'],
     ext_modules=[
         Extension(
             splitext(relpath(path, 'src').replace(os.sep, '.'))[0],
