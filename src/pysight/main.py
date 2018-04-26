@@ -111,9 +111,9 @@ def main_data_readout(gui):
 
     # Create a movie object
     volume_chunks = VolumeGenerator(data=data_for_movie, data_shape=outputs.data_shape)
-    volume_chunks.run()
+    frames = volume_chunks.create_frame_slices()
 
-    final_movie = Movie(data=data_for_movie, x_pixels=int(gui.x_pixels),
+    final_movie = Movie(data=data_for_movie, frames=frames, x_pixels=int(gui.x_pixels),
                         y_pixels=int(gui.y_pixels), z_pixels=outputs.z_pixels,
                         reprate=float(gui.reprate), name=gui.filename,
                         binwidth=float(gui.binwidth), bidir=gui.bidir,

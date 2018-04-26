@@ -33,6 +33,7 @@ class Movie(object):
     """
     data            = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     lines           = attr.ib(validator=instance_of(pd.Series), repr=False)
+    frames          = attr.ib()  # generator of frame slices
     reprate         = attr.ib(default=80e6, validator=instance_of(float))
     x_pixels        = attr.ib(default=512, validator=instance_of(int))
     y_pixels        = attr.ib(default=512, validator=instance_of(int))
@@ -63,21 +64,6 @@ class Movie(object):
             return int(np.ceil(1 / (self.reprate * self.binwidth)))
         else:
             return 1
-
-    @property
-    def list_of_volume_times(self) -> List[np.uint64]:
-        """ All volumes start-times in the movie. """
-
-        volume_times = np.unique(self.data.index.get_level_values('Frames')).astype(np.uint64)
-        if len(volume_times) > 1:
-            diff_between_frames = np.median(np.diff(volume_times))
-        else:
-            diff_between_frames = np.uint64(np.max(self.data['time_rel_frames']))
-
-        volume_times = list(volume_times)
-        volume_times.append(np.uint64(volume_times[-1] + diff_between_frames))
-
-        return volume_times
 
     @property
     def photons_per_pulse(self) -> Dict[int, float]:

@@ -11,7 +11,15 @@ from typing import List, Generator
 
 @attr.s(slots=True)
 class VolumeGenerator:
-    """ Generate the list of volume chunks to be processed """
+    """
+    Generate the list of volume chunks to be processed.
+    Main method is "create_frame_slices", which returns a generator containing
+    slice objects that signify the chunks of volumes to be processed simultaneously.
+    Inputs:
+        :param data pd.DataFrame: The entire dataset
+        :param data_shape tuple: Shape of the final n-dimensional array (from the Output object)
+        :param MAX_BYTES_ALLOWED int: Number of bytes that can be held in RAM ("magic number")
+    """
     data = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     data_shape = attr.ib(validator=instance_of(tuple))
     MAX_BYTES_ALLOWED = attr.ib(default=int(300e6), validator=instance_of(int))
