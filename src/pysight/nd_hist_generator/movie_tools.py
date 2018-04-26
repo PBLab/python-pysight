@@ -14,7 +14,9 @@ from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
 from tqdm import tqdm
+
 from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
+from .frame_chunk import FrameChunk
 
 
 def trunc_end_of_file(name) -> str:
@@ -31,39 +33,47 @@ class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
     """
-    data            = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
-    lines           = attr.ib(validator=instance_of(pd.Series), repr=False)
-    frames          = attr.ib()  # generator of frame slices
-    reprate         = attr.ib(default=80e6, validator=instance_of(float))
-    x_pixels        = attr.ib(default=512, validator=instance_of(int))
-    y_pixels        = attr.ib(default=512, validator=instance_of(int))
-    z_pixels        = attr.ib(default=1, validator=instance_of(int))
-    name            = attr.ib(default='Movie', validator=instance_of(str),
-                              convert=trunc_end_of_file)
-    binwidth        = attr.ib(default=800e-12, validator=instance_of(float))
-    fill_frac       = attr.ib(default=71.0, validator=instance_of(float))
-    bidir           = attr.ib(default=False, validator=instance_of(bool))
-    num_of_channels = attr.ib(default=1, validator=instance_of(int))
-    outputs         = attr.ib(default={}, validator=instance_of(dict))
-    censor          = attr.ib(default=False, validator=instance_of(bool))
-    flim            = attr.ib(default=False, validator=instance_of(bool))
-    lst_metadata    = attr.ib(default={}, validator=instance_of(dict))
-    exp_params      = attr.ib(default={}, validator=instance_of(dict))
-    line_delta      = attr.ib(default=158000, validator=instance_of(int))
-    use_sweeps      = attr.ib(default=False, validator=instance_of(bool))
-    cache_size      = attr.ib(default=10*1024**3, validator=instance_of(int))
-    tag_as_phase    = attr.ib(default=True, validator=instance_of(bool))
-    tag_freq        = attr.ib(default=189e3, validator=instance_of(float))
-    mirror_phase    = attr.ib(default=-2.71, validator=instance_of(float))
-    summed_mem      = attr.ib(init=False)
-    stack           = attr.ib(init=False)
+    data                = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
+    lines               = attr.ib(validator=instance_of(pd.Series), repr=False)
+    frames              = attr.ib()  # generator of frame slices
+    reprate             = attr.ib(default=80e6, validator=instance_of(float))
+    name                = attr.ib(default='Movie', validator=instance_of(str),
+                                  convert=trunc_end_of_file)
+    binwidth            = attr.ib(default=800e-12, validator=instance_of(float))
+    fill_frac           = attr.ib(default=71.0, validator=instance_of(float))
+    bidir               = attr.ib(default=False, validator=instance_of(bool))
+    num_of_channels     = attr.ib(default=1, validator=instance_of(int))
+    outputs             = attr.ib(default={}, validator=instance_of(dict))
+    censor              = attr.ib(default=False, validator=instance_of(bool))
+    flim                = attr.ib(default=False, validator=instance_of(bool))
+    lst_metadata        = attr.ib(default={}, validator=instance_of(dict))
+    exp_params          = attr.ib(default={}, validator=instance_of(dict))
+    line_delta          = attr.ib(default=158000, validator=instance_of(int))
+    use_sweeps          = attr.ib(default=False, validator=instance_of(bool))
+    cache_size          = attr.ib(default=10*1024**3, validator=instance_of(int))
+    tag_as_phase        = attr.ib(default=True, validator=instance_of(bool))
+    tag_freq            = attr.ib(default=189e3, validator=instance_of(float))
+    mirror_phase        = attr.ib(default=-2.71, validator=instance_of(float))
+    num_of_frame_chunks = attr.ib(default=1, validator=instance_of(int))
+    data_shape          = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
+    frames_per_chunk    = attr.ib(default=8, validator=instance_of(int))
+    summed_mem          = attr.ib(init=False)
+    stack               = attr.ib(init=False)
+    x_pixels            = attr.ib(init=False)
+    y_pixels            = attr.ib(init=False)
+    z_pixels            = attr.ib(init=False)
+    bins_bet_pulses     = attr.ib(init=False)
 
-    @property
-    def bins_bet_pulses(self) -> int:
-        if self.flim:
-            return int(np.ceil(1 / (self.reprate * self.binwidth)))
-        else:
-            return 1
+    def __attrs_post_init__(self):
+        self.x_pixels = self.data_shape[1]
+        self.y_pixels = self.data_shape[2]
+        self.z_pixels = 1
+        self.bins_bet_pulses = 1
+        try:
+            self.z_pixels = self.data_shape[3]
+            self.bins_bet_pulses = self.data_shape[4]
+        except IndexError:
+            pass
 
     @property
     def photons_per_pulse(self) -> Dict[int, float]:
@@ -81,10 +91,10 @@ class Movie(object):
     def run(self) -> None:
         """
         Main pipeline for the movie object
-        :return:
         """
         funcs_during, funcs_end = self.__determine_outputs()
-        self.__create_outputs(funcs_during, funcs_end)
+        self.__validate_df_indices()
+        self.__process_data(funcs_during, funcs_end)
         self.__print_outputs()
         print("Movie object created, analysis done.")
 
@@ -105,6 +115,19 @@ class Movie(object):
                          bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
                          line_delta=self.line_delta, use_sweeps=self.use_sweeps,
                          tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq, mirror_phase=self.mirror_phase)
+
+    def __slice_df(self, frame_chunk) -> Dict[int, pd.DataFrame]:
+        """
+        Receives a slice object and slices the DataFrame accordingly -
+        once per channel. The returned dictionary has a key for each channel.
+        """
+        slice_dict = {}
+        idx_slice = pd.IndexSlice
+        for chan in range(1, self.num_of_channels + 1):
+            slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
+
+        return slice_dict
+
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
         """
@@ -145,29 +168,41 @@ class Movie(object):
         return funcs_to_execute_during, funcs_to_execute_end
 
 
-    def __create_outputs(self, funcs_during: List[Callable],
+    def __process_data(self, funcs_during: List[Callable],
                          funcs_end: List[Callable]) -> None:
         """
         Create the outputs according to the outputs dictionary.
         Data is generated by appending to a list the needed micro-function to be executed.
         """
-
-        VolTuple = namedtuple('VolumeHist', ('hist', 'edges'))
-        data_of_vol = VolTuple
-
         # Execute the appended functions after generating each volume
-        for chan in range(1, self.num_of_channels + 1):
-            tq = tqdm(total=len(self.list_of_volume_times)-1,
-                      desc=f"Processing volumes in channel {chan} / {self.num_of_channels}",
-                      unit="volume", leave=False)
-            for idx, vol in enumerate(self.gen_of_volumes(channel_num=chan)):
-                data_of_vol.hist, data_of_vol.edges = vol.create_hist()
-                for func in funcs_during:
-                    func(data=data_of_vol.hist, channel=chan, vol_num=idx)
-                tq.update(1)
-            tq.close()
+        tq = tqdm(total=self.num_of_frame_chunks, desc=f"Processing frames...",
+                  unit="frame", leave=False)
+        for idx, frame_chunk in enumerate(self.frames):
+            sliced_df_dict = self.__slice_df(frame_chunk)
+            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict)
+            hist_dict = chunk.create_hist()
+            for func in funcs_during:
+                for chan, (hist, _) in hist_dict.values:
+                    func(data=hist, chan=chan)
 
+            tq.update(1)
+
+        tq.close()
         [func() for func in funcs_end]
+        #
+        # for chan in range(1, self.num_of_channels + 1):
+        #     for idx, vol in enumerate(self.gen_of_volumes(channel_num=chan)):
+        #         data_of_vol.hist, data_of_vol.edges = vol.create_hist()
+        #         for func in funcs_during:
+        #             func(data=data_of_vol.hist, channel=chan, vol_num=idx)
+
+    def __validate_df_indices(self):
+        """
+        Make sure that the DataFrame of data contains the two
+        important indices "Channel" and "Frames", and in the correct order.
+        """
+        assert self.data.index.names[0] == 'Channel'
+        assert self.data.index.names[1] == 'Frames'
 
     def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
@@ -206,14 +241,14 @@ class Movie(object):
         self.stack[channel].append(data)
         self.summed_mem[channel] += np.uint16(data)
 
-    def __save_stack_incr(self, data: np.ndarray, channel: int, vol_num: int) -> None:
+    def __save_stack_incr(self, data: np.ndarray, channel: int) -> None:
         """
         Save incrementally new data to an open file on the disk
         :param data: Data to save
         :param channel: Current spectral channel of data
         :param vol_num: Current volume
         """
-        self.outputs['stack'][f'Channel {channel}'][vol_num, ...] = np.squeeze(data)
+        self.outputs['stack'][f'Channel {channel}'][...] = np.squeeze(data)
 
     def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs) -> None:
         """

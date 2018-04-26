@@ -53,21 +53,21 @@ class TestVolumeGenerator(TestCase):
         shape = (10, 512, 512, 16)
         volgen = VolumeGenerator(df, shape)
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 71), slice(80, 91)])
+        self.assertSequenceEqual(list(vol_times), [slice(0, 70), slice(80, 90)])
 
     def test_full_slice(self):
         df = gen_test_df(16, end=1600)
         shape = (16, 512, 512, 16)
         volgen = VolumeGenerator(df, shape)
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 701), slice(800, 1501)])
+        self.assertSequenceEqual(list(vol_times), [slice(0, 700), slice(800, 1500)])
 
     def test_single_slice(self):
         df = gen_test_df(1, end=10)
         shape = (1, 512, 512, 16)
         volgen = VolumeGenerator(df, shape)
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 1)])
+        self.assertSequenceEqual(list(vol_times), [slice(0, 0)])
 
     def test_grouper(self):
         volgen = VolumeGenerator(pd.DataFrame(), (1,))

@@ -29,6 +29,7 @@ class VolumeGenerator:
     full_frame_chunks = attr.ib(init=False)
     frame_slices = attr.ib(init=False)
     chunk_size = attr.ib(init=False)
+    num_of_chunks = attr.ib(init=False)
 
     def create_frame_slices(self, create_slices=True) -> Generator:
         """
@@ -39,6 +40,7 @@ class VolumeGenerator:
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
         self.chunk_size = max(1, int(self.MAX_BYTES_ALLOWED / self.bytes_per_frames))
         self.frames = self.__create_vol_list()
+        self.num_of_chunks = len(self.frames) // self.chunk_size
         self.full_frame_chunks = self.__grouper()
         if create_slices:
             self.frame_slices = self.__generate_frame_slices()
@@ -66,11 +68,11 @@ class VolumeGenerator:
 
         start_and_end = []
         for chunk in self.full_frame_chunks:
-            first, last = chunk[0], chunk[-1] + 1
+            first, last = chunk[0], chunk[-1]
             if np.isnan(last):
                 for val in reversed(chunk[:-1]):
                     if val is not np.nan:
-                        last = val + 1
+                        last = val
                         break
             start_and_end.append((first, last))
 
