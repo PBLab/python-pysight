@@ -11,6 +11,7 @@ import warnings
 import colorama
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
 colorama.init()
 
 from pysight.ascii_list_file_parser.fileIO_tools import FileIO
@@ -123,7 +124,7 @@ def main_data_readout(gui):
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines,
                         tag_as_phase=True, tag_freq=float(gui.tag_freq),
-                        num_of_frame_chunks=volume_chunks.num_of_chunks, frames_per_chunk=volume_chunks.chunk_size)
+                        num_of_frame_chunks=volume_chunks.num_of_chunks)
 
     final_movie.run()
 

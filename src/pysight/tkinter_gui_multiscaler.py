@@ -548,8 +548,10 @@ class GuiAppLst(object):
         With the dictionary loaded from the .json file, change all variables
         """
         for key, val in self.config.items():
-            # val_to_set = self.__get_matching_tkinter_var(val)
-            self.x_pixels._tk.globalsetvar(val[0], val[1])
+            try:
+                self.x_pixels._tk.globalsetvar(val[0], val[1])
+            except:
+                pass
         self.root.update_idletasks()
 
     def __get_matching_tkinter_var(self, val: Union[StringVar, DoubleVar, IntVar]) -> \

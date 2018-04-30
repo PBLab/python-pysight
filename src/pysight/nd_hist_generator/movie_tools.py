@@ -56,7 +56,6 @@ class Movie(object):
     mirror_phase        = attr.ib(default=-2.71, validator=instance_of(float))
     num_of_frame_chunks = attr.ib(default=1, validator=instance_of(int))
     data_shape          = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
-    frames_per_chunk    = attr.ib(default=8, validator=instance_of(int))
     summed_mem          = attr.ib(init=False)
     stack               = attr.ib(init=False)
     x_pixels            = attr.ib(init=False)
@@ -116,7 +115,7 @@ class Movie(object):
                          line_delta=self.line_delta, use_sweeps=self.use_sweeps,
                          tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq, mirror_phase=self.mirror_phase)
 
-    def __slice_df(self, frame_chunk) -> Dict[int, pd.DataFrame]:
+    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int]:
         """
         Receives a slice object and slices the DataFrame accordingly -
         once per channel. The returned dictionary has a key for each channel.
@@ -125,8 +124,8 @@ class Movie(object):
         idx_slice = pd.IndexSlice
         for chan in range(1, self.num_of_channels + 1):
             slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
-
-        return slice_dict
+        num_of_frames = len(np.unique(slice_dict[1].index.get_level_values('Frames')))
+        return slice_dict, num_of_frames
 
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
@@ -178,12 +177,13 @@ class Movie(object):
         tq = tqdm(total=self.num_of_frame_chunks, desc=f"Processing frames...",
                   unit="frame", leave=False)
         for idx, frame_chunk in enumerate(self.frames):
-            sliced_df_dict = self.__slice_df(frame_chunk)
-            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict)
+            sliced_df_dict, num_of_frames = self.__slice_df(frame_chunk)
+            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict,
+                               frames_per_chunk=num_of_frames)
             hist_dict = chunk.create_hist()
             for func in funcs_during:
-                for chan, (hist, _) in hist_dict.values:
-                    func(data=hist, chan=chan)
+                for chan, (hist, _) in hist_dict.items():
+                    func(data=hist, channel=chan)
 
             tq.update(1)
 
@@ -201,8 +201,12 @@ class Movie(object):
         Make sure that the DataFrame of data contains the two
         important indices "Channel" and "Frames", and in the correct order.
         """
+        if self.data.index.names[1] == 'Lines':
+            self.data = self.data.swaplevel()
+
         assert self.data.index.names[0] == 'Channel'
         assert self.data.index.names[1] == 'Frames'
+        assert self.data.index.names[2] == 'Lines'
 
     def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
@@ -228,7 +232,7 @@ class Movie(object):
         dimension (0) containing the data.
         """
         for channel in range(1, self.num_of_channels + 1):
-            self.stack[channel] = np.squeeze(np.stack(self.stack[channel], axis=0))
+            self.stack[channel] = np.squeeze(np.vstack(self.stack[channel]))
 
     def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs) -> None:
         """
@@ -239,7 +243,8 @@ class Movie(object):
         :param channel: Current spectral channel of data
         """
         self.stack[channel].append(data)
-        self.summed_mem[channel] += np.uint16(data)
+        assert len(data.shape) > 2
+        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __save_stack_incr(self, data: np.ndarray, channel: int) -> None:
         """
@@ -256,7 +261,8 @@ class Movie(object):
         :param data: Data to be saved
         :param channel: Spectral channel of data to be saved
         """
-        self.summed_mem[channel] += np.uint16(data)
+        assert len(data.shape) > 2
+        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __print_outputs(self) -> None:
         """

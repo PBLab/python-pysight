@@ -77,3 +77,4 @@ docs/_build
 src/pysight/__pycache__/
 !/tests/tests_data/1.lst
 !/tests/tests_data/2.lst
+.vscode

@@ -41,27 +41,31 @@ class Allocate(object):
         # Unidirectional scan - create fake lines
         if not self.bidir:
             self.__add_unidirectional_lines()
-        self.allocate_photons()
-        print('Relative times calculated. Creating Movie object...')
+        self.__allocate_photons()
+        self.__allocate_tag()
+        if self.flim:
+            self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
+            if self.censor:
+                self.exp_params = self.__fit_data_to_exponent(rel_time)
         # Censor correction addition:
         if 'Laser' not in self.dict_of_data.keys():
             self.dict_of_data['Laser'] = 0
             # if self.use_sweeps:
             #     out = self.train_dataset()
+        print('Relative times calculated. Creating Movie object...')
 
     @property
     def num_of_channels(self):
         return sum([1 for key in self.dict_of_data.keys() if 'PMT' in key])
 
-    def allocate_photons(self):
+    def __allocate_photons(self):
         """
         Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
         """
-
-        # Preparations
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
-        column_heads = {'Lines': 'time_rel_line_pre_drop', 'Frames': 'time_rel_frames', 'Laser': 'time_rel_pulse'}
+        # Preparations
+        column_heads = {'Lines': 'time_rel_line_pre_drop', 'Laser': 'time_rel_pulse'}
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
@@ -73,7 +77,8 @@ class Allocate(object):
             # drop photons that came before the first line
             self.df_photons = self.df_photons.iloc[positive_mask].copy()
             # relative time of each photon in accordance to the line\frame\laser pulse
-            self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
+            if 'Frames' != key:
+                self.df_photons[column_heads[key]] = self.df_photons['abs_time'] - self.df_photons[key]
             self.sorted_indices = sorted_indices[sorted_indices >= 0]
             if 'Lines' == key:
                 self.__rectify_photons_in_uneven_lines()
@@ -85,7 +90,8 @@ class Allocate(object):
         assert len(self.df_photons) > 0
         assert np.all(self.df_photons.iloc[:, 0].values >= 0)  # finds NaNs as well
 
-        # Deal with TAG lens interpolation
+    def __allocate_tag(self):
+        """ Allocate photons to TAG lens phase """
         try:
             tag = self.dict_of_data['TAG Lens'].loc[:, 'abs_time']
         except KeyError:
@@ -100,12 +106,6 @@ class Allocate(object):
             self.tag_interp_ok = tag_pipe.finished_pipe
 
             print('TAG lens interpolation finished.')
-
-        # Deal with laser pulses interpolation
-        if self.flim:
-            self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
-            if self.censor:
-                self.exp_params = self.__fit_data_to_exponent(rel_time)
 
     def __nano_flim_exp(self, x, a, b, c):
         """ Exponential function for FLIM and censor correction """

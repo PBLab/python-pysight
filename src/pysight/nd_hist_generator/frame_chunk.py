@@ -5,7 +5,7 @@ import attr
 from attr.validators import instance_of
 import numpy as np
 import pandas as pd
-from typing import List
+from typing import List, Dict
 
 
 @attr.s(slots=True)
@@ -17,12 +17,24 @@ class FrameChunk:
     """
     movie = attr.ib()
     df_dict = attr.ib(validator=instance_of(dict), repr=False)
+    frames_per_chunk = attr.ib(validator=instance_of(int))
     hist_dict = attr.ib(init=False)
+    end_time = attr.ib(init=False)
+    frames = attr.ib(init=False)
 
     def __getattr__(self, item):
         return getattr(self.movie, item)
 
-    def create_hist(self):
+    def __attrs_post_init__(self):
+        self.frames = self.df_dict[1].index.get_level_values('Frames')
+        frames_unique = np.unique(self.frames)
+        if len(frames_unique) > 1:
+            dif = np.diff(frames_unique).mean()
+            self.end_time = frames_unique[-1] + dif
+        else:
+            self.end_time = self.frames[0] + 1
+
+    def create_hist(self) -> Dict[int, np.ndarray]:
         """
         Main method to create the histogram of data. Assigns each event
         in the dataframe to its correct location, for each channel.
@@ -30,38 +42,34 @@ class FrameChunk:
             :hist np.ndarray: n-dimensional histogram
             :edges tuple: arrays that represent edges
         """
-        if not self.empty:
-            for chan in self.df_dict:
-                list_of_edges = self.__create_hist_edges(chan)
-                data_columns = []
-                data_columns.append(self.df_dict[chan].index.get_level_values('Frames'))
-                data_columns.append(self.df_dict[chan]['time_rel_frames'].values)
-                data_columns.append(self.df_dict[chan]['time_rel_line'].values)
-                try:
-                    data_columns.append(self.df_dict[chan]['Phase'].values)
-                except KeyError:
-                    pass
-                try:
-                    data_columns.append(self.df_dict[chan]['time_rel_pulse'].values)
-                except KeyError:
-                    pass
+        self.hist_dict: Dict[int, np.ndarray] = {}
+        for chan in self.df_dict:
+            list_of_edges = self.__create_hist_edges(chan)
+            data_columns = []
+            # data_columns.append(self.frames)
+            data_columns.append(self.df_dict[chan]['abs_time'].values)
+            data_columns.append(self.df_dict[chan]['time_rel_line'].values)
+            try:
+                data_columns.append(self.df_dict[chan]['Phase'].values)
+            except KeyError:
+                pass
+            try:
+                data_columns.append(self.df_dict[chan]['time_rel_pulse'].values)
+            except KeyError:
+                pass
 
-                data_to_be_hist = np.reshape(data_columns,
-                                             (len(self.data_shape), self.df_dict[chan].shape[0])).T
-                assert data_to_be_hist.shape[0] == self.df_dict[chan].shape[0]
-                assert len(data_columns) == data_to_be_hist.shape[1]
-                hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
+            hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
+            hist = np.vstack((hist, np.zeros((1, self.x_pixels))))
+            idx_to_take = np.ones_like(hist, dtype=np.bool)
+            idx_to_take[np.arange(0, self.x_pixels*self.frames_per_chunk, self.x_pixels), :] = False
+            data = hist[idx_to_take].astype(np.uint8).reshape(((self.frames_per_chunk, ) + self.data_shape[1:]))
 
-                if self.bidir:
-                    hist[1::2] = np.fliplr(hist[1::2])
-                if self.censor:
-                    hist = self.__censor_correction(hist)
+            if self.bidir:
+                data[:, 1::2, ...] = np.fliplr(data[:, 1::2, ...])
+            if self.censor:
+                data = self.__censor_correction(data)
 
-                self.hist_dict[chan] = (np.uint8(hist), edges)
-        else:
-            self.hist_dict = {key: (np.zeros(self.data_shape, dtype=np.uint8),
-                                    tuple([0] * len(self.data_shape)))
-                              for key in self.df_dict}
+            self.hist_dict[chan] = data, edges
         return self.hist_dict
 
     def __create_hist_edges(self, chan) -> List[np.ndarray]:
@@ -73,8 +81,7 @@ class FrameChunk:
             list of np.ndarray - one for each dimension
         """
         edges = []
-        edges.append(self.__create_frame_edges(chan))
-        edges.append(self.__create_line_edges(chan))
+        edges.append(self.__create_frame_and_line_edges(chan))
         edges.append(self.__create_col_edges(chan))
 
         if 'Phase' in self.df_dict[chan].columns:
@@ -88,31 +95,29 @@ class FrameChunk:
     def __censor_correction(self, hist):
         raise NotImplementedError("No censor correction as of yet. Contact package authors.")
 
-    def __create_frame_edges(self, chan) -> np.ndarray:
-        """ Create edges for a numpy histogram for the frames dimension """
-        frames = np.unique(self.df_dict[chan].index.get_level_values('Frames'))
-        print(frames)
-        assert len(frames) == self.frames_per_chunk
-        frames = np.hstack((frames, frames[-1] + np.uint64(1)))
-        return frames
+    def __create_frame_and_line_edges(self, chan) -> np.ndarray:
+        """ Create edges for a numpy histogram for the frames and lines dimension """
+        frames = np.unique(self.frames)
+        assert frames.shape[0] == self.frames_per_chunk
+        lines = np.unique(self.df_dict[chan].index.get_level_values('Lines'))
+        assert len(lines) == self.x_pixels * self.frames_per_chunk
 
-    def __create_line_edges(self, chan) -> np.ndarray:
+        frames_and_lines = lines.reshape((self.frames_per_chunk, self.x_pixels))
+        mean_line_diffs = (np.diff(frames_and_lines, axis=1)).mean(axis=1, dtype=np.uint64)
+        last_line_col = np.atleast_2d(frames_and_lines[:, -1] + mean_line_diffs).T
+        frames_and_lines = np.hstack((frames_and_lines, last_line_col))
 
-        all_lines = np.unique(self.df_dict[chan].index.get_level_values('Lines'))
-        assert len(all_lines) == self.x_pixels * self.frames_per_chunk
-        # Add a closing line as the final edge
-        all_lines = np.r_[all_lines, all_lines[-1] + np.uint64(np.diff(all_lines).mean())]
-        return all_lines
+        return frames_and_lines.ravel()
 
     def __create_col_edges(self, chan) -> np.ndarray:
-        num_of_lines = np.unique(self.df_dict[chan].index.get_level_values('Lines'))
+        num_of_lines = np.unique(self.df_dict[chan].index.get_level_values('Lines')).shape[0]
         if num_of_lines == 1:
-            return np.linspace(0, self.end_time, num=self.y_pixels+1, endpoint=True)
+            return np.linspace(0, self.end_time, num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
 
-        delta = self.line_delta if self.bidir else self.linedelta / 2
+        delta = self.line_delta if self.bidir else self.line_delta / 2
         col_end = delta * self.fill_frac/100 if self.fill_frac > 0 else delta
 
-        return np.linspace(start=0, stop=int(col_end), num=self.y_pixels+1, endpoint=True)
+        return np.linspace(start=0, stop=int(col_end), num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
 
     def __linspace_along_sine(self) -> np.ndarray:
         """
