@@ -40,7 +40,7 @@ extlinks = {
     'issue': ('https://github.com/HagaiHargil/python-pysight/issues/%s', '#'),
     'pr': ('https://github.com/HagaiHargil/python-pysight/pull/%s', 'PR #'),
 }
-html_theme = "alabaster"
+# html_theme = "alabaster"
 html_theme_options = {
     "font_family": "Palatino, Georgia, serif",
     "font_size": "18px",
