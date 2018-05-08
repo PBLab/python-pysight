@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Har-Gil
-"""
 from unittest import TestCase
 from collections import namedtuple
 from pprint import pprint

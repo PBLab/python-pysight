@@ -1,8 +1,3 @@
-"""
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-__author__ = Hagai Hargil
-"""
 import attr
 from attr.validators import instance_of
 import matplotlib.pyplot as plt

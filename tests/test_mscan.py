@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 from unittest import TestCase
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
 from pysight.nd_hist_generator.line_signal_validators.mscan import MScanLineValidator

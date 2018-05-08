@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 from typing import Dict, List
 from attr.validators import instance_of
 import numpy as np

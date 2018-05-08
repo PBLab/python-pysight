@@ -1,5 +1,5 @@
 .. image:: docs/pysight_logo.png
-   :scale: 2
+   :scale: 1
    :alt: PySight
 .. start-badges
 
@@ -64,7 +64,7 @@ Installation and Documentation
 
 Current version: 0.8.1
 
-Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed instructions.
+Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed usage instructions.
 
 If you have questions, come visit us at our `Gitter channel. <https://gitter.im/python-pysight/Lobby>`_
 

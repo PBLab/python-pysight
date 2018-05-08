@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-__author__: Hagai Hargil
-"""
 from collections import OrderedDict
 import numpy as np
 from typing import List

@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Har-Gil
-"""
 from unittest import TestCase
 from pysight.nd_hist_generator.movie_tools import *
 from pysight.nd_hist_generator.volume_gen import *

@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Har-Gil
-"""
 import attr
 from attr.validators import instance_of
 import numpy as np
