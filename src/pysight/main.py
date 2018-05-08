@@ -93,8 +93,7 @@ def main_data_readout(gui):
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there
-    outputs = OutputParser(num_of_frames=len(np.unique(analyzed_struct.df_photons.index
-                                                       .get_level_values('Frames')).astype(np.uint64)),
+    outputs = OutputParser(num_of_frames=len(validated_data.dict_of_data['Frames']),
                            output_dict=gui.outputs, filename=gui.filename,
                            x_pixels=gui.x_pixels, y_pixels=gui.y_pixels,
                            z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,

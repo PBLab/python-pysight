@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 import attr
 from attr.validators import instance_of
 import pandas as pd
@@ -19,6 +16,7 @@ class PhotonDF(object):
         """
         If a single PMT channel exists, create a df_photons object.
         Else, concatenate the two data channels into a single dataframe.
+
         :return pd.DataFrame: Photon data
         """
 
