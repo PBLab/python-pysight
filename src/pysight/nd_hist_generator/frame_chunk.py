@@ -59,9 +59,9 @@ class FrameChunk:
                 pass
 
             hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            hist = np.vstack((hist, np.zeros((1, self.x_pixels))))
+            # hist = np.vstack((hist, np.zeros(((1,) +  self.data_shape[2:]))))
             idx_to_take = np.ones_like(hist, dtype=np.bool)
-            idx_to_take[np.arange(0, self.x_pixels*self.frames_per_chunk, self.x_pixels), :] = False
+            idx_to_take[np.arange(start=self.x_pixels, stop=self.x_pixels*self.frames_per_chunk, step=self.x_pixels+1), :] = False
             data = hist[idx_to_take].astype(np.uint8).reshape(((self.frames_per_chunk, ) + self.data_shape[1:]))
 
             if self.bidir:
@@ -96,7 +96,13 @@ class FrameChunk:
         raise NotImplementedError("No censor correction as of yet. Contact package authors.")
 
     def __create_frame_and_line_edges(self, chan) -> np.ndarray:
-        """ Create edges for a numpy histogram for the frames and lines dimension """
+        """
+        Create edges for a numpy histogram for the frames and lines dimension. Its main job
+        is to add a "closing" line for each frame, i.e. the right edge of the last bin of the image.
+        If the lines originated from ScanImage, at the end of each frame there's a large difference between
+        the last line of the previous frame and the first of the next frame. If lines are from MSCan,
+        there's no such difference. This function has to deal with these two cases.
+        """
         frames = np.unique(self.frames)
         assert frames.shape[0] == self.frames_per_chunk
         lines = np.unique(self.df_dict[chan].index.get_level_values('Lines'))
@@ -104,9 +110,16 @@ class FrameChunk:
 
         frames_and_lines = lines.reshape((self.frames_per_chunk, self.x_pixels))
         mean_line_diffs = (np.diff(frames_and_lines, axis=1)).mean(axis=1, dtype=np.uint64)
-        last_line_col = np.atleast_2d(frames_and_lines[:, -1] + mean_line_diffs).T
-        frames_and_lines = np.hstack((frames_and_lines, last_line_col))
-
+        diff_bet_last_and_first = np.abs(frames_and_lines[1:, 0] - frames_and_lines[:-1, -1]).mean()
+        if (diff_bet_last_and_first > self.line_delta * 1000) or (diff_bet_last_and_first < 3 * self.line_delta):
+            # MSCan
+            last_col_of_lines = np.atleast_2d(frames_and_lines[1:, 0] - 1).T  # -1 is due to bug in histogramdd
+            last_edge = frames_and_lines[-1, -1] + mean_line_diffs.mean(dtype=np.uint64)
+            last_col_of_lines = np.vstack((last_col_of_lines, last_edge))
+            frames_and_lines = np.hstack((frames_and_lines, last_col_of_lines))
+        else:  # ScanImage
+            last_col_of_lines = np.atleast_2d(frames_and_lines[:, -1] + mean_line_diffs).T
+            frames_and_lines = np.hstack((frames_and_lines, last_col_of_lines))
         return frames_and_lines.ravel()
 
     def __create_col_edges(self, chan) -> np.ndarray:

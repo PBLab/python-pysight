@@ -27,6 +27,24 @@ class LinesType(Enum):
 class SignalValidator:
     """
     Parse a dictionary of all recorded signals and verify the data's integrity
+    Inputs:
+        :param dict_of_data dict: Dictionary with keys corresponding to signal type,
+        and values as DataFrames.
+        :param data_to_grab list: Column names from the DF of the data to parse.
+        :param num_of_lines int: Number of lines (x pixels) in the frame)
+        :param num_of_frames int: Number of frames of the data. If "Frames" is not in the
+        dict_of_data keys then this number is disregarded.
+        :param binwidth float: Multiscaler binwidth in seconds.
+        :param line_freq float: Line frequency of the fast scanner (x) in Hz.
+        :param bidir bool: Whether the scan was bidirectional.
+        :param delay_between_frames float: Time between subsequent frames. Depends on imaging
+        software and hardware.
+        :param use_sweeps bool: Use the sweeps of the multiscaler as an indicator of new lines.
+        :bidir phase float: A number in microseconds typically reported by the scanning software.
+        Helps with alignment of the generated image when using a bidirectional scan.
+        :param imaging_software ImagingSoftware: Software used for imaging.
+        :param change_thresh float: Percent-like [0, 1] threshold to discard irregular line signals.
+        Above which PySight will terminate with an exception.
     """
     dict_of_data = attr.ib(validator=instance_of(dict))
     data_to_grab = attr.ib(default=['abs_time', 'sweep'], validator=instance_of(list))
@@ -77,17 +95,12 @@ class SignalValidator:
         """
         if 'Frames' in self.dict_of_data:
             self.num_of_frames = self.dict_of_data['Frames'].shape[0] + 1  # account for first frame
-
         self.last_event_time = self.__calc_last_event_time()
-
         self.line_type_data: LinesType = \
             self.__match_line_data_to_case(lines=self.dict_of_data.get('Lines'))
-
         self.dict_of_data, self.line_delta = \
             self.handle_line_cases[self.line_type_data]()
-
         self.dict_of_data = self.__validate_frame_input()
-
         try:
             self.dict_of_data['Laser'] = self.__validate_laser_input(self.dict_of_data['Laser'])
         except KeyError:
@@ -128,22 +141,38 @@ class SignalValidator:
             num_of_lines_recorded = self.dict_of_data['Lines'].shape[0]
             div, mod = divmod(num_of_lines_recorded, self.num_of_lines)
 
-            if num_of_lines_recorded > self.num_of_lines * (div+1):  # excessive number of lines
-                last_line_of_last_frame = self.dict_of_data['Lines'].loc[:, 'abs_time']\
-                    .iloc[div * self.num_of_lines - 1]
-                frame_diff = self.dict_of_data['Lines'].loc[:, 'abs_time'].iloc[div * self.num_of_lines - 1] -\
-                    self.dict_of_data['Lines'].loc[:, 'abs_time'].iloc[(div - 1) * self.num_of_lines]
-                return int(last_line_of_last_frame + frame_diff)
+            # if num_of_lines_recorded > (self.num_of_lines * div):  # excessive number of lines
+            #     last_line_of_last_frame = self.dict_of_data['Lines'].loc[:, 'abs_time']\
+            #         .iloc[div * self.num_of_lines - 1]
+            #     line_diff = int(self.dict_of_data['Lines'].iloc[:, 0].diff().mean())
+            #     next_frame_event = self.dict_of_data['Lines'].iloc[div * self.num_of_lines, :]
+            #     next_frame_event['abs_time'] += np.uint64(10 * line_diff)
+            #     self.dict_of_data['Lines'] = self.dict_of_data['Lines'].loc[
+            #                                  self.dict_of_data['Lines'].loc[:, 'abs_time'] <= last_line_of_last_frame,:]
+            #     if self.image_soft == ImagingSoftware.SCANIMAGE.value:
+            #         self.dict_of_data['Lines'] = self.dict_of_data['Lines'].append(next_frame_event)
+            #     return int(last_line_of_last_frame + line_diff)
 
-            elif mod == 0:  # number of lines contained exactly in number of lines per frame
+            if mod == 0:  # number of lines contained exactly in number of lines per frame
                 return int(self.dict_of_data['Lines'].loc[:, 'abs_time'].iloc[-1] + self.dict_of_data['Lines']\
                     .loc[:, 'abs_time'].diff().mean())
 
-            elif num_of_lines_recorded < self.num_of_lines * (div+1):
-                missing_lines = self.num_of_lines - mod
+            elif (num_of_lines_recorded < self.num_of_lines * (div+1)) and (div > 0):
+                last_line_of_last_frame = self.dict_of_data['Lines'].loc[:, 'abs_time']\
+                    .iloc[div * self.num_of_lines - 1]
                 line_diff = int(self.dict_of_data['Lines'].iloc[:, 0].diff().mean())
-                return int(self.dict_of_data['Lines'].iloc[:, 0].iloc[-1] +\
-                    ((missing_lines+1) * line_diff))
+                # missing_lines = self.num_of_lines - mod
+                # next_frame_event = self.dict_of_data['Lines'].iloc[div * self.num_of_lines, :]
+                # next_frame_event['abs_time'] += np.uint64(10 * line_diff)
+                # if self.image_soft == ImagingSoftware.SCANIMAGE.value:
+                #     self.dict_of_data['Lines'] = self.dict_of_data['Lines'].append(next_frame_event)
+                #
+                return int(last_line_of_last_frame + line_diff)
+
+            elif div == 0:
+                line_diff = int(self.dict_of_data['Lines'].iloc[:, 0].diff().mean())
+                missing_lines = self.num_of_lines - num_of_lines_recorded + 1
+                return self.dict_of_data['Lines'].iloc[-1, 0] + (line_diff * missing_lines)
 
         # Just PMT data
         max_pmt1 = self.dict_of_data['PMT1'].loc[:, 'abs_time'].max()
@@ -181,9 +210,8 @@ class SignalValidator:
             lines = self.__add_zeroth_line_event(lines=lines)
 
             # Analyze the line signal
-            change_thresh = 0.3
-            rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
-            is_corrupt_sig: bool = len(rel_idx) / lines.shape[0] > change_thresh
+            rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > self.change_thresh)[0]
+            is_corrupt_sig: bool = (len(rel_idx) // 2) / lines.shape[0] > self.change_thresh
             if is_corrupt_sig and 'Frames' in self.dict_of_data.keys():
                 return LinesType.REBUILD
             elif is_corrupt_sig and 'Frames' not in self.dict_of_data.keys():
@@ -208,9 +236,9 @@ class SignalValidator:
         Data is corrupted, and no frame channel can help us.
         :return:
         """
-        line_delta = self.__bins_bet_lines()
+        self.line_delta = self.__bins_bet_lines()
         self.dict_of_data['Lines'] = self.__extrapolate_line_data(line_point=self.dict_of_data['Lines'].at[0, 'abs_time'])
-        return self.dict_of_data, line_delta
+        return self.dict_of_data, self.line_delta
 
     def __rebuild(self) -> Tuple[Dict, int]:
         """
@@ -328,10 +356,11 @@ class SignalValidator:
     def __validate_frame_input(self):
 
         if 'Frames' in self.dict_of_data.keys():
-            self.dict_of_data['Frames'] = pd.DataFrame([[0] * len(self.data_to_grab)],
-                                                       columns=self.data_to_grab,
-                                                       dtype='uint64')\
-                        .append(self.dict_of_data['Frames'], ignore_index=True)
+            if self.image_soft == 'MScan':
+                self.dict_of_data['Frames'] = pd.DataFrame([[0] * len(self.data_to_grab)],
+                                                           columns=self.data_to_grab,
+                                                           dtype='uint64')\
+                            .append(self.dict_of_data['Frames'], ignore_index=True)
         else:
             frame_array = self.__create_frame_array(lines=self.dict_of_data['Lines'].loc[:, 'abs_time'])
             self.dict_of_data['Frames'] = pd.DataFrame(frame_array, columns=['abs_time'], dtype='uint64')

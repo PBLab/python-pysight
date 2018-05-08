@@ -55,7 +55,7 @@ GUI Options
 .. image:: gui.png
    :scale: 25
 
-Running **PySight** will open GUI seen above.
+Running **PySight** will open the GUI seen above.
 
 Choosing a ``.lst`` file for analysis is done with the *Browse* button, located at the top-left corner of the GUI.
 

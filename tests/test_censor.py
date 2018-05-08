@@ -30,7 +30,7 @@ class TestCensorTools(unittest.TestCase):
                              columns=['abs_time', 'edge', 'sweep', 'time_rel_sweep'])
     }
     dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
-    movie = Movie(data=dict_of_data['PMT1'], lines=dict_of_data['Lines'].abs_time)
+    movie = Movie(data=dict_of_data['PMT1'], lines=dict_of_data['Lines'].abs_time, frames=1)
 
     def test_allocate_some_photons(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1'],
@@ -41,7 +41,7 @@ class TestCensorTools(unittest.TestCase):
         idx_list = np.array([7])
         result = np.array([0], dtype=object)
         res_hist = np.histogram(np.array([5], dtype=object),
-                                            bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint8))[0]
+                                bins=np.arange(0, censored.bins_bet_pulses+1, dtype=np.uint8))[0]
         result[0] = res_hist
         returned = censored._CensoredVolume__allocate_photons_to_bins(idx_list, photons)
         self.assertTrue(np.all(result[0] == returned[0]))

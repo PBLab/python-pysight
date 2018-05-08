@@ -8,7 +8,7 @@ import pandas as pd
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 
 
-def gen_test_df(frame_num, end=1000000) -> pd.DataFrame:
+def gen_test_df(frame_num=10, end=1000000) -> pd.DataFrame:
     photons = np.arange(0, end, dtype=np.uint64)
     frames = np.linspace(0, end, num=frame_num, dtype=np.uint64,
                          endpoint=False)

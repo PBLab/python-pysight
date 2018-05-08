@@ -95,7 +95,7 @@ class Allocate(object):
         try:
             tag = self.dict_of_data['TAG Lens'].loc[:, 'abs_time']
         except KeyError:
-            pass
+            return
         else:
             print('Interpolating TAG lens data...')
             tag_pipe = TagPipeline(photons=self.df_photons, tag_pulses=tag, freq=self.tag_freq,

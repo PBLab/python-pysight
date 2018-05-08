@@ -38,9 +38,9 @@ class VolumeGenerator:
         :param create_slices bool: Used for testing, always keep true.
         """
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
-        self.chunk_size = max(1, int(self.MAX_BYTES_ALLOWED / self.bytes_per_frames))
+        self.chunk_size = max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames)
         self.frames = self.__create_vol_list()
-        self.num_of_chunks = len(self.frames) // self.chunk_size
+        self.num_of_chunks = max(1, len(self.frames) // self.chunk_size)
         self.full_frame_chunks = self.__grouper()
         if create_slices:
             self.frame_slices = self.__generate_frame_slices()

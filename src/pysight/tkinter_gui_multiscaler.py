@@ -13,6 +13,7 @@ import time
 import attr
 from attr.validators import instance_of
 from enum import Enum
+import pysight
 
 
 def is_positive(instance, attribute, value):
@@ -52,7 +53,7 @@ class GuiAppLst(object):
 
         self.root = Tk()
         self._data_sources = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
-        self.root.title("PySight \uFF5C  PBLab \uFF5C 2018")
+        self.root.title(f"PySight \uFF5C  PBLab \uFF5C v{pysight.__version__}")
         self.root.rowconfigure(16, weight=1)
         self.root.columnconfigure(16, weight=1)
         main_frame = ttk.Frame(self.root, width=1000, height=1300)

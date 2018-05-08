@@ -24,10 +24,14 @@ class ScanImageLineValidator:
         lines = self.dict_of_data['Lines'].loc[:, 'abs_time'].copy()
         lines_mat, rel_idx, end_of_frames_idx, last_idx_of_row, rel_idx_non_end_frame = \
             self.__calc_line_parameters(lines=lines)
-        theo_lines, delta = self.__gen_line_model(lines=lines, rel_idx=rel_idx, end_of_frames_idx=end_of_frames_idx)
-        lines_mat = self.__diff_mat_analysis(y=theo_lines, lines_mat=lines_mat, last_idx=last_idx_of_row,
-                                             delta=delta, rel_idx=rel_idx_non_end_frame)
-        lines = self.__finalize_lines(lines_mat=lines_mat)
+        if lines_mat.shape[0] == 1:  # single frame
+            lines = pd.Series(lines_mat[0, :self.num_of_lines], dtype=np.uint64)
+            delta = np.uint64(lines.diff().mean())
+        else:
+            theo_lines, delta = self.__gen_line_model(lines=lines, rel_idx=rel_idx, end_of_frames_idx=end_of_frames_idx)
+            lines_mat = self.__diff_mat_analysis(y=theo_lines, lines_mat=lines_mat, last_idx=last_idx_of_row,
+                                                 delta=delta, rel_idx=rel_idx_non_end_frame)
+            lines = self.__finalize_lines(lines_mat=lines_mat)
         if self.bidir:
             lines = self.sig_val.add_phase_to_bidir_lines(lines=lines)
         self.dict_of_data['Lines'] = pd.DataFrame(lines, dtype=np.uint64, columns=['abs_time'])
@@ -86,14 +90,15 @@ class ScanImageLineValidator:
     def __calc_line_parameters(self, lines: pd.Series) -> Tuple[np.ndarray, np.ndarray,
                                                                 np.ndarray, np.ndarray, np.ndarray]:
         """ Generate general parameters of the given acquisition """
-        change_thresh = 0.3
-        rel_idx = np.where(np.abs(lines.diff().pct_change(periods=1)) > change_thresh)[0]
-        if len(rel_idx) == 0:
-            raise UserWarning('Data contained signals only from the first frame.')
+        change = np.abs(lines.diff().pct_change(periods=1))
+        rel_idx = np.where(change > self.change_thresh)[0]
+        div, mod = divmod(len(lines), self.num_of_lines)
+        if len(rel_idx) == 0 and mod != 0 and div == 0:
+            raise UserWarning('Data contained incomplete signals only from the first frame.')
 
-        end_of_frames = rel_idx > 5
-        end_of_frames_idx = rel_idx[end_of_frames][::2]  # scanimage specific
-        rel_idx_non_end_frame = rel_idx[np.logical_not(end_of_frames)]
+        end_of_frames = change > 5
+        end_of_frames_idx = np.where(end_of_frames)[0]  # scanimage specific
+        rel_idx_non_end_frame = np.where(change <= self.change_thresh)[0]
         idx_list = [slice(st, sp) for st, sp in self.__pairwise([0] + list(end_of_frames_idx))]
         lines_mat = np.zeros((len(idx_list), self.num_of_lines * 2), dtype=np.uint64)
         last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)

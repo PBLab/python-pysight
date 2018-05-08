@@ -38,6 +38,7 @@ class OutputParser(object):
     def run(self):
         """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
         self.outputs = {}
+        self.data_shape = self.determine_data_shape_full()
         if not self.output_dict:
             return
         try:
@@ -46,7 +47,6 @@ class OutputParser(object):
             pass
         f = self.__create_prelim_file()
         if f is not None:
-            self.data_shape = self.determine_data_shape_full()
             self.__populate_hdf(f)
 
     def __create_prelim_file(self):

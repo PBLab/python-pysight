@@ -32,8 +32,8 @@ def gen_data_df():
     frames = (np.atleast_2d(frames).T @ ones_frames).ravel()
     assert len(lines) == len(frames) == len(photons)
 
-    df = pd.DataFrame({'time_rel_line': photons - lines,
-                       'time_rel_frames': photons - frames,
+    df = pd.DataFrame({'abs_time': photons - frames,
+                       'time_rel_line': photons - lines,
                        'Lines': lines, 'Frames': frames,
                        'Channel': channel})
     df.set_index(['Channel', 'Frames', 'Lines'], drop=True, inplace=True)
@@ -62,15 +62,33 @@ class TestFrameChunk(TestCase):
 
     def test_frame_edges_single_frame(self):
         fr = self.chunk_single._FrameChunk__create_frame_and_line_edges(1)
-        self.assertSequenceEqual(fr.tolist(), np.arange(100, 210, 10, dtype=np.uint64).tolist())
+        result = np.arange(100, 210, 10, dtype=np.uint64)
+        self.assertSequenceEqual(fr.tolist(), result.tolist())
 
     def test_frame_edges_multiple_frames(self):
         fr = self.chunk_multi._FrameChunk__create_frame_and_line_edges(1)
-        arr = np.array([100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 200, 210,
-                        220, 230, 240, 250, 260, 270, 280, 290, 300, 300, 310, 320, 330,
-                        340, 350, 360, 370, 380, 390, 400, 400, 410, 420, 430, 440, 450,
+        arr = np.array([100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 199, 200, 210,
+                        220, 230, 240, 250, 260, 270, 280, 290, 299, 300, 310, 320, 330,
+                        340, 350, 360, 370, 380, 390, 399, 400, 410, 420, 430, 440, 450,
                         460, 470, 480, 490, 500], dtype=np.uint64)
         np.testing.assert_equal(fr, arr)
+
+    def test_frame_edges_multiple_frames_si(self):
+        lines = pd.Series([0, 10, 20, 80, 90, 100, 160, 170, 180], dtype=np.uint64)
+        frames = [0, 0, 0, 80, 80, 80, 160, 160, 160]
+        data = np.arange(9)
+        df = pd.DataFrame(data, index=pd.MultiIndex.from_arrays((frames, lines),
+                                                                names=['Frames', 'Lines']),
+                          dtype=np.uint64)
+        x, y = 3, 3
+        movie = Movie(df, lines, outputs={'memory': True},
+                      line_delta=10, fill_frac=100., bidir=True,
+                      data_shape=(len(frames), x, y),
+                      frames=(slice(frame) for frame in frames))
+        chunk = FrameChunk(movie=movie, df_dict={1: df}, frames_per_chunk=3)
+        fr = chunk._FrameChunk__create_frame_and_line_edges(1)
+        self.assertTrue(fr.dtype == np.dtype('uint64'))
+        np.testing.assert_equal(fr, [0, 10, 20, 30, 80, 90, 100, 110, 160, 170, 180, 190])
 
     def test_col_edges_single_frame(self):
         cr = self.chunk_single._FrameChunk__create_col_edges(1)
@@ -90,7 +108,7 @@ class TestFrameChunk(TestCase):
     def test_linspace_along_sine_100_pix_z(self):
         movie_for_sine = Movie(self.df, self.lines, data_shape=(1, 512, 512, 100),
                                frames=(1,))
-        chunk = FrameChunk(movie_for_sine, self.df_dict)
+        chunk = FrameChunk(movie_for_sine, self.df_dict, frames_per_chunk=1)
         sin = chunk._FrameChunk__linspace_along_sine()
         true = np.array([-9.99995030e-01, -9.80000436e-01, -9.60000408e-01, -9.40001149e-01,
                          -9.20001249e-01, -9.00001813e-01, -8.80000700e-01, -8.60002042e-01,

@@ -39,7 +39,7 @@ class MScanLineValidator:
         delta = np.uint64(lines.drop(rel_idx).reindex(np.arange(len(lines))).interpolate().diff().mean())
         return rel_idx[::2], delta
 
-    def __filter_extra_lines(self, lines: pd.Series, delta: int) -> Tuple[pd.Series, pd.Series, int]:
+    def __filter_extra_lines(self, lines: pd.Series, delta: np.uint64) -> Tuple[pd.Series, pd.Series, np.uint64]:
         """
         Kick out excess line signals
         :param lines:
@@ -69,7 +69,12 @@ class MScanLineValidator:
                 missing_lines.append(idx)
 
         valid_lines = lines.drop(extra_lines).reset_index(drop=True)
-        delta = int(valid_lines.drop(missing_lines).diff().mean())
+        delta = np.uint64(valid_lines.drop(missing_lines).diff().mean())
+
+        # Get rid of lines that came after the last frame
+        num_of_extra_lines = len(valid_lines) % self.num_of_lines
+        valid_lines = valid_lines[:-num_of_extra_lines]
+
         return valid_lines, pd.Series(missing_lines), delta
 
     def __gen_line_model(self, lines: pd.Series, m: np.uint64) -> np.ndarray:
@@ -84,7 +89,7 @@ class MScanLineValidator:
                 y[idx:] = m * x + lines.iloc[idx]
 
         # MScan's lines are evenly separated
-        first_diff = np.uint64(lines.iloc[10:110].diff()[1::2].median())
+        first_diff = np.uint64(lines.iloc[2:110].diff()[1::2].median())
         delta_diff = np.int32((m - first_diff) / 2)
         if first_diff < m:
             y[1::2] -= delta_diff
