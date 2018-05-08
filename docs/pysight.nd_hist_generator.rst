@@ -75,6 +75,15 @@ pysight\.nd\_hist\_generator\.tag\_tools\_v2 module
     :undoc-members:
     :show-inheritance:
 
+pysight\.nd\_hist\_generator\.volume\_gen module
+---------------------------------------------------
+
+.. automodule:: pysight.nd_hist_generator.volume_gen
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 
 Module contents
 ---------------
