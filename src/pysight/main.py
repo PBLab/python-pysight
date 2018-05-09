@@ -110,7 +110,8 @@ def main_data_readout(gui):
     data_for_movie = gated.data if gui.gating else analyzed_struct.df_photons
 
     # Create a movie object
-    volume_chunks = VolumeGenerator(data=data_for_movie, data_shape=outputs.data_shape)
+    volume_chunks = VolumeGenerator(data=validated_data.dict_of_data['Frames'],
+                                    data_shape=outputs.data_shape)
     frames = volume_chunks.create_frame_slices()
 
     final_movie = Movie(data=data_for_movie, frames=frames,
