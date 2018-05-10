@@ -51,6 +51,7 @@ class Movie(object):
     tag_freq            = attr.ib(default=189e3, validator=instance_of(float))
     mirror_phase        = attr.ib(default=-2.71, validator=instance_of(float))
     num_of_frame_chunks = attr.ib(default=1, validator=instance_of(int))
+    frames_per_chunk    = attr.ib(default=1, validator=instance_of(int))
     data_shape          = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
     summed_mem          = attr.ib(init=False)
     stack               = attr.ib(init=False)
@@ -105,6 +106,9 @@ class Movie(object):
         frames = self.frames.loc[frame_chunk]
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
+        if len(lines) > self.x_pixels * num_of_frames:
+            warnings.warn(f"More-than-necessary line signals in the frame of chunk {frame_chunk}.")
+        lines = lines.iloc[:self.x_pixels*num_of_frames]
         return slice_dict, num_of_frames, frames, lines
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:

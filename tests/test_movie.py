@@ -44,10 +44,12 @@ class TestMovies(TestCase):
     line_num = 100
     data, frames, lines, x_pix, y_pix = gen_data_df(frame_num=frame_num, line_num=line_num, end=end)
     data_shape = (frame_num, x_pix, y_pix)
-    fr = VolumeGenerator(frames, data_shape).create_frame_slices()
+    volgen = VolumeGenerator(frames, data_shape)
+    fr = volgen.create_frame_slices()
     movie = Movie(data=data, lines=lines, data_shape=data_shape,
                   outputs={'memory': True}, line_delta=int(lines.diff().mean()),
-                  fill_frac=100., bidir=True, frame_slices=fr, frames=frames)
+                  fill_frac=100., bidir=True, frame_slices=fr, frames=frames,
+                  frames_per_chunk=volgen.frame_per_chunk)
     movie.run()
 
     def test_all_pipeline_basic(self):

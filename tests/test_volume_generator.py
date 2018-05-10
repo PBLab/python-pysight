@@ -67,7 +67,7 @@ class TestVolumeGenerator(TestCase):
     def test_grouper(self):
         volgen = VolumeGenerator(pd.Series(), (1,))
         volgen.frames = pd.Series([10, 20, 30, 40], dtype=np.uint64)
-        volgen.chunk_size = 3
+        volgen.frame_per_chunk = 3
         grouped = volgen._VolumeGenerator__grouper()
         self.assertSequenceEqual(list(grouped), [(10, 20, 30), (40, np.nan, np.nan)])
 

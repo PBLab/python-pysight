@@ -14,8 +14,8 @@ class FrameChunk:
     """
     movie = attr.ib()
     df_dict = attr.ib(validator=instance_of(dict), repr=False)
-    frames = attr.ib()
-    lines = attr.ib()
+    frames = attr.ib(validator=instance_of(pd.Series))
+    lines = attr.ib(validator=instance_of(pd.Series))
     frames_per_chunk = attr.ib(validator=instance_of(int))
     hist_dict = attr.ib(init=False)
     end_time = attr.ib(init=False)
@@ -25,10 +25,10 @@ class FrameChunk:
 
     def __attrs_post_init__(self):
         if len(self.frames) > 1:
-            dif = np.diff(self.frames).mean()
-            self.end_time = self.frames[-1] + dif
+            dif = np.uint64(self.frames.diff().mean())
+            self.end_time = self.frames.iloc[-1] + dif
         else:
-            self.end_time = self.frames[0] + 1
+            self.end_time = self.frames.iloc[0] + 1
 
     def create_hist(self) -> Dict[int, np.ndarray]:
         """
@@ -72,12 +72,19 @@ class FrameChunk:
         """
         Generate the grid of the histogram.
         Inputs:
-            :param chan int: Channel number
+        -------
+
+        :param chan: ``int`` Channel number
+
         Returns:
-            list of np.ndarray - one for each dimension
+        --------
+
+        ``list`` of ``np.ndarray``, one for each dimension
         """
         edges = []
         edges.append(self.__create_frame_and_line_edges(chan))
+        # edges.append(self.__create_frame_edges(chan))
+        # edges.append(self.__create_line_edges(chan))
         edges.append(self.__create_col_edges(chan))
 
         if 'Phase' in self.df_dict[chan].columns:
