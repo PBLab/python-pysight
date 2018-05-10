@@ -6,86 +6,98 @@ from pysight.nd_hist_generator.frame_chunk import *
 from pysight.nd_hist_generator.movie_tools import *
 
 
-def gen_data_df():
+def gen_data_df(frame_num=10, line_num=100, end=1000, channels=2):
     """
     Mock data for tests.
     Returns:
         df - The full DataFrame
+        frames only
         lines only
         x pixels
         y pixels
     """
-    photons = np.arange(0, 1000, dtype=np.uint64)
+    photons = np.arange(0, end, dtype=np.uint64)
     channel = np.ones_like(photons)
-    channel[channel.shape[0] // 2:] = 2
-    lines = np.arange(0, 1000, step=10, dtype=np.uint64)
+    if channels == 2:
+        channel[len(channel)//2:] = 2
+    lines = np.linspace(0, end, num=line_num, endpoint=False, dtype=np.uint64)
     x_pix = int(len(photons) / len(lines))
     ones_lines = np.ones((1, int(len(photons) / len(lines))),
                          dtype=np.uint64)
-    frames = np.arange(0, 1000, step=100, dtype=np.uint64)
+    frames = np.linspace(0, end, num=frame_num, dtype=np.uint64, endpoint=False)
+    frames_ser = pd.Series(frames, index=frames)
     ones_frames = np.ones((1, int(len(photons) / len(frames))),
                           dtype=np.uint64)
     lines = (np.atleast_2d(lines).T @ ones_lines).ravel()
     frames = (np.atleast_2d(frames).T @ ones_frames).ravel()
     assert len(lines) == len(frames) == len(photons)
 
-    df = pd.DataFrame({'abs_time': photons - frames,
+    df = pd.DataFrame({'abs_time': photons,
                        'time_rel_line': photons - lines,
                        'Lines': lines, 'Frames': frames,
                        'Channel': channel})
     df.set_index(['Channel', 'Frames', 'Lines'], drop=True, inplace=True)
     y_pix = x_pix
-    return df, pd.Series(np.unique(lines)), x_pix, y_pix, frames
+    lines_to_return = pd.Series(np.unique(lines), index=np.repeat(frames_ser, line_num//frame_num))
+
+    return df, frames_ser, lines_to_return, x_pix, y_pix
 
 
 class TestFrameChunk(TestCase):
-    df, lines, x, y, frames = gen_data_df()
-    movie_single = Movie(df, lines,
-                  outputs={'memory': True}, line_delta=int(lines.diff().mean()),
-                  fill_frac=100., bidir=True, data_shape=(len(frames), x, y),
-                  frames=(slice(frame) for frame in frames))
+    df, frames, lines, x, y = gen_data_df()
+    movie_single = Movie(df, lines, outputs={'memory': True}, line_delta=int(lines.diff().mean()),
+                         fill_frac=100., bidir=True, data_shape=(len(frames), x, y),
+                         frame_slices=(slice(frame) for frame in frames), frames=frames,
+                         frames_per_chunk=10)
     df_dict = {1: df.xs(key=(1, 100), level=('Channel', 'Frames'),
                         drop_level=False),
-               2: df.xs(key=(2, 200), level=('Channel', 'Frames'),
+               2: df.xs(key=(2, 100), level=('Channel', 'Frames'),
                         drop_level=False)}
-    chunk_single = FrameChunk(movie=movie_single, df_dict=df_dict, frames_per_chunk=1)
+    chunk_single = FrameChunk(movie=movie_single, df_dict=df_dict, frames_per_chunk=10, frames=frames,
+                              lines=lines)
 
-    movie_multi = Movie(df, lines, outputs={'memory': True},
+    movie_multi = Movie(df, lines=lines, outputs={'memory': True},
                         line_delta=int(lines.diff().mean()), fill_frac=100., bidir=True,
-                        data_shape=(len(frames), x, y),
-                        frames=(slice(frame) for frame in frames))
+                        data_shape=(len(frames), x, y), frames=frames,
+                        frame_slices=(slice(frame) for frame in frames), frames_per_chunk=4)
     sl = pd.IndexSlice[slice(1), slice(100, 400)]
-    chunk_multi = FrameChunk(movie=movie_multi, df_dict={1: df.loc[sl, :]}, frames_per_chunk=4)
+    chunk_multi = FrameChunk(movie=movie_multi, df_dict={1: df.loc[sl, :]}, frames_per_chunk=4,
+                             frames=frames, lines=lines)
 
-    def test_frame_edges_single_frame(self):
-        fr = self.chunk_single._FrameChunk__create_frame_and_line_edges(1)
-        result = np.arange(100, 210, 10, dtype=np.uint64)
-        self.assertSequenceEqual(fr.tolist(), result.tolist())
+    def test_frame_edges_single_chunk(self):
+        fr = self.chunk_single._FrameChunk__create_frame_edges()
+        np.testing.assert_equal(fr, np.array([0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 901], dtype=np.uint64))
 
     def test_frame_edges_multiple_frames(self):
-        fr = self.chunk_multi._FrameChunk__create_frame_and_line_edges(1)
-        arr = np.array([100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 199, 200, 210,
-                        220, 230, 240, 250, 260, 270, 280, 290, 299, 300, 310, 320, 330,
-                        340, 350, 360, 370, 380, 390, 399, 400, 410, 420, 430, 440, 450,
-                        460, 470, 480, 490, 500], dtype=np.uint64)
-        np.testing.assert_equal(fr, arr)
+        sl = pd.IndexSlice[slice(1), slice(100, 400)]
+        movie = Movie(self.df, self.lines, outputs={'memory': True},
+                      line_delta=int(self.lines.diff().mean()), fill_frac=100., bidir=True,
+                      data_shape=(len(self.frames), self.x, self.y), frames=self.frames,
+                      frame_slices=(slice(frame) for frame in self.frames), frames_per_chunk=4, )
+        chunk_multi = FrameChunk(movie=movie, df_dict={1: self.df.loc[sl, :]},
+                                 frames=pd.Series([100, 200, 300, 400], dtype=np.uint64),
+                                 lines=pd.Series([10]), frames_per_chunk=4)
+        fr = chunk_multi._FrameChunk__create_frame_edges()
+        np.testing.assert_equal(fr, np.array([100, 200, 300, 400, 401]))
 
-    def test_frame_edges_multiple_frames_si(self):
-        lines = pd.Series([0, 10, 20, 80, 90, 100, 160, 170, 180], dtype=np.uint64)
-        frames = [0, 0, 0, 80, 80, 80, 160, 160, 160]
-        data = np.arange(9)
-        df = pd.DataFrame(data, index=pd.MultiIndex.from_arrays((frames, lines),
-                                                                names=['Frames', 'Lines']),
-                          dtype=np.uint64)
-        x, y = 3, 3
-        movie = Movie(df, lines, outputs={'memory': True},
-                      line_delta=10, fill_frac=100., bidir=True,
-                      data_shape=(len(frames), x, y),
-                      frames=(slice(frame) for frame in frames))
-        chunk = FrameChunk(movie=movie, df_dict={1: df}, frames_per_chunk=3)
-        fr = chunk._FrameChunk__create_frame_and_line_edges(1)
-        self.assertTrue(fr.dtype == np.dtype('uint64'))
-        np.testing.assert_equal(fr, [0, 10, 20, 30, 80, 90, 100, 110, 160, 170, 180, 190])
+    def test_line_edges_single_chunk(self):
+        li = self.chunk_single._FrameChunk__create_line_edges()
+        lines = np.arange(0, 1000, 10)
+        lines = np.r_[lines, 991]
+        np.testing.assert_equal(li, lines)
+
+    def test_line_edges_multi_chunk(self):
+        sl = pd.IndexSlice[slice(1), slice(100, 400)]
+        movie = Movie(self.df, self.lines, outputs={'memory': True},
+                      line_delta=int(self.lines.diff().mean()), fill_frac=100., bidir=True,
+                      data_shape=(len(self.frames), self.x, self.y), frames=self.frames,
+                      frame_slices=(slice(frame) for frame in self.frames), frames_per_chunk=4, )
+        chunk_multi = FrameChunk(movie=movie, df_dict={1: self.df.loc[sl, :]}, frames=self.frames,
+                                 lines=self.lines.loc[slice(100, 400)], frames_per_chunk=4, )
+        li = chunk_multi._FrameChunk__create_line_edges()
+        lines = np.arange(100, 500, 10)
+        lines = np.r_[lines, 491]
+        np.testing.assert_equal(li, lines)
 
     def test_col_edges_single_frame(self):
         cr = self.chunk_single._FrameChunk__create_col_edges(1)
@@ -104,8 +116,9 @@ class TestFrameChunk(TestCase):
 
     def test_linspace_along_sine_100_pix_z(self):
         movie_for_sine = Movie(self.df, self.lines, data_shape=(1, 512, 512, 100),
-                               frames=(1,))
-        chunk = FrameChunk(movie_for_sine, self.df_dict, frames_per_chunk=1)
+                               frame_slices=(1,), frames=self.frames)
+        chunk = FrameChunk(movie_for_sine, self.df_dict, frames_per_chunk=1,
+                           frames=self.frames, lines=self.lines)
         sin = chunk._FrameChunk__linspace_along_sine()
         true = np.array([-9.99995030e-01, -9.80000436e-01, -9.60000408e-01, -9.40001149e-01,
                          -9.20001249e-01, -9.00001813e-01, -8.80000700e-01, -8.60002042e-01,

@@ -94,23 +94,6 @@ class Movie(object):
         self.__print_outputs()
         print("Movie object created, analysis done.")
 
-    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
-        """
-        Receives a slice object and slices the DataFrame accordingly -
-        once per channel. The returned dictionary has a key for each channel.
-        """
-        slice_dict = {}
-        idx_slice = pd.IndexSlice
-        for chan in range(1, self.num_of_channels + 1):
-            slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
-        frames = self.frames.loc[frame_chunk]
-        num_of_frames = len(frames)
-        lines = self.lines.loc[frame_chunk]
-        if len(lines) > self.x_pixels * num_of_frames:
-            warnings.warn(f"More-than-necessary line signals in the frame of chunk {frame_chunk}.")
-        lines = lines.iloc[:self.x_pixels*num_of_frames]
-        return slice_dict, num_of_frames, frames, lines
-
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
         """
         Based on the "outputs" variable, decide which outputs to generate.
@@ -161,9 +144,8 @@ class Movie(object):
                   unit="frame", leave=False)
         for idx, frame_chunk in enumerate(self.frame_slices):
             sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
-            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict,
-                               frames_per_chunk=num_of_frames, frames=frames,
-                               lines=lines)
+            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict, frames_per_chunk=num_of_frames,
+                               frames=frames, lines=lines, )
             hist_dict = chunk.create_hist()
             for func in funcs_during:
                 for chan, (hist, _) in hist_dict.items():
@@ -179,6 +161,23 @@ class Movie(object):
         #         data_of_vol.hist, data_of_vol.edges = vol.create_hist()
         #         for func in funcs_during:
         #             func(data=data_of_vol.hist, channel=chan, vol_num=idx)
+
+    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
+        """
+        Receives a slice object and slices the DataFrame accordingly -
+        once per channel. The returned dictionary has a key for each channel.
+        """
+        slice_dict = {}
+        idx_slice = pd.IndexSlice
+        for chan in range(1, self.num_of_channels + 1):
+            slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
+        frames = self.frames.loc[frame_chunk]
+        num_of_frames = len(frames)
+        lines = self.lines.loc[frame_chunk]
+        if len(lines) > self.x_pixels * num_of_frames:
+            warnings.warn(f"More-than-necessary line signals in the frame of chunk {frame_chunk}.")
+        lines = lines.iloc[:self.x_pixels*num_of_frames]
+        return slice_dict, num_of_frames, frames, lines
 
     def __validate_df_indices(self):
         """
