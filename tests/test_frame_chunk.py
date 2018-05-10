@@ -3,7 +3,7 @@ from collections import namedtuple
 from pprint import pprint
 
 from pysight.nd_hist_generator.frame_chunk import *
-from pysight.nd_hist_generator.movie_tools import *
+from pysight.nd_hist_generator.movie import *
 
 
 def gen_data_df(frame_num=10, line_num=100, end=1000, channels=2):

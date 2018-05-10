@@ -1,6 +1,6 @@
 import unittest
 
-from pysight.nd_hist_generator.allocation_tools import *
+from pysight.nd_hist_generator.allocation import *
 
 
 class TestAllocation(unittest.TestCase):

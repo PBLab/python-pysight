@@ -5,7 +5,7 @@ __author__ = Hagai Hargil
 import unittest
 import numpy as np
 import pandas as pd
-from pysight.nd_hist_generator.tag_tools_v2 import TagPeriodVerifier, TagPhaseAllocator, \
+from pysight.nd_hist_generator.tag_lens import TagPeriodVerifier, TagPhaseAllocator, \
     TagPipeline, numba_digitize
 
 class TestTagPipeline(unittest.TestCase):

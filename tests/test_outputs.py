@@ -3,7 +3,7 @@ __author__ = Hagai Hargil
 """
 
 from unittest import TestCase
-from pysight.nd_hist_generator.output_tools import *
+from pysight.nd_hist_generator.outputs import *
 from os import sep
 
 

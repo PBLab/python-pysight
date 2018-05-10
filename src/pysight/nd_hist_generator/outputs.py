@@ -4,7 +4,7 @@ __author__ = Hagai Hargil
 
 import attr
 from attr.validators import instance_of
-from pysight.nd_hist_generator.movie_tools import trunc_end_of_file
+from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
 import warnings
 import h5py_cache

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from pysight.nd_hist_generator.movie_tools import *
+from pysight.nd_hist_generator.movie import *
 from pysight.nd_hist_generator.volume_gen import *
 import pandas as pd
 import numpy as np

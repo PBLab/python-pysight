@@ -16,13 +16,13 @@ colorama.init()
 
 from pysight.ascii_list_file_parser.fileIO_tools import FileIO
 from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
-from pysight.nd_hist_generator.allocation_tools import Allocate
-from pysight.nd_hist_generator.movie_tools import Movie
+from pysight.nd_hist_generator.allocation import Allocate
+from pysight.nd_hist_generator.movie import Movie
 from pysight.ascii_list_file_parser import timepatch_switch
-from pysight.nd_hist_generator.output_tools import OutputParser
-from pysight.nd_hist_generator.gating_tools import GatedDetection
-from pysight.nd_hist_generator.photon_df_tools import PhotonDF
-from pysight.nd_hist_generator.tag_bits_tools import ParseTAGBits
+from pysight.nd_hist_generator.outputs import OutputParser
+from pysight.nd_hist_generator.gating import GatedDetection
+from pysight.nd_hist_generator.photon_df import PhotonDF
+from pysight.nd_hist_generator.tag_bits import ParseTAGBits
 from pysight.ascii_list_file_parser.distribute_data import DistributeData
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
 from pysight.tkinter_gui_multiscaler import GuiAppLst

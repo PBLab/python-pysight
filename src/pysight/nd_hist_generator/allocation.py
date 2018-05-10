@@ -9,7 +9,7 @@ from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks_cwt
 
-from pysight.nd_hist_generator.tag_tools_v2 import TagPipeline
+from pysight.nd_hist_generator.tag_lens import TagPipeline
 
 
 @attr.s(slots=True)
