@@ -5,11 +5,11 @@ import pandas as pd
 import numpy as np
 import attr
 from typing import Dict, Tuple, List
-from numba import jit, int64, uint64
-from pysight.nd_hist_generator.tag_tools_v2 import TagPipeline
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks_cwt
+
+from pysight.nd_hist_generator.tag_tools_v2 import TagPipeline
 
 
 @attr.s(slots=True)
@@ -19,6 +19,7 @@ class Allocate(object):
     """
     # TODO: Variable documentation
     df_photons         = attr.ib(validator=instance_of(pd.DataFrame))
+    dict_of_data       = attr.ib(validator=instance_of(dict))
     laser_freq         = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth           = attr.ib(default=800e-12, validator=instance_of(float))
     bidir              = attr.ib(default=False, validator=instance_of(bool))
@@ -29,7 +30,6 @@ class Allocate(object):
     flim               = attr.ib(default=False, validator=instance_of(bool))
     exp_params         = attr.ib(default={}, validator=instance_of(dict))
     censor             = attr.ib(default=False, validator=instance_of(bool))
-    dict_of_data       = attr.ib(default={}, validator=instance_of(dict))
     tag_interp_ok      = attr.ib(default=False, validator=instance_of(bool))
     tag_to_phase       = attr.ib(default=True, validator=instance_of(bool))
     tag_offset         = attr.ib(default=0, validator=instance_of(int))
@@ -52,6 +52,8 @@ class Allocate(object):
             self.dict_of_data['Laser'] = 0
             # if self.use_sweeps:
             #     out = self.train_dataset()
+        self.__reindex_dict_of_data()
+
         print('Relative times calculated. Creating Movie object...')
 
     @property
@@ -69,8 +71,8 @@ class Allocate(object):
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
-            sorted_indices = np.searchsorted(self.dict_of_data[key].loc[:, 'abs_time'].values,
-                                             self.df_photons.loc[:, 'abs_time'].values) - 1
+            sorted_indices = np.digitize(self.df_photons.loc[:, 'abs_time'].values,
+                                         self.dict_of_data[key].loc[:, 'abs_time'].values) - 1
             self.df_photons[key] = self.dict_of_data[key].iloc[sorted_indices, 0].values  # columns 0 is abs_time,
             # but this .iloc method is amazingly faster than .loc
             positive_mask = sorted_indices >= 0
@@ -219,17 +221,18 @@ class Allocate(object):
             pass
         self.df_photons = self.df_photons.loc[self.df_photons.loc[:, 'time_rel_line'] >= 0, :]
 
-
-@jit(nopython=True, cache=True)
-def numba_sorted(arr: np.array) -> np.array:
-    """
-    Sort an array with Numba. CURRENTLY NOT WORKING
-    """
-
-    arr.sort()
-    return arr.astype(np.uint64)
-
-@jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
-def numba_search_sorted(input_sorted, input_values):
-    """ Numba-powered searchsorted function. """
-    return np.searchsorted(input_sorted, input_values) - 1
+    def  __reindex_dict_of_data(self):
+        """
+        Add new frame indices to the Series composing ``self.dict_of_data`` for slicing later on.
+        The "Frames" indices are its values, and the "Lines" indices are the corresponding frames.
+        """
+        # Frames
+        self.dict_of_data['Frames'] = pd.Series(self.dict_of_data['Frames'].abs_time.values,
+                                                index=self.dict_of_data['Frames'].abs_time.values)
+        # Lines
+        lines = self.dict_of_data['Lines'].abs_time.values
+        sorted_indices = np.digitize(lines, self.dict_of_data['Frames'].values) - 1
+        positive_mask = sorted_indices >= 0
+        lines = lines[positive_mask].copy()
+        sorted_indices = sorted_indices[positive_mask]
+        self.dict_of_data['Lines'] = pd.Series(lines, index=self.dict_of_data['Frames'].iloc[sorted_indices].values)

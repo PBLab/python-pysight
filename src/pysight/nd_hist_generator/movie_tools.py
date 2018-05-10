@@ -30,7 +30,8 @@ class Movie(object):
     """
     data                = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     lines               = attr.ib(validator=instance_of(pd.Series), repr=False)
-    frames              = attr.ib()  # generator of frame slices
+    frame_slices        = attr.ib(repr=False)  # generator of frame slices from VolumeGenerator
+    frames              = attr.ib(validator=instance_of(pd.Series), repr=False)
     reprate             = attr.ib(default=80e6, validator=instance_of(float))
     name                = attr.ib(default='Movie', validator=instance_of(str),
                                   convert=trunc_end_of_file)
@@ -92,25 +93,7 @@ class Movie(object):
         self.__print_outputs()
         print("Movie object created, analysis done.")
 
-    def gen_of_volumes(self, channel_num: int) -> Generator:
-        """
-        Populate the deque containing the volumes as a generator.
-        Creates a list for each channel in the data. Channels start with 1.
-        """
-
-        list_of_frames: List[int] = self.list_of_volume_times  # saves a bit of computation
-        for idx, current_time in enumerate(list_of_frames[:-1]):  # populate deque with frames
-            cur_data = self.data.xs(key=(current_time, channel_num), level=('Frames', 'Channel'), drop_level=False)
-            cur_lines = self.lines[(self.lines >= current_time) & (self.lines <list_of_frames[idx + 1])]
-            yield Volume(data=cur_data, lines=cur_lines, x_pixels=self.x_pixels, y_pixels=self.y_pixels,
-                         z_pixels=self.z_pixels, number=idx, abs_start_time=current_time,
-                         reprate=self.reprate, binwidth=self.binwidth, empty=True if cur_data.empty else False,
-                         end_time=(list_of_frames[idx + 1] - list_of_frames[idx]),
-                         bidir=self.bidir, fill_frac=self.fill_frac, censor=self.censor,
-                         line_delta=self.line_delta, use_sweeps=self.use_sweeps,
-                         tag_as_phase=self.tag_as_phase, tag_freq=self.tag_freq, mirror_phase=self.mirror_phase)
-
-    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int]:
+    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
         """
         Receives a slice object and slices the DataFrame accordingly -
         once per channel. The returned dictionary has a key for each channel.
@@ -119,9 +102,10 @@ class Movie(object):
         idx_slice = pd.IndexSlice
         for chan in range(1, self.num_of_channels + 1):
             slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
-        num_of_frames = len(np.unique(slice_dict[1].index.get_level_values('Frames')))
-        return slice_dict, num_of_frames
-
+        frames = self.frames.loc[frame_chunk]
+        num_of_frames = len(frames)
+        lines = self.lines.loc[frame_chunk]
+        return slice_dict, num_of_frames, frames, lines
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
         """
@@ -171,10 +155,11 @@ class Movie(object):
         # Execute the appended functions after generating each volume
         tq = tqdm(total=self.num_of_frame_chunks, desc=f"Processing frames...",
                   unit="frame", leave=False)
-        for idx, frame_chunk in enumerate(self.frames):
-            sliced_df_dict, num_of_frames = self.__slice_df(frame_chunk)
+        for idx, frame_chunk in enumerate(self.frame_slices):
+            sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
             chunk = FrameChunk(movie=self, df_dict=sliced_df_dict,
-                               frames_per_chunk=num_of_frames)
+                               frames_per_chunk=num_of_frames, frames=frames,
+                               lines=lines)
             hist_dict = chunk.create_hist()
             for func in funcs_during:
                 for chan, (hist, _) in hist_dict.items():

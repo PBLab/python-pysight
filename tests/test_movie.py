@@ -10,6 +10,7 @@ def gen_data_df(frame_num=10, line_num=1000, end=100000):
     Mock data for tests.
     Returns:
         df - The full DataFrame
+        frames only
         lines only
         x pixels
         y pixels
@@ -21,6 +22,7 @@ def gen_data_df(frame_num=10, line_num=1000, end=100000):
     ones_lines = np.ones((1, int(len(photons) / len(lines))),
                          dtype=np.uint64)
     frames = np.linspace(0, end, num=frame_num, dtype=np.uint64, endpoint=False)
+    frames_ser = pd.Series(frames)
     ones_frames = np.ones((1, int(len(photons) / len(frames))),
                           dtype=np.uint64)
     lines = (np.atleast_2d(lines).T @ ones_lines).ravel()
@@ -33,18 +35,19 @@ def gen_data_df(frame_num=10, line_num=1000, end=100000):
                        'Channel': channel})
     df.set_index(['Channel', 'Frames', 'Lines'], drop=True, inplace=True)
     y_pix = x_pix
-    return df, pd.Series(np.unique(lines)), x_pix, y_pix
+    return df, frames_ser, pd.Series(np.unique(lines)), x_pix, y_pix
 
 
 class TestMovies(TestCase):
     frame_num = 10
-    end = 100000
-    data, lines, x_pix, y_pix = gen_data_df(frame_num=frame_num, end=end)
+    end = 1000
+    line_num = 100
+    data, frames, lines, x_pix, y_pix = gen_data_df(frame_num=frame_num, line_num=line_num, end=end)
     data_shape = (frame_num, x_pix, y_pix)
-    fr = VolumeGenerator(data, data_shape).create_frame_slices()
-    movie = Movie(data, lines, data_shape=data_shape,
+    fr = VolumeGenerator(frames, data_shape).create_frame_slices()
+    movie = Movie(data=data, lines=lines, data_shape=data_shape,
                   outputs={'memory': True}, line_delta=int(lines.diff().mean()),
-                  fill_frac=100., bidir=True, frames=fr)
+                  fill_frac=100., bidir=True, frame_slices=fr, frames=frames)
     movie.run()
 
     def test_all_pipeline_basic(self):

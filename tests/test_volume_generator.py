@@ -4,23 +4,24 @@ __author__ = Hagai Har-Gil
 from unittest import TestCase
 import numpy as np
 import pandas as pd
+from typing import Tuple
 
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 
 
-def gen_test_df(frame_num=10, end=1000000) -> pd.DataFrame:
+def gen_test_df(frame_num=10, end=1000000) -> Tuple[pd.DataFrame, pd.Series]:
     photons = np.arange(0, end, dtype=np.uint64)
     frames = np.linspace(0, end, num=frame_num, dtype=np.uint64,
                          endpoint=False)
     ones_frames = np.ones((1, int(len(photons) / len(frames))),
                           dtype=np.uint64)
-    frames_df = pd.DataFrame(frames, columns=['abs_time'])
+    frames_ser = pd.Series(frames)
     frames = (np.atleast_2d(frames).T @ ones_frames).ravel()
     assert len(frames) == len(photons)
     df = pd.DataFrame({'time_rel_frame': photons - frames,
                        'Frames': frames})
     df.set_index(['Frames'], drop=True, inplace=True)
-    return df, frames_df
+    return df, frames_ser
 
 
 class TestVolumeGenerator(TestCase):
@@ -64,8 +65,8 @@ class TestVolumeGenerator(TestCase):
         self.assertSequenceEqual(list(vol_times), [slice(0, 0)])
 
     def test_grouper(self):
-        volgen = VolumeGenerator(pd.DataFrame(), (1,))
-        volgen.frames = pd.DataFrame([10, 20, 30, 40], columns=['abs_time'], dtype=np.uint64)
+        volgen = VolumeGenerator(pd.Series(), (1,))
+        volgen.frames = pd.Series([10, 20, 30, 40], dtype=np.uint64)
         volgen.chunk_size = 3
         grouped = volgen._VolumeGenerator__grouper()
         self.assertSequenceEqual(list(grouped), [(10, 20, 30), (40, np.nan, np.nan)])

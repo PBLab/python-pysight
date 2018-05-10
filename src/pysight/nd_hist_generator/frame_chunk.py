@@ -14,20 +14,19 @@ class FrameChunk:
     """
     movie = attr.ib()
     df_dict = attr.ib(validator=instance_of(dict), repr=False)
+    frames = attr.ib()
+    lines = attr.ib()
     frames_per_chunk = attr.ib(validator=instance_of(int))
     hist_dict = attr.ib(init=False)
     end_time = attr.ib(init=False)
-    frames = attr.ib(init=False)
 
     def __getattr__(self, item):
         return getattr(self.movie, item)
 
     def __attrs_post_init__(self):
-        self.frames = self.df_dict[1].index.get_level_values('Frames')
-        frames_unique = np.unique(self.frames)
-        if len(frames_unique) > 1:
-            dif = np.diff(frames_unique).mean()
-            self.end_time = frames_unique[-1] + dif
+        if len(self.frames) > 1:
+            dif = np.diff(self.frames).mean()
+            self.end_time = self.frames[-1] + dif
         else:
             self.end_time = self.frames[0] + 1
 
