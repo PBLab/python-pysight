@@ -30,7 +30,8 @@ class TestCensorTools(unittest.TestCase):
                              columns=['abs_time', 'edge', 'sweep', 'time_rel_sweep'])
     }
     dict_of_data['PMT1'].time_rel_pulse = dict_of_data['PMT1'].time_rel_pulse.astype(np.uint8)
-    movie = Movie(data=dict_of_data['PMT1'], lines=dict_of_data['Lines'].abs_time, frames=1)
+    movie = Movie(data=dict_of_data['PMT1'], lines=dict_of_data['Lines'].abs_time, frames=pd.Series([]),
+                  frame_slices=())
 
     def test_allocate_some_photons(self):
         censored = CensoredVolume(df=self.df, vol=Volume(data=self.dict_of_data['PMT1'],

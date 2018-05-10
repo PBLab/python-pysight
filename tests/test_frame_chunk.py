@@ -100,12 +100,12 @@ class TestFrameChunk(TestCase):
         np.testing.assert_equal(li, lines)
 
     def test_col_edges_single_frame(self):
-        cr = self.chunk_single._FrameChunk__create_col_edges(1)
+        cr = self.chunk_single._FrameChunk__create_col_edges()
         cols = np.arange(11)
         np.testing.assert_equal(cr, cols)
 
     def test_col_edges_multi_frame(self):
-        cr = self.chunk_multi._FrameChunk__create_col_edges(1)
+        cr = self.chunk_multi._FrameChunk__create_col_edges()
         cols = np.arange(11)
         self.assertSequenceEqual(cr.tolist(), cols.tolist())
 

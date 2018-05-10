@@ -155,12 +155,6 @@ class Movie(object):
 
         tq.close()
         [func() for func in funcs_end]
-        #
-        # for chan in range(1, self.num_of_channels + 1):
-        #     for idx, vol in enumerate(self.gen_of_volumes(channel_num=chan)):
-        #         data_of_vol.hist, data_of_vol.edges = vol.create_hist()
-        #         for func in funcs_during:
-        #             func(data=data_of_vol.hist, channel=chan, vol_num=idx)
 
     def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
         """

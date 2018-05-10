@@ -110,17 +110,17 @@ def main_data_readout(gui):
     data_for_movie = gated.data if gui.gating else analyzed_struct.df_photons
 
     # Create a movie object
-    volume_chunks = VolumeGenerator(data=analyzed_struct.dict_of_data['Frames'],
+    volume_chunks = VolumeGenerator(frames=analyzed_struct.dict_of_data['Frames'],
                                     data_shape=outputs.data_shape)
     frame_slices = volume_chunks.create_frame_slices()
 
-    final_movie = Movie(data=data_for_movie, frames=analyzed_struct.dict_of_data['Frames'].abs_time,
+    final_movie = Movie(data=data_for_movie, frames=analyzed_struct.dict_of_data['Frames'],
                         frame_slices=frame_slices, num_of_frame_chunks=volume_chunks.num_of_chunks,
                         reprate=float(gui.reprate), name=gui.filename, data_shape=outputs.data_shape,
                         binwidth=float(gui.binwidth), bidir=gui.bidir,
                         fill_frac=gui.fill_frac if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
                         outputs=outputs.outputs, censor=gui.censor, mirror_phase=gui.phase,
-                        lines=analyzed_struct.dict_of_data['Lines'].abs_time,
+                        lines=analyzed_struct.dict_of_data['Lines'],
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim,
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines,

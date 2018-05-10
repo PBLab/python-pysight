@@ -2,7 +2,7 @@ import attr
 from attr.validators import instance_of
 import numpy as np
 import pandas as pd
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 
 @attr.s(slots=True)
@@ -30,20 +30,22 @@ class FrameChunk:
         else:
             self.end_time = self.frames.iloc[0] + 1
 
-    def create_hist(self) -> Dict[int, np.ndarray]:
+    def create_hist(self) -> Dict[int, Tuple[np.ndarray]]:
         """
         Main method to create the histogram of data. Assigns each event
         in the dataframe to its correct location, for each channel.
-        :returns:
-            :hist np.ndarray: n-dimensional histogram
-            :edges tuple: arrays that represent edges
+
+        Returns:
+        --------
+        ``Dict[int, np.ndarray]`` A dictionary with its keys being the spectral channels
+        of the data, and the value is a tuple of the histogrammed data and the edges.
         """
-        self.hist_dict: Dict[int, np.ndarray] = {}
+        self.hist_dict: Dict[int, Tuple[np.ndarray]] = {}
         for chan in self.df_dict:
             list_of_edges = self.__create_hist_edges(chan)
             data_columns = []
-            # data_columns.append(self.frames)
-            data_columns.append(self.df_dict[chan]['abs_time'].values)
+            data_columns.append(self.df_dict[chan].index.get_level_values('Frames'))
+            data_columns.append(self.df_dict[chan].index.get_level_values('Lines'))
             data_columns.append(self.df_dict[chan]['time_rel_line'].values)
             try:
                 data_columns.append(self.df_dict[chan]['Phase'].values)
@@ -55,17 +57,14 @@ class FrameChunk:
                 pass
 
             hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            # hist = np.vstack((hist, np.zeros(((1,) +  self.data_shape[2:]))))
-            idx_to_take = np.ones_like(hist, dtype=np.bool)
-            idx_to_take[np.arange(start=self.x_pixels, stop=self.x_pixels*self.frames_per_chunk, step=self.x_pixels+1), :] = False
-            data = hist[idx_to_take].astype(np.uint8).reshape(((self.frames_per_chunk, ) + self.data_shape[1:]))
+            data = hist.astype(np.uint8).reshape(((self.frames_per_chunk, ) + self.data_shape[1:]))
 
             if self.bidir:
                 data[:, 1::2, ...] = np.fliplr(data[:, 1::2, ...])
             if self.censor:
                 data = self.__censor_correction(data)
 
-            self.hist_dict[chan] = data, edges
+            self.hist_dict[chan] = (data, edges)
         return self.hist_dict
 
     def __create_hist_edges(self, chan) -> List[np.ndarray]:
@@ -84,7 +83,7 @@ class FrameChunk:
         edges = []
         edges.append(self.__create_frame_edges())
         edges.append(self.__create_line_edges())
-        edges.append(self.__create_col_edges(chan))
+        edges.append(self.__create_col_edges())
 
         if 'Phase' in self.df_dict[chan].columns:
             edges.append(self.__linspace_along_sine())
@@ -105,13 +104,13 @@ class FrameChunk:
         return frames
 
     def __create_line_edges(self) -> np.ndarray:
+        """ Takes existing lines and turns them into bin edges. """
 
-        assert self.lines.shape[0] == self.x_pixels * self.frames_per_chunk
-        # Add a closing line as the final edge
+        assert self.lines.shape[0] <= self.x_pixels * self.frames_per_chunk  # last chunk can have less frames
         all_lines = np.hstack((self.lines.values, self.lines.values[-1] + np.uint64(1)))
         return all_lines
 
-    def __create_col_edges(self, chan) -> np.ndarray:
+    def __create_col_edges(self) -> np.ndarray:
         if self.x_pixels == 1:
             return np.linspace(0, self.end_time, num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
 
