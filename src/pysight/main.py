@@ -14,8 +14,8 @@ import pickle
 import matplotlib.pyplot as plt
 colorama.init()
 
-from pysight.ascii_list_file_parser.fileIO_tools import FileIO
-from pysight.ascii_list_file_parser.tabulation_tools import Tabulate
+from pysight.ascii_list_file_parser.file_io import FileIO
+from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
 from pysight.ascii_list_file_parser import timepatch_switch

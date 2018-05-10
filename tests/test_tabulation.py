@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from pysight.ascii_list_file_parser.tabulation_tools import *
+from pysight.ascii_list_file_parser.tabulation import *
 
 
 class TestTabulation(unittest.TestCase):

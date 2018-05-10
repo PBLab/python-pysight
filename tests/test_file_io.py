@@ -2,7 +2,7 @@
 __author__ = Hagai Hargil
 """
 import unittest
-from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser.file_io import FileIO
 import pathlib
 
 

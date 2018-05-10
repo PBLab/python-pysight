@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from os import sep
-from pysight.ascii_list_file_parser.fileIO_tools import FileIO
+from pysight.ascii_list_file_parser.file_io import FileIO
 from pysight.ascii_list_file_parser import timepatch_switch
 
 
