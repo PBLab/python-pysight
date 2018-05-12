@@ -82,8 +82,7 @@ class TestFrameChunk(TestCase):
 
     def test_line_edges_single_chunk(self):
         li = self.chunk_single._FrameChunk__create_line_edges()
-        lines = np.arange(0, 1000, 10)
-        lines = np.r_[lines, 991]
+        lines = np.arange(0, 1010, 10)
         np.testing.assert_equal(li, lines)
 
     def test_line_edges_multi_chunk(self):
@@ -95,8 +94,7 @@ class TestFrameChunk(TestCase):
         chunk_multi = FrameChunk(movie=movie, df_dict={1: self.df.loc[sl, :]}, frames=self.frames,
                                  lines=self.lines.loc[slice(100, 400)], frames_per_chunk=4, )
         li = chunk_multi._FrameChunk__create_line_edges()
-        lines = np.arange(100, 500, 10)
-        lines = np.r_[lines, 491]
+        lines = np.arange(100, 510, 10)
         np.testing.assert_equal(li, lines)
 
     def test_col_edges_single_frame(self):

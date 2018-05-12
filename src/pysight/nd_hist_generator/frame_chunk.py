@@ -44,8 +44,7 @@ class FrameChunk:
         for chan in self.df_dict:
             list_of_edges = self.__create_hist_edges(chan)
             data_columns = []
-            data_columns.append(self.df_dict[chan].index.get_level_values('Frames'))
-            data_columns.append(self.df_dict[chan].index.get_level_values('Lines'))
+            data_columns.append(self.df_dict[chan]['abs_time'].values)
             data_columns.append(self.df_dict[chan]['time_rel_line'].values)
             try:
                 data_columns.append(self.df_dict[chan]['Phase'].values)
@@ -57,14 +56,14 @@ class FrameChunk:
                 pass
 
             hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            data = hist.astype(np.uint8).reshape(((self.frames_per_chunk, ) + self.data_shape[1:]))
+            hist = hist.astype(np.uint8).reshape((self.frames_per_chunk,) + self.data_shape[1:])
 
             if self.bidir:
-                data[:, 1::2, ...] = np.fliplr(data[:, 1::2, ...])
+                hist[:, 1::2, ...] = np.fliplr(hist[:, 1::2, ...])
             if self.censor:
-                data = self.__censor_correction(data)
+                hist = self.__censor_correction(hist)
 
-            self.hist_dict[chan] = (data, edges)
+            self.hist_dict[chan] = hist, edges
         return self.hist_dict
 
     def __create_hist_edges(self, chan) -> List[np.ndarray]:
@@ -81,7 +80,6 @@ class FrameChunk:
         ``list`` of ``np.ndarray``, one for each dimension
         """
         edges = []
-        edges.append(self.__create_frame_edges())
         edges.append(self.__create_line_edges())
         edges.append(self.__create_col_edges())
 
@@ -107,7 +105,8 @@ class FrameChunk:
         """ Takes existing lines and turns them into bin edges. """
 
         assert self.lines.shape[0] <= self.x_pixels * self.frames_per_chunk  # last chunk can have less frames
-        all_lines = np.hstack((self.lines.values, self.lines.values[-1] + np.uint64(1)))
+        last_line = np.uint64(self.lines.diff().mean())
+        all_lines = np.hstack((self.lines.values, self.lines.values[-1] + last_line))
         return all_lines
 
     def __create_col_edges(self) -> np.ndarray:

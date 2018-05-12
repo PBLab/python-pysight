@@ -53,8 +53,7 @@ class TestMovies(TestCase):
     movie.run()
 
     def test_all_pipeline_basic(self):
-        self.assertFalse(np.all(self.movie.stack[1].ravel() == np.ones((self.end,), dtype=np.uint8)))
-        ### SHOULD NOT FAIL, BUT DOES DUE TO HISTOGRAMDD BUG ###
+        self.assertTrue(np.all(self.movie.stack[1].ravel() == np.ones((self.end,), dtype=np.uint8)))
 
     def test_baseline_outputs(self):
         during, end = self.movie._Movie__determine_outputs()
@@ -68,18 +67,18 @@ class TestMovies(TestCase):
         sl = slice(0, 23000)
         movie = Movie(self.data, self.lines, data_shape=self.data_shape,
                       outputs={'memory': True}, line_delta=int(self.lines.diff().mean()),
-                      fill_frac=100., bidir=True,
-                      frames=(slice(1) for n in range(2)))
+                      fill_frac=100., bidir=True, frames=self.frames,
+                      frame_slices=(slice(1) for n in range(2)))
         di = movie._Movie__slice_df(sl)
         self.assertTrue(1 in di[0].keys())
-        self.assertSequenceEqual((di[0][1].shape, di[1]), ((30000, 2), 3))
+        self.assertSequenceEqual((di[0][1].shape, di[1]), ((1000, 2), 10))
 
     def test_single_slice_df(self):
         sl = slice(0, 0)
         movie = Movie(self.data, self.lines, data_shape=self.data_shape,
                       outputs={'memory': True}, line_delta=int(self.lines.diff().mean()),
-                      fill_frac=100., bidir=True,
-                      frames=(slice(1) for n in range(2)))
+                      fill_frac=100., bidir=True, frames=self.frames,
+                      frame_slices=(slice(1) for n in range(2)))
         di = movie._Movie__slice_df(sl)
         self.assertTrue(1 in di[0].keys())
-        self.assertSequenceEqual((di[0][1].shape, di[1]), ((10000, 2), 1))
+        self.assertSequenceEqual((di[0][1].shape, di[1]), ((100, 2), 1))
