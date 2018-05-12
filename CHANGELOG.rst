@@ -723,8 +723,18 @@ Changelog
 
 * Bug fix in ``setup.py``.
 
-0.8.2 (2018-04-XX)
+0.8.2 (2018-05-12)
 ------------------
 
 * Unified configuration file keyword to be ``cfg_file``.
+
+* Dramatically increased performance to due faster I/O.
+
+* Refactored the ``Movie`` class, changing the ``Volume`` class with a ``FrameChunk`` class.
+
+* Added tests.
+
+* Updated docs.
+
+* Changed many internal file names.
 
