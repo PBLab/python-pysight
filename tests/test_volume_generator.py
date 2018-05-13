@@ -64,10 +64,26 @@ class TestVolumeGenerator(TestCase):
         vol_times = volgen.create_frame_slices()
         self.assertSequenceEqual(list(vol_times), [slice(0, 0)])
 
+    def test_single_chunk(self):
+        _, frames = gen_test_df(10, end=100)
+        shape = (10, 800, 800, 200)
+        volgen = VolumeGenerator(frames, shape)
+        vol_times = volgen.create_frame_slices()
+        self.assertSequenceEqual(list(vol_times), [slice(0, 10, None), slice(10, 20, None), slice(20, 30, None),
+                                                   slice(30, 40, None), slice(40, 50, None), slice(50, 60, None),
+                                                   slice(60, 70, None), slice(70, 80, None), slice(80, 90, None)])
+
     def test_grouper(self):
         volgen = VolumeGenerator(pd.Series(), (1,))
         volgen.frames = pd.Series([10, 20, 30, 40], dtype=np.uint64)
-        volgen.frame_per_chunk = 3
+        volgen.frames_per_chunk = 3
         grouped = volgen._VolumeGenerator__grouper()
         self.assertSequenceEqual(list(grouped), [(10, 20, 30), (40, np.nan, np.nan)])
+
+    def test_grouper_single_chunk(self):
+        volgen = VolumeGenerator(pd.Series(), (1,))
+        volgen.frames = pd.Series([10, 20, 30, 40], dtype=np.uint64)
+        volgen.frames_per_chunk = 1
+        grouped = volgen._VolumeGenerator__grouper()
+        self.assertSequenceEqual(list(grouped), [(10,), (20,), (30,), (40,)])
 

@@ -738,3 +738,7 @@ Changelog
 
 * Changed many internal file names.
 
+0.8.3 (2018-05-13)
+------------------
+
+* Fixed bug in ``VolumeGenerator`` when having a single frame slice.

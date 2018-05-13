@@ -33,11 +33,11 @@
     ],
     "fill_frac": [
         "PY_VAR8",
-        72.0
+        73.0
     ],
     "bidir": [
         "PY_VAR9",
-        false
+        true
     ],
     "keep_unidir": [
         "PY_VAR10",
@@ -61,19 +61,19 @@
     ],
     "frame_delay": [
         "PY_VAR15",
-        0.001
+        1e-05
     ],
     "filename": [
         "PY_VAR16",
-        "C:/Users/Hagai/Documents/GitHub/python-pysight/start_pmt1_stop1_lines_stop2_tag_820nm_unidir_189khz_amplitude28p_power_60p_300umdeep_1xzoom_005.lst"
+        "X:/Lior/Multiscaler data/2018-05-10/Fixed_sample_LPT_800px_4p5Z_186kHz_62p_180d_phase_70duty_cycle_bidir_ascii_028_FOV2_100um_deeper-003.lst"
     ],
     "input_start": [
         "PY_VAR17",
-        "PMT1"
+        "Lines"
     ],
     "input_stop1": [
         "PY_VAR18",
-        "Lines"
+        "PMT1"
     ],
     "input_stop2": [
         "PY_VAR19",
@@ -97,15 +97,15 @@
     ],
     "x_pixels": [
         "PY_VAR24",
-        512
+        800
     ],
     "y_pixels": [
         "PY_VAR25",
-        512
+        800
     ],
     "z_pixels": [
         "PY_VAR26",
-        13
+        110
     ],
     "tag_bits": [
         "PY_VAR27",
@@ -153,6 +153,6 @@
     ],
     "save_as": [
         "PY_VAR38",
-        "tag"
+        "tag2"
     ]
 }

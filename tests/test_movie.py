@@ -49,7 +49,7 @@ class TestMovies(TestCase):
     movie = Movie(data=data, lines=lines, data_shape=data_shape,
                   outputs={'memory': True}, line_delta=int(lines.diff().mean()),
                   fill_frac=100., bidir=True, frame_slices=fr, frames=frames,
-                  frames_per_chunk=volgen.frame_per_chunk)
+                  frames_per_chunk=volgen.frames_per_chunk)
     movie.run()
 
     def test_all_pipeline_basic(self):
