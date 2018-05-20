@@ -300,7 +300,8 @@ pub fn analyze_lst(fname: &str, start_of_data: usize, range: u64,
 
 }
 
-#[py::modinit(binary_lst_parser)]
+/// DOCSTRING
+#[py::modinit("binary_lst_parser")]
 fn init_mod(py: Python, m: &PyModule) -> PyResult<()> {
     #[pyfn(m, "analyze_lst")]
     fn analyze_lst_py(fname: &str, start_of_data: usize, range: u64,
@@ -308,7 +309,7 @@ fn init_mod(py: Python, m: &PyModule) -> PyResult<()> {
         -> PyResult<HashMap<u8, Vec<DataLine>>> {
 
         let out = analyze_lst(fname, start_of_data, range,
-        timepatch, channel_map, file_type).unwrap();
+           timepatch, channel_map, file_type).unwrap();
         Ok(out)
     }
     Ok(())

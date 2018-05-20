@@ -67,7 +67,7 @@ setup(
     url=r'https://github.com/PBLab/python-pysight/',
     packages=find_packages('src'),
     rust_extensions=[
-        RustExtension('hello_rust._helloworld',
+        RustExtension('src.binary_lst_parser',
                       'Cargo.toml', binding=Binding.PyO3)],
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
