@@ -15,3 +15,4 @@ h5py-cache == 1
 tqdm == 4.23
 numba == 0.38
 ansimarkup == 1.4
+setuptools-rust == 0.9
