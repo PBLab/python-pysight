@@ -1,10 +1,12 @@
 Changelog
 =========
 
-0.8.4 (2018-05-XX)
+0.8.4 (2018-05-20)
 ------------------
 
 * Pinned versions of required libraries.
+
+* Fixed bidirectional TAG stack generation.
 
 
 0.8.3 (2018-05-13)

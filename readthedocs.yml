@@ -2,6 +2,9 @@ name: PySight
 type: sphinx
 requirements_file: docs/requirements.txt
 
+build:
+    image: latest
+
 python:
-    version: 3
+    version: 3.6
     pip_install: true
