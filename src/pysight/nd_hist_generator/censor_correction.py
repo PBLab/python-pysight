@@ -5,7 +5,7 @@ import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of
-from pysight.nd_hist_generator.movie import Volume, Movie
+from pysight.nd_hist_generator.movie import Movie, FrameChunk
 from collections import deque, namedtuple
 from typing import Tuple, Union
 from numba import jit, uint8, int64
@@ -245,7 +245,7 @@ class CensorCorrection(object):
 @attr.s(slots=True)
 class CensoredVolume(object):
     df           = attr.ib(validator=instance_of(pd.DataFrame))
-    vol          = attr.ib(validator=instance_of(Volume))
+    chunk        = attr.ib(validator=instance_of(FrameChunk))
     offset       = attr.ib(validator=instance_of(int))
     binwidth     = attr.ib(default=800e-12)
     reprate      = attr.ib(default=80e6)
@@ -258,8 +258,8 @@ class CensoredVolume(object):
         """
         Bin the photons into their relative laser pulses, and count how many photons arrived due to each pulse.
         """
-        hist, _ = np.histogram(self.vol.data.loc[:, 'time_rel_frames'].values, bins=self.laser_pulses)
-        dig = np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
+        hist, _ = np.histogram(self.chunk.data.loc[:, 'time_rel_frames'].values, bins=self.laser_pulses)
+        dig = np.digitize(self.chunk.data.loc[:, 'time_rel_frames'].values,
                           bins=self.laser_pulses) - 1
         return dig, np.bincount(hist)
 
@@ -277,9 +277,9 @@ class CensoredVolume(object):
         Helper function to generate a searchsorted output of photons in laser pulses.
         """
         pulses = self.laser_pulses
-        sorted_indices: np.ndarray = np.searchsorted(pulses, self.vol.data['time_rel_frames'].values) - 1
+        sorted_indices: np.ndarray = np.searchsorted(pulses, self.movie.data['time_rel_frames'].values) - 1
         array_of_laser_starts = pulses[sorted_indices]
-        subtracted_times = self.vol.data['time_rel_frames'].values - array_of_laser_starts
+        subtracted_times = self.movie.data['time_rel_frames'].values - array_of_laser_starts
         return subtracted_times, array_of_laser_starts, sorted_indices
 
     def gen_array_of_hists(self) -> np.ndarray:
@@ -293,7 +293,7 @@ class CensoredVolume(object):
         all_pulses = 0
         all_photons = 0
 
-        hist, edges = self.vol.create_hist()
+        hist, edges = self.chunk.create_hist()
         # Create a relative timestamp to the line signal for each laser pulse
         sorted_pulses = np.searchsorted(edges[0][:-1], self.laser_pulses) - 1
         pulses = pd.DataFrame(data=self.laser_pulses[np.where(sorted_pulses >= 0)[0]], columns=['time_rel_frames'])
@@ -309,22 +309,22 @@ class CensoredVolume(object):
                                    bins=edges[0]) - 1).astype('uint16', copy=False)
         pulses.loc[:, 'bins_y'] = (np.digitize(pulses.loc[:, 'time_rel_line'].values,
                                    bins=edges[1]) - 1).astype('uint16', copy=False)
-        self.vol.data.loc[:, 'bins_x'] = (np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
+        self.chunk.data.loc[:, 'bins_x'] = (np.digitize(self.chunk.data.loc[:, 'time_rel_frames'].values,
                                           bins=edges[0]) - 1).astype('uint16', copy=False)
-        self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
+        self.chunk.data.loc[:, 'bins_y'] = (np.digitize(self.chunk.data.loc[:, 'time_rel_line'].values,
                                           bins=edges[1]) - 1).astype('uint16', copy=False)
         pulses.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
-        self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+        self.chunk.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
 
         # Go through each bin and histogram the photons there
         image_bincount = np.zeros_like(hist, dtype=object)
-        for row in range(self.vol.x_pixels):
+        for row in range(self.chunk.x_pixels):
             row_pulses = pulses.xs(key=row, level='bins_x', drop_level=False)
             assert len(row_pulses) > 0, 'Row {} contains no pulses'.format(row)
             try:
-                row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
+                row_photons = self.chunk.data.xs(key=row, level='bins_x', drop_level=False)
             except KeyError:  # no photons in row
-                for col in range(self.vol.y_pixels):
+                for col in range(self.chunk.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
                     hist = (np.histogram(np.array([]), bins=final_pulses.loc[:, 'time_rel_line'].values)[0])\
                         .astype('uint8')
@@ -335,7 +335,7 @@ class CensoredVolume(object):
                     all_photons += tot_photons
                     all_pulses += tot_pulses
             else:
-                for col in range(self.vol.y_pixels):
+                for col in range(self.movie.y_pixels):
                     final_pulses = row_pulses.xs(key=col, level='bins_y', drop_level=False)
                     assert len(final_pulses) > 0, 'Column {} in row {} contains no pulses'.format(col, row)
                     try:
@@ -370,25 +370,25 @@ class CensoredVolume(object):
         :return: np.ndarray of the same size as the original frame,
         with each bin containing a histogram.
         """
-        edges = self.vol._Volume__create_hist_edges()[0]
+        edges = self.chunk._Volume__create_hist_edges()[0]
 
-        hist_t, edges_t = self.vol.create_hist()
-        assert "time_rel_pulse" in self.vol.data.columns, \
+        hist_t, edges_t = self.chunk.create_hist()
+        assert "time_rel_pulse" in self.chunk.data.columns, \
             "No `time_rel_pulse` column in data."
 
-        self.vol.data.loc[:, 'bins_x'] = (np.digitize(self.vol.data.loc[:, 'time_rel_frames'].values,
+        self.chunk.data.loc[:, 'bins_x'] = (np.digitize(self.chunk.data.loc[:, 'time_rel_frames'].values,
                                                       bins=edges[0])-1).astype('uint16', copy=False)
-        self.vol.data.loc[:, 'bins_y'] = (np.digitize(self.vol.data.loc[:, 'time_rel_line'].values,
+        self.chunk.data.loc[:, 'bins_y'] = (np.digitize(self.chunk.data.loc[:, 'time_rel_line'].values,
                                                       bins=edges[1])-1).astype('uint16', copy=False)
-        self.vol.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
-        self.vol.data.drop(len(edges[0])-1, level='bins_x', inplace=True)
-        self.vol.data.drop(len(edges[1])-1, level='bins_y', inplace=True)
+        self.chunk.data.set_index(keys=['bins_x', 'bins_y'], inplace=True, append=True, drop=True)
+        self.chunk.data.drop(len(edges[0])-1, level='bins_x', inplace=True)
+        self.chunk.data.drop(len(edges[1])-1, level='bins_y', inplace=True)
 
         image_bincount = np.zeros((len(edges[0])-1, len(edges[1])-1), dtype=object)  # returned variable, contains hists
-        active_lines = np.unique(self.vol.data.index.get_level_values('bins_x'))
+        active_lines = np.unique(self.chunk.data.index.get_level_values('bins_x'))
         for row in active_lines:
             print("Row number: {}".format(row))
-            row_photons = self.vol.data.xs(key=row, level='bins_x', drop_level=False)
+            row_photons = self.chunk.data.xs(key=row, level='bins_x', drop_level=False)
             rel_idx = np.unique(row_photons.index.get_level_values('bins_y'))
             image_bincount[row, rel_idx] = self.__allocate_photons_to_bins(idx=rel_idx, photons=row_photons)
 

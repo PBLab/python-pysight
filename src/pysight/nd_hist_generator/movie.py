@@ -141,7 +141,7 @@ class Movie(object):
         """
         # Execute the appended functions after generating each volume
         tq = tqdm(total=self.num_of_frame_chunks, desc=f"Processing frame chunks...",
-                  unit="frame", leave=False)
+                  unit="chunk", leave=False)
         for idx, frame_chunk in enumerate(self.frame_slices):
             sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
             chunk = FrameChunk(movie=self, df_dict=sliced_df_dict, frames_per_chunk=num_of_frames,
@@ -194,7 +194,7 @@ class Movie(object):
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self) -> None:
-        """ Save the netire in-memory summed data into .hdf5 file """
+        """ Save the entire in-memory summed data into .hdf5 file """
         with h5py_cache.File(f'{self.outputs["filename"]}', 'a', chunk_cache_mem_size=self.cache_size,
                              libver='latest', w0=1) as f:
             for channel in range(1, self.num_of_channels + 1):
@@ -228,7 +228,6 @@ class Movie(object):
         Save incrementally new data to an open file on the disk
         :param data: Data to save
         :param channel: Current spectral channel of data
-        :param vol_num: Current volume
         """
         self.outputs['stack'][f'Channel {channel}'][...] = np.squeeze(data)
 
@@ -280,230 +279,6 @@ class Movie(object):
 
         plt.title(f'Channel number {channel}')
         plt.axis('off')
-
-    def show_stack(self, channel: int=1, slice_range: Iterable=range(10)) -> None:
-        """ Show the stack of given slices """
-        if 'time_rel_pulse' in self.data.columns:
-            self.__show_stack_flim(channel=channel, slice_range=slice_range)
-        else:
-            self.__show_stack_no_flim(channel=channel, slice_range=slice_range)
-
-    def __show_stack_no_flim(self, channel: int, slice_range: Iterable) -> None:
-        """ Show the slices from the generated stack """
-
-        img = None
-        for frame in slice_range:
-            print(frame, channel)
-            if None == img:
-                img = plt.imshow(self.stack[channel][frame, :, :], cmap='gray')
-            else:
-                img.set_data(self.stack[channel][frame, :, :])
-            plt.pause(0.1)
-            plt.draw()
-
-    def __show_stack_flim(self, channel: int, slice_range: Iterable) -> None:
-        """ Show the slices from the generated stack that contains FLIM data """
-
-        for frame in slice_range:
-            plt.figure()
-            plt.imshow(np.sum(self.stack[channel][frame, :, :], axis=-1), cmap='gray')
-
-
-@attr.s(slots=True)
-class Volume(object):
-    """
-    A Movie() is a sequence of Volumes(). Each volume contains frames in a plane.
-    """
-    data           = attr.ib(validator=instance_of(pd.DataFrame))
-    lines          = attr.ib(validator=instance_of(pd.Series))
-    x_pixels       = attr.ib(default=512, validator=instance_of(int))
-    y_pixels       = attr.ib(default=512, validator=instance_of(int))
-    z_pixels       = attr.ib(default=1, validator=instance_of(int))
-    number         = attr.ib(default=1, validator=instance_of(int))  # the volume's ordinal number
-    reprate        = attr.ib(default=80e6, validator=instance_of(float))  # laser repetition rate, relevant for FLIM
-    end_time       = attr.ib(default=np.uint64(100), validator=instance_of(np.uint64))
-    binwidth       = attr.ib(default=800e-12, validator=instance_of(float))
-    bidir          = attr.ib(default=False, validator=instance_of(bool))  # Bi-directional scanning
-    fill_frac      = attr.ib(default=80.0, validator=instance_of(float))
-    abs_start_time = attr.ib(default=np.uint64(0), validator=instance_of(np.uint64))
-    empty          = attr.ib(default=False, validator=instance_of(bool))
-    censor         = attr.ib(default=False, validator=instance_of(bool))
-    line_delta     = attr.ib(default=158000, validator=instance_of(int))
-    use_sweeps     = attr.ib(default=False, validator=instance_of(bool))
-    tag_as_phase   = attr.ib(default=True, validator=instance_of(bool))
-    tag_freq       = attr.ib(default=189e3, validator=instance_of(float))
-    mirror_phase   = attr.ib(default=-2.76, validator=instance_of(float))  # phase for scanning mirrors
-
-
-    @property
-    def num_of_dims(self) -> int:
-        """ Number of data dimensions """
-        added_dims = 0
-        if 'Phase' in self.data.columns:
-            added_dims += 1
-        if 'time_rel_pulse' in self.data.columns:
-            added_dims += 1
-        return 2 + added_dims
-
-    @property
-    def tag_period(self) -> int:
-        return int(np.ceil(1 / (self.tag_freq * self.binwidth)))
-
-    @property
-    def dimensions_iterable(self) -> List:
-        return [self.x_pixels, self.y_pixels, self.z_pixels, int(np.ceil(1 / (self.reprate * self.binwidth)))]
-
-    def __create_hist_edges(self) -> Tuple[List, int]:
-        """
-        Create three vectors that will create the grid of the frame. Uses Numba internal function for optimization.
-        :return: Tuple of np.array
-        """
-        list_of_edges = []
-        if not self.empty:
-            # Volume (row) edges
-            try:
-                list_of_edges.append(
-                    LineRectifier(lines=self.lines.values - self.abs_start_time,
-                                  x_pixels=self.x_pixels,
-                                  bidir=self.bidir,
-                                  end_time=self.end_time).rectify()
-                )
-            except ValueError:  # problem with line correction\interpolation
-                warnings.warn(f"\nVolume {self.number} contained too many missing\corrupt lines.")
-                list_of_edges.append(np.arange(self.x_pixels + 1))
-            # Column edges
-            y_start, y_end = metadata_ydata(data=self.data, jitter=0.02, bidir=self.bidir,
-                                            fill_frac=self.fill_frac, delta=self.line_delta,
-                                            sweeps=self.use_sweeps)
-            list_of_edges.append(np.linspace(start=y_start,
-                                             stop=self.end_time if y_end == 1 else y_end,
-                                             num=self.y_pixels+1, endpoint=True))
-
-            # Z edges
-            if 'Phase' in self.data.columns:
-                list_of_edges.append(self.__linspace_along_sine())
-
-            # Laser pulses edges
-            if 'time_rel_pulse' in self.data.columns:
-                laser_start = 0
-                try:
-                    laser_end = np.ceil(1 / (self.reprate * self.binwidth)).astype(np.uint8)
-                except ZeroDivisionError:
-                    warnings.warn('No laser reprate provided. Assuming 80.3 MHz.')
-                    laser_end = np.ceil(1 / (80.3e6 * self.binwidth)).astype(np.uint8)
-
-                list_of_edges.append(np.linspace(start=laser_start,
-                                                 stop=laser_end,
-                                                 num=laser_end+1,
-                                                 endpoint=True)[1:])
-
-            return list_of_edges, self.num_of_dims
-        else:
-            return [], self.num_of_dims
-
-    def create_hist(self) -> Tuple[np.ndarray, Iterable]:
-        """
-        Create the histogram of data using calculated edges.
-        :return: np.ndarray of shape [num_of_cols, num_of_rows] with the histogram data, and edges
-        """
-
-        list_of_data_columns = []
-        list_of_edges, num_of_dims = self.__create_hist_edges()
-        if not self.empty:
-            list_of_data_columns.append(self.data['time_rel_frames'].values)
-            list_of_data_columns.append(self.data['time_rel_line'].values)
-            try:
-                list_of_data_columns.append(self.data['Phase'].values)
-            except KeyError:
-                pass
-            try:
-                list_of_data_columns.append(self.data['time_rel_pulse'].values)
-            except KeyError:
-                pass
-
-            data_to_be_hist = np.reshape(list_of_data_columns, (num_of_dims, self.data.shape[0])).T
-
-            assert data_to_be_hist.shape[0] == self.data.shape[0]
-            assert len(list_of_data_columns) == data_to_be_hist.shape[1]
-
-            hist, edges = np.histogramdd(sample=data_to_be_hist, bins=list_of_edges)
-            if self.bidir:
-                hist[1::2] = np.fliplr(hist[1::2])
-            if self.censor:
-                hist = self.__censor_correction(hist)
-
-            return np.uint8(hist), edges
-        else:
-            return np.zeros(self.dimensions_iterable[:num_of_dims], dtype=np.uint8), (0, 0, 0)
-
-    def __censor_correction(self, data) -> np.ndarray:
-        """
-        Add censor correction to the data after being histogrammed
-        :param data:
-        :return:
-        """
-        rel_idx = np.argwhere(np.sum(data, axis=-1) > 1)
-        split = np.split(rel_idx, 2, axis=1)
-        squeezed = np.squeeze(data[split[0], split[1], :])
-        return data
-
-    def __linspace_along_sine(self) -> np.ndarray:
-        """
-        Find the points that are evenly spaced along a sine function between pi/2 and 3*pi/2
-        :return: Array of bin edges
-        """
-        lower_bound = -1 if self.tag_as_phase else 0
-        upper_bound = 1 if self.tag_as_phase else self.tag_period
-        pts = []
-        relevant_idx = []
-
-        bin_edges = np.linspace(lower_bound, upper_bound, self.z_pixels+1, endpoint=True)[:, np.newaxis]
-        dx = 0.00001
-        x = np.arange(np.pi/2, 3*np.pi/2+dx, step=dx, dtype=np.float64)
-        sinx = np.sin(x)
-        locs = np.where(np.isclose(sinx, bin_edges, atol=1e-05))
-        vals, first_idx, count = np.unique(locs[0], return_index=True, return_counts=True)
-        assert len(vals) == len(bin_edges)
-        for first_idx, count in zip(first_idx, count):
-            idx_to_append = locs[1][first_idx + count // 2]
-            relevant_idx.append(idx_to_append)
-            pts.append(sinx[idx_to_append])
-
-        return np.array(pts)
-
-
-def validate_number_larger_than_zero(instance, attribute, value: int=0):
-    """
-    Validator for attrs module - makes sure line numbers and row numbers are larger than 0.
-    """
-
-    if value >= instance.attribute:
-        raise ValueError(f"{attribute} has to be larger than {value}.")
-
-
-def metadata_ydata(data: pd.DataFrame, jitter: float=0.02, bidir: bool=True, fill_frac: float=0,
-                   delta: int=158000, sweeps: bool=False) -> Tuple[int, int]:
-    """
-    Create the metadata for the y-axis.
-
-    """
-    lines_start: int = 0
-
-    unique_indices: np.ndarray = np.unique(data.index.get_level_values('Lines'))
-    if unique_indices.shape[0] <= 1:
-        lines_end = 1
-        return lines_start, lines_end
-
-    # Case where it's a unidirectional scan and we dump back-phase photons
-    if not bidir:
-        delta /= 2
-
-    if fill_frac > 0:
-        lines_end = delta * fill_frac/100
-    else:
-        lines_end = delta
-
-    return lines_start, int(lines_end)
 
 
 @attr.s

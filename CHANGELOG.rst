@@ -225,7 +225,9 @@ Changelog
 0.6.13 (2017-10-08)
 -------------------
 
-* The TAG phase is now between 0.6.12 (2017-10-08)
+* The TAG phase is now between 0 and 1, generating non-cyclic volumes.
+
+0.6.12 (2017-10-08)
 -------------------
 
 * Removed the experimental ``parallel`` feature from the Numba implementation.

@@ -217,7 +217,7 @@ class Allocate(object):
             self.dict_of_data['Lines'] = self.dict_of_data['Lines'].iloc[::2, :].copy().reset_index()
         try:
             self.df_photons.drop(['time_rel_line_pre_drop'], axis=1, inplace=True)
-        except ValueError:  # column label doesn't exist
+        except (ValueError, KeyError):  # column label doesn't exist
             pass
         self.df_photons = self.df_photons.loc[self.df_photons.loc[:, 'time_rel_line'] >= 0, :]
 

@@ -59,7 +59,7 @@ class FrameChunk:
             hist = hist.astype(np.uint8).reshape((self.frames_per_chunk,) + self.data_shape[1:])
 
             if self.bidir:
-                hist[:, 1::2, ...] = np.fliplr(hist[:, 1::2, ...])
+                hist[:, 1::2, ...] = np.flip(hist[:, 1::2, ...], axis=2)
             if self.censor:
                 hist = self.__censor_correction(hist)
 
@@ -105,8 +105,7 @@ class FrameChunk:
         """ Takes existing lines and turns them into bin edges. """
 
         assert self.lines.shape[0] <= self.x_pixels * self.frames_per_chunk  # last chunk can have less frames
-        last_line = np.uint64(self.lines.diff().mean())
-        all_lines = np.hstack((self.lines.values, self.lines.values[-1] + last_line))
+        all_lines = np.hstack((self.lines.values, self.lines.values[-1] + self.line_delta))
         return all_lines
 
     def __create_col_edges(self) -> np.ndarray:
