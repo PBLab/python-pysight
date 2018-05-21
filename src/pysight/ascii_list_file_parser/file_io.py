@@ -3,6 +3,12 @@ from attr.validators import instance_of
 import numpy as np
 import attr
 import re
+from enum import Enum
+
+
+class LstFormat(Enum):
+    ASCII = 'ascii'
+    BINARY = 'binary'
 
 
 @attr.s(slots=True)
@@ -143,23 +149,20 @@ class FileIO(object):
         if self.filename == '':
             raise ValueError('No filename given.')
 
-        is_binary: bool = False
-        self.is_binary = is_binary
-
         try:
             with open(self.filename, 'r') as f:
-                f.read(100)
-                is_binary = False
-        except UnicodeDecodeError:  # File is binary
-            with open(self.filename, 'rb') as f:
-                f.read(100)
-                is_binary = True
+                txt = f.read(300)
         except FileNotFoundError:
             raise FileNotFoundError(f"File {self.filename} doesn't exist.")
         except:
             raise Exception(f'File {self.filename} read unsuccessfully.')
-        finally:
-            self.is_binary = is_binary
+
+        reg = re.compile(r'\nmpafmt=(\w{3})\n')
+        match = reg.findall(txt)
+        if match[0] == 'dat':
+            self.is_binary = True
+        elif match[0] == 'asc':
+            self.is_binary = False
 
     def get_range(self, cur_str) -> int:
         """
@@ -200,6 +203,10 @@ class FileIO(object):
         except AttributeError:
             assert isinstance(timepatch, str)
         finally:
+            if self.is_binary and timepatch in ('1a', '2a', '22', '32', '2'):
+                raise NotImplementedError(f"The timepatch used ({timepatch}) isn't supported "
+                                          "for binary files since it uses a 6-byte word representation. "
+                                          "Please disallow this option in the MPANT software.")
             return timepatch
 
     def find_active_channels(self, cur_str) -> List[bool]:
@@ -318,14 +325,9 @@ class FileIO(object):
         if self.is_binary:
             with open(self.filename, "rb") as f:
                 f.seek(self.start_of_data_pos)
-                dt: np.dtype = np.dtype(('u1', data_length))
-                arr: np.ndarray = np.fromfile(f, dtype=dt, count=num_of_lines_to_read)
-                arr_as_bits: np.ndarray = np.unpackbits(np.fliplr(arr), axis=1)
-                ########## STILL NOT SUPPORTED ##############
-                # It's very hard to pack int32 bits, for example, to a numpy array effectively,
-                # since numpy.packbits only works for uint8. Other solutions seem slow and complicated.
-                raise NotImplementedError('Binary files are still not supported.')
-            return arr_as_bits
+                arr: np.ndarray = np.fromfile(f, dtype=f'u{data_length}',
+                                              count=num_of_lines_to_read)
+            return arr
 
         else:
             with open(self.filename, "rb") as f:
