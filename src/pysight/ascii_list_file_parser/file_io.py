@@ -151,7 +151,7 @@ class FileIO(object):
 
         try:
             with open(self.filename, 'r') as f:
-                txt = f.read(300)
+                txt = f.read(350)
         except FileNotFoundError:
             raise FileNotFoundError(f"File {self.filename} doesn't exist.")
         except:
