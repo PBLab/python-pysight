@@ -409,8 +409,8 @@ class FileIO(object):
 
         format_regex = re.compile(format_str)
         try:
-            self.lst_metadata[str_to_parse] = re.search(format_regex,
-                                                        metadata).group(1)
+            self.lst_metadata[str_to_parse] = str(re.search(format_regex,
+                                                            metadata).group(1))
         except AttributeError:  # field is non-existent
             pass
 

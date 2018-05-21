@@ -3,6 +3,7 @@ from typing import NamedTuple
 import warnings
 
 import numpy as np
+import pandas as pd
 import attr
 from attr.validators import instance_of
 
@@ -23,7 +24,7 @@ class Timepatch(Enum):
     Tpf3 = TimepatchBits(64, 36, 7, 16, 1)
     Tp43 = TimepatchBits(64, 44, 0, 15, 1)
     Tpc3 = TimepatchBits(64, 44, 0, 16, 0)
-    Tp3 = TimepatchBits(64, 54, 0, 6, 1)
+    Tp3 = TimepatchBits(64, 54, 0, 5, 1)
 
 
 @attr.s
@@ -32,6 +33,11 @@ class BinaryDataParser:
 
     data = attr.ib(validator=instance_of(np.ndarray))
     timepatch = attr.ib(validator=instance_of(str))
+    data_range = attr.ib(default=0, validator=instance_of(int))
+    dict_of_inputs = attr.ib(default=attr.Factory(dict), validator=instance_of(dict))
+    use_tag_bits = attr.ib(default=False, validator=instance_of(bool))
+    dict_of_inputs_bin = attr.ib(init=False)
+    data_to_grab = attr.ib(init=False)
     channel = attr.ib(init=False)
     edge = attr.ib(init=False)
     time = attr.ib(init=False)
@@ -40,21 +46,32 @@ class BinaryDataParser:
     lost = attr.ib(init=False)
     dict_of_data = attr.ib(init=False)
     timepatch_bits = attr.ib(init=False)
+    aligned_data = attr.ib(init=False)
 
     def __attrs_post_init__(self):
+        self.data_to_grab = ['abs_time']
         tpdict = {'0': Timepatch.Tp0,
                   '5': Timepatch.Tp5,
                   '1': Timepatch.Tp1,
                   '5b': Timepatch.Tp5b,
-                  }
+                  'Db': Timepatch.TpDb,
+                  'f3': Timepatch.Tpf3,
+                  '43': Timepatch.Tp43,
+                  'c3': Timepatch.Tpc3,
+                  '3': Timepatch.Tp3}
         try:
             self.timepatch_bits = tpdict[self.timepatch]
         except KeyError:
             raise KeyError(f"Invalid timepatch value received: {self.timepatch}.")
 
+        self.dict_of_inputs_bin = {}
+        for key, val in self.dict_of_inputs.items():
+            self.dict_of_inputs_bin[key] = int(val, 2)
+
     def run(self):
         """ Main pipeline for the parsing """
         self.channel = self.__get_channel()
+        self.__check_user_inputs()
         self.edge = self.__get_edge()
         self.time = self.__get_time()
         if self.timepatch_bits.value.sweep != 0:
@@ -67,7 +84,9 @@ class BinaryDataParser:
         else:
             self.tag = self.__get_tag_f3()
             self.lost = self.__get_lost_f3()
-
+        self.aligned_data = self.__gen_df()
+        self.dict_of_data = self.__slice_df_to_dict()
+        print('Sorted dataframe created. Starting to set the proper data channel distribution...')
 
     def __get_channel(self) -> np.ndarray:
         """
@@ -137,3 +156,89 @@ class BinaryDataParser:
         right_shift_by = self.timepatch_bits.value.total - 1
         lost = np.right_shift(self.data, right_shift_by) & 1
         return lost.astype(np.uint8)
+
+    def __get_tag_f3(self):
+        """
+        Parse the TAG bits of the f3 timepatch files.
+        Return:
+        -------
+            :param tag np.ndarray: Array of the TAG bits for each event.
+        """
+        tag = np.right_shift(self.data, 48) & 65535
+        return tag.astype(np.uint16)
+
+    def __get_lost_f3(self):
+        """
+        Parse the lost bit of the f3 timepatch files.
+        Return:
+        -------
+            :param lost np.ndarray: Array of the lost bit for each event.
+        """
+        lost = np.right_shift(self.data, 47) & 1
+        return lost.astype(np.uint8)
+
+    def __check_user_inputs(self):
+        """
+        Assert that the channels that the user believe were recorded are actually there.
+        Before sorting all photons make sure that no input is missing from the user. If it's missing
+        the code will ignore this channel, but not raise an exception
+        """
+
+        actual_data_channels = set(np.unique(self.channel))
+        if actual_data_channels != set(self.dict_of_inputs_bin.values()):
+            warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
+                          f"The list files contains data in the following channels: {actual_data_channels}.")
+            thrown_channels = 0
+            keys_to_pop = []
+            for key, item in self.dict_of_inputs_bin.items():
+                if item not in actual_data_channels:
+                    keys_to_pop.append(key)
+                    thrown_channels += 1
+            [self.dict_of_inputs_bin.pop(key) for key in keys_to_pop]
+
+    def __gen_df(self):
+        """
+        Align the acquired data into a single DataFrame
+        Return:
+        -------
+            pd.DataFrame
+        """
+        df = pd.DataFrame(self.time, index=[self.channel, self.edge],
+                          columns=['abs_time'])
+        try:
+            df.abs_time += (self.sweep - 1) * self.data_range
+        except AttributeError:
+            pass
+        try:
+            tag_ser = pd.Series(self.tag, index=[self.channel, self.edge])
+            df['tag'] = tag_ser
+        except AttributeError:
+            pass
+        else:
+            if self.use_tag_bits:
+                self.data_to_grab.extend(['tag', 'edge'])
+
+        try:
+            lost_ser = pd.Series(self.lost, index=[self.channel, self.edge])
+            df['lost'] = lost_ser
+        except AttributeError:
+            pass
+
+        df.index.names = ['analog_input', 'edge']
+        return df
+
+    def __slice_df_to_dict(self):
+        """
+        Take the DataFrame of data and create a dictionary of data from it
+        :return: dict
+        """
+        dict_of_data = {}
+        for key, analog_chan in self.dict_of_inputs_bin.items():
+            relevant_vals = self.aligned_data.xs(key=analog_chan, level=0).loc[:, self.data_to_grab]
+            if key in ['PMT1', 'PMT2']:
+                dict_of_data[key] = relevant_vals.reset_index(drop=True)
+                dict_of_data[key]['Channel'] = 1 if 'PMT1' == key else 2  # channel is the spectral channel
+            else:
+                dict_of_data[key] = relevant_vals.sort_values(by=['abs_time']).reset_index(drop=True)
+
+        return dict_of_data

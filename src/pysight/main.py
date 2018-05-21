@@ -28,6 +28,7 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import Si
 from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
+from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 
 
 def main_data_readout(gui):
@@ -42,27 +43,35 @@ def main_data_readout(gui):
                           use_sweeps=gui.sweeps_as_lines)
         cur_file.run()
 
-        # Create input structures
-        dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
-        # dict_of_slices_bin = timepatch_switch.ChoiceManagerBinary().process(cur_file.timepatch)  # Not supported
+        if cur_file.is_binary:
+            binary_parser = BinaryDataParser(data=cur_file.data, data_range=cur_file.data_range,
+                                             timepatch=cur_file.timepatch, use_tag_bits=gui.tag_bits,
+                                             dict_of_inputs=cur_file.dict_of_input_channels)
+            binary_parser.run()
+        else:
+            # Create input structures and create a DataFrame
+            dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
+            tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
+                                      dict_of_inputs=cur_file.dict_of_input_channels,
+                                      use_tag_bits=gui.tag_bits,
+                                      dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
+                                      time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
+                                      num_of_channels=cur_file.num_of_channels, )
+            tabulated_data.run()
 
-        # Process events into dataframe
-        tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
-                                  dict_of_inputs=cur_file.dict_of_input_channels,
-                                  is_binary=cur_file.is_binary, use_tag_bits=gui.tag_bits,
-                                  dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
-                                  time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
-                                  num_of_channels=cur_file.num_of_channels, )
-        tabulated_data.run()
-
-        separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
-                                        dict_of_inputs=tabulated_data.dict_of_inputs,
-                                        use_tag_bits=gui.tag_bits, )
-        separated_data.run()
+            separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
+                                            dict_of_inputs=tabulated_data.dict_of_inputs,
+                                            use_tag_bits=gui.tag_bits, )
+            separated_data.run()
 
 ####### START OF "PUBLIC API" ##########
     try:
-        dict_of_data = separated_data.dict_of_data
+        if cur_file.is_binary:
+            relevant_columns = binary_parser.data_to_grab
+            dict_of_data = binary_parser.dict_of_data
+        else:
+            relevant_columns = separated_data.data_to_grab
+            dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
     except NameError:
         with open(gui.filename, 'rb') as f:
@@ -72,7 +81,7 @@ def main_data_readout(gui):
     validated_data = SignalValidator(dict_of_data=dict_of_data, num_of_frames=gui.num_of_frames,
                                      binwidth=float(gui.binwidth), use_sweeps=gui.sweeps_as_lines,
                                      delay_between_frames=float(gui.frame_delay),
-                                     data_to_grab=separated_data.data_to_grab, line_freq=gui.line_freq,
+                                     data_to_grab=relevant_columns, line_freq=gui.line_freq,
                                      num_of_lines=gui.x_pixels, bidir=gui.bidir,
                                      bidir_phase=gui.phase, image_soft=gui.imaging_software,
                                      )

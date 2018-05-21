@@ -28,7 +28,6 @@ class Tabulate(object):
     dict_of_slices_hex = attr.ib(validator=instance_of(dict))
     dict_of_slices_bin = attr.ib()
     data_range         = attr.ib(default=1, validator=instance_of(int))
-    is_binary          = attr.ib(default=False, validator=instance_of(bool))
     use_tag_bits       = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay          = attr.ib(default=int(0), validator=instance_of(int))
@@ -40,14 +39,10 @@ class Tabulate(object):
 
     def run(self):
         """ Pipeline of analysis """
-        if self.is_binary:
-            raise NotImplementedError('Binary files are currently not implemented. Contact package author for updates.')
-            # self.df_after_timepatch = self.__tabulate_input_binary()
-        else:
-            self.__preparations_hex()
-            self.__tabulate_input_hex()
-            self.df_after_timepatch = self.__reformat_data_hex()
-            self.__check_user_inputs()
+        self.__preparations_hex()
+        self.__tabulate_input_hex()
+        self.df_after_timepatch = self.__reformat_data_hex()
+        self.__check_user_inputs()
         print('Sorted dataframe created. Starting to set the proper data channel distribution...')
 
     @staticmethod
@@ -200,7 +195,3 @@ class Tabulate(object):
         """
         b = arr.view('U1').reshape(len(arr), -1)[:, start:end]
         return np.fromstring(b.tostring(), dtype='U' + str(end - start))
-
-    def __tabulate_input_binary(self):
-        """ Reformat the read binary data into a dataframe. """
-        pass

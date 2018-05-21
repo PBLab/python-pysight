@@ -75,3 +75,34 @@ class BinaryTest(TestCase):
         calced = binda._BinaryDataParser__get_lost()
         np.testing.assert_array_equal(calced, lost)
 
+    def test_tag_f3(self):
+        timepatch = 'f3'
+        data = np.array([0b0101_1_0101010_101010101010101010101010101010101010_1010,
+                         0b0111_1_0101010_101010101010101010101010101010101010_1010,
+                         0b1111111111111111_1_0101010_110101011010101010101010101010101010_1010],
+                        dtype=np.uint64)
+        binda = BinaryDataParser(data, timepatch)
+        calced = binda._BinaryDataParser__get_tag_f3()
+        tag = np.array([5, 7, 65535], dtype=np.uint16)
+        np.testing.assert_array_equal(tag, calced)
+
+    def test_lost_f3(self):
+        timepatch = 'f3'
+        data = np.array([0b0101_1_0101010_101010101010101010101010101010101010_1010,
+                         0b0111_1_0101010_101010101010101010101010101010101010_1010,
+                         0b1111111111111111_0_0101010_110101011010101010101010101010101010_1010,
+                         0b1],
+                        dtype=np.uint64)
+        binda = BinaryDataParser(data, timepatch)
+        calced = binda._BinaryDataParser__get_lost_f3()
+        lost = np.array([1, 1, 0, 0], dtype=np.uint8)
+        np.testing.assert_array_equal(lost, calced)
+
+    def test_integ_df_creation(self):
+        data = np.array([0b0101_1_0101010_101010101010101010101010101010101010_1010,
+                         0b0111_1_0101010_101010101010101010101010101010101010_1010,
+                         0b1111111111111111_0_0101010_110101011010101010101010101010101010_1010],
+                        dtype=np.uint64)
+        timepatch = 'f3'
+        binda = BinaryDataParser(data, timepatch)
+        binda.run()
