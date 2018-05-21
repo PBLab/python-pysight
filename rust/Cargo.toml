@@ -1,17 +1,17 @@
 [package]
-name = 'lst_parser'
+name = 'pysight'
 version = "0.1.0"
 authors = ["Hagai Har-Gil <hagaihargil@protonmail.com>"]
 
 [lib]
+name = 'pysight'
 crate-type = ["cdylib"]
 
 [dependencies]
 filebuffer = "0.3"
 bitreader = "0.3"
 failure = "0.1"
-data-encoding = "2.1"
+libc = "0.2"
 
-[dependencies.pyo3]
-version = "0.2"
-default-features = false
+[build-dependencies]
+cbindgen = "0.5"

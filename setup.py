@@ -18,7 +18,6 @@ from setuptools import Extension
 from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.build_ext import build_ext
-from setuptools_rust import Binding, RustExtension
 
 try:
     # Allow installing package without any Cython available. This
@@ -46,6 +45,23 @@ class CustomBuildExtCommand(build_ext):
         # Call original build_ext command
         build_ext.run(self)
 
+def build_native(spec):
+    # Step 1: build the rust library
+    build = spec.add_external_build(
+        cmd=['cargo', 'build', '--release'],
+        path='./rust'
+        )
+
+    # Step 2: add a cffi module based on the dylib we built
+    #
+    # We use lambdas here for dylib and header_filename so that those are
+    # only called after the external build finished.
+    spec.add_cffi_module(
+        module_path='pysight._native',
+        dylib=lambda: build.find_dylib('pysight', in_path='target/release'),
+        header_filename=lambda: build.find_header('pysight.h', in_path='target'),
+        rtld_flags=['NOW', 'NODELETE']
+    )
 
 # Enable code coverage for C code: we can't use CFLAGS=-coverage in toxa.ini, since that may mess with compiling
 # dependencies (e.g. numpy). Therefore we set SETUPPY_CFLAGS=-coverage in toxa.ini and copy it to CFLAGS here (after
@@ -66,9 +82,6 @@ setup(
     author_email='hagaihargil@protonmail.com',
     url=r'https://github.com/PBLab/python-pysight/',
     packages=find_packages('src'),
-    rust_extensions=[
-        RustExtension('src.binary_lst_parser',
-                      'Cargo.toml', binding=Binding.PyO3)],
     package_dir={'': 'src'},
     py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
     include_package_data=True,
@@ -89,26 +102,30 @@ setup(
     ],
     cmdclass = {'build_ext': CustomBuildExtCommand},
     install_requires=[
-        'numpy == 1.14',
-        'matplotlib == 2.2',
-        'pandas == 0.23',
-        'attrs == 17.4',
-        'cython == 0.28',
-        'tables == 3.4',
-        'scipy == 1.1',
-        'scikit-learn == 0.19',
-        'h5py == 2.7',
-        'h5py-cache == 1',
-        'tqdm == 4.23',
-        'numba == 0.38',
-        'ansimarkup == 1.4',
-        'setuptools-rust == 0.9'
+        'numpy < 1.15',
+        'matplotlib < 2.3',
+        'pandas < 0.24',
+        'attrs < 17.5',
+        'cython < 0.29',
+        'tables < 3.5',
+        'scipy < 1.2',
+        'scikit-learn < 0.20',
+        'h5py < 2.8',
+        'h5py-cache < 2',
+        'tqdm < 4.24',
+        'numba < 0.39',
+        'ansimarkup < 1.5',
+        'milksnake == 0.1.5',
     ],
     extras_require={
     },
     setup_requires=[
-        'cython', 'numpy'
-    ] if Cython else ['numpy'],
+        'cython', 'numpy', 'milksnake'
+    ] if Cython else ['numpy', 'milksnake'],
+    milksnake_tasks=[
+        build_native
+    ],
+    milksnake_universal=False,
     ext_modules=[
         Extension(
             splitext(relpath(path, 'src').replace(os.sep, '.'))[0],

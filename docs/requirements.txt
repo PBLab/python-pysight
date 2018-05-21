@@ -1,18 +1,18 @@
-sphinx == 1.7
+sphinx < 1.8
 
 -e .
 
-numpy == 1.14
-matplotlib == 2.2
-pandas == 0.22
-attrs == 17.4
-cython == 0.28
-tables == 3.4
-scipy == 1.1
-scikit-learn == 0.19
-h5py == 2.7
-h5py-cache == 1
-tqdm == 4.23
-numba == 0.38
-ansimarkup == 1.4
-setuptools-rust == 0.9
+numpy < 1.15
+matplotlib < 2.3
+pandas < 0.24
+attrs < 17.5
+cython < 0.29
+tables < 3.5
+scipy < 1.2
+scikit-learn < 0.20
+h5py < 2.8
+h5py-cache < 2
+tqdm < 4.24
+numba < 0.39
+ansimarkup < 1.5
+milksnake == 0.1.5

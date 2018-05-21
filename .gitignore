@@ -79,3 +79,4 @@ src/pysight/__pycache__/
 !/tests/tests_data/2.lst
 .vscode
 *.ai
+rust/target/*
