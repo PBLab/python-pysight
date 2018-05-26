@@ -72,4 +72,4 @@ If you have questions, come visit us at our `Gitter channel. <https://gitter.im/
 References
 ==========
 
-The article's preprint is available `here. <https://www.biorxiv.org/content/early/2018/05/09/316125>`_
+PySight's preprint is available `here. <https://doi.org/10.1101/316125>`_
