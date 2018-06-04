@@ -37,7 +37,7 @@ class FrameChunk:
 
         Returns:
         --------
-        ``Dict[int, np.ndarray]`` A dictionary with its keys being the spectral channels
+        ``Dict[int, Tuple[np.ndarray]]`` A dictionary with its keys being the spectral channels
         of the data, and the value is a tuple of the histogrammed data and the edges.
         """
         self.hist_dict: Dict[int, Tuple[np.ndarray]] = {}

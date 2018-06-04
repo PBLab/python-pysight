@@ -12,7 +12,6 @@ import colorama
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-colorama.init()
 
 from pysight.ascii_list_file_parser.file_io import FileIO
 from pysight.ascii_list_file_parser.tabulation import Tabulate
@@ -29,6 +28,8 @@ from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
+
+colorama.init()
 
 
 def main_data_readout(gui):

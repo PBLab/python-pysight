@@ -30,9 +30,11 @@ class VolumeGenerator:
     def create_frame_slices(self, create_slices=True) -> Generator:
         """
         Main method for the pipeline. Returns a generator with slices that
-        signify the start time and end time of all frames.
+        signify the start time and end time of each chunk of frames. The indexing
+        is inclusive-inclusive, and not inclusive-exclusive, since it's done using
+        pandas' ``.loc`` method.
 
-        :param create_slices bool: Used for testing, always keep true.
+        :param create_slices bool: Used for testing, always keep true for actual code.
         """
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
         self.frames_per_chunk = int(max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames))
