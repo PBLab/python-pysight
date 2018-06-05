@@ -85,8 +85,8 @@ class Allocate(object):
             if 'Lines' == key:
                 self.__rectify_photons_in_uneven_lines()
 
-            if 'Laser' != key:
-                self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype('category')
+            # if 'Laser' != key:
+            #     self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype('category')
             self.df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
         assert len(self.df_photons) > 0

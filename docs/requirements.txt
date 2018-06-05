@@ -15,3 +15,4 @@ h5py-cache < 1.1
 tqdm < 4.24
 numba < 0.39
 ansimarkup < 1.5
+psutil < 5.5

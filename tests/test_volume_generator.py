@@ -30,7 +30,7 @@ class TestVolumeGenerator(TestCase):
         _, frames = gen_test_df(1000)
         shape = (1000, 512, 512, 16)
         max_vols = int(300e6 / (np.prod(shape[1:]) * 8))
-        volgen = VolumeGenerator(frames, shape)
+        volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         volgen.create_frame_slices(create_slices=False)
         chunks = list(volgen.full_frame_chunks)
         self.assertEqual(len(chunks[0]), max_vols)
@@ -46,14 +46,14 @@ class TestVolumeGenerator(TestCase):
     def test_standard_slice(self):
         _, frames = gen_test_df(10, end=100)
         shape = (10, 512, 512, 16)
-        volgen = VolumeGenerator(frames, shape)
+        volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 70), slice(80, 90)])
+        self.assertSequenceEqual(list(vol_times), [slice(0, 70, None), slice(80, 90, None)])
 
     def test_full_slice(self):
         _, frames = gen_test_df(16, end=1600)
         shape = (16, 512, 512, 16)
-        volgen = VolumeGenerator(frames, shape)
+        volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         vol_times = volgen.create_frame_slices()
         self.assertSequenceEqual(list(vol_times), [slice(0, 700), slice(800, 1500)])
 
@@ -66,12 +66,13 @@ class TestVolumeGenerator(TestCase):
 
     def test_single_chunk(self):
         _, frames = gen_test_df(10, end=100)
-        shape = (10, 800, 800, 200)
-        volgen = VolumeGenerator(frames, shape)
+        shape = (10, 800, 800, 100)
+        volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 10, None), slice(10, 20, None), slice(20, 30, None),
-                                                   slice(30, 40, None), slice(40, 50, None), slice(50, 60, None),
-                                                   slice(60, 70, None), slice(70, 80, None), slice(80, 90, None)])
+        self.assertSequenceEqual(list(vol_times), [slice(0, 0, None), slice(10, 10, None), slice(20, 20, None),
+                                                   slice(30, 30, None), slice(40, 40, None), slice(50, 50, None),
+                                                   slice(60, 60, None), slice(70, 70, None), slice(80, 80, None),
+                                                   slice(90, 90, None)])
 
     def test_grouper(self):
         volgen = VolumeGenerator(pd.Series(), (1,))

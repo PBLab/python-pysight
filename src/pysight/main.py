@@ -5,6 +5,8 @@ __author__ = Hagai Hargil
 Created on Thu Oct 13 09:37:02 2016
 """
 from typing import Union, Tuple
+import matplotlib
+matplotlib.rcParams['backend'] = 'TkAgg'
 import json
 import pandas as pd
 import warnings

@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import itertools
 from typing import List, Generator
+import psutil
 
 
 @attr.s(slots=True)
@@ -15,17 +16,27 @@ class VolumeGenerator:
     Inputs:
     :param frames pd.DataFrame: Frames for the entire dataset. Should not contain a closing, right-edge, frame.
     :param data_shape tuple: Shape of the final n-dimensional array (from the Output object)
-    :param MAX_BYTES_ALLOWED int: Number of bytes that can be held in RAM ("magic number")
+    :param MAX_BYTES_ALLOWED int: Number of bytes that can be held in RAM. Calculated using the
+    psutil package if not supplied manually.
     """
     frames = attr.ib(validator=instance_of(pd.Series), repr=False)
     data_shape = attr.ib(validator=instance_of(tuple))
-    MAX_BYTES_ALLOWED = attr.ib(default=int(300e6), validator=instance_of(int))
+    MAX_BYTES_ALLOWED = attr.ib(default=0, validator=instance_of(int))
     num_of_frames = attr.ib(init=False)
     bytes_per_frames = attr.ib(init=False)
     full_frame_chunks = attr.ib(init=False)
     frame_slices = attr.ib(init=False)
     frames_per_chunk = attr.ib(init=False)
     num_of_chunks = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        if self.MAX_BYTES_ALLOWED == 0:
+            try:
+                free = psutil.virtual_memory().free
+            except AttributeError:
+                self.MAX_BYTES_ALLOWED = int(1e9)
+            else:
+                self.MAX_BYTES_ALLOWED = int(free // 2)
 
     def create_frame_slices(self, create_slices=True) -> Generator:
         """
@@ -46,18 +57,13 @@ class VolumeGenerator:
             return self.frame_slices
 
     def __grouper(self) -> Generator:
-        """
-        Chunk volume times into maximal-sized groups of values.
-        grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
-        """
+        """ Chunk volume times into maximal-sized groups of values. """
         args = [iter(self.frames.values)] * self.frames_per_chunk
         return itertools.zip_longest(*args, fillvalue=np.nan)
 
     def __generate_frame_slices(self) -> Generator:
         if self.frames_per_chunk == 1:
-            start, end = itertools.tee(self.full_frame_chunks)
-            next(end, None)
-            return (slice(s[0], e[0]) for s, e in zip(start, end))
+            return (slice(frame[0], frame[0]) for frame in self.full_frame_chunks)
 
         start_and_end = []
         for chunk in self.full_frame_chunks:

@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import attr
 from itertools import tee
+import warnings
 
 
 @attr.s(slots=True)
@@ -70,14 +71,17 @@ class ScanImageLineValidator:
                                                               np.atleast_1d(y[frame_num, miss]),
                                                               lines_mat[frame_num, miss:-1]))
             elif num_of_missing_lines > 0:
-                cur_missing_cols = missing_vals_cols.copy()
-                while cur_missing_cols.shape[0] > 0:
-                    lines_mat[frame_num, :] = np.concatenate((lines_mat[frame_num, :missing_vals_cols[0]],
-                                                              np.atleast_1d(y[frame_num, missing_vals_cols[0]]),
-                                                              lines_mat[frame_num, missing_vals_cols[0]:-1]))
+                cur_missing_cols = missing_vals_cols[missing_vals_rows == frame_num].copy()
+                iters = 0
+                while (cur_missing_cols.shape[0] > 1) and (iters < 1000):
+                    lines_mat[frame_num, :] = np.concatenate((lines_mat[frame_num, :cur_missing_cols[0]],
+                                                              np.atleast_1d(y[frame_num, cur_missing_cols[0]]),
+                                                              lines_mat[frame_num, cur_missing_cols[1]:]))
                     diff_line = np.abs(np.subtract(lines_mat[frame_num, :], y[frame_num, :], dtype=np.int64))
                     cur_missing_cols = np.where(diff_line > delta / 20)[0]
-
+                    iters += 1
+                if iters == 1000:
+                    warnings.warn('Line signal was corrupt during at least one frame.')
         return lines_mat
 
     def __finalize_lines(self, lines_mat: np.ndarray) -> pd.Series:

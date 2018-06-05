@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.9.1 (2018-06-05)
+------------------
+
+* Fixed a bug with single-frame-chunks.
+
+* Smarter usage of memory using the ``psutil`` package.
+
+* Improvements to line extrapolation.
+
 0.9.0 (2018-05-21)
 ------------------
 
