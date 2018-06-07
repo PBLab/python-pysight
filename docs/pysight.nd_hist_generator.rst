@@ -83,7 +83,13 @@ pysight\.nd\_hist\_generator\.volume\_gen module
     :undoc-members:
     :show-inheritance:
 
+pysight\.nd\_hist\_generator\.frame\_chunk module
+---------------------------------------------------
 
+.. automodule:: pysight.nd_hist_generator.frame_chunk
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------

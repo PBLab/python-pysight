@@ -14,12 +14,10 @@ class VolumeGenerator:
     Main method is "create_frame_slices", which returns a generator containing
     slice objects that signify the chunks of volumes to be processed simultaneously.
 
-    Inputs:
-    -------
-    :param frames pd.DataFrame: Frames for the entire dataset. Should not contain a closing, right-edge, frame.
-    :param data_shape tuple: Shape of the final n-dimensional array (from the Output object)
-    :param MAX_BYTES_ALLOWED int: Number of bytes that can be held in RAM. Calculated using the
-                                  psutil package if not supplied manually.
+    :param pd.DataFrame frames: Frames for the entire dataset. Should not contain a closing, right-edge, frame.
+    :param tuple data_shape: Shape of the final n-dimensional array (from the Output object)
+    :param int MAX_BYTES_ALLOWED: Number of bytes that can be held in RAM. Calculated using the
+                                  ``psutil`` package if not supplied manually.
     """
     frames = attr.ib(validator=instance_of(pd.Series), repr=False)
     data_shape = attr.ib(validator=instance_of(tuple))
@@ -47,7 +45,7 @@ class VolumeGenerator:
         is inclusive-inclusive, and not inclusive-exclusive, since it's done using
         pandas' ``.loc`` method.
 
-        :param create_slices bool: Used for testing, always keep true for actual code.
+        :param bool create_slices: Used for testing, always keep ``True`` for actual code.
         """
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
         self.frames_per_chunk = int(max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames))

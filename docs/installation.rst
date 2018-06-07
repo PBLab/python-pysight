@@ -38,5 +38,5 @@ running PySight. `This <https://www.fastcomtec.com/ftp/manuals/mcs6adoc.pdf>`_ i
 with its quite simple installation instructions.
 
 After you've managed to run a simple multiscaler experiment, you can use one of the settings files we supply with PySight,
-located at the ``mcs6a_settings_files`` folder in the main repo, to see how a typical Mutliscaler + PySight experiment looks like,
+located at the ``mcs6a_settings_files`` folder in the main repo, to see how a typical Multiscaler + PySight experiment looks like,
 settings-wise.

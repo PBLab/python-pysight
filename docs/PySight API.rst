@@ -4,6 +4,7 @@ Subpackages
 .. toctree::
 
     pysight.ascii_list_file_parser
+    pysight.binary_list_file_parser
     pysight.nd_hist_generator
 
 pysight\.main module

@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 import attr
 from attr.validators import instance_of
 import numpy as np
@@ -10,8 +7,9 @@ import pandas as pd
 @attr.s(slots=True)
 class GatedDetection(object):
     """ Gating the unneeded photons """
-
+    #: Raw data
     raw = attr.ib(validator=instance_of(pd.DataFrame))
+    #: Repetition rate of the laser (float)
     reprate = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     data = attr.ib(init=False)
