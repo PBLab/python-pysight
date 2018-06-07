@@ -20,18 +20,18 @@ pysight\.ascii\_list\_file\_parser\.distribute\_data module
     :undoc-members:
     :show-inheritance:
 
-pysight\.ascii\_list\_file\_parser\.fileIO\_tools module
+pysight\.ascii\_list\_file\_parser\.file\_io module
 --------------------------------------------------------
 
-.. automodule:: pysight.ascii_list_file_parser.fileIO_tools
+.. automodule:: pysight.ascii_list_file_parser.file_io
     :members:
     :undoc-members:
     :show-inheritance:
 
-pysight\.ascii\_list\_file\_parser\.tabulation\_tools module
+pysight\.ascii\_list\_file\_parser\.tabulation module
 ------------------------------------------------------------
 
-.. automodule:: pysight.ascii_list_file_parser.tabulation_tools
+.. automodule:: pysight.ascii_list_file_parser.tabulation
     :members:
     :undoc-members:
     :show-inheritance:

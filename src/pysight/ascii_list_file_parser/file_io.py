@@ -15,14 +15,14 @@ class LstFormat(Enum):
 class FileIO(object):
     """
     Manage pipeline of file IO process.
-    Inputs:
-        :param filename str: List file name
-        :param debug bool: Run a debug build (limited number of lines for quick execution of the entire pipeline)
-        :param input_start str: Data type in analog channel 'START' (6)
-        :param input_stop1 str: Data type in analog channel 'STOP1' (1)
-        :param input_stop2 str: Data type in analog channel 'STOP2' (2)
-        :param binwidth float: Multiscaler resolution in seconds (100-800 picoseconds)
-        :param use_sweeps bool: Use the sweeps counter as a new frame indicator (dev mode)
+
+    :param str filename: List file name
+    :param bool debug: Run a debug build (limited number of lines for quick execution of the entire pipeline)
+    :param str input_start: Data type in analog channel 'START' (6)
+    :param str input_stop1: Data type in analog channel 'STOP1' (1)
+    :param str input_stop2: Data type in analog channel 'STOP2' (2)
+    :param float binwidth: Multiscaler resolution in seconds (100-800 picoseconds)
+    :param bool use_sweeps: Use the sweeps counter as a new frame indicator (dev mode)
     """
     filename                       = attr.ib(validator=instance_of(str))
     debug                          = attr.ib(default=False, validator=instance_of(bool))
@@ -71,7 +71,8 @@ class FileIO(object):
     def __get_metadata(self) -> str:
         """
         Read the file's metadata to be parsed by other functions.
-        :return: String with the .lst file's metadata
+
+        :return str: String with the .lst file's metadata
         """
         file_mode = 'rb' if self.is_binary else 'r'
         with open(self.filename, file_mode) as f:
@@ -92,10 +93,7 @@ class FileIO(object):
 
     @staticmethod
     def create_data_length_dict():
-        """
-        CURRENTLY DEPRECATED
-        :return:
-        """
+        """  CURRENTLY DEPRECATED """
         dict_of_data_length = {
                 "0": 16,
                 "5": 32,
@@ -117,10 +115,7 @@ class FileIO(object):
 
     @staticmethod
     def hex_to_bin_dict() -> Dict:
-        """
-        Create a simple dictionary that maps a hex input into a 4 letter binary output.
-        :return: dict
-        """
+        """ Create a simple dictionary that maps a hex input into a 4 letter binary output. """
         diction = \
             {
                 '0': '0000',
@@ -167,7 +162,7 @@ class FileIO(object):
     def get_range(self, cur_str) -> int:
         """
         Finds the "range" of the current file in the proper units
-        :return: range as defined by MCS6A
+        :return int: range as defined by MCS6A
         """
         if self.filename == '':
             raise ValueError('No filename given.')
@@ -185,8 +180,9 @@ class FileIO(object):
     def get_timepatch(self, cur_str: str) -> str:
         """
         Get the time patch value out of of a list file.
+
         :param cur_str: Start of file to be analyzed.
-        :return: Time patch value as string.
+        :return str: Time patch value as string.
         """
         if self.filename == '':
             raise ValueError('No filename given.')
@@ -212,6 +208,7 @@ class FileIO(object):
     def find_active_channels(self, cur_str) -> List[bool]:
         """
         Create a dictionary containing the active channels.
+
         :param cur_str: String to be analyzed.
         """
         if self.filename == '':
@@ -237,7 +234,8 @@ class FileIO(object):
     def get_start_pos(self) -> int:
         """
         Returns the start position of the data
-        :return: Integer of file position for f.seek() method
+
+        :return int: Integer of file position for f.seek() method
         """
         if self.filename == '':
             raise ValueError('No filename given.')
@@ -266,8 +264,9 @@ class FileIO(object):
         Read the time (in ns, and convert to timebins) that is considered a
         "hold after", or "hold-off", after a single sweep. Add that time, along with a 96 ns
         inherit delay, to all future times of the sweep.
+
         :param cur_str: String to parse
-        :return: Final time that has to be added to all sweeps, in timebins
+        :return int: Final time that has to be added to all sweeps, in timebins
         """
         if self.is_binary:
             format_str: str = b'holdafter=([\w\+]+)'
@@ -284,8 +283,9 @@ class FileIO(object):
     def __get_fstchan(self, cur_str: str) -> int:
         """
         Read the acquisition delay of each sweep, called "fstchan" in the list files
-        :param cur_str: Metadata to be parsed
-        :return: Acq delay in timebins
+
+        :param str cur_str: Metadata to be parsed
+        :return int: Acq delay in timebins
         """
         if self.is_binary:
             format_str: str = b'fstchan=(\w+)'
@@ -302,8 +302,8 @@ class FileIO(object):
     def read_lst(self, num_of_items: int=-1) -> np.ndarray:
         """
         Updated version of LST readout using array slicing (and not Pandas slicing).
-        :param num_of_items: Number of lines to read. -1 is all file.
-        :return:
+
+        :param int num_of_items: Number of lines to read. -1 is all file.
         """
 
         if self.filename is '' or self.start_of_data_pos == 0 or self.timepatch == '':
@@ -388,7 +388,8 @@ class FileIO(object):
     def __parse_extra_metadata(self, metadata):
         """
         Update self.lst_metadata with some additional information
-        :param metadata: Start of the lst file.
+
+        :param metadata: Data from the start of the lst file.
         """
         list_to_parse = ["fstchan", "holdafter", "periods", "rtpreset",
                          "cycles", "sequences", "range", "sweepmode",
@@ -418,7 +419,7 @@ class FileIO(object):
         """
         If we're using sweeps as lines then the true fill fraction is determined
         by the multiscaler's parameters, like hold_after and acquisiton delay.
-        :return: True fill fraction
+        :return float: True fill fraction
         """
         if self.use_sweeps:
             fill_frac = self.data_range / (self.acq_delay + self.data_range + self.time_after)

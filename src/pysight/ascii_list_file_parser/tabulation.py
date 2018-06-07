@@ -11,22 +11,20 @@ from attr.validators import instance_of
 class Tabulate(object):
     """
     Place all data in a pandas' DataFrame after sorting out each bit's meaning
-    Inputs:
-        :param dict_of_inputs dict: Mapping of inputs to signal type
-        :param data np.ndarray: Raw data from list file
-        :param dict_of_slices_hex dict: The role of each bit in the data per timepatch used
-        :param dict_of_slices_bin dict: Unused
-        :param data_range int: Length in bins of a single sweep
-        :param is_binary bool: Whether the list file is a binary one
-        :param use_tag_bits bool: Are the TAG bits needed for image generation in this timepatch
-        :param time_after_sweep int: How long does the multiscaler wait after a sweep
-        :param acq_delay int: How long does the multiscaler wait before start of experiment
-        :param num_of_channel int: Number of active channels
+
+    :param dict dict_of_inputs: Mapping of inputs to signal type
+    :param np.ndarray data: Raw data from list file
+    :param dict dict_of_slices_hex: The role of each bit in the data per timepatch used
+    :parame int data_rang: Length in bins of a single sweep
+    :param bool is_binary: Whether the list file is a binary one
+    :param bool use_tag_bits: Are the TAG bits needed for image generation in this timepatch
+    :param int time_after_sweep: How long does the multiscaler wait after a sweep
+    :param int acq_delay: How long does the multiscaler wait before start of experiment
+    :param int num_of_channel: Number of active channels
     """
     dict_of_inputs     = attr.ib(validator=instance_of(dict))
     data               = attr.ib(validator=instance_of(np.ndarray))
     dict_of_slices_hex = attr.ib(validator=instance_of(dict))
-    dict_of_slices_bin = attr.ib()
     data_range         = attr.ib(default=1, validator=instance_of(int))
     use_tag_bits       = attr.ib(default=False, validator=instance_of(bool))
     time_after_sweep   = attr.ib(default=int(96), validator=instance_of(int))
@@ -49,7 +47,6 @@ class Tabulate(object):
     def hex_to_bin_dict() -> Dict:
         """
         Create a simple dictionary that maps a hex input into a 4 letter binary output.
-        :return: dict
         """
         diction = \
             {
@@ -85,7 +82,6 @@ class Tabulate(object):
     def __preparations_hex(self) -> None:
         """
         "Set up the stage" for the tabulation process
-        :return None:
         """
         if len(self.data) == 0:
             raise IOError('List file contained zero events.')
@@ -131,7 +127,6 @@ class Tabulate(object):
     def __reformat_data_hex(self) -> pd.DataFrame:
         """
         Place the data in an organized DataFrame
-        :return pd.DataFrame:
         """
         df = pd.DataFrame(self.channel, columns=['channel'], dtype='category')
         df['edge'] = self.edge

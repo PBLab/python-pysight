@@ -54,7 +54,7 @@ Changelog
 * Bug fix in ``setup.py``.
 
 0.8.0 (2018-03-19)
------------------
+------------------
 
 * Added ``recursive`` and ``n_proc`` keywords to ``mp_batch``, and changed return type to ``None``.
 

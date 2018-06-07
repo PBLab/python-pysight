@@ -27,6 +27,33 @@ def trunc_end_of_file(name) -> str:
 class Movie(object):
     """
     A holder for Volume objects to be displayed consecutively.
+
+    :param pd.DataFrame data: All recorded data
+    :param pd.Series lines: Recorded lines
+    :param Generator frame_slices: Slices of frame chunks
+    :param pd.Series frames: Recorded frames
+    :param float reprate: Laser repetition rate in Hz
+    :param str name: Name of the file that is parsed
+    :param float binwidth: Binwidth of multiscaler in seconds (100 ps == 100e-12)
+    :param float fill_frac: Temporal fill fraction of the original movie, in percentage
+    :param bool bidir: Whether the original scan was bi-directional
+    :param int num_of_channels: Number of recorded channels
+    :param dict outputs: Required outputs
+    :param bool censor: Whether to perform censor correction (currently NotImplemented)
+    :param bool flim: Whether to perform FLIM (currently NotImplemented)
+    :param dict lst_metadata: Metadata of the ``.lst`` file
+    :param dict exp_params: Parameters used for fitting when using censor correction (currently NotImplemented)
+    :param int line_delta: Number of bins between subsequent line signals
+    :param bool use_sweeps: Whether to count each sweep as a line in the resulting image
+    :param float cache_size: Size of cache in bytes
+    :param bool tag_as_phase: Whether to take into consideration the sinusoidal pattern of the TAG lens
+    :param float tag_freq: Frequency of TAG lens in Hz
+    :param float mirror_phase: Offset phase of the resonant mirror when scanning. If line shift (pixel shift) is
+                                observed in the resulting image, change this parameter to fix it
+    :param int num_of_frame_chunks: Number of chunks as calculated by the ``VolumeGenerator`` class
+    :param int frames_per_chunk: Number of frames inside each chunk. ``frames_per_chunk * num_of_frame_chunks ==
+                                len(frames)``
+    :param tuple data_shape: Shape of data
     """
     data                = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     lines               = attr.ib(validator=instance_of(pd.Series), repr=False)

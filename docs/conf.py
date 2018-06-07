@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 import os, sys
 
-import mock
-
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'pandas', 'attrs', 'cython', 'tables']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
+# import mock
+#
+# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'pandas', 'attrs', 'cython', 'tables']
+# for mod_name in MOCK_MODULES:
+#     sys.modules[mod_name] = mock.Mock()
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -28,8 +28,8 @@ if os.getenv('SPELLCHECK'):
 source_suffix = '.rst'
 master_doc = 'index'
 project = 'PySight'
-year = '2017'
-author = 'Hagai Hargil'
+year = '2018'
+author = 'Hagai Har-Gil'
 copyright = '{0}, {1}'.format(year, author)
 version = release = '0.9.1'
 autodoc = True

@@ -7,11 +7,13 @@ import pandas as pd
 @attr.s(slots=True)
 class GatedDetection(object):
     """ Gating the unneeded photons """
-    #: Raw data
+    #: ``pd.DataFrame`` Raw data
     raw = attr.ib(validator=instance_of(pd.DataFrame))
-    #: Repetition rate of the laser (float)
+    #: ``float`` Repetition rate of the laser in Hz
     reprate = attr.ib(default=80.3e6, validator=instance_of(float))
+    #: ``float`` Binwidth of the multiscaler in seconds (100 ps == 100e-12)
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
+    #: ``pd.DataFrame`` Returned gated data
     data = attr.ib(init=False)
 
     @property

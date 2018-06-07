@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple
 class FrameChunk:
     """
     Holds a chunk of data and can histogram ir efficiently.
-    Composed out of a Movie - any attribute\method not definedhere is
+    Composed out of a Movie - any attribute\method not defined here is
     taken from the self.movie object with the __getattr__ method
     """
     movie = attr.ib()
@@ -35,10 +35,8 @@ class FrameChunk:
         Main method to create the histogram of data. Assigns each event
         in the dataframe to its correct location, for each channel.
 
-        Returns:
-        --------
-        ``Dict[int, Tuple[np.ndarray]]`` A dictionary with its keys being the spectral channels
-        of the data, and the value is a tuple of the histogrammed data and the edges.
+        :return: A dictionary with its keys being the spectral channels
+                of the data, and the value is a tuple of the histogrammed data and the edges.
         """
         self.hist_dict: Dict[int, Tuple[np.ndarray]] = {}
         for chan in self.df_dict:
@@ -69,15 +67,10 @@ class FrameChunk:
     def __create_hist_edges(self, chan) -> List[np.ndarray]:
         """
         Generate the grid of the histogram.
-        Inputs:
-        -------
 
-        :param chan: ``int`` Channel number
+        :param int chan: Channel number
 
-        Returns:
-        --------
-
-        ``list`` of ``np.ndarray``, one for each dimension
+        :return ``list`` of ``np.ndarray``: One for each dimension
         """
         edges = []
         edges.append(self.__create_line_edges())
@@ -120,6 +113,7 @@ class FrameChunk:
     def __linspace_along_sine(self) -> np.ndarray:
         """
         Find the points that are evenly spaced along a sine function between pi/2 and 3*pi/2
+
         :return: Array of bin edges
         """
         lower_bound = -1 if self.tag_as_phase else 0

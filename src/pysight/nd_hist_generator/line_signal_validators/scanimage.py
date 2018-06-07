@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
@@ -19,8 +16,9 @@ class ScanImageLineValidator:
 
     def run(self) -> Tuple[Dict, np.uint64]:
         """
-        Interpolate SI-specific line signals
-        :return: Dictionary containing the data and the mean difference between subsequent lines
+        Interpolate SI-specific line signals.
+
+        Returns a dictionary containing the data and the mean difference between subsequent lines
         """
         lines = self.dict_of_data['Lines'].loc[:, 'abs_time'].copy()
         lines_mat, rel_idx, end_of_frames_idx, last_idx_of_row, rel_idx_non_end_frame = \
@@ -55,10 +53,10 @@ class ScanImageLineValidator:
     def __diff_mat_analysis(self, y: np.ndarray, lines_mat: np.ndarray, last_idx: np.ndarray,
                             delta: int, rel_idx: np.ndarray) -> np.ndarray:
         """
-        Check for missing\extra lines in the matrix of lines
-        :param diff_mat: np.ndarray
-        :param last_idx: last index of relevant lines in the frame
-        :return:
+        Check for missing\extra lines in the matrix of lines.
+
+        :param np.ndarray diff_mat:
+        :param np.ndarray last_idx: Last index of relevant lines in the frame
         """
         diff_mat = np.abs(np.subtract(lines_mat, y, dtype=np.int64))
         missing_vals_rows, missing_vals_cols = np.where(diff_mat > delta / 20)

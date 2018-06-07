@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 import pandas as pd
 import numpy as np
 import attr

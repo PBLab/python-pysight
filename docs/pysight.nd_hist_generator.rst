@@ -70,7 +70,7 @@ pysight\.nd\_hist\_generator\.tag\_bits module
 pysight\.nd\_hist\_generator\.tag\_lens module
 ---------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.tag_len
+.. automodule:: pysight.nd_hist_generator.tag_lens
     :members:
     :undoc-members:
     :show-inheritance:

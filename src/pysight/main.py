@@ -1,7 +1,7 @@
 """
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-__author__ = Hagai Hargil
+__author__ = Hagai Har-Gil
 Created on Thu Oct 13 09:37:02 2016
 """
 from typing import Union, Tuple
@@ -56,8 +56,7 @@ def main_data_readout(gui):
             dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
             tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
                                       dict_of_inputs=cur_file.dict_of_input_channels,
-                                      use_tag_bits=gui.tag_bits,
-                                      dict_of_slices_hex=dict_of_slices_hex, dict_of_slices_bin=None,
+                                      use_tag_bits=gui.tag_bits, dict_of_slices_hex=dict_of_slices_hex,
                                       time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
                                       num_of_channels=cur_file.num_of_channels, )
             tabulated_data.run()
@@ -212,10 +211,11 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False,
                   cfg_file: str='') -> pd.DataFrame:
     """
     Run PySight on all list files in the folder
-    :param foldername: str - Main folder to run the analysis on.
-    :param glob_str: String for the `glob` function to filter list files
-    :param recursive: bool - Whether the search should be recursive.
-    :param cfg_file: str - Name of config file to use
+
+    :param str foldername: - Main folder to run the analysis on.
+    :param str glob_str: String for the `glob` function to filter list files
+    :param bool recursive: Whether the search should be recursive.
+    :param str cfg_file: Name of config file to use
     :return pd.DataFrame: Record of analyzed data
     """
 
@@ -279,12 +279,11 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
              cfg_file: str=''):
     """
     Run several instances of PySight using the multiprocessing module.
-    :param foldername: Folder to scan
-    :param glob_str: Glob string to filter files
-    :param recursive: Whether to scan subdirectories as well
-    :param n_proc: Number of processes to use (None means all)
-    :param cfg_file: str - Configuration file name
-    :return: None
+    :param str foldername: Folder to scan
+    :param str glob_str: Glob string to filter files
+    :param bool recursive: Whether to scan subdirectories as well
+    :param int n_proc: Number of processes to use (None means all)
+    :param str cfg_file: Configuration file name
     """
     import pathlib
     import multiprocessing as mp

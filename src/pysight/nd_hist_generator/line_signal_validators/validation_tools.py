@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 from typing import Dict, Tuple
 import pandas as pd
 import numpy as np
@@ -27,24 +24,24 @@ class LinesType(Enum):
 class SignalValidator:
     """
     Parse a dictionary of all recorded signals and verify the data's integrity
-    Inputs:
-        :param dict_of_data dict: Dictionary with keys corresponding to signal type,
-        and values as DataFrames.
-        :param data_to_grab list: Column names from the DF of the data to parse.
-        :param num_of_lines int: Number of lines (x pixels) in the frame)
-        :param num_of_frames int: Number of frames of the data. If "Frames" is not in the
-        dict_of_data keys then this number is disregarded.
-        :param binwidth float: Multiscaler binwidth in seconds.
-        :param line_freq float: Line frequency of the fast scanner (x) in Hz.
-        :param bidir bool: Whether the scan was bidirectional.
-        :param delay_between_frames float: Time between subsequent frames. Depends on imaging
-        software and hardware.
-        :param use_sweeps bool: Use the sweeps of the multiscaler as an indicator of new lines.
-        :bidir phase float: A number in microseconds typically reported by the scanning software.
-        Helps with alignment of the generated image when using a bidirectional scan.
-        :param imaging_software ImagingSoftware: Software used for imaging.
-        :param change_thresh float: Percent-like [0, 1] threshold to discard irregular line signals.
-        Above which PySight will terminate with an exception.
+
+    :param dict dict_of_data: Dictionary with keys corresponding to signal type,
+                            and values as DataFrames.
+    :param list data_to_grab: Column names from the DF of the data to parse.
+    :param int num_of_lines: Number of lines (x pixels) in the frame)
+    :param int num_of_frames: Number of frames of the data. If "Frames" is not in the
+                            dict_of_data keys then this number is disregarded.
+    :param float binwidth: Multiscaler binwidth in seconds.
+    :param float line_freq: Line frequency of the fast scanner (x) in Hz.
+    :param bool bidir: Whether the scan was bidirectional.
+    :param float delay_between_frames: Time between subsequent frames. Depends on imaging
+                                        software and hardware.
+    :param bool use_sweeps: Use the sweeps of the multiscaler as an indicator of new lines.
+    :param float bidir_phase: A number in microseconds typically reported by the scanning software.
+                                Helps with alignment of the generated image when using a bidirectional scan.
+    :param ImagingSoftware imaging_software: Software used for imaging.
+    :param float change_thresh: Percent-like [0, 1] threshold to discard irregular line signals.
+                                Above which PySight will terminate with an exception.
     """
     dict_of_data = attr.ib(validator=instance_of(dict))
     data_to_grab = attr.ib(default=['abs_time', 'sweep'], validator=instance_of(list))
@@ -60,7 +57,6 @@ class SignalValidator:
     change_thresh = attr.ib(default=0.3, validator=instance_of(float))
     handle_line_cases = attr.ib(init=False)
     last_event_time = attr.ib(init=False)
-    max_sweep = attr.ib(init=False)
     line_type_data = attr.ib(init=False)
     line_delta = attr.ib(init=False)
 
@@ -89,10 +85,7 @@ class SignalValidator:
         return self.df.sweep.max()
 
     def run(self):
-        """
-        Main pipeline
-        :return:
-        """
+        """ Main pipeline """
         if 'Frames' in self.dict_of_data:
             self.num_of_frames = self.dict_of_data['Frames'].shape[0] + 1  # account for first frame
         self.last_event_time = self.__calc_last_event_time()
