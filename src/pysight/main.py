@@ -193,7 +193,12 @@ def convert_json_to_input_dict(cfg_fname):
 
 
 def run(cfg_file: str=None) -> Tuple[pd.DataFrame, Movie]:
-    """ Run PySight. Supply an existing configuration filename optionally, otherwise a GUI will open. """
+    """ Run PySight.
+
+    :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
+
+    :return (pd.DataFrame, Movie): DataFrame with all the data, and a ``Movie`` object.
+    """
     from pysight.tkinter_gui_multiscaler import GuiAppLst
     from pysight.tkinter_gui_multiscaler import verify_gui_input
 

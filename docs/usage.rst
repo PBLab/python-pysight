@@ -112,8 +112,8 @@ Below, specify the phase delay of the scanners and fill fraction, to cancel pixe
 Limitations
 -----------
 
-* List (``.lst``) files have to be saved in ``ASCII`` format, and not binary.
+* Only three input channels are currently supported. If your multiscaler has more than 3 (including start), please
+contact the package authors and supply such list files so that support could be added. Alternatively, contribute a
+pull request to the PySight repo.
 
-* Only three input channels are currently supported.
-
-* Timepatch ``3`` is currently unsupported (and can usually be avoided completely).
+* Timepatch ``3`` is currently supported only for binary files (and can usually be avoided completely).

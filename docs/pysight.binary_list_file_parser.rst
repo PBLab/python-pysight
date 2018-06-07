@@ -1,6 +1,7 @@
 pysight\.binary\_list\_file\_parser package
 ===========================================
 
+----------
 Submodules
 ----------
 

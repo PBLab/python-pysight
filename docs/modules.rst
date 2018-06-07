@@ -1,5 +1,5 @@
-pysight
-=======
+PySight API
+===========
 
 .. toctree::
    :maxdepth: 6

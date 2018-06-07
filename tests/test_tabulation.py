@@ -7,8 +7,7 @@ from pysight.ascii_list_file_parser.tabulation import *
 class TestTabulation(unittest.TestCase):
 
     tab = Tabulate(dict_of_inputs={}, data=np.array([]),
-                   dict_of_slices_hex={},
-                   dict_of_slices_bin={})
+                   dict_of_slices_hex={})
     def test_conversion_hex_to_bits(self):
         diction = \
             {

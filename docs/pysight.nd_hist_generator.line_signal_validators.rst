@@ -1,6 +1,7 @@
 pysight\.nd\_hist\_generator\.line\_signal\_validators package
 ==============================================================
 
+----------
 Submodules
 ----------
 

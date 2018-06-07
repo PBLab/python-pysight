@@ -1,6 +1,7 @@
 pysight\.nd\_hist\_generator package
 ====================================
 
+-----------
 Subpackages
 -----------
 
@@ -8,6 +9,7 @@ Subpackages
 
     pysight.nd_hist_generator.line_signal_validators
 
+----------
 Submodules
 ----------
 
@@ -91,6 +93,7 @@ pysight\.nd\_hist\_generator\.frame\_chunk module
     :undoc-members:
     :show-inheritance:
 
+---------------
 Module contents
 ---------------
 

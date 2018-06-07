@@ -12,7 +12,23 @@ from pysight.nd_hist_generator.tag_lens import TagPipeline
 @attr.s(slots=True)
 class Allocate(object):
     """
-    Create pipeline of analysis of lst files.
+    Allocate photons to their coordinates (frames, lines, etc.).
+
+    :param pd.DataFrame df_photons: DataFrame with photons
+    :param dict dict_of_data: Organized data parsed from file
+    :param float laser_freq: Frequency of laser pulses in Hz
+    :param float binwidth: Binwidth of multiscaler in seconds (100 ps == 100e-12)
+    :param bool bidir: Whether the scan was performed in a bi-directional manner
+    :param float tag_freq: TAG lens frequency in Hz
+    :param int tag_pulses: Number of TAG driver pulses per period (currently ``NotImplemented``)
+    :param float phase: Phase of the resonant scanner when used in a bi-directional mode
+    :param bool keep_unidir: Whether to keep photons from the returning phase of the resonant scanner
+    :param bool flim: Whether to perform FLIM analysis (currently ``NotImplemented``)
+    :param dict exp_params: Parameters from the FLIM fit (currently ``NotImplemented``)
+    :param bool censor: Whether to perform censor correction (currently ``NotImplemented``)
+    :param bool tag_interp_ok: Whether the TAG lens interpolation process completed successfully
+    :param bool tag_to_phase: Whether to interpolate the TAG lens sinusoidal pattern
+    :param int tag_offset: Offset in degrees of the TAG pulse
     """
     # TODO: Variable documentation
     df_photons         = attr.ib(validator=instance_of(pd.DataFrame))
@@ -33,7 +49,7 @@ class Allocate(object):
     sorted_indices     = attr.ib(init=False)
 
     def run(self):
-        """ Pipeline of analysis """
+        """ Pipeline of allocation """
         print('Channels of events found. Allocating photons to their frames and lines...')
         # Unidirectional scan - create fake lines
         if not self.bidir:
@@ -114,8 +130,9 @@ class Allocate(object):
         """
         Take the data after modulu BINS_BETWEEN_PULSES, in each channel,
          and fit an exponential decay to it, with some lifetime.
-        :return: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
-        inside a dictionary with the channel number as its key.
+
+        :return dict: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
+                        inside a dictionary with the channel number as its key.
         """
         params = {}
         for chan, data_of_channel in enumerate(list_of_channels, 1):
@@ -134,11 +151,12 @@ class Allocate(object):
 
         return params
 
-    def __requires_censoring(self, data: np.ndarray):
+    def __requires_censoring(self, data: np.ndarray) -> bool:
         """
         Method to determine if we should undergo the censor correction process
-        :param data: Bins of histogram from their peak onward.
-        :return: boolean value
+
+        :param np.ndarray data: Bins of histogram from their peak onward.
+        :return bool:
         """
         diffs = np.diff(data)
         if len(diffs) == 0:
@@ -171,10 +189,10 @@ class Allocate(object):
 
     def __interpolate_laser(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List]:
         """
-        Assign a time relative to a laser pulse for each photon.
-        :param df: Dataframe with data for each photon.
-        Assuming that the clock is synced to a 10 MHz signal.
-        :return: Modified dataframe.
+        Assign a time relative to a laser pulse for each photon. Assuming that the clock is synced to a 10 MHz signal.
+
+        :param pd.DataFrame df: Dataframe with data for each photon.
+        :return: Modified dataframe and the relative times.
         """
         TEN_MEGAHERTZ_IN_BINS = 251
         rel_time = []

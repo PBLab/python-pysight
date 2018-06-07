@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import os, sys
+import os
 
 # import mock
 #
@@ -40,11 +40,10 @@ extlinks = {
     'issue': ('https://github.com/HagaiHargil/python-pysight/issues/%s', '#'),
     'pr': ('https://github.com/HagaiHargil/python-pysight/pull/%s', 'PR #'),
 }
-# html_theme = "alabaster"
-html_theme_options = {
-    "font_family": "Palatino, Georgia, serif",
-    "font_size": "18px",
-}
+# html_theme_options = {
+#     "font_family": "Palatino, Georgia, serif",
+#     "font_size": "18px",
+# }
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_use_index = True
