@@ -13,7 +13,19 @@ from itertools import chain
 
 @attr.s(slots=True)
 class TagPipeline(object):
-    """ Pipeline to interpolate TAG lens pulses """
+    """
+    Pipeline to interpolate TAG lens pulses
+
+    Inputs:
+    -------
+    :param photons pd.DataFrame: DataFrame of photons in experiment
+    :param tag_pulses pd.Series: Series of TAG events
+    :param freq float: Expected frequency of TAG sync pulses in Hz
+    :param binwidth float: Multiscaler binwidth in seconds (100 ps == 100e-12)
+    :param num_of_pulses int: Number of TAG pulses from the driver per period. Currently NotImplemented
+    :param to_phase bool: Whether to compensate for the sinusoidal pattern of the TAG. Leave True
+    :param offset int: Offset in degrees given from the TAG driver for each pulse
+    """
     photons       = attr.ib(validator=instance_of(pd.DataFrame))
     tag_pulses    = attr.ib(validator=instance_of(pd.Series))
     freq          = attr.ib(default=189e3, validator=instance_of(float))  # Hz

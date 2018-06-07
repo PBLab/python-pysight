@@ -104,7 +104,7 @@ class ScanImageLineValidator:
         end_of_frames_idx = np.where(end_of_frames)[0]  # scanimage specific
         rel_idx_non_end_frame = np.where(change <= self.change_thresh)[0]
         idx_list = [slice(st, sp) for st, sp in self.__pairwise([0] + list(end_of_frames_idx))]
-        lines_mat = np.zeros((len(idx_list), self.num_of_lines * 2), dtype=np.uint64)
+        lines_mat = np.zeros((len(end_of_frames_idx), self.num_of_lines * 2), dtype=np.uint64)
         last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)
         for cur_row, cur_slice in enumerate(idx_list):
             last_idx = cur_slice.stop-cur_slice.start

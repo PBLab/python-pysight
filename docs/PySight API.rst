@@ -1,6 +1,3 @@
-pysight package
-===============
-
 Subpackages
 -----------
 

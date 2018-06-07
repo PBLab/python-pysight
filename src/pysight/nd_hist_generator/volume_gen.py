@@ -13,11 +13,13 @@ class VolumeGenerator:
     Generate the list of volume chunks to be processed.
     Main method is "create_frame_slices", which returns a generator containing
     slice objects that signify the chunks of volumes to be processed simultaneously.
+
     Inputs:
+    -------
     :param frames pd.DataFrame: Frames for the entire dataset. Should not contain a closing, right-edge, frame.
     :param data_shape tuple: Shape of the final n-dimensional array (from the Output object)
     :param MAX_BYTES_ALLOWED int: Number of bytes that can be held in RAM. Calculated using the
-    psutil package if not supplied manually.
+                                  psutil package if not supplied manually.
     """
     frames = attr.ib(validator=instance_of(pd.Series), repr=False)
     data_shape = attr.ib(validator=instance_of(tuple))

@@ -14,7 +14,7 @@ Submodules
 pysight\.nd\_hist\_generator\.allocation\_tools module
 ------------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.allocation_tools
+.. automodule:: pysight.nd_hist_generator.allocation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -22,7 +22,7 @@ pysight\.nd\_hist\_generator\.allocation\_tools module
 pysight\.nd\_hist\_generator\.censor\_tools module
 --------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.censor_tools
+.. automodule:: pysight.nd_hist_generator.censor_correction
     :members:
     :undoc-members:
     :show-inheritance:
@@ -30,7 +30,7 @@ pysight\.nd\_hist\_generator\.censor\_tools module
 pysight\.nd\_hist\_generator\.gating\_tools module
 --------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.gating_tools
+.. automodule:: pysight.nd_hist_generator.gating
     :members:
     :undoc-members:
     :show-inheritance:
@@ -38,7 +38,7 @@ pysight\.nd\_hist\_generator\.gating\_tools module
 pysight\.nd\_hist\_generator\.movie\_tools module
 -------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.movie_tools
+.. automodule:: pysight.nd_hist_generator.movie
     :members:
     :undoc-members:
     :show-inheritance:
@@ -46,7 +46,7 @@ pysight\.nd\_hist\_generator\.movie\_tools module
 pysight\.nd\_hist\_generator\.output\_tools module
 --------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.output_tools
+.. automodule:: pysight.nd_hist_generator.outputs
     :members:
     :undoc-members:
     :show-inheritance:
@@ -54,7 +54,7 @@ pysight\.nd\_hist\_generator\.output\_tools module
 pysight\.nd\_hist\_generator\.photon\_df\_tools module
 ------------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.photon_df_tools
+.. automodule:: pysight.nd_hist_generator.photon_df
     :members:
     :undoc-members:
     :show-inheritance:
@@ -62,7 +62,7 @@ pysight\.nd\_hist\_generator\.photon\_df\_tools module
 pysight\.nd\_hist\_generator\.tag\_bits\_tools module
 -----------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.tag_bits_tools
+.. automodule:: pysight.nd_hist_generator.tag_bits
     :members:
     :undoc-members:
     :show-inheritance:
@@ -70,7 +70,7 @@ pysight\.nd\_hist\_generator\.tag\_bits\_tools module
 pysight\.nd\_hist\_generator\.tag\_tools\_v2 module
 ---------------------------------------------------
 
-.. automodule:: pysight.nd_hist_generator.tag_tools_v2
+.. automodule:: pysight.nd_hist_generator.tag_len
     :members:
     :undoc-members:
     :show-inheritance:
