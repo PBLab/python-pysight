@@ -11,7 +11,7 @@ Subpackages
 Submodules
 ----------
 
-pysight\.nd\_hist\_generator\.allocation\_tools module
+pysight\.nd\_hist\_generator\.allocation module
 ------------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.allocation
@@ -19,15 +19,15 @@ pysight\.nd\_hist\_generator\.allocation\_tools module
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.censor\_tools module
---------------------------------------------------
+pysight\.nd\_hist\_generator\.censor\_correction module
+-------------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.censor_correction
     :members:
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.gating\_tools module
+pysight\.nd\_hist\_generator\.gating module
 --------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.gating
@@ -35,7 +35,7 @@ pysight\.nd\_hist\_generator\.gating\_tools module
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.movie\_tools module
+pysight\.nd\_hist\_generator\.movie module
 -------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.movie
@@ -43,7 +43,7 @@ pysight\.nd\_hist\_generator\.movie\_tools module
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.output\_tools module
+pysight\.nd\_hist\_generator\.outputs module
 --------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.outputs
@@ -51,7 +51,7 @@ pysight\.nd\_hist\_generator\.output\_tools module
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.photon\_df\_tools module
+pysight\.nd\_hist\_generator\.photon\_df module
 ------------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.photon_df
@@ -59,15 +59,15 @@ pysight\.nd\_hist\_generator\.photon\_df\_tools module
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.tag\_bits\_tools module
------------------------------------------------------
+pysight\.nd\_hist\_generator\.tag\_bits module
+----------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.tag_bits
     :members:
     :undoc-members:
     :show-inheritance:
 
-pysight\.nd\_hist\_generator\.tag\_tools\_v2 module
+pysight\.nd\_hist\_generator\.tag\_lens module
 ---------------------------------------------------
 
 .. automodule:: pysight.nd_hist_generator.tag_len
