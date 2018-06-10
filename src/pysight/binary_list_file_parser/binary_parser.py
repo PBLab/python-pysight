@@ -141,33 +141,30 @@ class BinaryDataParser:
         tag = np.right_shift(self.data, right_shift_by) & ones
         return tag.astype(np.uint16)
 
-    def __get_lost(self):
+    def __get_lost(self) -> np.ndarray:
         """
         Parse the lost bits.
-        Return:
-        -------
-            :param lost np.ndarray: Array of the lost bit for each event.
+
+        :return np.ndarray lost: Array of the lost bit for each event.
         """
         right_shift_by = self.timepatch_bits.value.total - 1
         lost = np.right_shift(self.data, right_shift_by) & 1
         return lost.astype(np.uint8)
 
-    def __get_tag_f3(self):
+    def __get_tag_f3(self) -> np.ndarray:
         """
         Parse the TAG bits of the f3 timepatch files.
-        Return:
-        -------
-            :param tag np.ndarray: Array of the TAG bits for each event.
+
+        :return np.ndarray tag: Array of the TAG bits for each event.
         """
         tag = np.right_shift(self.data, 48) & 65535
         return tag.astype(np.uint16)
 
-    def __get_lost_f3(self):
+    def __get_lost_f3(self) -> np.ndarray:
         """
         Parse the lost bit of the f3 timepatch files.
-        Return:
-        -------
-            :param lost np.ndarray: Array of the lost bit for each event.
+
+        :return np.ndarray lost: Array of the lost bit for each event.
         """
         lost = np.right_shift(self.data, 47) & 1
         return lost.astype(np.uint8)
@@ -191,12 +188,11 @@ class BinaryDataParser:
                     thrown_channels += 1
             [self.dict_of_inputs_bin.pop(key) for key in keys_to_pop]
 
-    def __gen_df(self):
+    def __gen_df(self) -> pd.DataFrame:
         """
         Align the acquired data into a single DataFrame
-        Return:
-        -------
-            pd.DataFrame
+
+        :return pd.DataFrame:
         """
         df = pd.DataFrame(self.time, index=[self.channel, self.edge],
                           columns=['abs_time'])
@@ -222,10 +218,10 @@ class BinaryDataParser:
         df.index.names = ['analog_input', 'edge']
         return df
 
-    def __slice_df_to_dict(self):
+    def __slice_df_to_dict(self) -> dict:
         """
         Take the DataFrame of data and create a dictionary of data from it
-        :return: dict
+        :return dict:
         """
         dict_of_data = {}
         for key, analog_chan in self.dict_of_inputs_bin.items():
