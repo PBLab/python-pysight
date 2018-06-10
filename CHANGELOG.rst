@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.9.2 (2018-06-XX)
+------------------
+
+* Many documentation updates, especially for the raw API.
+
+* Tweaks to memory usage when writing chunks.
+
 0.9.1 (2018-06-05)
 ------------------
 

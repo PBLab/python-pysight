@@ -32,11 +32,11 @@ class VolumeGenerator:
     def __attrs_post_init__(self):
         if self.MAX_BYTES_ALLOWED == 0:
             try:
-                free = psutil.virtual_memory().free
+                avail = psutil.virtual_memory().available
             except AttributeError:
                 self.MAX_BYTES_ALLOWED = int(1e9)
             else:
-                self.MAX_BYTES_ALLOWED = int(free // 2)
+                self.MAX_BYTES_ALLOWED = int(avail // 4)
 
     def create_frame_slices(self, create_slices=True) -> Generator:
         """

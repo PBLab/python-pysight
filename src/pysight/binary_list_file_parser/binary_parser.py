@@ -91,9 +91,8 @@ class BinaryDataParser:
     def __get_channel(self) -> np.ndarray:
         """
         Parse the channel and edge information from the data.
-        Return:
-        -------
-            :param chan np.ndarray: Array of channel numbers, with 6 == START
+
+        :return np.ndarray chan: Array of channel numbers, with 6 == START
         """
         chan = (self.data & 0b111).astype(np.uint8)
         if np.any(chan > 6) or np.any(chan < 1):
@@ -104,41 +103,37 @@ class BinaryDataParser:
     def __get_edge(self) -> np.ndarray:
         """
         Parse the edge of each data line.
-        Return:
-        -------
-            :param edge np.ndarray: Array of edges, 1 means falling edge.
+
+        :return np.ndarray edge: Array of edges, 1 means falling edge
         """
         return (np.right_shift(self.data, 3) & 1).astype(np.uint8)
 
     def __get_time(self) -> np.ndarray:
         """
         Parse the time bits.
-        Return:
-        -------
-            :param time np.ndarray: Array of the absolute times for each event.
+
+        :return np.ndarray time: Array of the absolute times for each event.
         """
         ones = int('1' * self.timepatch_bits.value.time, 2)  # time bits
         time = np.right_shift(self.data, 4) & ones
         return time.astype(np.uint64)
 
-    def __get_sweep(self):
+    def __get_sweep(self) -> np.ndarray:
         """
         Parse the sweep bits.
-        Return:
-        -------
-            :param sweep np.ndarray: Array of the sweep number for each event.
+
+        :return np.ndarray sweep: Array of the sweep number for each event.
         """
         ones = int('1' * self.timepatch_bits.value.sweep, 2)
         right_shift_by = 4 + self.timepatch_bits.value.time
         sweep = np.right_shift(self.data, right_shift_by) & ones
         return sweep.astype(np.uint16)
 
-    def __get_tag(self):
+    def __get_tag(self) -> np.ndarray:
         """
         Parse the tag bits.
-        Return:
-        -------
-            :param tag np.ndarray: Array of the tag bits for each event.
+
+        :return np.ndarray tag: Array of the tag bits for each event.
         """
         ones = int('1' * self.timepatch_bits.value.tag, 2)
         right_shift_by = 4 + self.timepatch_bits.value.time + \
