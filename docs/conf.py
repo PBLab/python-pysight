@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 import os
-
+import matplotlib
+matplotlib.use('agg')
 # import mock
 #
 # MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'pandas', 'attrs', 'cython', 'tables']
@@ -33,7 +34,6 @@ author = 'Hagai Har-Gil'
 copyright = '{0}, {1}'.format(year, author)
 version = release = '0.9.2'
 autodoc = True
-autodoc_mock_imports = ['_tkinter']
 
 pygments_style = 'trac'
 templates_path = ['.']
