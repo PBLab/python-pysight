@@ -95,7 +95,7 @@ class BinaryDataParser:
         :return np.ndarray chan: Array of channel numbers, with 6 == START
         """
         chan = (self.data & 0b111).astype(np.uint8)
-        if np.any(chan > 6) or np.any(chan < 1):
+        if np.any(chan > 6):
             warnings.warn(f"Illegal channels found in file. Encountered the following"
                           f" values: {np.unique(chan)}.\nTrying to continue.")
         return chan

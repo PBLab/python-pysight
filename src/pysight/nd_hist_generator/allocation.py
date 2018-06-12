@@ -75,7 +75,10 @@ class Allocate(object):
 
     def __allocate_photons(self):
         """
-        Returns a dataframe in which each photon is a part of a frame, line and possibly laser pulse
+        Returns a dataframe in which each photon has an address as its index - its corresponding
+        frame, line, and possibly laser pulse. This address is used to histogram it in the right pixel.
+        The arrival time of each photon is calculated relative to this address - start-of-line, for example.
+        The TAG lens address is different - each photon simply receives a phase between 0 and 2π.
         """
         irrelevant_keys = {'PMT1', 'PMT2', 'TAG Lens'}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
@@ -98,12 +101,15 @@ class Allocate(object):
             if 'Lines' == key:
                 self.__rectify_photons_in_uneven_lines()
 
-            # if 'Laser' != key:
-            #     self.df_photons.loc[:, key] = self.df_photons.loc[:, key].astype('category')
             self.df_photons.set_index(keys=key, inplace=True, append=True, drop=True)
 
         assert len(self.df_photons) > 0
         assert np.all(self.df_photons.iloc[:, 0].values >= 0)  # finds NaNs as well
+        self.df_photons.sort_index(level=self.df_photons.index.names, axis=0,
+                                   inplace=True, sort_remaining=True)
+        self.df_photons.sort_index(level=self.df_photons.index.names, axis=1,
+                                   inplace=True, sort_remaining=True)
+        assert self.df_photons.index.is_lexsorted()
 
     def __allocate_tag(self):
         """ Allocate photons to TAG lens phase """
@@ -131,7 +137,7 @@ class Allocate(object):
         Take the data after modulu BINS_BETWEEN_PULSES, in each channel,
          and fit an exponential decay to it, with some lifetime.
 
-        :return dict: (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
+        :return dict (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
                         inside a dictionary with the channel number as its key.
         """
         params = {}

@@ -1,12 +1,16 @@
 Changelog
 =========
 
-0.9.2 (2018-06-XX)
+0.9.2 (2018-06-12)
 ------------------
 
 * Many documentation updates, especially for the raw API.
 
 * Tweaks to memory usage when writing chunks.
+
+* PySight allows zero-events in binary files.
+
+* Fixed lex-sort issue with the ``Frames`` column.
 
 0.9.1 (2018-06-05)
 ------------------

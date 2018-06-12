@@ -33,6 +33,7 @@ author = 'Hagai Har-Gil'
 copyright = '{0}, {1}'.format(year, author)
 version = release = '0.9.1'
 autodoc = True
+autodoc_mock_imports = ['_tkinter']
 
 pygments_style = 'trac'
 templates_path = ['.']

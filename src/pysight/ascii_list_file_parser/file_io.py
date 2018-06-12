@@ -146,14 +146,19 @@ class FileIO(object):
 
         try:
             with open(self.filename, 'r') as f:
-                txt = f.read(350)
+                txt = f.read(400)
         except FileNotFoundError:
             raise FileNotFoundError(f"File {self.filename} doesn't exist.")
+        except UnicodeDecodeError:
+            with open(self.filename, 'rb') as f:
+                txt = f.read(400).decode()
         except:
             raise Exception(f'File {self.filename} read unsuccessfully.')
 
-        reg = re.compile(r'\nmpafmt=(\w{3})\n')
+        reg = re.compile(r'\nmpafmt=(\w{3})')
         match = reg.findall(txt)
+        if len(match) == 0:
+            raise RuntimeError('Could not resolve file type.')
         if match[0] == 'dat':
             self.is_binary = True
         elif match[0] == 'asc':
