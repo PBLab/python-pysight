@@ -176,7 +176,7 @@ class BinaryDataParser:
         the code will ignore this channel, but not raise an exception
         """
 
-        actual_data_channels = set(np.unique(self.channel))
+        actual_data_channels = set(np.unique(self.channel)).difference({0})
         if actual_data_channels != set(self.dict_of_inputs_bin.values()):
             warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
                           f"The list files contains data in the following channels: {actual_data_channels}.")
