@@ -62,7 +62,7 @@ Installation and Documentation
 
 ``pip install pysight``
 
-Current version: 0.9.2
+Current version: 0.9.3
 
 Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed usage instructions.
 

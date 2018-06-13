@@ -36,7 +36,7 @@ class VolumeGenerator:
             except AttributeError:
                 self.MAX_BYTES_ALLOWED = int(1e9)
             else:
-                self.MAX_BYTES_ALLOWED = int(avail // 4)
+                self.MAX_BYTES_ALLOWED = int(avail // 16)
 
     def create_frame_slices(self, create_slices=True) -> Generator:
         """

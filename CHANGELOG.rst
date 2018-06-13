@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.9.3 (2018-06-13)
+------------------
+
+* More documentation work.
+
+* Lower memory usage in certain parts of the application.
+
 0.9.2 (2018-06-12)
 ------------------
 

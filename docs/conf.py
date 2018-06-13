@@ -4,11 +4,6 @@ from __future__ import unicode_literals
 import os
 import matplotlib
 matplotlib.use('agg')
-# import mock
-#
-# MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'pandas', 'attrs', 'cython', 'tables']
-# for mod_name in MOCK_MODULES:
-#     sys.modules[mod_name] = mock.Mock()
 
 extensions = [
     'sphinx.ext.autodoc',
@@ -32,7 +27,7 @@ project = 'PySight'
 year = '2018'
 author = 'Hagai Har-Gil'
 copyright = '{0}, {1}'.format(year, author)
-version = release = '0.9.2'
+version = release = '0.9.3'
 autodoc = True
 autodoc_mock_imports = ['_tkinter']
 

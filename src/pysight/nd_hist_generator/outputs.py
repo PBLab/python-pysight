@@ -120,13 +120,8 @@ class OutputParser(object):
     def determine_data_shape_full(self):
         """ Return the tuple that describes the shape of the final dataset """
 
-        # Dimension order: [X, Y, Z, LIFETIME, FRAME]
-        shape = np.squeeze(np.empty(shape=(self.num_of_frames,
-                                           self.x_pixels,
-                                           self.y_pixels,
-                                           self.z_pixels,
-                                           self.bins_bet_pulses),
-                                    dtype=np.int8)).shape
-        if self.num_of_frames == 1:  # Edge case in which the single frame is "squeezed out"
-            return (1,) + shape
-        return shape
+        # Dimension order: [FRAME, X, Y, Z, LIFETIME]
+        non_squeezed = (self.x_pixels, self.y_pixels,
+                        self.z_pixels, self.bins_bet_pulses)
+        shape = tuple([dim for dim in non_squeezed if dim != 1])
+        return (self.num_of_frames,) + shape  # we never "squeeze" the number of frames
