@@ -192,7 +192,7 @@ class Movie(object):
         slice_dict = {}
         idx_slice = pd.IndexSlice
         for chan in range(1, self.num_of_channels + 1):
-            slice_dict[chan] = self.data.loc[(chan, frame_chunk.start), (chan, frame_chunk.stop), :]
+            slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
         frames = self.frames.loc[frame_chunk]
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
