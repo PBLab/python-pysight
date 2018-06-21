@@ -170,7 +170,8 @@ class Tabulate(object):
         actual_data_channels = set(self.df_after_timepatch['channel'].cat.categories.values)
         if actual_data_channels != set(self.dict_of_inputs.values()):
             warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                          f"The list files contains data in the following channels: {actual_data_channels}.")
+                          f"The list files contains data in the following channels: "
+                          f"{{int(val, 2) for val in actual_data_channels}}.")
             thrown_channels = 0
             keys_to_pop = []
             for key, item in self.dict_of_inputs.items():

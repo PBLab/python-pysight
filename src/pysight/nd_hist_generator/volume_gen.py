@@ -34,9 +34,9 @@ class VolumeGenerator:
             try:
                 avail = psutil.virtual_memory().available
             except AttributeError:
-                self.MAX_BYTES_ALLOWED = int(1e9)
+                self.MAX_BYTES_ALLOWED = 1_000_000
             else:
-                self.MAX_BYTES_ALLOWED = int(avail // 16)
+                self.MAX_BYTES_ALLOWED = avail // 32  # magic number
 
     def create_frame_slices(self, create_slices=True) -> Generator:
         """

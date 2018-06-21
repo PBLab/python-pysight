@@ -17,8 +17,9 @@ from .frame_chunk import FrameChunk
 def trunc_end_of_file(name) -> str:
     """
     Take only the start of the filename to avoid error with Python and Windows
-    :param name: File name to truncate.
-    :return:
+
+    :param str name: Filename to truncate
+    :return str:
     """
     return name[:240]
 
@@ -100,7 +101,7 @@ class Movie(object):
 
     @property
     def photons_per_pulse(self) -> Dict[int, float]:
-        """ Caclculate the amount of detected photons per pulse """
+        """ Calculate the amount of detected photons per pulse """
         max_time = self.list_of_volume_times[-1] * self.binwidth
         num_of_pulses = int(max_time * self.reprate)
         photons_per_pulse = {}
@@ -191,7 +192,7 @@ class Movie(object):
         slice_dict = {}
         idx_slice = pd.IndexSlice
         for chan in range(1, self.num_of_channels + 1):
-            slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
+            slice_dict[chan] = self.data.loc[(chan, frame_chunk.start), (chan, frame_chunk.stop), :]
         frames = self.frames.loc[frame_chunk]
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
@@ -243,8 +244,9 @@ class Movie(object):
         If the user desired, create two memory constructs -
         A summed array of all images (for a specific channel), and a stack containing
         all images in a serial manner.
-        :param data: Data to be saved.
-        :param channel: Current spectral channel of data
+
+        :param np.ndarray data: Data to be saved
+        :param int channel: Current spectral channel of data
         """
         self.stack[channel].append(data)
         assert len(data.shape) > 2
@@ -253,24 +255,24 @@ class Movie(object):
     def __save_stack_incr(self, data: np.ndarray, channel: int) -> None:
         """
         Save incrementally new data to an open file on the disk
-        :param data: Data to save
-        :param channel: Current spectral channel of data
+
+        :param np.ndarray data: Data to save
+        :param int channel: Current spectral channel of data
         """
         self.outputs['stack'][f'Channel {channel}'][...] = np.squeeze(data)
 
     def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs) -> None:
         """
         Create a summed variable later to be saved as the channel's data
-        :param data: Data to be saved
-        :param channel: Spectral channel of data to be saved
+
+        :param np.ndarray data: Data to be saved
+        :param int channel: Spectral channel of data to be saved
         """
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __print_outputs(self) -> None:
-        """
-        Print to console the outputs that were generated.
-        """
+        """ Print to console the outputs that were generated. """
         if not self.outputs:
             return
 

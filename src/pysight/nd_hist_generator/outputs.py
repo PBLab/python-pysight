@@ -32,8 +32,10 @@ class OutputParser(object):
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024**3, validator=instance_of(int))
     debug = attr.ib(default=False, validator=instance_of(bool))
+    #: Dictionary with data - either the full or summed stack, with a list of HDF5 objects as channels
     outputs = attr.ib(init=False)
-    data_shape = attr.ib(init=False)  # (num_of_frames, x, y, z, tau)
+    #: Tuple of (num_of_frames, x, y, z, tau)
+    data_shape = attr.ib(init=False)
 
     def run(self):
         """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
@@ -69,7 +71,7 @@ class OutputParser(object):
     def __populate_hdf(self, f):
         """
         Generate files and add metadata to each group, write out the data in chunks
-        f: File pointer
+        f: HDF5 file pointer
         """
         data_shape_summed = self.data_shape[1:]
         chunk_shape = list(self.data_shape)
@@ -118,9 +120,10 @@ class OutputParser(object):
             return 1
 
     def determine_data_shape_full(self):
-        """ Return the tuple that describes the shape of the final dataset """
-
-        # Dimension order: [FRAME, X, Y, Z, LIFETIME]
+        """
+        Return the tuple that describes the shape of the final dataset.
+        Dimension order: [FRAME, X, Y, Z, LIFETIME]
+        """
         non_squeezed = (self.x_pixels, self.y_pixels,
                         self.z_pixels, self.bins_bet_pulses)
         shape = tuple([dim for dim in non_squeezed if dim != 1])

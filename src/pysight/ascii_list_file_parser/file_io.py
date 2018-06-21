@@ -31,6 +31,7 @@ class FileIO(object):
     input_stop2                    = attr.ib(default='Lines', validator=instance_of(str))
     binwidth                       = attr.ib(default=800e-12, validator=instance_of(float))
     use_sweeps                     = attr.ib(default=False, validator=instance_of(bool))
+    mirror_phase                   = attr.ib(default=-2.78, validator=instance_of(float))
     is_binary                      = attr.ib(init=False)
     timepatch                      = attr.ib(init=False)
     data_range                     = attr.ib(init=False)
@@ -312,7 +313,7 @@ class FileIO(object):
         """
 
         if self.filename is '' or self.start_of_data_pos == 0 or self.timepatch == '':
-            return ValueError('Wrong input detected.')
+            raise ValueError('Wrong input detected.')
 
         data_length_dict = self.create_data_length_dict()
         # Make sure we read the exact number of lines we were asked to
@@ -339,7 +340,6 @@ class FileIO(object):
                 f.seek(self.start_of_data_pos)
                 arr = np.fromfile(f, dtype='{}S'.format(data_length),
                                   count=num_of_lines_to_read).astype('{}U'.format(data_length))
-
             return arr
 
     def create_inputs_dict(self) -> Dict[str, str]:
@@ -388,7 +388,7 @@ class FileIO(object):
         for key in self.dict_of_input_channels:
             if not self.list_of_recorded_data_channels[help_dict[self.dict_of_input_channels[key]]]:
                 raise UserWarning(f'Wrong channel specification - the key "{key}" is on an empty channel'
-                                  f' (number {self.dict_of_input_channels[key]}).')
+                                  f' (number {int(self.dict_of_input_channels[key], 2)}).')
 
     def __parse_extra_metadata(self, metadata):
         """
@@ -402,6 +402,8 @@ class FileIO(object):
         self.lst_metadata = {}
         for cur_str in list_to_parse:
             self.__parse_str(metadata, cur_str)
+
+        self.lst_metadata['mirror_phase'] = self.mirror_phase
 
     def __parse_str(self, metadata, str_to_parse):
         """

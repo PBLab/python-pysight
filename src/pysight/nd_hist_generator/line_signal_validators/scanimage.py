@@ -13,7 +13,6 @@ class ScanImageLineValidator:
     def __getattr__(self, item):
         return getattr(self.sig_val, item)
 
-
     def run(self) -> Tuple[Dict, np.uint64]:
         """
         Interpolate SI-specific line signals.
@@ -59,7 +58,7 @@ class ScanImageLineValidator:
         :param np.ndarray last_idx: Last index of relevant lines in the frame
         """
         diff_mat = np.abs(np.subtract(lines_mat, y, dtype=np.int64))
-        missing_vals_rows, missing_vals_cols = np.where(diff_mat > delta / 20)
+        missing_vals_rows, missing_vals_cols = np.where(diff_mat > delta / 15)
         frames_to_correct = np.where(last_idx != self.num_of_lines)[0]
         for frame_num in frames_to_correct:
             num_of_missing_lines = last_idx[frame_num] - self.num_of_lines

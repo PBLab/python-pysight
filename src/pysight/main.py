@@ -43,7 +43,7 @@ def main_data_readout(gui):
     if gui.filename.endswith('.lst'):
         cur_file = FileIO(filename=gui.filename, debug=gui.debug, input_start=gui.input_start,
                           input_stop1=gui.input_stop1, input_stop2=gui.input_stop2, binwidth=gui.binwidth,
-                          use_sweeps=gui.sweeps_as_lines)
+                          use_sweeps=gui.sweeps_as_lines, mirror_phase=gui.phase)
         cur_file.run()
 
         if cur_file.is_binary:
@@ -79,6 +79,7 @@ def main_data_readout(gui):
         with open(gui.filename, 'rb') as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
+        relevant_columns = ['abs_time']
 
     validated_data = SignalValidator(dict_of_data=dict_of_data, num_of_frames=gui.num_of_frames,
                                      binwidth=float(gui.binwidth), use_sweeps=gui.sweeps_as_lines,
@@ -284,6 +285,7 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
              cfg_file: str=''):
     """
     Run several instances of PySight using the multiprocessing module.
+
     :param str foldername: Folder to scan
     :param str glob_str: Glob string to filter files
     :param bool recursive: Whether to scan subdirectories as well
