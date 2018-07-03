@@ -177,7 +177,7 @@ class Movie(object):
             hist_dict = chunk.create_hist()
             for func in funcs_during:
                 for chan, (hist, _) in hist_dict.items():
-                    func(data=hist, channel=chan)
+                    func(data=hist, channel=chan, idx=idx)
 
             tq.update(1)
 
@@ -239,34 +239,36 @@ class Movie(object):
         for channel in range(1, self.num_of_channels + 1):
             self.stack[channel] = np.squeeze(np.vstack(self.stack[channel]))
 
-    def __create_memory_output(self, data: np.ndarray, channel: int, **kwargs) -> None:
+    def __create_memory_output(self, data: np.ndarray, channel: int, idx: int) -> None:
         """
         If the user desired, create two memory constructs -
         A summed array of all images (for a specific channel), and a stack containing
         all images in a serial manner.
-
         :param np.ndarray data: Data to be saved
         :param int channel: Current spectral channel of data
+        :param int idx: Index of frame chunk
         """
         self.stack[channel].append(data)
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
-    def __save_stack_incr(self, data: np.ndarray, channel: int) -> None:
+    def __save_stack_incr(self, data: np.ndarray, channel: int, idx: int) -> None:
         """
         Save incrementally new data to an open file on the disk
-
         :param np.ndarray data: Data to save
         :param int channel: Current spectral channel of data
+        :param int idx: Index of frame chunk
         """
-        self.outputs['stack'][f'Channel {channel}'][...] = np.squeeze(data)
+        cur_slice_start = self.frames_per_chunk * idx
+        cur_slice_end = self.frames_per_chunk * (idx + 1)
+        self.outputs['stack'][f'Channel {channel}'][cur_slice_start:cur_slice_end, ...] = np.squeeze(data)
 
-    def __append_summed_data(self, data: np.ndarray, channel: int, **kwargs) -> None:
+    def __append_summed_data(self, data: np.ndarray, channel: int, idx: int) -> None:
         """
         Create a summed variable later to be saved as the channel's data
-
         :param np.ndarray data: Data to be saved
         :param int channel: Spectral channel of data to be saved
+        :param int idx: Index of frame chunk
         """
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))

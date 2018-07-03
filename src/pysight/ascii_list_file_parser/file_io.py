@@ -403,7 +403,7 @@ class FileIO(object):
         for cur_str in list_to_parse:
             self.__parse_str(metadata, cur_str)
 
-        self.lst_metadata['mirror_phase'] = self.mirror_phase
+        self.lst_metadata['mirror_phase'] = str(self.mirror_phase)
 
     def __parse_str(self, metadata, str_to_parse):
         """
