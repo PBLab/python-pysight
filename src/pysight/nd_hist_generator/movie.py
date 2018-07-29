@@ -10,6 +10,7 @@ import warnings
 import h5py_cache
 from tqdm import tqdm
 
+from pysight.tkinter_gui_multiscaler import ImagingSoftware
 from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 from .frame_chunk import FrameChunk
 
@@ -81,6 +82,7 @@ class Movie(object):
     num_of_frame_chunks = attr.ib(default=1, validator=instance_of(int))
     frames_per_chunk    = attr.ib(default=1, validator=instance_of(int))
     data_shape          = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
+    image_soft          = attr.ib(default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str))
     summed_mem          = attr.ib(init=False, repr=False)
     stack               = attr.ib(init=False, repr=False)
     x_pixels            = attr.ib(init=False)

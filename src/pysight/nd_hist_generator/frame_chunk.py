@@ -106,9 +106,12 @@ class FrameChunk:
             return np.linspace(0, self.end_time, num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
 
         delta = self.line_delta if self.bidir else self.line_delta / 2
+        start = 0
+        if self.image_soft == 'ScanImage':
+            start = delta * 0.04
         col_end = delta * self.fill_frac/100 if self.fill_frac > 0 else delta
 
-        return np.linspace(start=0, stop=int(col_end), num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
+        return np.linspace(start=start, stop=int(col_end), num=self.y_pixels+1, endpoint=True, dtype=np.uint64)
 
     def __linspace_along_sine(self) -> np.ndarray:
         """

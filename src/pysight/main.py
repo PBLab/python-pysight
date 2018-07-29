@@ -136,7 +136,7 @@ def main_data_readout(gui):
                         num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim,
                         lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
                         line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines,
-                        tag_as_phase=True, tag_freq=float(gui.tag_freq),
+                        tag_as_phase=True, tag_freq=float(gui.tag_freq), image_soft=gui.imaging_software,
                         frames_per_chunk=volume_chunks.frames_per_chunk,
                         )
 

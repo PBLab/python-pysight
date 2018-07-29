@@ -34,7 +34,7 @@ class VolumeGenerator:
             try:
                 avail = psutil.virtual_memory().available
             except AttributeError:
-                self.MAX_BYTES_ALLOWED = 1_000_000
+                self.MAX_BYTES_ALLOWED = 1_000_000_000
             else:
                 self.MAX_BYTES_ALLOWED = avail // 32  # magic number
 

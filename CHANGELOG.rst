@@ -1,6 +1,18 @@
 Changelog
 =========
 
+0.9.5 (2018-07-XX)
+------------------
+
+* ScanImage-generated stacks better fit the original fill fraction.
+
+* Small fix with non-ordered line signals.
+
+0.9.4 (2018-06-14)
+------------------
+
+* Small bug fixes.
+
 0.9.3 (2018-06-13)
 ------------------
 
