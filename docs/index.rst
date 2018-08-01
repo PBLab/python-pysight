@@ -70,6 +70,7 @@ Contents
 
    installation
    usage
+   nomultiscaler
    modules
    contributing
    authors

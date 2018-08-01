@@ -1,12 +1,14 @@
 Changelog
 =========
 
-0.9.5 (2018-07-XX)
+0.9.5 (2018-08-01)
 ------------------
 
-* ScanImage-generated stacks better fit the original fill fraction.
+* ScanImage-generated stacks better fit the original fill fraction value.
 
 * Small fix with non-ordered line signals.
+
+* Dependency upgrades to support Python 3.7. Note - still not officially supported.
 
 0.9.4 (2018-06-14)
 ------------------
