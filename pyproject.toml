@@ -15,7 +15,7 @@ keywords = ["photons", "photon counting", "imaging", "multiscaler", "neuroimagin
 build = "build.py"
 
 include = ["mcs6a_settings_files/*", "pysight/configs/default.json",
-    "examples/*"]
+           "examples/*"]
 
 classifiers=[
     'Development Status :: 3 - Alpha',
