@@ -7,7 +7,8 @@ from attr.validators import instance_of
 @attr.s(slots=True)
 class DistributeData:
     """
-    Separates the channel-specific data to their own channels.
+    Separates the channel-specific data to their own channels and
+    sorts them.
 
     :param pd.DataFrame df: Raw data
     :param dict dict_of_inputs: Mapping of inputs to data they contain

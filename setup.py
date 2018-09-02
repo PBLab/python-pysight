@@ -64,9 +64,9 @@ setup(
     author='Hagai Har-Gil',
     author_email='hagaihargil@protonmail.com',
     url=r'https://github.com/PBLab/python-pysight/',
-    packages=find_packages('src'),
-    package_dir={'': 'src'},
-    py_modules=[splitext(basename(path))[0] for path in glob('src/*.py')],
+    packages=find_packages('pysight'),
+    package_dir={'': 'pysight'},
+    py_modules=[splitext(basename(path))[0] for path in glob('pysight/*.py')],
     include_package_data=True,
     zip_safe=False,
     classifiers=[
@@ -107,14 +107,14 @@ setup(
     ] if Cython else ['numpy'],
     ext_modules=[
         Extension(
-            splitext(relpath(path, 'src').replace(os.sep, '.'))[0],
+            splitext(relpath(path, 'pysight').replace(os.sep, '.'))[0],
             sources=[path],
             include_dirs=[dirname(path)]
         )
-        for root, _, _ in os.walk('src')
+        for root, _, _ in os.walk('pysight')
         for path in glob(join(root, '*.pyx' if Cython else '*.c'))
     ],
-    data_files=['src' + os.sep + 'pysight' + os.sep + 'configs' + os.sep + 'default.json',
+    data_files=['pysight' + os.sep + 'configs' + os.sep + 'default.json',
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_2d_a.set')),
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_3d_a.set'))]
 )
