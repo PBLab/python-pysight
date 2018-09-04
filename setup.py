@@ -19,32 +19,27 @@ from setuptools import find_packages
 from setuptools import setup
 from setuptools.command.build_ext import build_ext
 
-try:
-    # Allow installing package without any Cython available. This
-    # assumes you are going to include the .c files in your sdist.
-    import Cython
-except ImportError:
-    Cython = None
+
+def build_native(spec):
+    # build an example rust library
+    build = spec.add_external_build(
+        cmd=['cargo', 'build', '--release'],
+        path='./rust'
+    )
+
+    spec.add_cffi_module(
+        module_path='pysight._native',
+        dylib=lambda: build.find_dylib('pysight', in_path='target/release'),
+        header_filename=lambda: build.find_header('pysight.h', in_path='target'),
+        rtld_flags=['NOW', 'NODELETE']
+    )
+
 
 def read(*names, **kwargs):
     return io.open(
         join(dirname(__file__), *names),
         encoding=kwargs.get('encoding', 'utf8')
     ).read()
-
-class CustomBuildExtCommand(build_ext):
-    """build_ext command for use when numpy headers are needed."""
-    def run(self):
-
-        # Import numpy here, only when headers are needed
-        import numpy
-
-        # Add numpy headers to include_dirs
-        self.include_dirs.append(numpy.get_include())
-
-        # Call original build_ext command
-        build_ext.run(self)
-
 
 # Enable code coverage for C code: we can't use CFLAGS=-coverage in toxa.ini, since that may mess with compiling
 # dependencies (e.g. numpy). Therefore we set SETUPPY_CFLAGS=-coverage in toxa.ini and copy it to CFLAGS here (after
@@ -65,7 +60,6 @@ setup(
     author_email='hagaihargil@protonmail.com',
     url=r'https://github.com/PBLab/python-pysight/',
     packages=find_packages('pysight'),
-    package_dir={'': 'pysight'},
     py_modules=[splitext(basename(path))[0] for path in glob('pysight/*.py')],
     include_package_data=True,
     zip_safe=False,
@@ -83,8 +77,8 @@ setup(
     keywords=[
         'multiscaler', 'photon counting'
     ],
-    cmdclass = {'build_ext': CustomBuildExtCommand},
     install_requires=[
+        'milksnake < 0.2', 
         'numpy < 1.16',
         'matplotlib < 2.3',
         'pandas < 0.24',
@@ -100,20 +94,13 @@ setup(
         'ansimarkup < 1.5',
         'psutil < 5.5',
     ],
-    extras_require={
-    },
     setup_requires=[
-        'cython', 'numpy'
-    ] if Cython else ['numpy'],
-    ext_modules=[
-        Extension(
-            splitext(relpath(path, 'pysight').replace(os.sep, '.'))[0],
-            sources=[path],
-            include_dirs=[dirname(path)]
-        )
-        for root, _, _ in os.walk('pysight')
-        for path in glob(join(root, '*.pyx' if Cython else '*.c'))
+        'milksnake', 'numpy'
     ],
+    milksnake_tasks=[
+        build_native
+    ],
+
     data_files=['pysight' + os.sep + 'configs' + os.sep + 'default.json',
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_2d_a.set')),
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_3d_a.set'))]

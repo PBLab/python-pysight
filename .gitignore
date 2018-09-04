@@ -63,6 +63,12 @@ output/*/index.html
 # Sphinx
 docs/_build
 
+# Rust
+rust/target
+*.d
+*.lock
+*.rlib
+
 .DS_Store
 *~
 .*.sw[po]
@@ -79,3 +85,4 @@ src/pysight/__pycache__/
 !/tests/tests_data/2.lst
 .vscode
 *.ai
+

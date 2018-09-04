@@ -1,0 +1,20 @@
+[package]
+name = "pysight"
+version = "0.9.5"
+build = "build.rs"
+authors = ["Hagai Har-Gil <hagaihargil@protonmail.com>"]
+
+[lib]
+name = "pysight"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+cbindgen = "0.5.2"
+
+[dependencies]
+bitreader = "0.3"
+filebuffer = "0.3"
+libc = "0.2.24"
+failure = "0.1"
+failure_derive = "*"
+data-encoding = "2.1"
