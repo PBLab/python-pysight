@@ -195,7 +195,7 @@ class TagPhaseAllocator(object):
         assert self.photons['Phase'].any() <= 1
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True)
 def numba_digitize(values: np.array, bins: np.array) -> np.array:
     """ Numba'd version of np.digitize. """
     bins = np.digitize(values, bins)
@@ -203,7 +203,7 @@ def numba_digitize(values: np.array, bins: np.array) -> np.array:
     return bins, relevant_bins
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True)
 def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
                      to_phase: bool, offset: float) -> np.array:
     """
@@ -225,7 +225,7 @@ def numba_find_phase(photons: np.array, bins: np.array, raw_tag: np.array,
     return phase_vec.astype(np.float32)
 
 
-@jit(cache=True)
+@jit
 def numba_iterate_over_disordered(tag: np.ndarray, starts: np.ndarray, ends: np.ndarray,
                                   period: int, jitter: float) -> Tuple[List, List]:
     """

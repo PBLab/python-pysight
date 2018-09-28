@@ -20,21 +20,6 @@ from setuptools import setup
 from setuptools.command.build_ext import build_ext
 
 
-def build_native(spec):
-    # build an example rust library
-    build = spec.add_external_build(
-        cmd=['cargo', 'build', '--release'],
-        path='./rust'
-    )
-
-    spec.add_cffi_module(
-        module_path='pysight._native',
-        dylib=lambda: build.find_dylib('pysight', in_path='target/release'),
-        header_filename=lambda: build.find_header('pysight.h', in_path='target'),
-        rtld_flags=['NOW', 'NODELETE']
-    )
-
-
 def read(*names, **kwargs):
     return io.open(
         join(dirname(__file__), *names),
@@ -78,7 +63,6 @@ setup(
         'multiscaler', 'photon counting'
     ],
     install_requires=[
-        'milksnake < 0.2', 
         'numpy < 1.16',
         'matplotlib < 2.3',
         'pandas < 0.24',
@@ -90,17 +74,13 @@ setup(
         'h5py < 2.9',
         'h5py-cache < 1.1',
         'tqdm < 4.24',
-        'numba < 0.40',
+        'numba < 0.41',
         'ansimarkup < 1.5',
         'psutil < 5.5',
     ],
     setup_requires=[
-        'milksnake', 'numpy'
+        'numpy'
     ],
-    milksnake_tasks=[
-        build_native
-    ],
-
     data_files=['pysight' + os.sep + 'configs' + os.sep + 'default.json',
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_2d_a.set')),
                 str(pathlib.Path('./mcs6a_settings_files/pre_test_3d_a.set'))]

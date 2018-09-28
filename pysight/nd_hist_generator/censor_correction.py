@@ -411,14 +411,14 @@ class CensoredVolume(object):
         return hist_storage
 
 
-@jit((int64[:](uint8[:], uint8[:])), nopython=True, cache=True)
+@jit((int64[:](uint8[:], uint8[:])), nopython=True)
 def numba_histogram(arr: np.array, bins) -> np.array:
     return np.histogram(arr, bins)[0]
 
-@jit((int64[:](uint8[:])), nopython=True, cache=True)
+@jit((int64[:](uint8[:])), nopython=True)
 def numba_bincount(arr: np.array) -> np.array:
     return np.bincount(arr)
 #
-# @jit((int64[:](uint64[:], uint64[:])), nopython=True, cache=True)
+# @jit((int64[:](uint64[:], uint64[:])), nopython=True)
 # def numba_digitize(arr: np.array) -> np.array:
 #     pass

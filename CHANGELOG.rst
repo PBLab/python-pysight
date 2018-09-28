@@ -1,5 +1,14 @@
 Changelog
 =========
+0.9.6 (2018-XX-XX)
+------------------
+
+* Caching of `numba` functions is disabled.
+
+* `numba` version bumped to `0.40`.
+
+
+
 
 0.9.5 (2018-08-01)
 ------------------
