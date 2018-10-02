@@ -65,14 +65,16 @@ Installation and Documentation
 
 ``pip install pysight``
 
-Current version: 0.9.5
+Current version: 0.9.6
 
 Please refer to the `official documentation <https://python-pysight.readthedocs.io/>`_ for detailed usage instructions.
 
-If you have questions, come visit us at our `Gitter channel. <https://gitter.im/python-pysight/Lobby>`_
+If you have questions, come visit us at our `Gitter channel <https://gitter.im/python-pysight/Lobby>`_ or use GitHub's
+issue tracker.
 
 
 References
 ==========
 
-PySight's preprint is available `here. <https://doi.org/10.1101/316125>`_
+PySight is fully described in `this Optica article <https://www.osapublishing.org/optica/abstract.cfm?uri=optica-5-9-1104>`_, 
+released in September 2018.
