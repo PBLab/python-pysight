@@ -7,6 +7,62 @@ import pandas as pd
 import attr
 from attr.validators import instance_of
 
+import libpysight
+
+@attr.s
+class CallBinaryParser():
+    """ Calls the Rust-implemented binary parser """
+    filename = attr.ib(validator=instance_of(str))
+    data_offset = attr.ib(validator=instance_of(int))
+    timepatch = attr.ib(validator=instance_of(str))
+    data_range = attr.ib(validator=instance_of(int))
+    dict_of_inputs = attr.ib(validator=instance_of(dict))
+    use_tag_bits = attr.ib(default=False, validator=instance_of(bool))
+    data_to_grab = attr.ib(init=False)
+    dict_of_data = attr.ib(init=False)
+
+    def run_parser(self):
+        """ Main method that runs all parser steps """
+        dict_of_inputs_as_list = self._convert_dict_inputs()
+        timepatches_u16, timepatches_u8 = self._differentiate_timepatches()
+        if self.timepatch in timepatches_u16:
+            raw_output = libpysight.read_binary_lst_u16(self.filename, self.data_offset,
+                                                        self.data_range, self.timepatch,
+                                                        dict_of_inputs_as_list)
+        elif self.timepatch in timepatches_u8:
+            raw_output = libpysight.read_binary_lst_u8(self.filename, self.data_offset,
+                                                       self.data_range, self.timepatch,
+                                                       dict_of_inputs_as_list)
+        self.dict_of_data = self.parse_output(raw_output)
+
+    def _convert_dict_inputs(self):
+        """ Converts the standard dict of inputs, in which a key is a binary number and the value
+        is the type of signal, to a list containing 1 if the channel was active and 0 otherwise.
+        """
+        inputs = [0, 0, 0, 0, 0, 0]
+        for val in self.dict_of_inputs.values():
+            inputs[int(val, 2) - 1] = 1
+        
+        assert sum(inputs) == len(self.dict_of_inputs)
+        return inputs
+    
+    def _differentiate_timepatches(self):
+        """ The current Rust implementation isn't generic over the number of bits used
+        by the TAG bits (8 or 16ish). Thus we have two Rust functions that we need to
+        choose from based on the input timepatch. """
+        timepatches_u16 = ["0","5", "1", "1a", "32", "2", "5b", "Db", "f3", "43", "c3"]
+        timepatches_u8 = ["2a", "22", "3"]
+
+        return timepatches_u16, timepatches_u8
+
+    def _parse_output(self, data):
+        """ Converts the data received from the `libpysight` parser into a dict of DataFrames 
+        that the rest of PySight can work with. """
+        parsed_data = None
+        return parsed_data
+
+######################################
+
 class TimepatchBits(NamedTuple):
     total: int
     time: int

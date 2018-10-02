@@ -29,7 +29,7 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import Si
 from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
-from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
+from pysight.binary_list_file_parser.binary_parser import CallBinaryParser
 
 colorama.init()
 
@@ -47,9 +47,10 @@ def main_data_readout(gui):
         cur_file.run()
 
         if cur_file.is_binary:
-            binary_parser = BinaryDataParser(data=cur_file.data, data_range=cur_file.data_range,
-                                             timepatch=cur_file.timepatch, use_tag_bits=gui.tag_bits,
-                                             dict_of_inputs=cur_file.dict_of_input_channels)
+            binary_parser = CallBinaryParser(filename=cur_file.filename, data_offset=cur_file.start_of_data_pos,
+                                             timepatch=cur_file.timepatch, data_range=cur_file.data_range,
+                                             dict_of_inputs=cur_file.dict_of_input_channels, 
+                                             use_tag_bits=gui.tag_bits)
             binary_parser.run()
         else:
             # Create input structures and create a DataFrame
