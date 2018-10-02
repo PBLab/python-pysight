@@ -1,5 +1,16 @@
 Changelog
 =========
+0.9.6 (2018-10-02)
+------------------
+
+* Removed ``numba`` caching as it was causing some bugs on remote clusters.
+
+* Added initial ``pyproject.toml``.
+
+* Moved to the ``black`` codestyle.
+
+* No wheels are currently generated. This might change in a future version.
+
 
 0.9.5 (2018-08-01)
 ------------------

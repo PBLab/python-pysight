@@ -73,3 +73,14 @@ For merging, you should:
        `run the tests <https://travis-ci.org/PBLab/python-pysight/pull_requests>`_ for each change you add in the pull request.
 
        It will be slower though ...
+
+Releasing a New version
+-----------------------
+
+To create and publish a new version, once all code changes are made, follow these steps:
+
+1. Make sure that the ``dev`` installation of PySight is installed.
+2. ``black .`` from the project's home directory.
+3. ``bumpversion --allow-dirty patch`` to bump the version. Other options include ``minor`` and ``major``.
+4. ``python setup.py clean --all sdist bdist_wheel``
+5.
