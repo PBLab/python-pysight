@@ -13,7 +13,7 @@
       - | |travis| |codecov|
     * - package
       - | |version| |wheel| |supported_versions|
-        | |supported_implementations| |codesyle|
+        | |supported_implementations| |codestyle|
 
 .. |docs| image:: https://readthedocs.org/projects/python-pysight/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pysight
