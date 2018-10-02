@@ -7,6 +7,7 @@ import pandas as pd
 import attr
 from attr.validators import instance_of
 
+
 class TimepatchBits(NamedTuple):
     total: int
     time: int
@@ -49,16 +50,18 @@ class BinaryDataParser:
     aligned_data = attr.ib(init=False)
 
     def __attrs_post_init__(self):
-        self.data_to_grab = ['abs_time']
-        tpdict = {'0': Timepatch.Tp0,
-                  '5': Timepatch.Tp5,
-                  '1': Timepatch.Tp1,
-                  '5b': Timepatch.Tp5b,
-                  'Db': Timepatch.TpDb,
-                  'f3': Timepatch.Tpf3,
-                  '43': Timepatch.Tp43,
-                  'c3': Timepatch.Tpc3,
-                  '3': Timepatch.Tp3}
+        self.data_to_grab = ["abs_time"]
+        tpdict = {
+            "0": Timepatch.Tp0,
+            "5": Timepatch.Tp5,
+            "1": Timepatch.Tp1,
+            "5b": Timepatch.Tp5b,
+            "Db": Timepatch.TpDb,
+            "f3": Timepatch.Tpf3,
+            "43": Timepatch.Tp43,
+            "c3": Timepatch.Tpc3,
+            "3": Timepatch.Tp3,
+        }
         try:
             self.timepatch_bits = tpdict[self.timepatch]
         except KeyError:
@@ -76,7 +79,7 @@ class BinaryDataParser:
         self.time = self.__get_time()
         if self.timepatch_bits.value.sweep != 0:
             self.sweep = self.__get_sweep()
-        if self.timepatch != 'f3':
+        if self.timepatch != "f3":
             if self.timepatch_bits.value.tag != 0:
                 self.tag = self.__get_tag()
             if self.timepatch_bits.value.lost != 0:
@@ -86,7 +89,9 @@ class BinaryDataParser:
             self.lost = self.__get_lost_f3()
         self.aligned_data = self.__gen_df()
         self.dict_of_data = self.__slice_df_to_dict()
-        print('Sorted dataframe created. Starting to set the proper data channel distribution...')
+        print(
+            "Sorted dataframe created. Starting to set the proper data channel distribution..."
+        )
 
     def __get_channel(self) -> np.ndarray:
         """
@@ -96,8 +101,10 @@ class BinaryDataParser:
         """
         chan = (self.data & 0b111).astype(np.uint8)
         if np.any(chan > 6):
-            warnings.warn(f"Illegal channels found in file. Encountered the following"
-                          f" values: {np.unique(chan)}.\nTrying to continue.")
+            warnings.warn(
+                f"Illegal channels found in file. Encountered the following"
+                f" values: {np.unique(chan)}.\nTrying to continue."
+            )
         return chan
 
     def __get_edge(self) -> np.ndarray:
@@ -114,7 +121,7 @@ class BinaryDataParser:
 
         :return np.ndarray time: Array of the absolute times for each event.
         """
-        ones = int('1' * self.timepatch_bits.value.time, 2)  # time bits
+        ones = int("1" * self.timepatch_bits.value.time, 2)  # time bits
         time = np.right_shift(self.data, 4) & ones
         return time.astype(np.uint64)
 
@@ -124,7 +131,7 @@ class BinaryDataParser:
 
         :return np.ndarray sweep: Array of the sweep number for each event.
         """
-        ones = int('1' * self.timepatch_bits.value.sweep, 2)
+        ones = int("1" * self.timepatch_bits.value.sweep, 2)
         right_shift_by = 4 + self.timepatch_bits.value.time
         sweep = np.right_shift(self.data, right_shift_by) & ones
         return sweep.astype(np.uint16)
@@ -135,9 +142,10 @@ class BinaryDataParser:
 
         :return np.ndarray tag: Array of the tag bits for each event.
         """
-        ones = int('1' * self.timepatch_bits.value.tag, 2)
-        right_shift_by = 4 + self.timepatch_bits.value.time + \
-            self.timepatch_bits.value.sweep
+        ones = int("1" * self.timepatch_bits.value.tag, 2)
+        right_shift_by = (
+            4 + self.timepatch_bits.value.time + self.timepatch_bits.value.sweep
+        )
         tag = np.right_shift(self.data, right_shift_by) & ones
         return tag.astype(np.uint16)
 
@@ -178,8 +186,10 @@ class BinaryDataParser:
 
         actual_data_channels = set(np.unique(self.channel)).difference({0})
         if actual_data_channels != set(self.dict_of_inputs_bin.values()):
-            warnings.warn("Channels that were inserted in GUI don't match actual data channels recorded. \n"
-                          f"The list files contains data in the following channels: {actual_data_channels}.")
+            warnings.warn(
+                "Channels that were inserted in GUI don't match actual data channels recorded. \n"
+                f"The list files contains data in the following channels: {actual_data_channels}."
+            )
             thrown_channels = 0
             keys_to_pop = []
             for key, item in self.dict_of_inputs_bin.items():
@@ -194,28 +204,29 @@ class BinaryDataParser:
 
         :return pd.DataFrame:
         """
-        df = pd.DataFrame(self.time, index=[self.channel, self.edge],
-                          columns=['abs_time'])
+        df = pd.DataFrame(
+            self.time, index=[self.channel, self.edge], columns=["abs_time"]
+        )
         try:
             df.abs_time += (self.sweep - 1) * self.data_range
         except AttributeError:
             pass
         try:
             tag_ser = pd.Series(self.tag, index=[self.channel, self.edge])
-            df['tag'] = tag_ser
+            df["tag"] = tag_ser
         except AttributeError:
             pass
         else:
             if self.use_tag_bits:
-                self.data_to_grab.extend(['tag', 'edge'])
+                self.data_to_grab.extend(["tag", "edge"])
 
         try:
             lost_ser = pd.Series(self.lost, index=[self.channel, self.edge])
-            df['lost'] = lost_ser
+            df["lost"] = lost_ser
         except AttributeError:
             pass
 
-        df.index.names = ['analog_input', 'edge']
+        df.index.names = ["analog_input", "edge"]
         return df
 
     def __slice_df_to_dict(self) -> dict:
@@ -225,11 +236,17 @@ class BinaryDataParser:
         """
         dict_of_data = {}
         for key, analog_chan in self.dict_of_inputs_bin.items():
-            relevant_vals = self.aligned_data.xs(key=analog_chan, level=0).loc[:, self.data_to_grab]
-            if key in ['PMT1', 'PMT2']:
+            relevant_vals = self.aligned_data.xs(key=analog_chan, level=0).loc[
+                :, self.data_to_grab
+            ]
+            if key in ["PMT1", "PMT2"]:
                 dict_of_data[key] = relevant_vals.reset_index(drop=True)
-                dict_of_data[key]['Channel'] = 1 if 'PMT1' == key else 2  # channel is the spectral channel
+                dict_of_data[key]["Channel"] = (
+                    1 if "PMT1" == key else 2
+                )  # channel is the spectral channel
             else:
-                dict_of_data[key] = relevant_vals.sort_values(by=['abs_time']).reset_index(drop=True)
+                dict_of_data[key] = relevant_vals.sort_values(
+                    by=["abs_time"]
+                ).reset_index(drop=True)
 
         return dict_of_data

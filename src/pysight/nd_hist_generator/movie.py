@@ -26,9 +26,16 @@ def trunc_end_of_file(name) -> str:
 
 
 @attr.s
-class Movie(object):
+class Movie:
     """
-    A holder for Volume objects to be displayed consecutively.
+    Creates FrameChunks that cn be appended into a multi-dimensional movie.
+
+    To create the movie, call the `run()` method. The output will be according to the
+    options specified in the GUI, although you can technically override them when 
+    instantiating this class. 
+
+    The Movie object also contains a `show_summed(channel)` method that can will show
+    a two-dimensional projection of the multi-dimensional data.
 
     :param pd.DataFrame data: All recorded data
     :param pd.Series lines: Recorded lines
@@ -57,38 +64,42 @@ class Movie(object):
                                 len(frames)``
     :param tuple data_shape: Shape of data
     """
-    data                = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
-    lines               = attr.ib(validator=instance_of(pd.Series), repr=False)
-    frame_slices        = attr.ib(repr=False)  # generator of frame slices from VolumeGenerator
-    frames              = attr.ib(validator=instance_of(pd.Series), repr=False)
-    reprate             = attr.ib(default=80e6, validator=instance_of(float))
-    name                = attr.ib(default='Movie', validator=instance_of(str),
-                                  convert=trunc_end_of_file)
-    binwidth            = attr.ib(default=800e-12, validator=instance_of(float))
-    fill_frac           = attr.ib(default=71.0, validator=instance_of(float))
-    bidir               = attr.ib(default=False, validator=instance_of(bool))
-    num_of_channels     = attr.ib(default=1, validator=instance_of(int))
-    outputs             = attr.ib(default={}, validator=instance_of(dict))
-    censor              = attr.ib(default=False, validator=instance_of(bool))
-    flim                = attr.ib(default=False, validator=instance_of(bool))
-    lst_metadata        = attr.ib(default={}, validator=instance_of(dict))
-    exp_params          = attr.ib(default={}, validator=instance_of(dict))
-    line_delta          = attr.ib(default=158000, validator=instance_of(int))
-    use_sweeps          = attr.ib(default=False, validator=instance_of(bool))
-    cache_size          = attr.ib(default=10*1024**3, validator=instance_of(int))
-    tag_as_phase        = attr.ib(default=True, validator=instance_of(bool))
-    tag_freq            = attr.ib(default=189e3, validator=instance_of(float))
-    mirror_phase        = attr.ib(default=-2.71, validator=instance_of(float))
+
+    data = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
+    lines = attr.ib(validator=instance_of(pd.Series), repr=False)
+    frame_slices = attr.ib(repr=False)  # generator of frame slices from VolumeGenerator
+    frames = attr.ib(validator=instance_of(pd.Series), repr=False)
+    reprate = attr.ib(default=80e6, validator=instance_of(float))
+    name = attr.ib(
+        default="Movie", validator=instance_of(str), converter=trunc_end_of_file
+    )
+    binwidth = attr.ib(default=800e-12, validator=instance_of(float))
+    fill_frac = attr.ib(default=71.0, validator=instance_of(float))
+    bidir = attr.ib(default=False, validator=instance_of(bool))
+    num_of_channels = attr.ib(default=1, validator=instance_of(int))
+    outputs = attr.ib(default={}, validator=instance_of(dict))
+    censor = attr.ib(default=False, validator=instance_of(bool))
+    flim = attr.ib(default=False, validator=instance_of(bool))
+    lst_metadata = attr.ib(default={}, validator=instance_of(dict))
+    exp_params = attr.ib(default={}, validator=instance_of(dict))
+    line_delta = attr.ib(default=158_000, validator=instance_of(int))
+    use_sweeps = attr.ib(default=False, validator=instance_of(bool))
+    cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
+    tag_as_phase = attr.ib(default=True, validator=instance_of(bool))
+    tag_freq = attr.ib(default=189e3, validator=instance_of(float))
+    mirror_phase = attr.ib(default=-2.71, validator=instance_of(float))
     num_of_frame_chunks = attr.ib(default=1, validator=instance_of(int))
-    frames_per_chunk    = attr.ib(default=1, validator=instance_of(int))
-    data_shape          = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
-    image_soft          = attr.ib(default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str))
-    summed_mem          = attr.ib(init=False, repr=False)
-    stack               = attr.ib(init=False, repr=False)
-    x_pixels            = attr.ib(init=False)
-    y_pixels            = attr.ib(init=False)
-    z_pixels            = attr.ib(init=False)
-    bins_bet_pulses     = attr.ib(init=False)
+    frames_per_chunk = attr.ib(default=1, validator=instance_of(int))
+    data_shape = attr.ib(default=(1, 512, 512), validator=instance_of(tuple))
+    image_soft = attr.ib(
+        default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
+    )
+    summed_mem = attr.ib(init=False, repr=False)
+    stack = attr.ib(init=False, repr=False)
+    x_pixels = attr.ib(init=False)
+    y_pixels = attr.ib(init=False)
+    z_pixels = attr.ib(init=False)
+    bins_bet_pulses = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.x_pixels = self.data_shape[1]
@@ -131,51 +142,66 @@ class Movie(object):
         finishing generating the entire stack.
         """
         if not self.outputs:
-            warnings.warn("No outputs requested. Data is still accessible using the dataframe variable.")
+            warnings.warn(
+                "No outputs requested. Data is still accessible using the dataframe variable."
+            )
             return [], []
 
         funcs_to_execute_during = []
         funcs_to_execute_end = []
 
-        if 'memory' in self.outputs:
+        if "memory" in self.outputs:
             self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
             self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}
             funcs_to_execute_during.append(self.__create_memory_output)
             funcs_to_execute_end.append(self.__convert_deque_to_arr)
-            if 'stack' in self.outputs:
+            if "stack" in self.outputs:
                 funcs_to_execute_end.append(self.__save_stack_at_once)
-            if 'summed' in self.outputs:
+            if "summed" in self.outputs:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
         else:
-            if 'stack' in self.outputs:
-                self.outputs['stack'] = h5py_cache.File(f'{self.outputs["filename"]}', 'a',
-                                                        chunk_cache_mem_size=self.cache_size,
-                                                        libver='latest', w0=1).require_group('Full Stack')
+            if "stack" in self.outputs:
+                self.outputs["stack"] = h5py_cache.File(
+                    f'{self.outputs["filename"]}',
+                    "a",
+                    chunk_cache_mem_size=self.cache_size,
+                    libver="latest",
+                    w0=1,
+                ).require_group("Full Stack")
                 funcs_to_execute_during.append(self.__save_stack_incr)
                 funcs_to_execute_end.append(self.__close_file)
 
-            if 'summed' in self.outputs:
+            if "summed" in self.outputs:
                 self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
                 funcs_to_execute_during.append(self.__append_summed_data)
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
         return funcs_to_execute_during, funcs_to_execute_end
 
-
-    def __process_data(self, funcs_during: List[Callable],
-                         funcs_end: List[Callable]) -> None:
+    def __process_data(
+        self, funcs_during: List[Callable], funcs_end: List[Callable]
+    ) -> None:
         """
         Create the outputs according to the outputs dictionary.
         Data is generated by appending to a list the needed micro-function to be executed.
         """
         # Execute the appended functions after generating each volume
-        tq = tqdm(total=self.num_of_frame_chunks, desc=f"Processing frame chunks...",
-                  unit="chunk", leave=False)
+        tq = tqdm(
+            total=self.num_of_frame_chunks,
+            desc=f"Processing frame chunks...",
+            unit="chunk",
+            leave=False,
+        )
         for idx, frame_chunk in enumerate(self.frame_slices):
             sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
-            chunk = FrameChunk(movie=self, df_dict=sliced_df_dict, frames_per_chunk=num_of_frames,
-                               frames=frames, lines=lines, )
+            chunk = FrameChunk(
+                movie=self,
+                df_dict=sliced_df_dict,
+                frames_per_chunk=num_of_frames,
+                frames=frames,
+                lines=lines,
+            )
             hist_dict = chunk.create_hist()
             for func in funcs_during:
                 for chan, (hist, _) in hist_dict.items():
@@ -186,7 +212,9 @@ class Movie(object):
         tq.close()
         [func() for func in funcs_end]
 
-    def __slice_df(self, frame_chunk) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
+    def __slice_df(
+        self, frame_chunk
+    ) -> Tuple[Dict[int, pd.DataFrame], int, pd.Series, pd.Series]:
         """
         Receives a slice object and slices the DataFrame accordingly -
         once per channel. The returned dictionary has a key for each channel.
@@ -199,8 +227,10 @@ class Movie(object):
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
         if len(lines) > self.x_pixels * num_of_frames:
-            warnings.warn(f"More-than-necessary line signals in the frame of chunk {frame_chunk}.")
-        lines = lines.iloc[:self.x_pixels*num_of_frames]
+            warnings.warn(
+                f"More-than-necessary line signals in the frame of chunk {frame_chunk}."
+            )
+        lines = lines.iloc[: self.x_pixels * num_of_frames]
         return slice_dict, num_of_frames, frames, lines
 
     def __validate_df_indices(self):
@@ -208,31 +238,43 @@ class Movie(object):
         Make sure that the DataFrame of data contains the two
         important indices "Channel" and "Frames", and in the correct order.
         """
-        if self.data.index.names[1] == 'Lines':
+        if self.data.index.names[1] == "Lines":
             self.data = self.data.swaplevel()
 
-        assert self.data.index.names[0] == 'Channel'
-        assert self.data.index.names[1] == 'Frames'
-        assert self.data.index.names[2] == 'Lines'
+        assert self.data.index.names[0] == "Channel"
+        assert self.data.index.names[1] == "Frames"
+        assert self.data.index.names[2] == "Lines"
 
     def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
-        with h5py_cache.File(f'{self.outputs["filename"]}', 'a', chunk_cache_mem_size=self.cache_size,
-                             libver='latest', w0=1) as f:
+        with h5py_cache.File(
+            f'{self.outputs["filename"]}',
+            "a",
+            chunk_cache_mem_size=self.cache_size,
+            libver="latest",
+            w0=1,
+        ) as f:
             print("Saving full stack to disk...")
             for channel in range(1, self.num_of_channels + 1):
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self) -> None:
         """ Save the entire in-memory summed data into .hdf5 file """
-        with h5py_cache.File(f'{self.outputs["filename"]}', 'a', chunk_cache_mem_size=self.cache_size,
-                             libver='latest', w0=1) as f:
+        with h5py_cache.File(
+            f'{self.outputs["filename"]}',
+            "a",
+            chunk_cache_mem_size=self.cache_size,
+            libver="latest",
+            w0=1,
+        ) as f:
             for channel in range(1, self.num_of_channels + 1):
-                f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(self.summed_mem[channel])
+                f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
+                    self.summed_mem[channel]
+                )
 
     def __close_file(self) -> None:
         """ Close the file pointer of the specific channel """
-        self.outputs['stack'].file.close()
+        self.outputs["stack"].file.close()
 
     def __convert_deque_to_arr(self) -> None:
         """ Convert a deque with a bunch of frames into a single numpy array with an extra
@@ -263,7 +305,9 @@ class Movie(object):
         """
         cur_slice_start = self.frames_per_chunk * idx
         cur_slice_end = self.frames_per_chunk * (idx + 1)
-        self.outputs['stack'][f'Channel {channel}'][cur_slice_start:cur_slice_end, ...] = np.squeeze(data)
+        self.outputs["stack"][f"Channel {channel}"][
+            cur_slice_start:cur_slice_end, ...
+        ] = np.squeeze(data)
 
     def __append_summed_data(self, data: np.ndarray, channel: int, idx: int) -> None:
         """
@@ -280,44 +324,47 @@ class Movie(object):
         if not self.outputs:
             return
 
-        print('======================================================= \nOutputs:\n--------')
-        if 'stack' in self.outputs:
-            print(f'Stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
-                  ' "Full Stack", with one dataset per channel.')
+        print(
+            "======================================================= \nOutputs:\n--------"
+        )
+        if "stack" in self.outputs:
+            print(
+                f'Stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
+                ' "Full Stack", with one dataset per channel.'
+            )
 
-        if 'memory' in self.outputs:
-            print('The full data is present in dictionary form (key per channel) under `movie.stack`, '
-                  'and in stacked form under `movie.summed_mem`.')
+        if "memory" in self.outputs:
+            print(
+                "The full data is present in dictionary form (key per channel) under `movie.stack`, "
+                "and in stacked form under `movie.summed_mem`."
+            )
 
-        if 'summed' in self.outputs:
-            print(f'Summed stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
-                  ' "Summed Stack", with one dataset per channel.')
+        if "summed" in self.outputs:
+            print(
+                f'Summed stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
+                ' "Summed Stack", with one dataset per channel.'
+            )
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
 
-    def show_summed(self, channel: int=1) -> None:
+    def show_summed(self, channel: int = 1) -> None:
         """ Show the summed Movie """
 
         plt.figure()
         try:
             num_of_dims = len(self.summed_mem[channel].shape)
             if num_of_dims > 2:
-                plt.imshow(np.sum(self.summed_mem[channel], axis=-(num_of_dims-2)),
-                           cmap='gray')
+                plt.imshow(
+                    np.sum(self.summed_mem[channel], axis=-(num_of_dims - 2)),
+                    cmap="gray",
+                )
             else:
-                plt.imshow(self.summed_mem[channel], cmap='gray')
+                plt.imshow(self.summed_mem[channel], cmap="gray")
         except:
-            warnings.warn("Can't show summed image when memory output wasn't asked for.")
+            warnings.warn(
+                "Can't show summed image when memory output wasn't asked for."
+            )
 
-        plt.title(f'Channel number {channel}')
-        plt.axis('off')
-
-
-@attr.s
-class Struct(object):
-    """ Basic struct-like object for data keeping. """
-
-    start = attr.ib()
-    end = attr.ib()
-    num = attr.ib(default=None)
+        plt.title(f"Channel number {channel}")
+        plt.axis("off")

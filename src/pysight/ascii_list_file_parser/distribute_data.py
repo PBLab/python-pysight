@@ -13,6 +13,7 @@ class DistributeData:
     :param dict dict_of_inputs: Mapping of inputs to data they contain
     :param bool use_tag_bits: Whether TAG bits are needed
     """
+
     df = attr.ib(validator=instance_of(pd.DataFrame))
     dict_of_inputs = attr.ib(validator=instance_of(dict))
     use_tag_bits = attr.ib(default=False, validator=instance_of(bool))
@@ -31,15 +32,24 @@ class DistributeData:
         :return dict: Dict containing the data
         """
         dict_of_data = {}
-        self.data_to_grab = ['abs_time', 'sweep']  # relevant columns of the DF for analysis
+        self.data_to_grab = [
+            "abs_time",
+            "sweep",
+        ]  # relevant columns of the DF for analysis
         if self.use_tag_bits:
-            self.data_to_grab.extend(['tag', 'edge'])
+            self.data_to_grab.extend(["tag", "edge"])
         for key in self.dict_of_inputs:
-            relevant_values = self.df.loc[self.df['channel'] == self.dict_of_inputs[key], self.data_to_grab]
-            if key in ['PMT1', 'PMT2']:
+            relevant_values = self.df.loc[
+                self.df["channel"] == self.dict_of_inputs[key], self.data_to_grab
+            ]
+            if key in ["PMT1", "PMT2"]:
                 dict_of_data[key] = relevant_values.reset_index(drop=True)
-                dict_of_data[key]['Channel'] = 1 if 'PMT1' == key else 2  # channel is the spectral channel
+                dict_of_data[key]["Channel"] = (
+                    1 if "PMT1" == key else 2
+                )  # channel is the spectral channel
             else:
-                dict_of_data[key] = relevant_values.sort_values(by=['abs_time']).reset_index(drop=True)
+                dict_of_data[key] = relevant_values.sort_values(
+                    by=["abs_time"]
+                ).reset_index(drop=True)
 
         return dict_of_data

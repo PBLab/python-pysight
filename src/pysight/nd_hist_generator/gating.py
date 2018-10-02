@@ -7,6 +7,7 @@ import pandas as pd
 @attr.s(slots=True)
 class GatedDetection(object):
     """ Gating the unneeded photons """
+
     #: ``pd.DataFrame`` Raw data
     raw = attr.ib(validator=instance_of(pd.DataFrame))
     #: ``float`` Repetition rate of the laser in Hz
@@ -26,7 +27,7 @@ class GatedDetection(object):
 
     def run(self):
         """ Main pipeline of class """
-        if 'time_rel_pulse' not in self.raw.columns:
+        if "time_rel_pulse" not in self.raw.columns:
             self.data = self.raw
             return
         self.__validate_time_rel_pulse()
@@ -49,9 +50,13 @@ class GatedDetection(object):
         """ Throw away unneeded events """
 
         peak_idx = np.argmax(hist)
-        lower_range = (peak_idx - 1) % self.bins_bet_pulses  # taking into consideration photons that came
-                                                       # just before the peak, mainly due to resolution considerations
+        lower_range = (
+            peak_idx - 1
+        ) % self.bins_bet_pulses  # taking into consideration photons that came
+        # just before the peak, mainly due to resolution considerations
         upper_range = lower_range + self.range_length
-        range_after_mod = np.arange(int(lower_range), int(upper_range)) % self.bins_bet_pulses
+        range_after_mod = (
+            np.arange(int(lower_range), int(upper_range)) % self.bins_bet_pulses
+        )
         mask = self.raw.time_rel_pulse.isin(range_after_mod)
         self.data = self.raw.loc[mask]

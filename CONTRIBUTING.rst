@@ -64,9 +64,10 @@ If you need some code review or feedback while you're developing the code just m
 For merging, you should:
 
 1. Include passing tests [1]_.
-2. Update documentation when there's new API, functionality, etc.
-3. Add a note to ``CHANGELOG.rst`` about the changes.
-4. Add yourself to ``AUTHORS.rst``.
+2. Format the code using `black <https://black.readthedocs.io/en/stable/index.html>`_: ``black python-pysight --py36``.
+3. Update documentation when there's new API, functionality, etc.
+4. Add a note to ``CHANGELOG.rst`` about the changes.
+5. Add yourself to ``AUTHORS.rst``.
 
 .. [1] If you don't have all the necessary Python versions available locally you can rely on Travis - it will
        `run the tests <https://travis-ci.org/PBLab/python-pysight/pull_requests>`_ for each change you add in the pull request.

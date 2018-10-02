@@ -19,6 +19,7 @@ class VolumeGenerator:
     :param int MAX_BYTES_ALLOWED: Number of bytes that can be held in RAM. Calculated using the
                                   ``psutil`` package if not supplied manually.
     """
+
     frames = attr.ib(validator=instance_of(pd.Series), repr=False)
     data_shape = attr.ib(validator=instance_of(tuple))
     MAX_BYTES_ALLOWED = attr.ib(default=0, validator=instance_of(int))
@@ -48,7 +49,9 @@ class VolumeGenerator:
         :param bool create_slices: Used for testing, always keep ``True`` for actual code.
         """
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
-        self.frames_per_chunk = int(max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames))
+        self.frames_per_chunk = int(
+            max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames)
+        )
         self.num_of_frames = len(self.frames)
         self.num_of_chunks = int(max(1, len(self.frames) // self.frames_per_chunk))
         self.full_frame_chunks = self.__grouper()

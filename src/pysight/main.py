@@ -6,7 +6,8 @@ Created on Thu Oct 13 09:37:02 2016
 """
 from typing import Union, Tuple
 import matplotlib
-matplotlib.rcParams['backend'] = 'TkAgg'
+
+matplotlib.rcParams["backend"] = "TkAgg"
 import json
 import pandas as pd
 import warnings
@@ -25,7 +26,9 @@ from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
 from pysight.ascii_list_file_parser.distribute_data import DistributeData
-from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
+from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
+    SignalValidator,
+)
 from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
@@ -40,33 +43,53 @@ def main_data_readout(gui):
     Should not be run independently - only from other "run_X" functions.
     """
     # Read the file
-    if gui.filename.endswith('.lst'):
-        cur_file = FileIO(filename=gui.filename, debug=gui.debug, input_start=gui.input_start,
-                          input_stop1=gui.input_stop1, input_stop2=gui.input_stop2, binwidth=gui.binwidth,
-                          use_sweeps=gui.sweeps_as_lines, mirror_phase=gui.phase)
+    if gui.filename.endswith(".lst"):
+        cur_file = FileIO(
+            filename=gui.filename,
+            debug=gui.debug,
+            input_start=gui.input_start,
+            input_stop1=gui.input_stop1,
+            input_stop2=gui.input_stop2,
+            binwidth=gui.binwidth,
+            use_sweeps=gui.sweeps_as_lines,
+            mirror_phase=gui.phase,
+        )
         cur_file.run()
 
         if cur_file.is_binary:
-            binary_parser = BinaryDataParser(data=cur_file.data, data_range=cur_file.data_range,
-                                             timepatch=cur_file.timepatch, use_tag_bits=gui.tag_bits,
-                                             dict_of_inputs=cur_file.dict_of_input_channels)
+            binary_parser = BinaryDataParser(
+                data=cur_file.data,
+                data_range=cur_file.data_range,
+                timepatch=cur_file.timepatch,
+                use_tag_bits=gui.tag_bits,
+                dict_of_inputs=cur_file.dict_of_input_channels,
+            )
             binary_parser.run()
         else:
             # Create input structures and create a DataFrame
-            dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
-            tabulated_data = Tabulate(data_range=cur_file.data_range, data=cur_file.data,
-                                      dict_of_inputs=cur_file.dict_of_input_channels,
-                                      use_tag_bits=gui.tag_bits, dict_of_slices_hex=dict_of_slices_hex,
-                                      time_after_sweep=cur_file.time_after, acq_delay=cur_file.acq_delay,
-                                      num_of_channels=cur_file.num_of_channels, )
+            dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(
+                cur_file.timepatch
+            )
+            tabulated_data = Tabulate(
+                data_range=cur_file.data_range,
+                data=cur_file.data,
+                dict_of_inputs=cur_file.dict_of_input_channels,
+                use_tag_bits=gui.tag_bits,
+                dict_of_slices_hex=dict_of_slices_hex,
+                time_after_sweep=cur_file.time_after,
+                acq_delay=cur_file.acq_delay,
+                num_of_channels=cur_file.num_of_channels,
+            )
             tabulated_data.run()
 
-            separated_data = DistributeData(df=tabulated_data.df_after_timepatch,
-                                            dict_of_inputs=tabulated_data.dict_of_inputs,
-                                            use_tag_bits=gui.tag_bits, )
+            separated_data = DistributeData(
+                df=tabulated_data.df_after_timepatch,
+                dict_of_inputs=tabulated_data.dict_of_inputs,
+                use_tag_bits=gui.tag_bits,
+            )
             separated_data.run()
 
-####### START OF "PUBLIC API" ##########
+    ####### START OF "PUBLIC API" ##########
     try:
         if cur_file.is_binary:
             relevant_columns = binary_parser.data_to_grab
@@ -76,69 +99,111 @@ def main_data_readout(gui):
             dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
     except NameError:
-        with open(gui.filename, 'rb') as f:
+        with open(gui.filename, "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
-        relevant_columns = ['abs_time']
+        relevant_columns = ["abs_time"]
 
-    validated_data = SignalValidator(dict_of_data=dict_of_data, num_of_frames=gui.num_of_frames,
-                                     binwidth=float(gui.binwidth), use_sweeps=gui.sweeps_as_lines,
-                                     delay_between_frames=float(gui.frame_delay),
-                                     data_to_grab=relevant_columns, line_freq=gui.line_freq,
-                                     num_of_lines=gui.x_pixels, bidir=gui.bidir,
-                                     bidir_phase=gui.phase, image_soft=gui.imaging_software,
-                                     )
+    validated_data = SignalValidator(
+        dict_of_data=dict_of_data,
+        num_of_frames=gui.num_of_frames,
+        binwidth=float(gui.binwidth),
+        use_sweeps=gui.sweeps_as_lines,
+        delay_between_frames=float(gui.frame_delay),
+        data_to_grab=relevant_columns,
+        line_freq=gui.line_freq,
+        num_of_lines=gui.x_pixels,
+        bidir=gui.bidir,
+        bidir_phase=gui.phase,
+        image_soft=gui.imaging_software,
+    )
 
     validated_data.run()
 
     photon_df = PhotonDF(dict_of_data=validated_data.dict_of_data)
-    tag_bit_parser = ParseTAGBits(dict_of_data=validated_data.dict_of_data, photons=photon_df.gen_df(),
-                                  use_tag_bits=gui.tag_bits, bits_dict=gui.tag_bits_dict)
+    tag_bit_parser = ParseTAGBits(
+        dict_of_data=validated_data.dict_of_data,
+        photons=photon_df.gen_df(),
+        use_tag_bits=gui.tag_bits,
+        bits_dict=gui.tag_bits_dict,
+    )
 
-    analyzed_struct = Allocate(bidir=gui.bidir, tag_offset=gui.tag_offset,
-                               laser_freq=float(gui.reprate), binwidth=float(gui.binwidth),
-                               tag_pulses=int(gui.tag_pulses), phase=gui.phase,
-                               keep_unidir=gui.keep_unidir, flim=gui.flim,
-                               censor=gui.censor, dict_of_data=validated_data.dict_of_data,
-                               df_photons=tag_bit_parser.gen_df(),
-                               tag_freq=float(gui.tag_freq), tag_to_phase=True, )
+    analyzed_struct = Allocate(
+        bidir=gui.bidir,
+        tag_offset=gui.tag_offset,
+        laser_freq=float(gui.reprate),
+        binwidth=float(gui.binwidth),
+        tag_pulses=int(gui.tag_pulses),
+        phase=gui.phase,
+        keep_unidir=gui.keep_unidir,
+        flim=gui.flim,
+        censor=gui.censor,
+        dict_of_data=validated_data.dict_of_data,
+        df_photons=tag_bit_parser.gen_df(),
+        tag_freq=float(gui.tag_freq),
+        tag_to_phase=True,
+    )
     analyzed_struct.run()
 
     # Determine type and shape of wanted outputs, and open the file pointers there
-    outputs = OutputParser(num_of_frames=len(validated_data.dict_of_data['Frames']),
-                           output_dict=gui.outputs, filename=gui.filename,
-                           x_pixels=gui.x_pixels, y_pixels=gui.y_pixels,
-                           z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
-                           num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim,
-                           binwidth=gui.binwidth, reprate=gui.reprate,
-                           lst_metadata=lst_metadata, debug=gui.debug)
+    outputs = OutputParser(
+        num_of_frames=len(validated_data.dict_of_data["Frames"]),
+        output_dict=gui.outputs,
+        filename=gui.filename,
+        x_pixels=gui.x_pixels,
+        y_pixels=gui.y_pixels,
+        z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
+        num_of_channels=analyzed_struct.num_of_channels,
+        flim=gui.flim,
+        binwidth=gui.binwidth,
+        reprate=gui.reprate,
+        lst_metadata=lst_metadata,
+        debug=gui.debug,
+    )
     outputs.run()
 
     if gui.gating:
-        gated = GatedDetection(raw=analyzed_struct.df_photons, reprate=gui.reprate,
-                               binwidth=gui.binwidth)
+        gated = GatedDetection(
+            raw=analyzed_struct.df_photons, reprate=gui.reprate, binwidth=gui.binwidth
+        )
         gated.run()
 
     data_for_movie = gated.data if gui.gating else analyzed_struct.df_photons
 
     # Create a movie object
-    volume_chunks = VolumeGenerator(frames=analyzed_struct.dict_of_data['Frames'],
-                                    data_shape=outputs.data_shape)
+    volume_chunks = VolumeGenerator(
+        frames=analyzed_struct.dict_of_data["Frames"], data_shape=outputs.data_shape
+    )
     frame_slices = volume_chunks.create_frame_slices()
 
-    final_movie = Movie(data=data_for_movie, frames=analyzed_struct.dict_of_data['Frames'],
-                        frame_slices=frame_slices, num_of_frame_chunks=volume_chunks.num_of_chunks,
-                        reprate=float(gui.reprate), name=gui.filename, data_shape=outputs.data_shape,
-                        binwidth=float(gui.binwidth), bidir=gui.bidir,
-                        fill_frac=gui.fill_frac if cur_file.fill_fraction == -1.0 else cur_file.fill_fraction,
-                        outputs=outputs.outputs, censor=gui.censor, mirror_phase=gui.phase,
-                        lines=analyzed_struct.dict_of_data['Lines'],
-                        num_of_channels=analyzed_struct.num_of_channels, flim=gui.flim,
-                        lst_metadata=cur_file.lst_metadata, exp_params=analyzed_struct.exp_params,
-                        line_delta=int(validated_data.line_delta), use_sweeps=gui.sweeps_as_lines,
-                        tag_as_phase=True, tag_freq=float(gui.tag_freq), image_soft=gui.imaging_software,
-                        frames_per_chunk=volume_chunks.frames_per_chunk,
-                        )
+    final_movie = Movie(
+        data=data_for_movie,
+        frames=analyzed_struct.dict_of_data["Frames"],
+        frame_slices=frame_slices,
+        num_of_frame_chunks=volume_chunks.num_of_chunks,
+        reprate=float(gui.reprate),
+        name=gui.filename,
+        data_shape=outputs.data_shape,
+        binwidth=float(gui.binwidth),
+        bidir=gui.bidir,
+        fill_frac=gui.fill_frac
+        if cur_file.fill_fraction == -1.0
+        else cur_file.fill_fraction,
+        outputs=outputs.outputs,
+        censor=gui.censor,
+        mirror_phase=gui.phase,
+        lines=analyzed_struct.dict_of_data["Lines"],
+        num_of_channels=analyzed_struct.num_of_channels,
+        flim=gui.flim,
+        lst_metadata=cur_file.lst_metadata,
+        exp_params=analyzed_struct.exp_params,
+        line_delta=int(validated_data.line_delta),
+        use_sweeps=gui.sweeps_as_lines,
+        tag_as_phase=True,
+        tag_freq=float(gui.tag_freq),
+        image_soft=gui.imaging_software,
+        frames_per_chunk=volume_chunks.frames_per_chunk,
+    )
 
     final_movie.run()
 
@@ -147,35 +212,54 @@ def main_data_readout(gui):
 
 class GUIClass:
     """ Helper class to create intermediate representation of the GUI's content """
+
     def __init__(self, **entries):
         self.__dict__.update(entries)
-        self.tag_bits_dict = dict(bits_grp_1_label=entries['bits_grp_1_label'],
-                                  bits_grp_2_label=entries['bits_grp_2_label'],
-                                  bits_grp_3_label=entries['bits_grp_3_label'])
+        self.tag_bits_dict = dict(
+            bits_grp_1_label=entries["bits_grp_1_label"],
+            bits_grp_2_label=entries["bits_grp_2_label"],
+            bits_grp_3_label=entries["bits_grp_3_label"],
+        )
 
     @property
     def outputs(self):
         """ Create a dictionary with the wanted user outputs. """
         output = {}
 
-        if self.summed is True: output['summed'] = True
-        if self.memory is True: output['memory'] = True
-        if self.stack is True: output['stack'] = True
+        if self.summed is True:
+            output["summed"] = True
+        if self.memory is True:
+            output["memory"] = True
+        if self.stack is True:
+            output["stack"] = True
 
-        if 'stack' in output:
-            if not 'summed' in output and not 'memory' in output:
-                warnings.warn("Performance Warning: Writing data to file might take a long time when the required"
-                              " output is only 'Full Stack'.")
+        if "stack" in output:
+            if not "summed" in output and not "memory" in output:
+                warnings.warn(
+                    "Performance Warning: Writing data to file might take a long time when the required"
+                    " output is only 'Full Stack'."
+                )
         return output
+
 
 def tkinter_to_object(gui: Union[GuiAppLst, dict]) -> GUIClass:
     """ Convert a tkinter instance into a pickable dictionary """
     if isinstance(gui, dict):
-        gui['tuple_of_data_sources'] = ('PMT1', 'PMT2', 'Lines', 'Frames', 'Laser', 'TAG Lens', 'Empty')
+        gui["tuple_of_data_sources"] = (
+            "PMT1",
+            "PMT2",
+            "Lines",
+            "Frames",
+            "Laser",
+            "TAG Lens",
+            "Empty",
+        )
         return GUIClass(**gui)
     else:
-        dic = {key: val.get() for key, val in gui.__dict__.items() if 'Var' in repr(val)}
-        dic['tuple_of_data_sources'] = gui.tuple_of_data_sources
+        dic = {
+            key: val.get() for key, val in gui.__dict__.items() if "Var" in repr(val)
+        }
+        dic["tuple_of_data_sources"] = gui.tuple_of_data_sources
         return GUIClass(**dic)
 
 
@@ -193,7 +277,7 @@ def convert_json_to_input_dict(cfg_fname):
         raise TypeError
 
 
-def run(cfg_file: str=None) -> Tuple[pd.DataFrame, Movie]:
+def run(cfg_file: str = None) -> Tuple[pd.DataFrame, Movie]:
     """ Run PySight.
 
     :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
@@ -213,8 +297,12 @@ def run(cfg_file: str=None) -> Tuple[pd.DataFrame, Movie]:
     return main_data_readout(gui_as_object)
 
 
-def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False,
-                  cfg_file: str='') -> pd.DataFrame:
+def run_batch_lst(
+    foldername: str,
+    glob_str: str = "*.lst",
+    recursive: bool = False,
+    cfg_file: str = "",
+) -> pd.DataFrame:
     """
     Run PySight on all list files in the folder
 
@@ -249,31 +337,33 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False,
             num_of_files += 1
         all_lst_files = path.glob(glob_str)
 
-    data_columns = ['fname', 'done', 'error']
-    data_record = pd.DataFrame(np.zeros((num_of_files, 3)), columns=data_columns)  # store result of PySight
+    data_columns = ["fname", "done", "error"]
+    data_record = pd.DataFrame(
+        np.zeros((num_of_files, 3)), columns=data_columns
+    )  # store result of PySight
     try:
         cfg_dict = convert_json_to_input_dict(cfg_file)
         named_gui = tkinter_to_object(cfg_dict)
     except TypeError:
         gui = GuiAppLst()
         gui.root.mainloop()
-        gui.filename.set('.lst')  # no need to choose a list file
+        gui.filename.set(".lst")  # no need to choose a list file
         named_gui = tkinter_to_object(gui)
     verify_gui_input(named_gui)
 
     try:
         for idx, lst_file in enumerate(all_lst_files):
             named_gui.filename = str(lst_file)
-            data_record.loc[idx, 'fname'] = str(lst_file)
+            data_record.loc[idx, "fname"] = str(lst_file)
             try:
                 main_data_readout(named_gui)
             except BaseException as e:
                 print(f"File {str(lst_file)} returned an error. Moving onwards.")
-                data_record.loc[idx, 'done'] = False
-                data_record.loc[idx, 'error'] = repr(e)
+                data_record.loc[idx, "done"] = False
+                data_record.loc[idx, "error"] = repr(e)
             else:
-                data_record.loc[idx, 'done'] = True
-                data_record.loc[idx, 'error'] = None
+                data_record.loc[idx, "done"] = True
+                data_record.loc[idx, "error"] = None
     except TypeError as e:
         print(repr(e))
 
@@ -281,8 +371,9 @@ def run_batch_lst(foldername: str, glob_str: str="*.lst", recursive: bool=False,
     return data_record
 
 
-def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
-             cfg_file: str=''):
+def mp_batch(
+    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str = ""
+):
     """
     Run several instances of PySight using the multiprocessing module.
 
@@ -312,7 +403,7 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
     except TypeError:
         gui = GuiAppLst()
         gui.root.mainloop()
-        gui.filename.set('.lst')  # no need to choose a list file
+        gui.filename.set(".lst")  # no need to choose a list file
     g = tkinter_to_object(gui)
     verify_gui_input(g)
     all_guis = []
@@ -323,5 +414,5 @@ def mp_batch(foldername, glob_str='*.lst', recursive=False, n_proc=None,
     pool.map(main_data_readout, all_guis)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     df, movie = run()

@@ -1,4 +1,4 @@
-.. image:: docs/pysight_logo.png
+.. image:: https://raw.githubusercontent.com/PBLab/python-pysight/master/docs/pysight_logo.png
    :scale: 1
    :alt: PySight
 .. start-badges
@@ -13,7 +13,7 @@
       - | |travis| |codecov|
     * - package
       - | |version| |wheel| |supported_versions|
-        | |supported_implementations|
+        | |supported_implementations| |codesyle|
 
 .. |docs| image:: https://readthedocs.org/projects/python-pysight/badge/?style=flat
     :target: https://readthedocs.org/projects/python-pysight
@@ -47,6 +47,9 @@
     :alt: Supported implementations
     :target: https://pypi.python.org/pypi/pysight
 
+.. |codestyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :alt: Code style
+    :target: https://github.com/ambv/black
 
 .. end-badges
 
