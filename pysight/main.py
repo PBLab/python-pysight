@@ -51,7 +51,7 @@ def main_data_readout(gui):
                                              timepatch=cur_file.timepatch, data_range=cur_file.data_range,
                                              dict_of_inputs=cur_file.dict_of_input_channels, 
                                              use_tag_bits=gui.tag_bits)
-            binary_parser.run()
+            binary_parser.run_parser()
         else:
             # Create input structures and create a DataFrame
             dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)

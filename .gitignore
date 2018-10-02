@@ -68,6 +68,7 @@ rust/target
 *.d
 *.lock
 *.rlib
+libpysight/target
 
 .DS_Store
 *~
@@ -85,4 +86,7 @@ src/pysight/__pycache__/
 !/tests/tests_data/2.lst
 .vscode
 *.ai
+target
+Cargo.lock
+
 

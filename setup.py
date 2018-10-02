@@ -26,7 +26,7 @@ def read(*names, **kwargs):
         encoding=kwargs.get('encoding', 'utf8')
     ).read()
 
-# Enable code coverage for C code: we can't use CFLAGS=-coverage in toxa.ini, since that may mess with compiling
+# Enable code coverage for C code: we can't use CFLAGS=-coverage in tox.ini, since that may mess with compiling
 # dependencies (e.g. numpy). Therefore we set SETUPPY_CFLAGS=-coverage in toxa.ini and copy it to CFLAGS here (after
 # deps have been safely installed).
 if 'TOXENV' in os.environ and 'SETUPPY_CFLAGS' in os.environ:
@@ -77,6 +77,7 @@ setup(
         'numba < 0.41',
         'ansimarkup < 1.5',
         'psutil < 5.5',
+        'pyo3-pack < 0.4',
     ],
     setup_requires=[
         'numpy'

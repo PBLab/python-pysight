@@ -1,5 +1,14 @@
 Changelog
 =========
+
+0.10.0 (2018-XX-XX)
+-------------------
+
+* Rewrote parsing backend in Rust and exported it as library - `libpysight`.
+
+* Added many tests, especially for the binary case.
+
+
 0.9.6 (2018-XX-XX)
 ------------------
 
