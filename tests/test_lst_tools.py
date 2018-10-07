@@ -23,31 +23,31 @@ from pysight.ascii_list_file_parser import timepatch_switch
 #     cur_file.run()
 #     dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
 
-    # analyzed = Allocate(dict_of_data=cur_file.dict_of_input_channels)
-    #
-    # def test_censor_not_needed(self):
-    #     a = np.array([10, 9, 8, 5])
-    #     self.assertTrue(not self.analyzed._Analysis__requires_censoring(a))
-    #
-    # def test_censor_needed_1(self):
-    #     a = np.array([10, 9, 0, 5])
-    #     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
-    #
-    # def test_censor_needed_2(self):
-    #     a = np.array([10, 9, 0, 7, 5, 0, 2])
-    #     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
-    #
-    # def test_censor_needed_3(self):
-    #     a = np.array([10, 9, 0, 7, 5, 0, 2, 5])
-    #     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
-    #
-    # def test_censor_needed_4(self):
-    #     a = np.array([10, 9, 0, 7, 5, 0, 2, 0])
-    #     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
-    #
-    # def test_laser_interpolation(self):
-    #     pass
+# analyzed = Allocate(dict_of_data=cur_file.dict_of_input_channels)
+#
+# def test_censor_not_needed(self):
+#     a = np.array([10, 9, 8, 5])
+#     self.assertTrue(not self.analyzed._Analysis__requires_censoring(a))
+#
+# def test_censor_needed_1(self):
+#     a = np.array([10, 9, 0, 5])
+#     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
+#
+# def test_censor_needed_2(self):
+#     a = np.array([10, 9, 0, 7, 5, 0, 2])
+#     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
+#
+# def test_censor_needed_3(self):
+#     a = np.array([10, 9, 0, 7, 5, 0, 2, 5])
+#     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
+#
+# def test_censor_needed_4(self):
+#     a = np.array([10, 9, 0, 7, 5, 0, 2, 0])
+#     self.assertTrue(self.analyzed._Analysis__requires_censoring(a))
+#
+# def test_laser_interpolation(self):
+#     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -9,23 +9,19 @@ from typing import Tuple
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 
 
-def gen_test_df(frame_num=10, end=1000000) -> Tuple[pd.DataFrame, pd.Series]:
+def gen_test_df(frame_num=10, end=1_000_000) -> Tuple[pd.DataFrame, pd.Series]:
     photons = np.arange(0, end, dtype=np.uint64)
-    frames = np.linspace(0, end, num=frame_num, dtype=np.uint64,
-                         endpoint=False)
-    ones_frames = np.ones((1, int(len(photons) / len(frames))),
-                          dtype=np.uint64)
+    frames = np.linspace(0, end, num=frame_num, dtype=np.uint64, endpoint=False)
+    ones_frames = np.ones((1, int(len(photons) / len(frames))), dtype=np.uint64)
     frames_ser = pd.Series(frames)
     frames = (np.atleast_2d(frames).T @ ones_frames).ravel()
     assert len(frames) == len(photons)
-    df = pd.DataFrame({'time_rel_frame': photons - frames,
-                       'Frames': frames})
-    df.set_index(['Frames'], drop=True, inplace=True)
+    df = pd.DataFrame({"time_rel_frame": photons - frames, "Frames": frames})
+    df.set_index(["Frames"], drop=True, inplace=True)
     return df, frames_ser
 
 
 class TestVolumeGenerator(TestCase):
-
     def test_many_frames(self):
         _, frames = gen_test_df(1000)
         shape = (1000, 512, 512, 16)
@@ -48,7 +44,9 @@ class TestVolumeGenerator(TestCase):
         shape = (10, 512, 512, 16)
         volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 70, None), slice(80, 90, None)])
+        self.assertSequenceEqual(
+            list(vol_times), [slice(0, 70, None), slice(80, 90, None)]
+        )
 
     def test_full_slice(self):
         _, frames = gen_test_df(16, end=1600)
@@ -69,10 +67,21 @@ class TestVolumeGenerator(TestCase):
         shape = (10, 800, 800, 100)
         volgen = VolumeGenerator(frames, shape, MAX_BYTES_ALLOWED=int(300e6))
         vol_times = volgen.create_frame_slices()
-        self.assertSequenceEqual(list(vol_times), [slice(0, 0, None), slice(10, 10, None), slice(20, 20, None),
-                                                   slice(30, 30, None), slice(40, 40, None), slice(50, 50, None),
-                                                   slice(60, 60, None), slice(70, 70, None), slice(80, 80, None),
-                                                   slice(90, 90, None)])
+        self.assertSequenceEqual(
+            list(vol_times),
+            [
+                slice(0, 0, None),
+                slice(10, 10, None),
+                slice(20, 20, None),
+                slice(30, 30, None),
+                slice(40, 40, None),
+                slice(50, 50, None),
+                slice(60, 60, None),
+                slice(70, 70, None),
+                slice(80, 80, None),
+                slice(90, 90, None),
+            ],
+        )
 
     def test_grouper(self):
         volgen = VolumeGenerator(pd.Series(), (1,))
@@ -87,4 +96,3 @@ class TestVolumeGenerator(TestCase):
         volgen.frames_per_chunk = 1
         grouped = volgen._VolumeGenerator__grouper()
         self.assertSequenceEqual(list(grouped), [(10,), (20,), (30,), (40,)])
-

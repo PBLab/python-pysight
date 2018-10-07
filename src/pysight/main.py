@@ -57,11 +57,12 @@ def main_data_readout(gui):
         cur_file.run()
 
         raw_data_obj = ReadData(
-            filename=gui.filename, 
+            filename=gui.filename,
             start_of_data_pos=cur_file.start_of_data_pos,
             timepatch=cur_file.timepatch,
             is_binary=cur_file.is_binary,
-            debug=gui.debug)
+            debug=gui.debug,
+        )
         raw_data = raw_data_obj.read_lst()
 
         if cur_file.is_binary:
@@ -380,7 +381,7 @@ def run_batch_lst(
 
 
 def mp_batch(
-    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str=""
+    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str = ""
 ):
     """
     Run several instances of PySight using the multiprocessing module.

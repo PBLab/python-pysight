@@ -9,12 +9,19 @@ import pathlib
 class TestMetaTools(unittest.TestCase):
     """ Tests for new multiscaler readout functions """
 
-    list_of_file_names = [str(next(pathlib.Path('tests/').rglob('*1.lst')).absolute()),
-                          str(next(pathlib.Path('tests/').rglob('*2.lst')).absolute())]
+    list_of_file_names = [
+        str(next(pathlib.Path("tests/").rglob("*1.lst")).absolute()),
+        str(next(pathlib.Path("tests/").rglob("*2.lst")).absolute()),
+    ]
     file_io_objects = []
     for file in list_of_file_names:
-        cur_obj = ReadMeta(file, debug=False, input_start='Frames',
-                         input_stop1='PMT1', input_stop2='Lines')
+        cur_obj = ReadMeta(
+            file,
+            debug=False,
+            input_start="Frames",
+            input_stop1="PMT1",
+            input_stop2="Lines",
+        )
         cur_obj.run()
         file_io_objects.append(cur_obj)
 
@@ -27,7 +34,7 @@ class TestMetaTools(unittest.TestCase):
         self.assertEqual(list_of_file_binary_formats, list_of_returned_binaries)
 
     def test_check_range_extraction(self):
-        list_of_real_range = [80000000, 8064]
+        list_of_real_range = [80_000_000, 8064]
         list_of_returned_range = []
         for oname in self.file_io_objects:
             list_of_returned_range.append(oname.data_range)
@@ -35,7 +42,7 @@ class TestMetaTools(unittest.TestCase):
         self.assertEqual(list_of_real_range, list_of_returned_range)
 
     def test_check_time_patch_extraction(self):
-        list_of_real_time_patch = ['32', '5b']
+        list_of_real_time_patch = ["32", "5b"]
         list_of_returned_time_patch = []
         for oname in self.file_io_objects:
             metadata = oname._ReadMeta__get_metadata()
@@ -52,24 +59,23 @@ class TestMetaTools(unittest.TestCase):
         self.assertEqual(list_of_real_start_loc, list_of_returned_locs)
 
     def test_find_active_channels(self):
-        real_list_of_active_channels = [[True, True, True, False, False, False],
-                                        [True, True, True, False, False, False]]
+        real_list_of_active_channels = [
+            [True, True, True, False, False, False],
+            [True, True, True, False, False, False],
+        ]
         returned_list_of_active_channels = []
         for oname in self.file_io_objects:
             metadata = oname._ReadMeta__get_metadata()
-            returned_list_of_active_channels.append(oname.list_of_recorded_data_channels)
+            returned_list_of_active_channels.append(
+                oname.list_of_recorded_data_channels
+            )
 
         self.assertEqual(returned_list_of_active_channels, real_list_of_active_channels)
 
     def test_create_inputs_dict(self):
         real_list_of_real_inputs_dict = [
-            {'Frames': '110',
-             'PMT1': '001',
-             'Lines': '010'},
-
-            {'Frames': '110',
-             'PMT1': '001',
-             'Lines': '010'}
+            {"Frames": "110", "PMT1": "001", "Lines": "010"},
+            {"Frames": "110", "PMT1": "001", "Lines": "010"},
         ]
         list_of_returned_inputs_dict = []
         for oname in self.file_io_objects:

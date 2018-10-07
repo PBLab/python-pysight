@@ -9,8 +9,9 @@ from pysight.nd_hist_generator.gating import GatedDetection
 
 
 class TestGatedDetection(unittest.TestCase):
-    df = pd.DataFrame([-1, 1, 5, 7, 9, 19, 25], columns=['time_rel_pulse'],
-                      dtype=np.uint64)
+    df = pd.DataFrame(
+        [-1, 1, 5, 7, 9, 19, 25], columns=["time_rel_pulse"], dtype=np.uint64
+    )
     base_obj = GatedDetection(raw=df)
 
     def test_bins_bet_pulses(self):
@@ -32,15 +33,14 @@ class TestGatedDetection(unittest.TestCase):
 
     def test_validate_with_boundaries(self):
         arr = np.array([[0], [5], [15]])
-        df2 = pd.DataFrame([0, 5, 15, 16], columns=['time_rel_pulse'],
-                           dtype=np.uint64)
+        df2 = pd.DataFrame([0, 5, 15, 16], columns=["time_rel_pulse"], dtype=np.uint64)
         obj = GatedDetection(raw=df2)
         obj._GatedDetection__validate_time_rel_pulse()
         self.assertSequenceEqual(arr.tolist(), obj.raw.values.tolist())
 
     def test_discard_events(self):
         arr = np.array([1, 2, 3, 3, 3, 4, 4, 5, 6, 11, 13, 10, 15, 15], dtype=np.uint64)
-        df = pd.DataFrame(arr, columns=['time_rel_pulse'], dtype=np.uint64)
+        df = pd.DataFrame(arr, columns=["time_rel_pulse"], dtype=np.uint64)
         hist, _ = np.histogram(arr, bins=range(1, 17))
         obj = GatedDetection(raw=df)
         obj._GatedDetection__discard_events(hist=hist)
@@ -48,7 +48,7 @@ class TestGatedDetection(unittest.TestCase):
 
     def test_discard_with_wrap(self):
         arr = np.array([1, 2, 3, 3, 4, 4, 11, 13, 14, 15, 15, 15, 1], dtype=np.uint64)
-        df = pd.DataFrame(arr, columns=['time_rel_pulse'], dtype=np.uint64)
+        df = pd.DataFrame(arr, columns=["time_rel_pulse"], dtype=np.uint64)
         hist, _ = np.histogram(arr, bins=16)
         obj = GatedDetection(raw=df)
         obj._GatedDetection__discard_events(hist=hist)

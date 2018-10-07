@@ -46,13 +46,14 @@ class ReadData:
             "c3": 64,
             "3": 64,
         }
-    
+
     def read_lst(self) -> np.ndarray:
         """ Main method to load the .lst file into memory """
         bytes_to_add = self._check_carriage_return()
         data_length_bytes = self._get_data_length_bytes(self.timepatch, bytes_to_add)
-        num_of_lines_in_bits = self._determine_num_of_lines(self.debug, 
-                                                            data_length_bytes)
+        num_of_lines_in_bits = self._determine_num_of_lines(
+            self.debug, data_length_bytes
+        )
         # Read file
         if self.is_binary:
             self.data = self._read_binary(data_length_bytes, num_of_lines_in_bits)
@@ -71,11 +72,10 @@ class ReadData:
             f.seek(self.start_of_data_pos)
             arr = np.fromfile(f, dtype="18S", count=18).astype("18U")
         first = arr[0]
-        if '\r' in first:
+        if "\r" in first:
             return 2
         else:
             return 1
-        
 
     def _get_data_length_bytes(self, tp: str, bytes_to_add: int):
         r""" 
@@ -102,7 +102,6 @@ class ReadData:
         print(printstr)
         return num_of_lines
 
-
     def _read_binary(self, data_length, num_of_lines) -> np.ndarray:
         with open(self.filename, "rb") as f:
             f.seek(self.start_of_data_pos)
@@ -110,7 +109,7 @@ class ReadData:
                 f, dtype=f"u{data_length}", count=num_of_lines
             )
         return arr
-    
+
     def _read_ascii(self, data_length, num_of_lines) -> np.ndarray:
         with open(self.filename, "rb") as f:
             f.seek(self.start_of_data_pos)
