@@ -16,7 +16,7 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 
-from pysight.ascii_list_file_parser.file_io import FileIO
+from pysight.ascii_list_file_parser.file_io import ReadMeta
 from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
@@ -33,6 +33,7 @@ from pysight.tkinter_gui_multiscaler import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
+from pysight.read_lst import ReadData
 
 colorama.init()
 
@@ -44,9 +45,8 @@ def main_data_readout(gui):
     """
     # Read the file
     if gui.filename.endswith(".lst"):
-        cur_file = FileIO(
+        cur_file = ReadMeta(
             filename=gui.filename,
-            debug=gui.debug,
             input_start=gui.input_start,
             input_stop1=gui.input_stop1,
             input_stop2=gui.input_stop2,
@@ -56,9 +56,17 @@ def main_data_readout(gui):
         )
         cur_file.run()
 
+        raw_data_obj = ReadData(
+            filename=gui.filename, 
+            start_of_data_pos=cur_file.start_of_data_pos,
+            timepatch=cur_file.timepatch,
+            is_binary=cur_file.is_binary,
+            debug=gui.debug)
+        raw_data = raw_data_obj.read_lst()
+
         if cur_file.is_binary:
             binary_parser = BinaryDataParser(
-                data=cur_file.data,
+                data=raw_data,
                 data_range=cur_file.data_range,
                 timepatch=cur_file.timepatch,
                 use_tag_bits=gui.tag_bits,
@@ -72,7 +80,7 @@ def main_data_readout(gui):
             )
             tabulated_data = Tabulate(
                 data_range=cur_file.data_range,
-                data=cur_file.data,
+                data=raw_data,
                 dict_of_inputs=cur_file.dict_of_input_channels,
                 use_tag_bits=gui.tag_bits,
                 dict_of_slices_hex=dict_of_slices_hex,
@@ -372,7 +380,7 @@ def run_batch_lst(
 
 
 def mp_batch(
-    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str = ""
+    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str=""
 ):
     """
     Run several instances of PySight using the multiprocessing module.

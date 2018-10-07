@@ -12,12 +12,12 @@ class LstFormat(Enum):
 
 
 @attr.s(slots=True)
-class FileIO(object):
+class ReadMeta:
     """
-    Manage pipeline of file IO process.
+    Manage pipeline of file IO process. Parses metadata, doesn't read the actual
+    data in it.
 
     :param str filename: List file name
-    :param bool debug: Run a debug build (limited number of lines for quick execution of the entire pipeline)
     :param str input_start: Data type in analog channel 'START' (6)
     :param str input_stop1: Data type in analog channel 'STOP1' (1)
     :param str input_stop2: Data type in analog channel 'STOP2' (2)
@@ -41,7 +41,6 @@ class FileIO(object):
     start_of_data_pos = attr.ib(init=False)
     dict_of_input_channels = attr.ib(init=False)
     list_of_recorded_data_channels = attr.ib(init=False)
-    data = attr.ib(init=False)
     lst_metadata = attr.ib(init=False)
     fill_fraction = attr.ib(init=False)
     num_of_channels = attr.ib(init=False)
@@ -64,12 +63,8 @@ class FileIO(object):
         self.dict_of_input_channels: dict = self.create_inputs_dict()
         self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
-        num_of_items = self.determine_num_of_items()
         # Grab some additional metadata from the file, to be saved later
         self.__parse_extra_metadata(metadata)
-        # Read the actual data
-        self.data: np.ndarray = self.read_lst(num_of_items=num_of_items)
-        print("File read. Sorting the file according to timepatch...")
 
     def __get_metadata(self) -> str:
         """
@@ -82,39 +77,6 @@ class FileIO(object):
             metadata = f.read(5000)
 
         return metadata
-
-    def determine_num_of_items(self):
-        if self.debug == False:
-            num_of_items = -1
-            read_string = f'Reading file "{self.filename}"...'
-        else:
-            num_of_items = 0.2e6
-            read_string = f'[DEBUG] Reading file "{self.filename}"...'
-
-        print(read_string)
-        return num_of_items
-
-    @staticmethod
-    def create_data_length_dict():
-        """  CURRENTLY DEPRECATED """
-        dict_of_data_length = {
-            "0": 16,
-            "5": 32,
-            "1": 32,
-            "1a": 48,
-            "2a": 48,
-            "22": 48,
-            "32": 48,
-            "2": 48,
-            "5b": 64,
-            "Db": 64,
-            "f3": 64,
-            "43": 64,
-            "c3": 64,
-            "3": 64,
-        }
-
-        return dict_of_data_length
 
     @staticmethod
     def hex_to_bin_dict() -> Dict:
@@ -309,45 +271,6 @@ class FileIO(object):
         )  # in nanoseconds
         acq_delay = int(fstchan / self.binwidth)
         return acq_delay
-
-    def read_lst(self, num_of_items: int = -1) -> np.ndarray:
-        """
-        Updated version of LST readout using array slicing (and not Pandas slicing).
-
-        :param int num_of_items: Number of lines to read. -1 is all file.
-        """
-
-        if self.filename is "" or self.start_of_data_pos == 0 or self.timepatch == "":
-            raise ValueError("Wrong input detected.")
-
-        data_length_dict = self.create_data_length_dict()
-        # Make sure we read the exact number of lines we were asked to
-        if self.is_binary:
-            data_length = data_length_dict[self.timepatch] // 8
-        else:
-            data_length = data_length_dict[self.timepatch] // 4 + 2
-
-        if num_of_items == -1:
-            num_of_lines_to_read = -1
-        else:
-            num_of_lines_to_read = int(num_of_items * data_length)
-
-        # Read file
-        if self.is_binary:
-            with open(self.filename, "rb") as f:
-                f.seek(self.start_of_data_pos)
-                arr: np.ndarray = np.fromfile(
-                    f, dtype=f"u{data_length}", count=num_of_lines_to_read
-                )
-            return arr
-
-        else:
-            with open(self.filename, "rb") as f:
-                f.seek(self.start_of_data_pos)
-                arr = np.fromfile(
-                    f, dtype="{}S".format(data_length), count=num_of_lines_to_read
-                ).astype("{}U".format(data_length))
-            return arr
 
     def create_inputs_dict(self) -> Dict[str, str]:
         """

@@ -1,5 +1,15 @@
 Changelog
 =========
+0.9.7 (2018-10-07)
+------------------
+
+* Added the ``ReadData`` class for easier testing of the data readout process.
+
+* Consequently, added tests.
+
+* Should now support Mac/Linux-generated list files.
+
+
 0.9.6 (2018-10-02)
 ------------------
 

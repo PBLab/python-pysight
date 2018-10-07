@@ -2,18 +2,18 @@
 __author__ = Hagai Hargil
 """
 import unittest
-from pysight.ascii_list_file_parser.file_io import FileIO
+from pysight.ascii_list_file_parser.file_io import ReadMeta
 import pathlib
 
 
-class TestFileIOTools(unittest.TestCase):
+class TestMetaTools(unittest.TestCase):
     """ Tests for new multiscaler readout functions """
 
     list_of_file_names = [str(next(pathlib.Path('tests/').rglob('*1.lst')).absolute()),
                           str(next(pathlib.Path('tests/').rglob('*2.lst')).absolute())]
     file_io_objects = []
     for file in list_of_file_names:
-        cur_obj = FileIO(file, debug=False, input_start='Frames',
+        cur_obj = ReadMeta(file, debug=False, input_start='Frames',
                          input_stop1='PMT1', input_stop2='Lines')
         cur_obj.run()
         file_io_objects.append(cur_obj)
@@ -38,7 +38,7 @@ class TestFileIOTools(unittest.TestCase):
         list_of_real_time_patch = ['32', '5b']
         list_of_returned_time_patch = []
         for oname in self.file_io_objects:
-            metadata = oname._FileIO__get_metadata()
+            metadata = oname._ReadMeta__get_metadata()
             list_of_returned_time_patch.append(oname.timepatch)
 
         self.assertEqual(list_of_real_time_patch, list_of_returned_time_patch)
@@ -56,7 +56,7 @@ class TestFileIOTools(unittest.TestCase):
                                         [True, True, True, False, False, False]]
         returned_list_of_active_channels = []
         for oname in self.file_io_objects:
-            metadata = oname._FileIO__get_metadata()
+            metadata = oname._ReadMeta__get_metadata()
             returned_list_of_active_channels.append(oname.list_of_recorded_data_channels)
 
         self.assertEqual(returned_list_of_active_channels, real_list_of_active_channels)
@@ -76,14 +76,6 @@ class TestFileIOTools(unittest.TestCase):
             list_of_returned_inputs_dict.append(oname.dict_of_input_channels)
 
         self.assertEqual(list_of_returned_inputs_dict, real_list_of_real_inputs_dict)
-
-    def test_num_of_items(self):
-        real_num_of_items = [-1, -1]
-        returned_num_of_items = []
-        for oname in self.file_io_objects:
-            returned_num_of_items.append(oname.determine_num_of_items())
-
-        self.assertEqual(returned_num_of_items, real_num_of_items)
 
     def test_fstchan(self):
         real_fstchan = [0, 54 * 8]
