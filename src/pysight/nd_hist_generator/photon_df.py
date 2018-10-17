@@ -20,9 +20,15 @@ class PhotonDF(object):
 
         :return pd.DataFrame: Photon data
         """
+        if "Channel" not in self.dict_of_data["PMT1"].columns:
+            self.dict_of_data["PMT1"]['Channel'] = 1
 
-        assert "Channel" in self.dict_of_data["PMT1"].columns
-
+        try:
+            if "Channel" not in self.dict_of_data["PMT2"].columns:
+                self.dict_of_data["PMT2"]['Channel'] = 2
+        except KeyError: 
+            pass
+            
         try:
             df_photons = pd.concat(
                 [self.dict_of_data["PMT1"].copy(), self.dict_of_data["PMT2"].copy()],

@@ -13,8 +13,6 @@ class TagPipeline(object):
     """
     Pipeline to interpolate TAG lens pulses
 
-    Inputs:
-    -------
     :param pd.DataFrame photons: DataFrame of photons in experiment
     :param pd.Series tag_pulses: Series of TAG events
     :param float freq: Expected frequency of TAG sync pulses in Hz

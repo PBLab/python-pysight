@@ -6,6 +6,7 @@ from enum import Enum, auto
 
 
 class LineSignalType(Enum):
+    """ All possible types of correct/incorrect line signals """
     VALID_UNIDIR = auto()
     VALID_BIDIR = auto()
     EXTRA_LINES = auto()

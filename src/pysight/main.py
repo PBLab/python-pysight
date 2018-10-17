@@ -4,6 +4,7 @@
 __author__ = Hagai Har-Gil
 Created on Thu Oct 13 09:37:02 2016
 """
+
 from typing import Union, Tuple
 import matplotlib
 

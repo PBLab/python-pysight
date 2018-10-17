@@ -12,7 +12,7 @@
 *.hdf5
 *.h5
 .eps
-
+*.html
 
 # C extensions
 *.so
@@ -82,3 +82,4 @@ src/pysight/__pycache__/
 *.nbi
 *.nbc
 .eggs
+target/
