@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import os
 import matplotlib
-
+autodoc_mock_imports = ["_tkinter"]
 matplotlib.use("agg")
 
 extensions = [
@@ -30,7 +30,6 @@ author = "Hagai Har-Gil"
 copyright = "{0}, {1}".format(year, author)
 version = release = "0.9.7"
 autodoc = True
-autodoc_mock_imports = ["_tkinter"]
 
 pygments_style = "trac"
 templates_path = ["."]

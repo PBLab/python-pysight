@@ -2,7 +2,9 @@ Subpackages
 ===========
 
 .. toctree::
-
+    pysight.main
+    pysight.tkinter_gui_multiscaler
+    pysight.read_lst
     pysight.ascii_list_file_parser
     pysight.binary_list_file_parser
     pysight.nd_hist_generator
