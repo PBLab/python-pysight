@@ -108,11 +108,15 @@ def main_data_readout(gui):
             relevant_columns = separated_data.data_to_grab
             dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
+        fill_frac = gui.fill_frac \
+        if cur_file.fill_fraction == -1 \
+        else cur_file.fill_fraction
     except NameError:
         with open(gui.filename, "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
+        fill_frac = gui.fill_frac
 
     validated_data = SignalValidator(
         dict_of_data=dict_of_data,
@@ -196,16 +200,14 @@ def main_data_readout(gui):
         data_shape=outputs.data_shape,
         binwidth=float(gui.binwidth),
         bidir=gui.bidir,
-        fill_frac=gui.fill_frac
-        if cur_file.fill_fraction == -1.0
-        else cur_file.fill_fraction,
+        fill_frac=fill_frac,
         outputs=outputs.outputs,
         censor=gui.censor,
         mirror_phase=gui.phase,
         lines=analyzed_struct.dict_of_data["Lines"],
         num_of_channels=analyzed_struct.num_of_channels,
         flim=gui.flim,
-        lst_metadata=cur_file.lst_metadata,
+        lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
         line_delta=int(validated_data.line_delta),
         use_sweeps=gui.sweeps_as_lines,
