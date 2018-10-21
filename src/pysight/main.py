@@ -44,7 +44,7 @@ def main_data_readout(gui):
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
     """
-    # Read the file
+    # Read the .lst file
     if gui.filename.endswith(".lst"):
         cur_file = ReadMeta(
             filename=gui.filename,
@@ -111,7 +111,8 @@ def main_data_readout(gui):
         fill_frac = gui.fill_frac \
         if cur_file.fill_fraction == -1 \
         else cur_file.fill_fraction
-    except NameError:
+    except NameError:  # dealing with a pickle file
+        print(f"Reading file {gui.filename}...")
         with open(gui.filename, "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
