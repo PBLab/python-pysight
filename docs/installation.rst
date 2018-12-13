@@ -24,7 +24,9 @@ In a virtual environment simply install PySight::
 
     pip install pysight
 
-In some environments you may be required to install ``numpy`` before installing PySight.
+*Note for Windows users:* PySight uses Cython to compile C extensions. If this is the first time you're using Cython, you'll have
+to download the `Visual Studio C++ Build Tools <https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=15>`_
+and install them before you'll be able to ``pip install pysight``.
 
 The "Usage" page provides more details on the operation of PySight.
 

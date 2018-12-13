@@ -2,7 +2,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 __author__ = Hagai Har-Gil
-Created on Thu Oct 13 09:37:02 2016
 """
 
 from typing import Union, Tuple
@@ -385,7 +384,7 @@ def run_batch_lst(
 
 
 def mp_batch(
-    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str = ""
+    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str=""
 ):
     """
     Run several instances of PySight using the multiprocessing module.

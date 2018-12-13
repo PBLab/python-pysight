@@ -83,3 +83,4 @@ src/pysight/__pycache__/
 *.nbc
 .eggs
 target/
+.mypy_cache/
