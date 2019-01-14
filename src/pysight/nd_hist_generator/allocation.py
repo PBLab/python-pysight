@@ -42,7 +42,7 @@ class Allocate(object):
     phase = attr.ib(default=-2.78, validator=instance_of(float))
     keep_unidir = attr.ib(default=False, validator=instance_of(bool))
     flim = attr.ib(default=False, validator=instance_of(bool))
-    exp_params = attr.ib(default={}, validator=instance_of(dict))
+    exp_params = attr.ib(factory=dict, validator=instance_of(dict))
     censor = attr.ib(default=False, validator=instance_of(bool))
     tag_interp_ok = attr.ib(default=False, validator=instance_of(bool))
     tag_to_phase = attr.ib(default=True, validator=instance_of(bool))
@@ -55,7 +55,6 @@ class Allocate(object):
             "Channels of events found. Allocating photons to their frames and lines..."
         )
         # Unidirectional scan - create fake lines
-        f
         if not self.bidir:
             self.__add_unidirectional_lines()
         self.__allocate_photons()
@@ -83,6 +82,8 @@ class Allocate(object):
         frame, line, and possibly laser pulse. This address is used to histogram it in the right pixel.
         The arrival time of each photon is calculated relative to this address - start-of-line, for example.
         The TAG lens address is different - each photon simply receives a phase between 0 and 2π.
+
+        The function doesn't return, but it populates self.df_photons with the allocated data.
         """
         irrelevant_keys = {"PMT1", "PMT2", "TAG Lens"}
         relevant_keys = set(self.dict_of_data.keys()) - irrelevant_keys
