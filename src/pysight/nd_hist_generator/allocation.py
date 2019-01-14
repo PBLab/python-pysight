@@ -55,6 +55,7 @@ class Allocate(object):
             "Channels of events found. Allocating photons to their frames and lines..."
         )
         # Unidirectional scan - create fake lines
+        f
         if not self.bidir:
             self.__add_unidirectional_lines()
         self.__allocate_photons()

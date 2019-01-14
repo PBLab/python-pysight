@@ -12,11 +12,9 @@ class PhotonDF:
 
     :param Dict[str, pd.DataFrame] dict_of_data: A dictionary with keys
     being the input analog channels and values are the DataFrames that contains the raw data.
-    :param int num_of_channels: Number of data channels that will be generated.
     """
 
     dict_of_data = attr.ib(validator=instance_of(dict))
-    num_of_channels = attr.ib(init=False)
 
     def run(self) -> pd.DataFrame:
         """
@@ -25,7 +23,6 @@ class PhotonDF:
 
         :return pd.DataFrame: Photon data with labeled channels.
         """
-        self.num_of_channels = 1
         if "Channel" not in self.dict_of_data["PMT1"].columns:
             self.dict_of_data["PMT1"]["Channel"] = 1
 
@@ -40,7 +37,6 @@ class PhotonDF:
                 [self.dict_of_data["PMT1"].copy(), self.dict_of_data["PMT2"].copy()],
                 axis=0,
             )
-            self.num_of_channels += 1
         except KeyError:
             df_photons = self.dict_of_data["PMT1"].copy()
         except:
