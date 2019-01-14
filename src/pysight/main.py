@@ -135,9 +135,10 @@ def main_data_readout(gui):
     validated_data.run()
 
     photon_df = PhotonDF(dict_of_data=validated_data.dict_of_data)
+    photons = photon_df.run()
     tag_bit_parser = ParseTAGBits(
         dict_of_data=validated_data.dict_of_data,
-        photons=photon_df.gen_df(),
+        photons=photons,
         use_tag_bits=gui.tag_bits,
         bits_dict=gui.tag_bits_dict,
     )
