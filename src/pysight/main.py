@@ -34,6 +34,7 @@ from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 from pysight.read_lst import ReadData
+from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 colorama.init()
 
