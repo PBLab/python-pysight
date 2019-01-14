@@ -107,9 +107,9 @@ def main_data_readout(gui):
             relevant_columns = separated_data.data_to_grab
             dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
-        fill_frac = gui.fill_frac \
-        if cur_file.fill_fraction == -1 \
-        else cur_file.fill_fraction
+        fill_frac = (
+            gui.fill_frac if cur_file.fill_fraction == -1 else cur_file.fill_fraction
+        )
     except NameError:  # dealing with a pickle file
         print(f"Reading file {gui.filename}...")
         with open(gui.filename, "rb") as f:
@@ -159,6 +159,7 @@ def main_data_readout(gui):
         tag_to_phase=True,
     )
     analyzed_struct.run()
+    data_for_movie = analyzed_struct.df_photons
 
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
@@ -178,12 +179,27 @@ def main_data_readout(gui):
     outputs.run()
 
     if gui.gating:
-        gated = GatedDetection(
-            raw=analyzed_struct.df_photons, reprate=gui.reprate, binwidth=gui.binwidth
+        warnings.warn(
+            "Gating is currently not implemented. Please contact package authors."
         )
-        gated.run()
+        # gated = GatedDetection(
+        #     raw=analyzed_struct.df_photons, reprate=gui.reprate, binwidth=gui.binwidth
+        # )
+        # gated.run()
 
-    data_for_movie = gated.data if gui.gating else analyzed_struct.df_photons
+    if gui.interleaved:
+        warnings.warn(
+            """Deinterleaving a data channel is currently highly experimental and
+            is supported only on data in the PMT1 channel. Inexperienced users
+            are highly advised not to use it."""
+        )
+        deinter = Deinterleave(
+            photons=analyzed_struct.df_photons,
+            reprate=gui.reprate,
+            binwidth=gui.binwidth,
+        )
+        deinter.run()
+        data_for_movie = deinter.data
 
     # Create a movie object
     volume_chunks = VolumeGenerator(
@@ -385,7 +401,7 @@ def run_batch_lst(
 
 
 def mp_batch(
-    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str=""
+    foldername, glob_str="*.lst", recursive=False, n_proc=None, cfg_file: str = ""
 ):
     """
     Run several instances of PySight using the multiprocessing module.
