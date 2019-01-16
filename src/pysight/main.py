@@ -240,6 +240,20 @@ def main_data_readout(gui):
     return analyzed_struct.df_photons, final_movie
 
 
+def mp_main_data_readout(gui):
+    """
+    Wrapper for main_data_readout that
+    wraps it with a try block. To be used with the
+    multiprocessing run option.
+    """
+    try:
+        df, movie = main_data_readout(gui)
+    except:
+        pass
+    else:
+        return df, movie
+
+
 class GUIClass:
     """ Helper class to create intermediate representation of the GUI's content """
 
@@ -441,7 +455,7 @@ def mp_batch(
         g.filename = str(file)
         all_guis.append(g)
     pool = mp.Pool(n_proc)
-    pool.map(main_data_readout, all_guis)
+    pool.map(mp_main_data_readout, all_guis)
 
 
 if __name__ == "__main__":
