@@ -158,6 +158,7 @@ def main_data_readout(gui):
         df_photons=tag_bit_parser.gen_df(),
         tag_freq=float(gui.tag_freq),
         tag_to_phase=True,
+        deinterleave=gui.interleaved,
     )
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
