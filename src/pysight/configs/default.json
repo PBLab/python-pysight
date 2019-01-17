@@ -63,96 +63,100 @@
         "PY_VAR15",
         0.001
     ],
-    "filename": [
+    "interleaved": [
         "PY_VAR16",
+        false
+    ],
+    "filename": [
+        "PY_VAR17",
         ""
     ],
     "input_start": [
-        "PY_VAR17",
+        "PY_VAR18",
         "PMT1"
     ],
     "input_stop1": [
-        "PY_VAR18",
+        "PY_VAR19",
         "Empty"
     ],
     "input_stop2": [
-        "PY_VAR19",
+        "PY_VAR20",
         "Lines"
     ],
     "num_of_frames": [
-        "PY_VAR20",
+        "PY_VAR21",
         1
     ],
     "summed": [
-        "PY_VAR21",
-        true
-    ],
-    "memory": [
         "PY_VAR22",
         true
     ],
-    "stack": [
+    "memory": [
         "PY_VAR23",
         true
     ],
-    "x_pixels": [
+    "stack": [
         "PY_VAR24",
-        512
+        true
     ],
-    "y_pixels": [
+    "x_pixels": [
         "PY_VAR25",
         512
     ],
-    "z_pixels": [
+    "y_pixels": [
         "PY_VAR26",
+        512
+    ],
+    "z_pixels": [
+        "PY_VAR27",
         1
     ],
     "tag_bits": [
-        "PY_VAR27",
+        "PY_VAR28",
         false
     ],
     "bits_grp_1_start": [
-        "PY_VAR28",
+        "PY_VAR29",
         1
     ],
     "bits_grp_1_end": [
-        "PY_VAR29",
+        "PY_VAR30",
         3
     ],
     "bits_grp_2_start": [
-        "PY_VAR30",
+        "PY_VAR31",
         4
     ],
     "bits_grp_2_end": [
-        "PY_VAR31",
+        "PY_VAR32",
         5
     ],
     "bits_grp_3_start": [
-        "PY_VAR32",
+        "PY_VAR33",
         6
     ],
     "bits_grp_3_end": [
-        "PY_VAR33",
+        "PY_VAR34",
         16
     ],
     "bits_grp_1_label": [
-        "PY_VAR34",
-        "None"
-    ],
-    "bits_grp_2_label": [
         "PY_VAR35",
         "None"
     ],
-    "bits_grp_3_label": [
+    "bits_grp_2_label": [
         "PY_VAR36",
         "None"
     ],
-    "imaging_software": [
+    "bits_grp_3_label": [
         "PY_VAR37",
+        "None"
+    ],
+    "imaging_software": [
+        "PY_VAR38",
         "ScanImage"
     ],
     "save_as": [
-        "PY_VAR38",
+        "PY_VAR39",
         "default"
     ]
 }

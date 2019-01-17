@@ -123,6 +123,7 @@ class GuiAppLst(object):
         self.line_freq = DoubleVar(value=7930.0)  # Hz
         self.sweeps_as_lines = BooleanVar(value=False)
         self.frame_delay = DoubleVar(value=0.001)  # sec
+        self.interleaved = BooleanVar(value=False)
 
     def __browse_file(self, main_frame):
         file_row = 0
@@ -222,7 +223,6 @@ class GuiAppLst(object):
         tif.grid(column=4, row=outputs_row + 2, sticky="ns")
 
     def __image_size(self, main_frame):
-        # Define image sizes
         image_size_row = 1
         image_size_label = ttk.Label(main_frame, text="Image Size", font=self.bold_font)
         image_size_label.grid(column=2, row=image_size_row, sticky="ns", columnspan=1)
@@ -248,7 +248,14 @@ class GuiAppLst(object):
     def __debug(self, main_frame):
         """ Read a smaller portion of data for debugging """
         debug_check = ttk.Checkbutton(main_frame, text="Debug?", variable=self.debug)
-        debug_check.grid(column=2, row=7, sticky="ns")
+        debug_check.grid(column=2, row=8, sticky="ns")
+
+    def __interleaved(self, main_frame):
+        """ Unmix two data channel in the same PMT1 analog channel """
+        inter_check = ttk.Checkbutton(
+            main_frame, text="Interleaved?", variable=self.interleaved
+        )
+        inter_check.grid(column=2, row=7, sticky="ns")
 
     def __mirror_phase(self, main_frame):
         phase_text = ttk.Label(main_frame, text="Mirror phase [us]: ")
@@ -352,7 +359,7 @@ class GuiAppLst(object):
         bits_grp_3.set("None")
         bits_grp_3["values"] = self.tag_bits_group_options
 
-        bits_grp_1_start_lab = ttk.Label(main_frame, text="Start")
+        bits_grp_1_start_lab = ttk.Label(main_frame, text="\tStart")
         bits_grp_1_start_lab.grid(column=1, row=tag_bits_row + 1, sticky="w")
         bits_grp_1_start_ent = ttk.Entry(
             main_frame, textvariable=self.bits_grp_1_start, width=3
@@ -365,7 +372,7 @@ class GuiAppLst(object):
         )
         bits_grp_1_end_ent.grid(column=2, row=tag_bits_row + 1, sticky="w")
 
-        bits_grp_2_start_lab = ttk.Label(main_frame, text="Start")
+        bits_grp_2_start_lab = ttk.Label(main_frame, text="\tStart")
         bits_grp_2_start_lab.grid(column=1, row=tag_bits_row + 2, sticky="w")
         bits_grp_2_start_ent = ttk.Entry(
             main_frame, textvariable=self.bits_grp_2_start, width=3
@@ -378,7 +385,7 @@ class GuiAppLst(object):
         )
         bits_grp_2_end_ent.grid(column=2, row=tag_bits_row + 2, sticky="w")
 
-        bits_grp_3_start_lab = ttk.Label(main_frame, text="Start")
+        bits_grp_3_start_lab = ttk.Label(main_frame, text="\tStart")
         bits_grp_3_start_lab.grid(column=1, row=tag_bits_row + 3, sticky="w")
         bits_grp_3_start_ent = ttk.Entry(
             main_frame, textvariable=self.bits_grp_3_start, width=3
@@ -561,6 +568,7 @@ class GuiAppLst(object):
         self.__tag_lens(frame)
         self.__frame_delay(frame)
         self.__line_freq(frame)
+        self.__interleaved(frame)
         for child in frame.winfo_children():
             child.grid_configure(padx=3, pady=2)
 
@@ -688,8 +696,8 @@ class GuiAppLst(object):
             raise ValueError(f"Type not recognized for value {val}.")
 
     def __load_last_used_cfg(self, main_frame):
-        dir: WindowsPath = Path(__file__).parent / "configs"
-        all_cfg_files: Iterable = dir.glob("*.json")
+        direc = Path(__file__).parent / "configs"
+        all_cfg_files: Iterable = direc.glob("*.json")
         latest_filename: str = ""
         latest_file_date: int = 0
         for cfg_file in all_cfg_files:

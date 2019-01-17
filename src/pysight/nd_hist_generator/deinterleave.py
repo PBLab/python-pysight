@@ -1,5 +1,5 @@
 import attr
-from attrs.validator import instance_of
+from attr.validators import instance_of
 import numpy as np
 import pandas as pd
 
@@ -27,14 +27,17 @@ class Deinterleave:
 
     @property
     def bins_bet_pulses(self):
-        return int(np.ceil(1/self.reprate / self.binwidth))
+        return int(np.ceil(1 / self.reprate / self.binwidth))
 
     def run(self):
         """ Main pipeline for this class """
         # TODO
-        late_photons = photons.mask(photons["time_rel_pulse"] > (self.bins_bet_pulses // 2))
+        late_photons = photons.mask(
+            photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
+        )
         early_photons = late_photons.dropna()
         late_photons = photons.loc[late_photons["time_rel_pulse"].isna()]
-        late_photons.index['Channel'] = 7
+        late_photons["Channel"] = 7
+        late_photons = late_photons.set_index(keys="Channel")
         new_photons = photons.drop(late_photons["time_rel_pulse"].isna())
         new_photons = pd.append((new_photons, late_photons))
