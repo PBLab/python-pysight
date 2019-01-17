@@ -47,6 +47,7 @@ class Allocate(object):
     tag_interp_ok = attr.ib(default=False, validator=instance_of(bool))
     tag_to_phase = attr.ib(default=True, validator=instance_of(bool))
     tag_offset = attr.ib(default=0, validator=instance_of(int))
+    deinterleave = attr.ib(default=False, validator=instance_of(bool))
     sorted_indices = attr.ib(init=False)
 
     def run(self):
@@ -59,7 +60,7 @@ class Allocate(object):
             self.__add_unidirectional_lines()
         self.__allocate_photons()
         self.__allocate_tag()
-        if self.flim:
+        if self.flim or self.deinterleave:
             self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
             if self.censor:
                 self.exp_params = self.__fit_data_to_exponent(rel_time)
