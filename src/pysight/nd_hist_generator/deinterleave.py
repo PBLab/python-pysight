@@ -18,7 +18,6 @@ class Deinterleave:
     This class should be used when two (or more, in the future) beams
     are co-aligned and excite the sample near-simultaneously.
     """
-
     photons = attr.ib(validator=instance_of(pd.DataFrame))
     reprate = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
@@ -31,13 +30,16 @@ class Deinterleave:
 
     def run(self):
         """ Main pipeline for this class """
-        # TODO
-        late_photons = photons.mask(
-            photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
+        late_photons_mask = self.photons.mask(
+            self.photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
         )
-        early_photons = late_photons.dropna()
-        late_photons = photons.loc[late_photons["time_rel_pulse"].isna()]
+        early_photons = late_photons_mask.dropna()
+        late_photons = self.photons.loc[late_photons_mask["time_rel_pulse"].isna(), :].copy()
         late_photons["Channel"] = 7
-        late_photons = late_photons.set_index(keys="Channel")
-        new_photons = photons.drop(late_photons["time_rel_pulse"].isna())
-        new_photons = pd.append((new_photons, late_photons))
+        late_photons = (late_photons
+            .set_index(keys="Channel", append=True)
+            .reset_index(level=0, drop=True)
+            .reorder_levels(['Channel', 'Lines', 'Frames']))
+        early_photons = self.photons.loc[~late_photons_mask["time_rel_pulse"].isna()]
+        new_photons = pd.append((early_photons, late_photons))
+        assert len(new_photons) == len(early_photons) + len(late_photons)

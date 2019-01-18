@@ -240,8 +240,8 @@ class Allocate(object):
             )
             rel_time_per_pulse = rel_time251 % np.ceil(
                 1 / (self.binwidth * self.laser_freq)
-            )
-            rel_time.append(np.uint8(rel_time_per_pulse))
+            ).astype(np.uint8)
+            rel_time.append(rel_time_per_pulse)
             df.loc[chan, "time_rel_pulse"] = np.uint8(rel_time_per_pulse)
 
         return df, rel_time
