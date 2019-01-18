@@ -34,12 +34,12 @@ class Deinterleave:
             self.photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
         )
         early_photons = late_photons_mask.dropna()
-        late_photons = self.photons.loc[late_photons_mask["time_rel_pulse"].isna(), :].copy()
-        late_photons["Channel"] = 7
-        late_photons = (late_photons
+        late_photons = (self.photons.loc[late_photons_mask["time_rel_pulse"].isna(), :]
+            .assign(Channel=7)
+            .assign(Channel=lambda x: x.loc[:, 'Channel'].astype('category'))
+            .assign(Channel=lambda x: x["Channel"].cat.add_categories(1))
             .set_index(keys="Channel", append=True)
             .reset_index(level=0, drop=True)
             .reorder_levels(['Channel', 'Lines', 'Frames']))
-        early_photons = self.photons.loc[~late_photons_mask["time_rel_pulse"].isna()]
-        new_photons = pd.append((early_photons, late_photons))
+        new_photons = pd.concat((early_photons, late_photons))
         assert len(new_photons) == len(early_photons) + len(late_photons)

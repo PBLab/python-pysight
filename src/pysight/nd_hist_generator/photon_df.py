@@ -12,9 +12,11 @@ class PhotonDF:
 
     :param Dict[str, pd.DataFrame] dict_of_data: A dictionary with keys
     being the input analog channels and values are the DataFrames that contains the raw data.
+    :param bool interleaved: Whether the PMT1 channel is interleaved.
     """
 
     dict_of_data = attr.ib(validator=instance_of(dict))
+    interleaved = attr.ib(validator=instance_of(bool))
 
     def run(self) -> pd.DataFrame:
         """
@@ -45,6 +47,8 @@ class PhotonDF:
             df_photons.loc[:, "Channel"] = df_photons.loc[:, "Channel"].astype(
                 "category"
             )
+            if self.interleaved:
+                df_photons["Channel"] = df_photons["Channel"].cat.add_categories(7)
             df_photons.set_index(keys="Channel", inplace=True)
 
         return df_photons
