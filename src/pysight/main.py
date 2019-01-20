@@ -165,6 +165,18 @@ def main_data_readout(gui):
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
 
+    if gui.interleaved:
+        warnings.warn(
+            """Deinterleaving a data channel is currently highly experimental and
+            is supported only on data in the PMT1 channel. Inexperienced users
+            are highly advised not to use it."""
+        )
+        deinter = Deinterleave(
+            photons=analyzed_struct.df_photons,
+            reprate=gui.reprate,
+            binwidth=gui.binwidth,
+        )
+        data_for_movie = deinter.run()
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
@@ -173,7 +185,7 @@ def main_data_readout(gui):
         x_pixels=gui.x_pixels,
         y_pixels=gui.y_pixels,
         z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
-        num_of_channels=analyzed_struct.num_of_channels,
+        num_of_channels=len(data_for_movie.index.levels[0].categories),
         flim=gui.flim,
         binwidth=gui.binwidth,
         reprate=gui.reprate,
@@ -190,20 +202,6 @@ def main_data_readout(gui):
         #     raw=analyzed_struct.df_photons, reprate=gui.reprate, binwidth=gui.binwidth
         # )
         # gated.run()
-
-    if gui.interleaved:
-        warnings.warn(
-            """Deinterleaving a data channel is currently highly experimental and
-            is supported only on data in the PMT1 channel. Inexperienced users
-            are highly advised not to use it."""
-        )
-        deinter = Deinterleave(
-            photons=analyzed_struct.df_photons,
-            reprate=gui.reprate,
-            binwidth=gui.binwidth,
-        )
-        deinter.run()
-        data_for_movie = deinter.data
 
     # Create a movie object
     volume_chunks = VolumeGenerator(
@@ -226,7 +224,7 @@ def main_data_readout(gui):
         censor=gui.censor,
         mirror_phase=gui.phase,
         lines=analyzed_struct.dict_of_data["Lines"],
-        num_of_channels=analyzed_struct.num_of_channels,
+        num_of_channels=len(data_for_movie.index.levels[0].categories),
         flim=gui.flim,
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,

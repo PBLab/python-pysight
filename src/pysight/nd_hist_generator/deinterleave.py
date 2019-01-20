@@ -22,14 +22,17 @@ class Deinterleave:
     reprate = attr.ib(default=80.3e6, validator=instance_of(float))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     num_of_beams = attr.ib(default=2, validator=instance_of(int))
-    late_photons = attr.ib(init=False)
 
     @property
     def bins_bet_pulses(self):
         return int(np.ceil(1 / self.reprate / self.binwidth))
 
-    def run(self):
-        """ Main pipeline for this class """
+    def run(self) -> pd.DataFrame:
+        """
+        Main pipeline for this class. Returns a DataFrame in which
+        Channel 1 was deinterleaved into two channels, early and late
+        with the late data going into channel 7.
+        """
         late_photons_mask = self.photons.mask(
             self.photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
         )
@@ -43,3 +46,4 @@ class Deinterleave:
             .reorder_levels(['Channel', 'Lines', 'Frames']))
         new_photons = pd.concat((early_photons, late_photons))
         assert len(new_photons) == len(early_photons) + len(late_photons)
+        return new_photons
