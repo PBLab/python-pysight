@@ -31,8 +31,8 @@ class Movie:
     Creates FrameChunks that cn be appended into a multi-dimensional movie.
 
     To create the movie, call the `run()` method. The output will be according to the
-    options specified in the GUI, although you can technically override them when 
-    instantiating this class. 
+    options specified in the GUI, although you can technically override them when
+    instantiating this class.
 
     The Movie object also contains a `show_summed(channel)` method that can will show
     a two-dimensional projection of the multi-dimensional data.
@@ -111,19 +111,6 @@ class Movie:
             self.bins_bet_pulses = self.data_shape[4]
         except IndexError:
             pass
-
-    @property
-    def photons_per_pulse(self) -> Dict[int, float]:
-        """ Calculate the amount of detected photons per pulse """
-        max_time = self.list_of_volume_times[-1] * self.binwidth
-        num_of_pulses = int(max_time * self.reprate)
-        photons_per_pulse = {}
-        if self.num_of_channels == 1:
-            photons_per_pulse[1] = self.data.shape[0] / num_of_pulses
-        else:
-            for chan in range(self.num_of_channels):
-                photons_per_pulse[chan] = self.data.loc[chan]
-        return photons_per_pulse
 
     def run(self) -> None:
         """
