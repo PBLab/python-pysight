@@ -130,6 +130,9 @@ class FrameChunk:
             dtype=np.uint64,
         )
 
+    def __create_laser_edge(self) -> np.ndarray:
+        return np.arange(1, self.bins_bet_pulses + 1)
+
     def __linspace_along_sine(self) -> np.ndarray:
         """
         Find the points that are evenly spaced along a sine function between pi/2 and 3*pi/2

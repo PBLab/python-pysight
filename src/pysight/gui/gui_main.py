@@ -630,10 +630,10 @@ class GuiAppLst(object):
                     # logging.warning(f"Error with value {val} under key {key}. Configuration file not saved. ")
                     cfg_dict_to_save[key] = val
 
-        path_to_save_to: str = str(Path(__file__).parent / "configs") + sep + str(
+        path_to_save_to: str = str(Path(__file__).parents[1] / "configs") + sep + str(
             self.save_as.get()
         ) + ".json"
-        with open(path_to_save_to, "w") as f:
+        with open(path_to_save_to, "w+") as f:
             json.dump(cfg_dict_to_save, f, indent=4)
 
     def __load_cfg(self, main_frame: ttk.Frame):
