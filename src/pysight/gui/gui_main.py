@@ -627,7 +627,7 @@ class GuiAppLst(object):
                 except AttributeError:
                     pass  # don't save non-tkinter variables
                 except TypeError:  # The TAG bits variable
-                    # logging.warn(f"Error with value {val} under key {key}. Configuration file not saved. ")
+                    # logging.warning(f"Error with value {val} under key {key}. Configuration file not saved. ")
                     cfg_dict_to_save[key] = val
 
         path_to_save_to: str = str(Path(__file__).parent / "configs") + sep + str(

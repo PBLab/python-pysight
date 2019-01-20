@@ -130,7 +130,7 @@ class Movie:
         finishing generating the entire stack.
         """
         if not self.outputs:
-            logging.warn(
+            logging.warning(
                 "No outputs requested. Data is still accessible using the dataframe variable."
             )
             return [], []
@@ -215,7 +215,7 @@ class Movie:
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
         if len(lines) > self.x_pixels * num_of_frames:
-            logging.warn(
+            logging.warning(
                 f"More-than-necessary line signals in the frame of chunk {frame_chunk}."
             )
         lines = lines.iloc[: self.x_pixels * num_of_frames]
@@ -350,7 +350,7 @@ class Movie:
             else:
                 plt.imshow(self.summed_mem[channel], cmap="gray")
         except:
-            logging.warn(
+            logging.warning(
                 "Can't show summed image when memory output wasn't asked for."
             )
 

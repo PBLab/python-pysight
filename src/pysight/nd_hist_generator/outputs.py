@@ -64,7 +64,7 @@ class OutputParser(object):
                 self.outputs["filename"] = fullfile
             except PermissionError or OSError:
                 self.file_pointer_created = False
-                logging.warn("Permission Error: Couldn't write data to disk.")
+                logging.warning("Permission Error: Couldn't write data to disk.")
                 return
             return f
         else:
@@ -122,7 +122,7 @@ class OutputParser(object):
 
         f.close()
         if self.file_pointer_created is False:
-            logging.warn("Permission Error: Couldn't write data to disk.")
+            logging.warning("Permission Error: Couldn't write data to disk.")
 
     @property
     def bins_bet_pulses(self) -> int:

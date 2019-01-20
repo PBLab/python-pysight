@@ -207,7 +207,7 @@ class Tabulate(object):
             self.df_after_timepatch["channel"].cat.categories.values
         )
         if actual_data_channels != set(self.dict_of_inputs.values()):
-            logging.warn(
+            logging.warning(
                 "Channels that were inserted in GUI don't match actual data channels recorded. \n"
                 f"The list files contains data in the following channels: "
                 f"{{int(val, 2) for val in actual_data_channels}}."
@@ -230,4 +230,4 @@ def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
     with modifications for Python 3.
     """
     b = arr.view("U1").reshape(len(arr), -1)[:, start:end]
-    return np.fromstring(b.tostring(), dtype="U" + str(end - start))
+    return np.frombuffer(b.tostring(), dtype="U" + str(end - start))

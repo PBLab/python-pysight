@@ -100,7 +100,7 @@ class BinaryDataParser:
         """
         chan = (self.data & 0b111).astype(np.uint8)
         if np.any(chan > 6):
-            logging.warn(
+            logging.warning(
                 f"Illegal channels found in file. Encountered the following"
                 f" values: {np.unique(chan)}.\nTrying to continue."
             )
@@ -185,7 +185,7 @@ class BinaryDataParser:
 
         actual_data_channels = set(np.unique(self.channel)).difference({0})
         if actual_data_channels != set(self.dict_of_inputs_bin.values()):
-            logging.warn(
+            logging.warning(
                 "Channels that were inserted in GUI don't match actual data channels recorded. \n"
                 f"The list files contains data in the following channels: {actual_data_channels}."
             )

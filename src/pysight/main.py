@@ -177,7 +177,7 @@ def main_data_readout(gui):
     data_for_movie = analyzed_struct.df_photons
 
     if gui.interleaved:
-        logging.warn(
+        logging.warning(
             """Deinterleaving a data channel is currently highly experimental and
             is supported only on data in the PMT1 channel. Inexperienced users
             are highly advised not to use it."""
@@ -206,7 +206,7 @@ def main_data_readout(gui):
     outputs.run()
 
     if gui.gating:
-        logging.warn(
+        logging.warning(
             "Gating is currently not implemented. Please contact package authors."
         )
         # gated = GatedDetection(
@@ -344,7 +344,7 @@ def run_batch_lst(
             try:
                 main_data_readout(named_gui)
             except BaseException as e:
-                logging.warning(f"File {str(lst_file)} returned an error. Moving onwards.")
+                logging.warninging(f"File {str(lst_file)} returned an error. Moving onwards.")
                 data_record.loc[idx, "done"] = False
                 data_record.loc[idx, "error"] = repr(e)
             else:

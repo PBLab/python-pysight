@@ -110,7 +110,7 @@ class ScanImageLineValidator:
                     cur_missing_cols = np.where(diff_line > delta / 20)[0]
                     iters += 1
                 if iters == 1000:
-                    logging.warn("Line signal was corrupt during at least one frame.")
+                    logging.warning("Line signal was corrupt during at least one frame.")
         return lines_mat
 
     def __finalize_lines(self, lines_mat: np.ndarray) -> pd.Series:

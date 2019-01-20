@@ -138,7 +138,7 @@ class TagPeriodVerifier(object):
         diffs[delta < self.allowed_noise] = 0  # regular events
         diffs[diffs != 0] = 1
         if np.sum(diffs) / len(diffs) > self.allowed_corruption:
-            logging.warn(
+            logging.warning(
                 f"Over {self.allowed_corruption * 100}% of TAG pulses were out-of-phase."
                 " Stopping TAG interpolation."
             )

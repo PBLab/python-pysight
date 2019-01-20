@@ -200,7 +200,7 @@ class GuiHelper:
 
         if "stack" in output:
             if not "summed" in output and not "memory" in output:
-                logging.warn(
+                logging.warning(
                     "Performance Warning: Writing data to file might take a long time when the required"
                     " output is only 'Full Stack'."
                 )
