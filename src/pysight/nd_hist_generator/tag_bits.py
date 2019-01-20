@@ -1,8 +1,10 @@
 import attr
 from attr.validators import instance_of
 import pandas as pd
-from pysight.ascii_list_file_parser.apply_df_funcs import convert_bin_to_int
 import numpy as np
+
+from pysight.ascii_list_file_parser.apply_df_funcs import convert_bin_to_int
+from pysight.ascii_list_file_parser.tabulation import slice_string_arrays
 
 
 @attr.s(slots=True)
@@ -47,7 +49,7 @@ class ParseTAGBits(object):
         Parse the bits of a power modulator
         :return:
         """
-        proc_tag_bits = self.slice_string_arrays(
+        proc_tag_bits = slice_string_arrays(
             self.dict_of_data["PMT1"].tag.values,
             start=self.bits_dict.start,
             end=self.bits_dict.end + 1,
@@ -64,13 +66,3 @@ class ParseTAGBits(object):
 
     def __parse_fast_axis(self):
         pass
-
-    @staticmethod
-    def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
-        """
-        Slice an array of strings efficiently.
-        Based on http://stackoverflow.com/questions/39042214/how-can-i-slice-each-element-of-a-numpy-array-of-strings
-        with modifications for Python 3.
-        """
-        b = arr.view("U1").reshape(len(arr), -1)[:, start:end]
-        return np.fromstring(b.tostring(), dtype="U" + str(end - start))

@@ -82,8 +82,8 @@ class Tabulate(object):
         Simple processing scheme for the channel and edge data.
         """
         bin_array = np.array(iter_string_hex_to_bin("".join(struct_of_data.data)))
-        edge = self.__slice_string_arrays(bin_array, start=0, end=1)
-        channel = self.__slice_string_arrays(bin_array, start=1, end=4)
+        edge = slice_string_arrays(bin_array, start=0, end=1)
+        channel = slice_string_arrays(bin_array, start=1, end=4)
 
         return edge, channel
 
@@ -95,7 +95,7 @@ class Tabulate(object):
             raise IOError("List file contained zero events.")
 
         for key in list(self.dict_of_slices_hex.keys())[1:]:
-            self.dict_of_slices_hex[key].data = self.__slice_string_arrays(
+            self.dict_of_slices_hex[key].data = slice_string_arrays(
                 self.data,
                 self.dict_of_slices_hex[key].start,
                 self.dict_of_slices_hex[key].end,
@@ -222,12 +222,12 @@ class Tabulate(object):
             [self.dict_of_inputs.pop(key) for key in keys_to_pop]
         assert np.all(self.df_after_timepatch["abs_time"].values >= 0)  # safety check
 
-    @staticmethod
-    def __slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
-        """
-        Slice an array of strings efficiently.
-        Based on http://stackoverflow.com/questions/39042214/how-can-i-slice-each-element-of-a-numpy-array-of-strings
-        with modifications for Python 3.
-        """
-        b = arr.view("U1").reshape(len(arr), -1)[:, start:end]
-        return np.fromstring(b.tostring(), dtype="U" + str(end - start))
+
+def slice_string_arrays(arr: np.array, start: int, end: int) -> np.array:
+    """
+    Slice an array of strings efficiently.
+    Based on http://stackoverflow.com/questions/39042214/how-can-i-slice-each-element-of-a-numpy-array-of-strings
+    with modifications for Python 3.
+    """
+    b = arr.view("U1").reshape(len(arr), -1)[:, start:end]
+    return np.fromstring(b.tostring(), dtype="U" + str(end - start))
