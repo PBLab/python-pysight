@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 import warnings
@@ -128,7 +129,7 @@ class TagPeriodVerifier(object):
         """ Create two vectors corresponding to the starts and ends of the 'wrong' periods of the TAG lens """
         diffs = self.tag.diff()
         diffs[0] = self.period
-        print(
+        logging.debug(
             "The mean frequency of TAG events is {:0.2f} Hz.".format(
                 1 / (np.mean(diffs) * self.binwidth)
             )
@@ -137,7 +138,7 @@ class TagPeriodVerifier(object):
         diffs[delta < self.allowed_noise] = 0  # regular events
         diffs[diffs != 0] = 1
         if np.sum(diffs) / len(diffs) > self.allowed_corruption:
-            warnings.warn(
+            logging.warn(
                 f"Over {self.allowed_corruption * 100}% of TAG pulses were out-of-phase."
                 " Stopping TAG interpolation."
             )

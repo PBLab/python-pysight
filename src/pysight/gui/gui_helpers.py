@@ -1,5 +1,5 @@
 import json
-import warnings
+import logging
 from typing import Union
 
 from pysight.gui.gui_main import GuiAppLst, ImagingSoftware
@@ -200,7 +200,7 @@ class GuiHelper:
 
         if "stack" in output:
             if not "summed" in output and not "memory" in output:
-                warnings.warn(
+                logging.warn(
                     "Performance Warning: Writing data to file might take a long time when the required"
                     " output is only 'Full Stack'."
                 )

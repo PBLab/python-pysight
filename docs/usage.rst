@@ -104,6 +104,8 @@ In the *Advanced* pop-up window, you can define more system parameters, includin
 
 * *Debug?*: Reads a relatively small portion of a file, allows for quick code-checking.
 
+* *Interleaved?*: [EXPERIMENTAL] Assumes data in Channel 1 is interleaved with two data channels coming at equal spacings, and deinterleaves them into two channels. The latter photons will be allocated into a new PMT channels in the final ouput.
+
 Advanced
 --------
 

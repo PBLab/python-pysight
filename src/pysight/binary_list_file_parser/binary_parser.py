@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import NamedTuple
-import warnings
-
+import logging
 import numpy as np
 import pandas as pd
 import attr
@@ -89,7 +88,7 @@ class BinaryDataParser:
             self.lost = self.__get_lost_f3()
         self.aligned_data = self.__gen_df()
         self.dict_of_data = self.__slice_df_to_dict()
-        print(
+        logging.info(
             "Sorted dataframe created. Starting to set the proper data channel distribution..."
         )
 
@@ -101,7 +100,7 @@ class BinaryDataParser:
         """
         chan = (self.data & 0b111).astype(np.uint8)
         if np.any(chan > 6):
-            warnings.warn(
+            logging.warn(
                 f"Illegal channels found in file. Encountered the following"
                 f" values: {np.unique(chan)}.\nTrying to continue."
             )
@@ -186,7 +185,7 @@ class BinaryDataParser:
 
         actual_data_channels = set(np.unique(self.channel)).difference({0})
         if actual_data_channels != set(self.dict_of_inputs_bin.values()):
-            warnings.warn(
+            logging.warn(
                 "Channels that were inserted in GUI don't match actual data channels recorded. \n"
                 f"The list files contains data in the following channels: {actual_data_channels}."
             )

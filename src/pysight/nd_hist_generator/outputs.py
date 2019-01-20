@@ -1,14 +1,10 @@
-"""
-__author__ = Hagai Hargil
-"""
-
 import attr
 from attr.validators import instance_of
 from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
-import warnings
 import h5py_cache
 import os
+import logging
 
 
 @attr.s(slots=True)
@@ -68,7 +64,7 @@ class OutputParser(object):
                 self.outputs["filename"] = fullfile
             except PermissionError or OSError:
                 self.file_pointer_created = False
-                warnings.warn("Permission Error: Couldn't write data to disk.")
+                logging.warn("Permission Error: Couldn't write data to disk.")
                 return
             return f
         else:
@@ -126,7 +122,7 @@ class OutputParser(object):
 
         f.close()
         if self.file_pointer_created is False:
-            warnings.warn("Permission Error: Couldn't write data to disk.")
+            logging.warn("Permission Error: Couldn't write data to disk.")
 
     @property
     def bins_bet_pulses(self) -> int:

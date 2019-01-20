@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+import logging
 import pandas as pd
 import numpy as np
 import warnings
@@ -211,7 +212,7 @@ class SignalValidator:
             lines = lines.loc[:, "abs_time"].copy()
             # Verify that the input is not corrupt
             if lines.shape[0] < self.num_of_lines // 2:
-                warnings.warn(
+                logging.warn(
                     "Line data was corrupt - there were too few lines.\n"
                     "Simulating line data using GUI's parameters."
                 )
@@ -331,7 +332,7 @@ class SignalValidator:
     def __sweeps_from_scratch(self) -> Tuple[Dict, int]:
         sweep_vec = np.arange(self.max_sweep + 1, dtype=np.uint64)
         if len(sweep_vec) < 2:
-            warnings.warn(
+            logging.warn(
                 "All data was registered to a single sweep. Line data will be completely simulated."
             )
         else:
@@ -516,7 +517,7 @@ class SignalValidator:
             pulses
         ):  # TODO: If there's holdafter time, there's a good chance that the pulses
             # will not be periodic due to this extra time.
-            warnings.warn(
+            logging.warn(
                 "More than 10% of pulses were filtered due to bad timings. Make sure the laser input is fine."
             )
 

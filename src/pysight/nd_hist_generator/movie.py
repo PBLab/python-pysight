@@ -1,3 +1,4 @@
+import logging
 import attr
 from attr.validators import instance_of
 import matplotlib.pyplot as plt
@@ -120,7 +121,7 @@ class Movie:
         self.__validate_df_indices()
         self.__process_data(funcs_during, funcs_end)
         self.__print_outputs()
-        print("Movie object created, analysis done.")
+        logging.info("Movie object created, analysis done.")
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
         """
@@ -129,7 +130,7 @@ class Movie:
         finishing generating the entire stack.
         """
         if not self.outputs:
-            warnings.warn(
+            logging.warn(
                 "No outputs requested. Data is still accessible using the dataframe variable."
             )
             return [], []
@@ -214,7 +215,7 @@ class Movie:
         num_of_frames = len(frames)
         lines = self.lines.loc[frame_chunk]
         if len(lines) > self.x_pixels * num_of_frames:
-            warnings.warn(
+            logging.warn(
                 f"More-than-necessary line signals in the frame of chunk {frame_chunk}."
             )
         lines = lines.iloc[: self.x_pixels * num_of_frames]
@@ -241,7 +242,7 @@ class Movie:
             libver="latest",
             w0=1,
         ) as f:
-            print("Saving full stack to disk...")
+            logging.info("Saving full stack to disk...")
             for channel in range(1, self.num_of_channels + 1):
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
@@ -311,23 +312,23 @@ class Movie:
         if not self.outputs:
             return
 
-        print(
+        logging.info(
             "======================================================= \nOutputs:\n--------"
         )
         if "stack" in self.outputs:
-            print(
+            logging.info(
                 f'Stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
                 ' "Full Stack", with one dataset per channel.'
             )
 
         if "memory" in self.outputs:
-            print(
+            logging.info(
                 "The full data is present in dictionary form (key per channel) under `movie.stack`, "
                 "and in stacked form under `movie.summed_mem`."
             )
 
         if "summed" in self.outputs:
-            print(
+            logging.info(
                 f'Summed stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
                 ' "Summed Stack", with one dataset per channel.'
             )
@@ -349,7 +350,7 @@ class Movie:
             else:
                 plt.imshow(self.summed_mem[channel], cmap="gray")
         except:
-            warnings.warn(
+            logging.warn(
                 "Can't show summed image when memory output wasn't asked for."
             )
 

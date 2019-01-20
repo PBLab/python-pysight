@@ -5,15 +5,24 @@ __author__ = Hagai Har-Gil
 """
 
 from typing import Union, Tuple
-import matplotlib
-
-matplotlib.rcParams["backend"] = "TkAgg"
-import pandas as pd
+import pickle
 import warnings
+import logging
+
+logging.basicConfig(
+    filename="logs/general.log",
+    filemode="w+",
+    format="%(levelname)s :: %(asctime)s :: %(message)s",
+    level=logging.INFO,
+)
+
+import matplotlib
+import pandas as pd
 import colorama
 import numpy as np
-import pickle
+matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
+colorama.init()
 
 from pysight.ascii_list_file_parser.file_io import ReadMeta
 from pysight.ascii_list_file_parser.tabulation import Tabulate
@@ -39,8 +48,6 @@ from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
-
-colorama.init()
 
 
 def main_data_readout(gui):
@@ -116,7 +123,7 @@ def main_data_readout(gui):
             gui.fill_frac if cur_file.fill_fraction == -1 else cur_file.fill_fraction
         )
     except NameError:  # dealing with a pickle file
-        print(f"Reading file {gui.filename}...")
+        logging.info(f"Reading file {gui.filename}...")
         with open(gui.filename, "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
@@ -170,7 +177,7 @@ def main_data_readout(gui):
     data_for_movie = analyzed_struct.df_photons
 
     if gui.interleaved:
-        warnings.warn(
+        logging.warn(
             """Deinterleaving a data channel is currently highly experimental and
             is supported only on data in the PMT1 channel. Inexperienced users
             are highly advised not to use it."""
@@ -199,7 +206,7 @@ def main_data_readout(gui):
     outputs.run()
 
     if gui.gating:
-        warnings.warn(
+        logging.warn(
             "Gating is currently not implemented. Please contact package authors."
         )
         # gated = GatedDetection(
@@ -303,16 +310,16 @@ def run_batch_lst(
         raise UserWarning(f"Folder {foldername} doesn't exist.")
     if recursive:
         all_lst_files = path.rglob(glob_str)
-        print(f"Running PySight on the following files:")
+        logging.info(f"Running PySight on the following files:")
         for file in list(all_lst_files):
-            print(str(file))
+            logging.info(str(file))
             num_of_files += 1
         all_lst_files = path.rglob(glob_str)
     else:
         all_lst_files = path.glob(glob_str)
-        print(f"Running PySight on the following files:")
+        logging.info(f"Running PySight on the following files:")
         for file in list(all_lst_files):
-            print(str(file))
+            logging.info(str(file))
             num_of_files += 1
         all_lst_files = path.glob(glob_str)
 
@@ -337,16 +344,16 @@ def run_batch_lst(
             try:
                 main_data_readout(named_gui)
             except BaseException as e:
-                print(f"File {str(lst_file)} returned an error. Moving onwards.")
+                logging.warning(f"File {str(lst_file)} returned an error. Moving onwards.")
                 data_record.loc[idx, "done"] = False
                 data_record.loc[idx, "error"] = repr(e)
             else:
                 data_record.loc[idx, "done"] = True
                 data_record.loc[idx, "error"] = None
     except TypeError as e:
-        print(repr(e))
+        logging.error(repr(e))
 
-    print(f"Summary of batch processing:\n{data_record}")
+    logging.info(f"Summary of batch processing:\n{data_record}")
     return data_record
 
 
@@ -372,9 +379,9 @@ def mp_batch(
         all_lst_files = path.rglob(glob_str)
     else:
         all_lst_files = path.glob(glob_str)
-    print(f"Running PySight on the following files:")
+    logging.info(f"Running PySight on the following files:")
     for file in list(all_lst_files):
-        print(str(file))
+        logging.info(str(file))
 
     all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
     try:

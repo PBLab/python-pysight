@@ -4,7 +4,7 @@ import numpy as np
 import attr
 from itertools import tee
 import warnings
-
+import logging
 
 @attr.s(slots=True)
 class ScanImageLineValidator:
@@ -110,7 +110,7 @@ class ScanImageLineValidator:
                     cur_missing_cols = np.where(diff_line > delta / 20)[0]
                     iters += 1
                 if iters == 1000:
-                    warnings.warn("Line signal was corrupt during at least one frame.")
+                    logging.warn("Line signal was corrupt during at least one frame.")
         return lines_mat
 
     def __finalize_lines(self, lines_mat: np.ndarray) -> pd.Series:

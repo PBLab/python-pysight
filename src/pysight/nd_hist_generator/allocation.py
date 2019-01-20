@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 import numpy as np
 import attr
@@ -52,7 +53,7 @@ class Allocate(object):
 
     def run(self):
         """ Pipeline of allocation """
-        print(
+        logging.info(
             "Channels of events found. Allocating photons to their frames and lines..."
         )
         # Unidirectional scan - create fake lines
@@ -71,7 +72,7 @@ class Allocate(object):
             #     out = self.train_dataset()
         self.__reindex_dict_of_data()
 
-        print("Relative times calculated. Creating Movie object...")
+        logging.info("Relative times calculated. Creating Movie object...")
 
     @property
     def num_of_channels(self):
@@ -136,7 +137,7 @@ class Allocate(object):
         except KeyError:
             return
         else:
-            print("Interpolating TAG lens data...")
+            logging.info("Interpolating TAG lens data...")
             tag_pipe = TagPipeline(
                 photons=self.df_photons,
                 tag_pulses=tag,
@@ -150,7 +151,7 @@ class Allocate(object):
             self.df_photons = tag_pipe.photons
             self.tag_interp_ok = tag_pipe.finished_pipe
 
-            print("TAG lens interpolation finished.")
+            logging.info("TAG lens interpolation finished.")
 
     def __nano_flim_exp(self, x, a, b, c):
         """ Exponential function for FLIM and censor correction """

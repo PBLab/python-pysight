@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import attr
 from typing import Dict, Tuple
-import warnings
+import logging
 from pysight.ascii_list_file_parser.apply_df_funcs import (
     get_lost_bit_np,
     get_lost_bit_tag,
@@ -48,7 +48,7 @@ class Tabulate(object):
         self.__tabulate_input_hex()
         self.df_after_timepatch = self.__reformat_data_hex()
         self.__check_user_inputs()
-        print(
+        logging.info(
             "Sorted dataframe created. Starting to set the proper data channel distribution..."
         )
 
@@ -207,7 +207,7 @@ class Tabulate(object):
             self.df_after_timepatch["channel"].cat.categories.values
         )
         if actual_data_channels != set(self.dict_of_inputs.values()):
-            warnings.warn(
+            logging.warn(
                 "Channels that were inserted in GUI don't match actual data channels recorded. \n"
                 f"The list files contains data in the following channels: "
                 f"{{int(val, 2) for val in actual_data_channels}}."

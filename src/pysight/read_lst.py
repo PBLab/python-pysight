@@ -1,17 +1,18 @@
 import attr
 from attr.validators import instance_of
 import numpy as np
+import logging
 
 
 @attr.s
 class ReadData:
-    """ 
-    Read a given .lst file into memory 
+    """
+    Read a given .lst file into memory
 
     :param str filename: File to read
     :param int start_of_data_pos: Number of header bytes in the file to skip
     :param str timepatch: Type of file
-    :param bool is_binary: Whether the file is a binary or ASCII file    
+    :param bool is_binary: Whether the file is a binary or ASCII file
     :param bool debug: Run a debug build (limited number of lines for quick execution of the entire pipeline)
     """
 
@@ -60,7 +61,7 @@ class ReadData:
         else:
             self.data = self._read_ascii(data_length_bytes, num_of_lines_in_bits)
 
-        print("File read. Sorting the file according to timepatch...")
+        logging.info("File read. Sorting the file according to timepatch...")
         return self.data
 
     def _check_carriage_return(self) -> int:
@@ -78,7 +79,7 @@ class ReadData:
             return 1
 
     def _get_data_length_bytes(self, tp: str, bytes_to_add: int):
-        r""" 
+        r"""
         Number of bytes per word for each timepatch. For the hex
         case it takes into consideration the fact that each two letters
         correspond to a single byte.
@@ -99,7 +100,7 @@ class ReadData:
         else:
             num_of_lines = -1
             printstr = f'Reading file "{self.filename}"...'
-        print(printstr)
+        logging.info(printstr)
         return num_of_lines
 
     def _read_binary(self, data_length, num_of_lines) -> np.ndarray:

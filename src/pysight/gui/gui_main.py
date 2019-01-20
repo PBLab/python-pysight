@@ -11,6 +11,7 @@ import attr
 from attr.validators import instance_of
 from enum import Enum
 import pysight
+import logging
 
 
 def is_positive(instance, attribute, value):
@@ -626,7 +627,7 @@ class GuiAppLst(object):
                 except AttributeError:
                     pass  # don't save non-tkinter variables
                 except TypeError:  # The TAG bits variable
-                    # warnings.warn(f"Error with value {val} under key {key}. Configuration file not saved. ")
+                    # logging.warn(f"Error with value {val} under key {key}. Configuration file not saved. ")
                     cfg_dict_to_save[key] = val
 
         path_to_save_to: str = str(Path(__file__).parent / "configs") + sep + str(

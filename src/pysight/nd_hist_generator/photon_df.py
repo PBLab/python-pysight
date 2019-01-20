@@ -2,6 +2,7 @@ import attr
 from attr.validators import instance_of
 import pandas as pd
 import sys
+import logging
 
 
 @attr.s(slots=True)
@@ -42,7 +43,7 @@ class PhotonDF:
         except KeyError:
             df_photons = self.dict_of_data["PMT1"].copy()
         except:
-            print("Unknown error: ", sys.exc_info()[0])
+            logging.error("Unknown error: ", sys.exc_info()[0])
         finally:
             df_photons.loc[:, "Channel"] = df_photons.loc[:, "Channel"].astype(
                 "category"

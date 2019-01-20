@@ -1,6 +1,3 @@
-"""
-__author__ = Hagai Hargil
-"""
 import attr
 from attr.validators import instance_of
 import pandas as pd
