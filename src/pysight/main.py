@@ -29,7 +29,12 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
 from pysight.gui.gui_main import GuiAppLst
-from pysight.gui.gui_helpers import verify_gui_input, convert_json_to_input_dict, GuiHelper, tkinter_to_object
+from pysight.gui.gui_helpers import (
+    verify_gui_input,
+    convert_json_to_input_dict,
+    GuiHelper,
+    tkinter_to_object,
+)
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 from pysight.read_lst import ReadData
