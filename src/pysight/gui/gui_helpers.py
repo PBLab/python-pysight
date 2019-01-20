@@ -1,3 +1,7 @@
+import json
+import warnings
+from typing import Union
+
 from pysight.gui.gui_main import GuiAppLst, ImagingSoftware
 
 
@@ -152,3 +156,73 @@ def verify_gui_input(gui: GuiAppLst):
         raise UserWarning(
             "Frame delay is the number of seconds between subsequent frames."
         )
+
+
+def convert_json_to_input_dict(cfg_fname):
+    """ Convert a config file to a usable dictionary """
+    if not isinstance(cfg_fname, str):
+        raise TypeError
+
+    try:
+        with open(cfg_fname) as f:
+            gui = json.load(f)
+        gui = {key: val[1] for key, val in gui.items()}
+        return gui
+    except:
+        raise TypeError
+
+
+class GuiHelper:
+    """
+    Helper class to create intermediate representation
+    of the GUI's content.
+    """
+
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+        self.tag_bits_dict = dict(
+            bits_grp_1_label=entries["bits_grp_1_label"],
+            bits_grp_2_label=entries["bits_grp_2_label"],
+            bits_grp_3_label=entries["bits_grp_3_label"],
+        )
+
+    @property
+    def outputs(self):
+        """ Create a dictionary with the wanted user outputs. """
+        output = {}
+
+        if self.summed is True:
+            output["summed"] = True
+        if self.memory is True:
+            output["memory"] = True
+        if self.stack is True:
+            output["stack"] = True
+
+        if "stack" in output:
+            if not "summed" in output and not "memory" in output:
+                warnings.warn(
+                    "Performance Warning: Writing data to file might take a long time when the required"
+                    " output is only 'Full Stack'."
+                )
+        return output
+
+
+def tkinter_to_object(gui: Union[GuiAppLst, dict]) -> GuiHelper:
+    """ Convert a tkinter instance into a pickable dictionary """
+    if isinstance(gui, dict):
+        gui["tuple_of_data_sources"] = (
+            "PMT1",
+            "PMT2",
+            "Lines",
+            "Frames",
+            "Laser",
+            "TAG Lens",
+            "Empty",
+        )
+        return GuiHelper(**gui)
+    else:
+        dic = {
+            key: val.get() for key, val in gui.__dict__.items() if "Var" in repr(val)
+        }
+        dic["tuple_of_data_sources"] = gui.tuple_of_data_sources
+        return GuiHelper(**dic)
