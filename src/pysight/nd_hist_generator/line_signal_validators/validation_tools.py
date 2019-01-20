@@ -5,7 +5,7 @@ import warnings
 import attr
 from attr.validators import instance_of
 from enum import Enum
-from pysight.tkinter_gui_multiscaler import ImagingSoftware
+from pysight.gui.gui_main import ImagingSoftware
 from ..line_signal_validators.scanimage import ScanImageLineValidator
 from ..line_signal_validators.mscan import MScanLineValidator
 

@@ -30,7 +30,7 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
 from pysight.gui.gui_main import GuiAppLst
-from pysight.tkinter_gui_multiscaler import verify_gui_input
+from pysight.gui.gui_helpers import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 from pysight.read_lst import ReadData
@@ -329,9 +329,6 @@ def run(cfg_file: str = None) -> Tuple[pd.DataFrame, Movie]:
 
     :return (pd.DataFrame, Movie): DataFrame with all the data, and a ``Movie`` object.
     """
-    from pysight.tkinter_gui_multiscaler import GuiAppLst
-    from pysight.tkinter_gui_multiscaler import verify_gui_input
-
     if cfg_file:
         gui = convert_json_to_input_dict(cfg_file)
     else:

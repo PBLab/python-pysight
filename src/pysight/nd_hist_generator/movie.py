@@ -10,7 +10,7 @@ import warnings
 import h5py_cache
 from tqdm import tqdm
 
-from pysight.tkinter_gui_multiscaler import ImagingSoftware
+from pysight.gui.gui_main import ImagingSoftware
 from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 from .frame_chunk import FrameChunk
 
