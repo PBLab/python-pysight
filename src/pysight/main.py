@@ -29,7 +29,7 @@ from pysight.ascii_list_file_parser.distribute_data import DistributeData
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
-from pysight.tkinter_gui_multiscaler import GuiAppLst
+from pysight.gui.gui_main import GuiAppLst
 from pysight.tkinter_gui_multiscaler import verify_gui_input
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
