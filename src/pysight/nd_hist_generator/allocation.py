@@ -232,7 +232,7 @@ class Allocate(object):
         :param pd.DataFrame df: Dataframe with data for each photon.
         :return: Modified dataframe and the relative times.
         """
-        TEN_MEGAHERTZ_IN_BINS = 251
+        TEN_MEGAHERTZ_IN_BINS = 125
         rel_time = []
         for chan in range(1, self.num_of_channels + 1):
             rel_time251 = (
