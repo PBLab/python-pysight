@@ -2,6 +2,7 @@ import attr
 from attr.validators import instance_of
 from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
+import pandas as pd
 import h5py_cache
 import os
 import logging
@@ -20,7 +21,7 @@ class OutputParser(object):
     x_pixels = attr.ib(default=512, validator=instance_of(int))
     y_pixels = attr.ib(default=512, validator=instance_of(int))
     z_pixels = attr.ib(default=1, validator=instance_of(int))
-    num_of_channels = attr.ib(default=1, validator=instance_of(int))
+    channels = attr.ib(default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex))
     flim = attr.ib(default=False, validator=instance_of(bool))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     reprate = attr.ib(default=80e6, validator=instance_of(float))
@@ -32,10 +33,12 @@ class OutputParser(object):
     outputs = attr.ib(init=False)
     #: Tuple of (num_of_frames, x, y, z, tau)
     data_shape = attr.ib(init=False)
+    num_of_channels = attr.ib(init=False)
 
     def run(self):
         """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
         self.outputs = {}
+        self.num_of_channels = len(self.channels)
         self.data_shape = self.determine_data_shape_full()
         if not self.output_dict:
             return
@@ -88,7 +91,7 @@ class OutputParser(object):
                         chunks=tuple(chunk_shape),
                         compression="gzip",
                     )
-                    for channel in range(1, self.num_of_channels + 1)
+                    for channel in self.channels
                 ]
 
                 for key, val in self.lst_metadata.items():
@@ -109,7 +112,7 @@ class OutputParser(object):
                         chunks=True,
                         compression="gzip",
                     )
-                    for channel in range(1, self.num_of_channels + 1)
+                    for channel in self.channels
                 ]
                 for key, val in self.lst_metadata.items():
                     for chan in range(self.num_of_channels):

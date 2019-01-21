@@ -47,7 +47,7 @@ class Movie:
     :param float binwidth: Binwidth of multiscaler in seconds (100 ps == 100e-12)
     :param float fill_frac: Temporal fill fraction of the original movie, in percentage
     :param bool bidir: Whether the original scan was bi-directional
-    :param int num_of_channels: Number of recorded channels
+    :param pd.CategoricalIndex channels: Active and used channels in this iteration.
     :param dict outputs: Required outputs
     :param bool censor: Whether to perform censor correction (currently NotImplemented)
     :param bool flim: Whether to perform FLIM (currently NotImplemented)
@@ -77,7 +77,7 @@ class Movie:
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     fill_frac = attr.ib(default=71.0, validator=instance_of(float))
     bidir = attr.ib(default=False, validator=instance_of(bool))
-    num_of_channels = attr.ib(default=1, validator=instance_of(int))
+    channels = attr.ib(default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex))
     outputs = attr.ib(default={}, validator=instance_of(dict))
     censor = attr.ib(default=False, validator=instance_of(bool))
     flim = attr.ib(default=False, validator=instance_of(bool))
@@ -101,6 +101,7 @@ class Movie:
     y_pixels = attr.ib(init=False)
     z_pixels = attr.ib(init=False)
     bins_bet_pulses = attr.ib(init=False)
+    num_of_channels = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.x_pixels = self.data_shape[1]
@@ -113,6 +114,8 @@ class Movie:
             pass
         if self.flim:
             self.bins_bet_pulses = self.data_shape[-1]
+
+        self.num_of_channels = len(self.channels)
 
     def run(self) -> None:
         """
@@ -140,8 +143,8 @@ class Movie:
         funcs_to_execute_end = []
 
         if "memory" in self.outputs:
-            self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
-            self.stack = {i: deque() for i in range(1, self.num_of_channels + 1)}
+            self.summed_mem = {i: 0 for i in self.channels}
+            self.stack = {i: deque() for i in self.channels}
             funcs_to_execute_during.append(self.__create_memory_output)
             funcs_to_execute_end.append(self.__convert_deque_to_arr)
             if "stack" in self.outputs:
@@ -162,7 +165,7 @@ class Movie:
                 funcs_to_execute_end.append(self.__close_file)
 
             if "summed" in self.outputs:
-                self.summed_mem = {i: 0 for i in range(1, self.num_of_channels + 1)}
+                self.summed_mem = {i: 0 for i in self.channels}
                 funcs_to_execute_during.append(self.__append_summed_data)
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
@@ -244,7 +247,7 @@ class Movie:
             w0=1,
         ) as f:
             logging.info("Saving full stack to disk...")
-            for channel in range(1, self.num_of_channels + 1):
+            for channel in self.channels:
                 f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self) -> None:
@@ -256,7 +259,7 @@ class Movie:
             libver="latest",
             w0=1,
         ) as f:
-            for channel in range(1, self.num_of_channels + 1):
+            for channel in self.channels:
                 f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
                     self.summed_mem[channel]
                 )
@@ -269,7 +272,7 @@ class Movie:
         """ Convert a deque with a bunch of frames into a single numpy array with an extra
         dimension (0) containing the data.
         """
-        for channel in range(1, self.num_of_channels + 1):
+        for channel in self.channels:
             self.stack[channel] = np.squeeze(np.vstack(self.stack[channel]))
 
     def __create_memory_output(self, data: np.ndarray, channel: int, idx: int) -> None:

@@ -42,7 +42,7 @@ class FrameChunk:
         self.hist_dict: Dict[int, Tuple[np.ndarray]] = {}
         for chan in self.df_dict:
             list_of_edges = self.__create_hist_edges(chan)
-            data_columns = []
+            data_columns: List[np.ndarray] = []
             data_columns.append(self.df_dict[chan]["abs_time"].values)
             data_columns.append(self.df_dict[chan]["time_rel_line"].values)
             try:
@@ -131,7 +131,8 @@ class FrameChunk:
         )
 
     def __create_laser_edges(self) -> np.ndarray:
-        return np.arange(1, self.bins_bet_pulses + 1)
+        """ Creates self.bins_bet_pulses bins for a histogram """
+        return np.arange(1, self.bins_bet_pulses + 2)
 
     def __linspace_along_sine(self) -> np.ndarray:
         """
