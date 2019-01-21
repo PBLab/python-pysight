@@ -34,26 +34,32 @@ class Deinterleave:
         Channel 1 was deinterleaved into two channels, early and late
         with the late data going into channel 7.
         """
-        late_photons_mask = self.photons.mask(
-            self.photons["time_rel_pulse"] > (self.bins_bet_pulses // 2)
+        late_photons_mask = self.photons.xs(1, level=0).mask(
+            self.photons["time_rel_pulse"].xs(1, level=0) > (self.bins_bet_pulses // 2)
         )
-        early_photons = (
-            late_photons_mask.dropna()
-            .assign(time_rel_pulse=lambda x: x.time_rel_pulse.astype(np.uint8))
-            .xs(1, level=0)
+        early_photons = late_photons_mask.dropna().assign(
+            time_rel_pulse=lambda x: x.time_rel_pulse.astype(np.uint8)
         )
-        late_photons = self.photons.loc[
+        late_photons = self.photons.xs(1, level=0).loc[
             late_photons_mask["time_rel_pulse"].isna(), :
-        ].xs(1, level=0)
+        ]
 
         # TODO: Change following paragraph when pandas 0.24 hits with Int64 extension type
         for column in early_photons.columns:
             early_photons[column] = early_photons[column].astype(
                 late_photons[column].dtype
             )
+        remaining_data_channels = self.photons.index.levels[0].categories[1:-1]
+        other_channels_photon_df = []
+        for chan in remaining_data_channels:
+            other_channels_photon_df.append(self.photons.xs(chan, level=0))
 
-        new_photons = pd.concat(
-            (early_photons, late_photons), keys=[1, 7], names=["Channel"]
-        )
-        assert len(new_photons) == len(early_photons) + len(late_photons)
+        new_photons = (pd.concat(
+            [early_photons] + other_channels_photon_df + [late_photons],
+            keys=self.photons.index.levels[0].categories.values,
+            names=["Channel"])
+            .reset_index(level=0)
+            .assign(Channel=lambda x: x['Channel'].astype('category'))
+            .set_index('Channel', append=True)
+            .reorder_levels((2, 0, 1)))
         return new_photons
