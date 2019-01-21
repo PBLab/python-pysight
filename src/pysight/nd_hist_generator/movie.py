@@ -109,9 +109,10 @@ class Movie:
         self.bins_bet_pulses = 1
         try:
             self.z_pixels = self.data_shape[3]
-            self.bins_bet_pulses = self.data_shape[4]
         except IndexError:
             pass
+        if self.flim:
+            self.bins_bet_pulses = self.data_shape[-1]
 
     def run(self) -> None:
         """
@@ -209,7 +210,7 @@ class Movie:
         """
         slice_dict = {}
         idx_slice = pd.IndexSlice
-        for chan in range(1, self.num_of_channels + 1):
+        for chan in self.data.index.levels[0].categories:
             slice_dict[chan] = self.data.loc[idx_slice[chan, frame_chunk], :]
         frames = self.frames.loc[frame_chunk]
         num_of_frames = len(frames)

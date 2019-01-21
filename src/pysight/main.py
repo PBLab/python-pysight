@@ -6,8 +6,8 @@ __author__ = Hagai Har-Gil
 
 from typing import Union, Tuple
 import pickle
-import warnings
 import logging
+import pathlib
 
 logging.basicConfig(
     filename="logs/general.log",
@@ -175,6 +175,7 @@ def main_data_readout(gui):
     )
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
+    num_of_channels = analyzed_struct.num_of_channels
 
     if gui.interleaved:
         logging.warning(
@@ -188,6 +189,7 @@ def main_data_readout(gui):
             binwidth=gui.binwidth,
         )
         data_for_movie = deinter.run()
+        num_of_channels = len(data_for_movie.index.levels[0].categories)
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
@@ -196,8 +198,8 @@ def main_data_readout(gui):
         x_pixels=gui.x_pixels,
         y_pixels=gui.y_pixels,
         z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
-        num_of_channels=len(data_for_movie.index.levels[0].categories),
-        flim=gui.flim,
+        num_of_channels=num_of_channels,
+        flim=gui.flim or gui.interleaved,
         binwidth=gui.binwidth,
         reprate=gui.reprate,
         lst_metadata=lst_metadata,
@@ -236,7 +238,7 @@ def main_data_readout(gui):
         mirror_phase=gui.phase,
         lines=analyzed_struct.dict_of_data["Lines"],
         num_of_channels=len(data_for_movie.index.levels[0].categories),
-        flim=gui.flim,
+        flim=gui.flim or gui.interleaved,
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
         line_delta=int(validated_data.line_delta),
@@ -298,12 +300,6 @@ def run_batch_lst(
     :param str cfg_file: Name of config file to use
     :return pd.DataFrame: Record of analyzed data
     """
-
-    import pathlib
-    from pysight.tkinter_gui_multiscaler import GuiAppLst
-    from pysight.tkinter_gui_multiscaler import verify_gui_input
-    import numpy as np
-
     path = pathlib.Path(foldername)
     num_of_files = 0
     if not path.exists():
@@ -344,7 +340,7 @@ def run_batch_lst(
             try:
                 main_data_readout(named_gui)
             except BaseException as e:
-                logging.warninging(f"File {str(lst_file)} returned an error. Moving onwards.")
+                logging.warning(f"File {str(lst_file)} returned an error. Moving onwards.")
                 data_record.loc[idx, "done"] = False
                 data_record.loc[idx, "error"] = repr(e)
             else:

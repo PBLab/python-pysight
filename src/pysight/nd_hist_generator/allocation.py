@@ -174,7 +174,7 @@ class Allocate(object):
                 max_value = yn[peakind[0]]
                 y_filt = yn[peakind[0] :]
                 x = np.arange(len(y_filt))
-                popt, pcov = curve_fit(
+                popt, _ = curve_fit(
                     self.__nano_flim_exp,
                     x,
                     y_filt,

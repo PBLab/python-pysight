@@ -130,7 +130,7 @@ class FrameChunk:
             dtype=np.uint64,
         )
 
-    def __create_laser_edge(self) -> np.ndarray:
+    def __create_laser_edges(self) -> np.ndarray:
         return np.arange(1, self.bins_bet_pulses + 1)
 
     def __linspace_along_sine(self) -> np.ndarray:
