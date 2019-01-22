@@ -47,10 +47,10 @@ class Movie:
     :param float binwidth: Binwidth of multiscaler in seconds (100 ps == 100e-12)
     :param float fill_frac: Temporal fill fraction of the original movie, in percentage
     :param bool bidir: Whether the original scan was bi-directional
-    :param pd.CategoricalIndex channels: Active and used channels in this iteration.
+    :param pd.CategoricalIndex channels: Active and used channels in this iteration
     :param dict outputs: Required outputs
     :param bool censor: Whether to perform censor correction (currently NotImplemented)
-    :param bool flim: Whether to perform FLIM (currently NotImplemented)
+    :param bool flim: Whether to perform FLIM
     :param dict lst_metadata: Metadata of the ``.lst`` file
     :param dict exp_params: Parameters used for fitting when using censor correction (currently NotImplemented)
     :param int line_delta: Number of bins between subsequent line signals
@@ -78,11 +78,11 @@ class Movie:
     fill_frac = attr.ib(default=71.0, validator=instance_of(float))
     bidir = attr.ib(default=False, validator=instance_of(bool))
     channels = attr.ib(default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex))
-    outputs = attr.ib(default={}, validator=instance_of(dict))
+    outputs = attr.ib(factory=dict, validator=instance_of(dict))
     censor = attr.ib(default=False, validator=instance_of(bool))
     flim = attr.ib(default=False, validator=instance_of(bool))
-    lst_metadata = attr.ib(default={}, validator=instance_of(dict))
-    exp_params = attr.ib(default={}, validator=instance_of(dict))
+    lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
+    exp_params = attr.ib(factory=dict, validator=instance_of(dict))
     line_delta = attr.ib(default=158_000, validator=instance_of(int))
     use_sweeps = attr.ib(default=False, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
@@ -101,7 +101,6 @@ class Movie:
     y_pixels = attr.ib(init=False)
     z_pixels = attr.ib(init=False)
     bins_bet_pulses = attr.ib(init=False)
-    num_of_channels = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.x_pixels = self.data_shape[1]
@@ -114,8 +113,6 @@ class Movie:
             pass
         if self.flim:
             self.bins_bet_pulses = self.data_shape[-1]
-
-        self.num_of_channels = len(self.channels)
 
     def run(self) -> None:
         """

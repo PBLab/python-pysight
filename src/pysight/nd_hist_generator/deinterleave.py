@@ -54,12 +54,15 @@ class Deinterleave:
         for chan in remaining_data_channels:
             other_channels_photon_df.append(self.photons.xs(chan, level=0))
 
-        new_photons = (pd.concat(
-            [early_photons] + other_channels_photon_df + [late_photons],
-            keys=self.photons.index.levels[0].categories.values,
-            names=["Channel"])
+        new_photons = (
+            pd.concat(
+                [early_photons] + other_channels_photon_df + [late_photons],
+                keys=self.photons.index.levels[0].categories.values,
+                names=["Channel"],
+            )
             .reset_index(level=0)
-            .assign(Channel=lambda x: x['Channel'].astype('category'))
-            .set_index('Channel', append=True)
-            .reorder_levels((2, 0, 1)))
+            .assign(Channel=lambda x: x["Channel"].astype("category"))
+            .set_index("Channel", append=True)
+            .reorder_levels((2, 0, 1))
+        )
         return new_photons
