@@ -25,7 +25,7 @@ class OutputParser(object):
     flim = attr.ib(default=False, validator=instance_of(bool))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     reprate = attr.ib(default=80e6, validator=instance_of(float))
-    lst_metadata = attr.ib(default={}, validator=instance_of(dict))
+    lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
     debug = attr.ib(default=False, validator=instance_of(bool))

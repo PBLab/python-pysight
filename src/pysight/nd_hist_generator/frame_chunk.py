@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple
 class FrameChunk:
     """
     Holds a chunk of data and can histogram ir efficiently.
-    Composed out of a Movie - any attribute\method not defined here is
+    Composed out of a Movie - any attribute or method not defined here is
     taken from the self.movie object with the __getattr__ method
     """
 

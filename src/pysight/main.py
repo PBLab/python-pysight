@@ -175,7 +175,6 @@ def main_data_readout(gui):
     )
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
-    num_of_channels = analyzed_struct.num_of_channels
 
     if gui.interleaved:
         logging.warning(
@@ -189,7 +188,6 @@ def main_data_readout(gui):
             binwidth=gui.binwidth,
         )
         data_for_movie = deinter.run()
-        num_of_channels = len(data_for_movie.index.levels[0].categories)
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
