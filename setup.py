@@ -88,7 +88,7 @@ setup(
     keywords=["multiscaler", "photon counting"],
     cmdclass={"build_ext": CustomBuildExtCommand},
     install_requires=[
-        "numpy >= 1.15",
+        "numpy == 1.15.4",
         "matplotlib >= 3",
         "pandas >= 0.23",
         "attrs >= 18.2",
