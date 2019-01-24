@@ -36,6 +36,7 @@ def gen_data_df(frame_num=10, line_num=1000, end=100_000):
             "Channel": channel,
         }
     )
+    df["Channel"] = df["Channel"].astype("category")
     df.set_index(["Channel", "Frames", "Lines"], drop=True, inplace=True)
     y_pix = x_pix
     return df, frames_ser, pd.Series(np.unique(lines)), x_pix, y_pix
