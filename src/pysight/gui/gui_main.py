@@ -429,7 +429,7 @@ class GuiAppLst(object):
             self.filename.set(
                 filedialog.askopenfilename(
                     filetypes=filetypes,
-                    title="Choose a list\pickle file",
+                    title="Choose a list or pickle file",
                     initialdir=str(Path(self.filename.get()).parent),
                 )
             )
@@ -437,7 +437,7 @@ class GuiAppLst(object):
             self.filename.set(
                 filedialog.askopenfilename(
                     filetypes=filetypes,
-                    title="Choose a list\pickle file",
+                    title="Choose a list or pickle file",
                     initialdir=".",
                 )
             )
@@ -651,8 +651,8 @@ class GuiAppLst(object):
             self.cfg_filename.set(
                 filedialog.askopenfilename(
                     filetypes=[("Config files", "*.json")],
-                    title="Choose a configuration file",
-                    initialdir=str(Path(__file__).parent / "configs"),
+                    title=f"Choose a configuration file",
+                    initialdir=str(Path(__file__).parents[1] / "configs"),
                 )
             )
         else:
@@ -694,7 +694,7 @@ class GuiAppLst(object):
             raise ValueError(f"Type not recognized for value {val}.")
 
     def __load_last_used_cfg(self, main_frame):
-        direc = Path(__file__).parent / "configs"
+        direc = Path(__file__).parents[1] / "configs"
         all_cfg_files: Iterable = direc.glob("*.json")
         latest_filename: str = ""
         latest_file_date: int = 0

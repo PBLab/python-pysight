@@ -11,7 +11,7 @@ import pathlib
 
 logging.basicConfig(
     filename="logs/general.log",
-    filemode="w+",
+    filemode="w",
     format="%(levelname)s :: %(filename)s :: %(asctime)s :: %(message)s",
     level=logging.INFO,
 )
