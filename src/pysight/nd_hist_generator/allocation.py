@@ -1,8 +1,9 @@
 import logging
+from typing import Dict, Tuple, List
+
 import pandas as pd
 import numpy as np
 import attr
-from typing import Dict, Tuple, List
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks_cwt
@@ -50,6 +51,7 @@ class Allocate(object):
     tag_offset = attr.ib(default=0, validator=instance_of(int))
     deinterleave = attr.ib(default=False, validator=instance_of(bool))
     sorted_indices = attr.ib(init=False)
+    bins_for_flim = attr.ib(init=False)
 
     def run(self):
         """ Pipeline of allocation """
@@ -232,20 +234,44 @@ class Allocate(object):
         :param pd.DataFrame df: Dataframe with data for each photon.
         :return: Modified dataframe and the relative times.
         """
-        TEN_MEGAHERTZ_IN_BINS = 125
+        needed_bins = self._find_integer_gcd()
+        num_of_pulses_per_bintrain = self._find_num_pulses(needed_bins)
+
         rel_time = []
         for chan in range(1, self.num_of_channels + 1):
-            rel_time251 = (
+            rel_time_first = (
                 df.xs(key=chan, level="Channel", drop_level=False)["abs_time"].values
-                % TEN_MEGAHERTZ_IN_BINS
+                % needed_bins
             )
-            rel_time_per_pulse = rel_time251 % np.ceil(
+            rel_time_per_pulse = rel_time_first % np.ceil(
                 1 / (self.binwidth * self.laser_freq)
             ).astype(np.uint8)
             rel_time.append(rel_time_per_pulse)
             df.loc[chan, "time_rel_pulse"] = np.uint8(rel_time_per_pulse)
 
         return df, rel_time
+
+    def _find_integer_gcd(self):
+        """
+        Converts the binwidth and laser frequency to
+        """
+        laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
+        bins_bet_pulses = np.around(laser_freq / self.binwidth, decimals=3)
+        ns_between_pulses = (1/laser_freq) * 1e9
+
+        while int(bins_bet_pulses) != bins_bet_pulses:
+            bins_bet_pulses *= 10
+
+        while int(ns_between_pulses) != ns_between_pulses:
+            ns_between_pulses *= 10
+
+        return np.gcd(int(bins_bet_pulses), int(ns_between_pulses))
+
+    def _find_num_pulses(self, needed_bins):
+        period = int(needed_bins * self.binwidth*1e9)
+        laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
+        ns_between_pulses = (1/laser_freq) * 1e9
+        return period / ns_between_pulses
 
     def __add_phase_offset_to_bidir_lines(self):
         """

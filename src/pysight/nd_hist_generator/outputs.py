@@ -65,7 +65,7 @@ class OutputParser(object):
                     w0=1,
                 )
                 self.outputs["filename"] = fullfile
-            except PermissionError or OSError:
+            except (PermissionError, OSError):
                 self.file_pointer_created = False
                 logging.warning("Permission Error: Couldn't write data to disk.")
                 return
@@ -100,7 +100,7 @@ class OutputParser(object):
                             name=key, data=val.encode()
                         )
 
-            except PermissionError or OSError:
+            except (PermissionError, OSError):
                 self.file_pointer_created = False
         if "summed" in self.output_dict:
             try:
@@ -120,7 +120,7 @@ class OutputParser(object):
                             name=key, data=val.encode()
                         )
 
-            except PermissionError or OSError:
+            except (PermissionError, OSError):
                 self.file_pointer_created = False
 
         f.close()
