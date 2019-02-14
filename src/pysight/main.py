@@ -29,7 +29,7 @@ from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
 from pysight.ascii_list_file_parser import timepatch_switch
-from pysight.nd_hist_generator.outputs import OutputParser
+from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
 from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
@@ -249,7 +249,15 @@ def main_data_readout(gui):
 
     final_movie.run()
 
-    return analyzed_struct.df_photons, final_movie
+    if "memory" in outputs.outputs:
+        pysight_output = PySightOutput(
+            photons=data_for_movie,
+            _summed_mem=final_movie.summed_mem,
+            _stack=final_movie.stack,
+            _channels=data_for_movie.index.levels[0],
+            _data_shape=outputs.data_shape,
+            )
+        return pysight_output
 
 
 def mp_main_data_readout(gui):
@@ -259,11 +267,11 @@ def mp_main_data_readout(gui):
     multiprocessing run option.
     """
     try:
-        df, movie = main_data_readout(gui)
+        out = main_data_readout(gui)
     except:
         pass
     else:
-        return df, movie
+        return out
 
 
 def run(cfg_file: str = None) -> Tuple[pd.DataFrame, Movie]:
@@ -395,4 +403,4 @@ def mp_batch(
 
 
 if __name__ == "__main__":
-    df, movie = run()
+    out = run()

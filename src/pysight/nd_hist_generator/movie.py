@@ -107,12 +107,10 @@ class Movie:
         self.y_pixels = self.data_shape[2]
         self.z_pixels = 1
         self.bins_bet_pulses = 1
-        try:
-            self.z_pixels = self.data_shape[3]
-        except IndexError:
-            pass
         if self.flim:
             self.bins_bet_pulses = self.data_shape[-1]
+            if len(self.data_shape) == 5:
+                self.z_pixels = self.data_shape[3]
 
     def run(self) -> None:
         """

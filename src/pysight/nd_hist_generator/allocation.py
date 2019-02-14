@@ -267,11 +267,11 @@ class Allocate(object):
 
         return np.gcd(int(bins_bet_pulses), int(ns_between_pulses))
 
-    def _find_num_pulses(self, needed_bins):
+    def _find_num_pulses(self, needed_bins) -> int:
         period = int(needed_bins * self.binwidth*1e9)
         laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
         ns_between_pulses = (1/laser_freq) * 1e9
-        return period / ns_between_pulses
+        return int(period / ns_between_pulses)
 
     def __add_phase_offset_to_bidir_lines(self):
         """

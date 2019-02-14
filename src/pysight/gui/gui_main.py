@@ -104,7 +104,7 @@ class GuiAppLst(object):
         self.debug = BooleanVar(value=False)
         self.phase = DoubleVar(value=-2.78)
         self.reprate = DoubleVar(
-            value=80.3e6
+            value=80e6
         )  # 80e6 for the Chameleon, 0 to raise ZeroDivisionError
         self.gating = BooleanVar(
             value=False
@@ -264,7 +264,7 @@ class GuiAppLst(object):
     def __reprate(self, main_frame):
         """ Laser repetition rate"""
 
-        laser1_label = ttk.Label(main_frame, text="Laser rep. rate (FLIM) [Hz]")
+        laser1_label = ttk.Label(main_frame, text="Laser nominal rep. rate (FLIM) [Hz]")
         laser1_label.grid(column=2, row=6, sticky="ns")
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
         reprate_entry.grid(column=3, row=6, sticky="ns")

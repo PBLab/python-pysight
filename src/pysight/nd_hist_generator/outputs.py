@@ -6,6 +6,7 @@ import pandas as pd
 import h5py_cache
 import os
 import logging
+from collections import namedtuple
 
 
 @attr.s(slots=True)
@@ -147,3 +148,82 @@ class OutputParser(object):
         )
         shape = tuple([dim for dim in non_squeezed if dim != 1])
         return (self.num_of_frames,) + shape  # we never "squeeze" the number of frames
+
+DataShape = namedtuple('DataShape', "t, x, y, z, tau, c")
+
+@attr.s(frozen=True)
+class PySightOutput:
+    """
+    Keeps the relevant data from the run of the algorithm for later
+    in-memory processing.
+    Parameters:
+        :param pd.DataFrame photons: The 'raw' photon DataFrame.
+        :param dict _summed_mem: Summed-over-time arrays of the data - one per channel.
+        :param dict _stack: Full data arrays, one per channel.
+        :param pd.CategoricalIndex _channels: Actual data channels analyzed.
+        :param tuple _data_shape: Data dimensions
+        :param bool _flim: Whether data has Tau channel.
+    """
+    photons = attr.ib(validator=instance_of(pd.DataFrame))
+    _summed_mem = attr.ib(validator=instance_of(dict))
+    _stack = attr.ib(validator=instance_of(dict))
+    _channels = attr.ib(validator=instance_of(pd.CategoricalIndex))
+    _data_shape = attr.ib(validator=instance_of(tuple))
+    _flim = attr.ib(validator=instance_of(bool))
+    available_channels = attr.ib(init=False)
+    data_shape = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        """
+        Populate the different attributes of the class
+        """
+        self.available_channels = list(self._channels)
+        self.data_shape = self._parse_data_shape()
+        for channel in self._channels:
+            cur_stack = MultiDimensionalData(self._stack[channel], self._summed_mem[channel], self.data_shape)
+            setattr(self, "ch" + channel, cur_stack)
+
+    def _parse_data_shape(self):
+        """
+        Turns the data shape tuple into a namedtuple
+        """
+        shape = self._data_shape[:3]
+        if self._flim:
+            if len(self._data_shape) == 5:
+                shape += self._data_shape[3]
+            shape += self._data_shape[4]
+        elif len(self._data_shape) == 4:  # take TAG shape regardless
+            shape += (self._data_shape[3], )
+            shape += (None, )
+        else:
+            shape += (None, None)
+        shape += (len(self._channels), )
+
+        return DataShape(*shape)
+
+
+@attr.s(frozen=True)
+class MultiDimensionalData:
+    """
+    Internal representation of a stack of data
+    """
+    full = attr.ib(validator=instance_of(np.ndarray))
+    time_summed = attr.ib(validator=instance_of(np.ndarray))
+    _data_shape = attr.ib(validator=instance_of(DataShape))
+    z_summed = attr.ib(init=False)
+    tau_summed = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        if self._data_shape.z:
+            self.z_summed = self.full.sum(axis=3)
+        if self._data_shape.tau:
+            self.tau_summed = self.full.sum(axis=4)
+
+
+
+
+
+
+
+
+

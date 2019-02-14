@@ -127,6 +127,11 @@ def verify_gui_input(gui: GuiAppLst):
     if gui.reprate < 0:
         raise UserWarning("Laser repetition rate must be positive.")
 
+    if (gui.reprate % 10 != 0) and (gui.flim or gui.interleaved):
+        raise UserWarning("FLIM or Deinterleaving isn't supported for laser "
+        "reprates that can't be used with a 10 MHz external clock."
+        " Please contact package authors.")
+
     if gui.binwidth < 0:
         raise UserWarning("Binwidth must be a positive number.")
 

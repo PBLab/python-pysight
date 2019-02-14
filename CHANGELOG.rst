@@ -1,6 +1,22 @@
 Changelog
 =========
 
+0.10.0 (2019-XX-XX)
+-------------------
+
+This is a minor release containing new features and bug fixes.
+
+* Added support for FLIM and image deinterleaving. For more information please refer to the docs.
+
+* Fixed several minor issues with build process and installation.
+
+* Upgrades depenedencies, now supports Python 3.7.
+
+* Refactoring of code base structure for higher clarity.
+
+* The "memory" output of PySight is now a ``PySightOutput`` object with simpler handles to the data, both raw and processed.
+
+
 0.9.8 (2018-12-13)
 ------------------
 
