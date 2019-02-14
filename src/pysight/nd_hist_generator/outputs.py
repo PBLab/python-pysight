@@ -22,7 +22,9 @@ class OutputParser(object):
     x_pixels = attr.ib(default=512, validator=instance_of(int))
     y_pixels = attr.ib(default=512, validator=instance_of(int))
     z_pixels = attr.ib(default=1, validator=instance_of(int))
-    channels = attr.ib(default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex))
+    channels = attr.ib(
+        default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex)
+    )
     flim = attr.ib(default=False, validator=instance_of(bool))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     reprate = attr.ib(default=80e6, validator=instance_of(float))
@@ -149,7 +151,9 @@ class OutputParser(object):
         shape = tuple([dim for dim in non_squeezed if dim != 1])
         return (self.num_of_frames,) + shape  # we never "squeeze" the number of frames
 
-DataShape = namedtuple('DataShape', "t, x, y, z, tau, c")
+
+DataShape = namedtuple("DataShape", "t, x, y, z, tau, c")
+
 
 @attr.s(frozen=True)
 class PySightOutput:
@@ -164,6 +168,7 @@ class PySightOutput:
         :param tuple _data_shape: Data dimensions
         :param bool _flim: Whether data has Tau channel.
     """
+
     photons = attr.ib(validator=instance_of(pd.DataFrame))
     _summed_mem = attr.ib(validator=instance_of(dict))
     _stack = attr.ib(validator=instance_of(dict))
@@ -172,6 +177,13 @@ class PySightOutput:
     _flim = attr.ib(validator=instance_of(bool))
     available_channels = attr.ib(init=False)
     data_shape = attr.ib(init=False)
+    ch1 = attr.ib(init=False)
+    ch2 = attr.ib(init=False)
+    ch3 = attr.ib(init=False)
+    ch4 = attr.ib(init=False)
+    ch5 = attr.ib(init=False)
+    ch6 = attr.ib(init=False)
+    ch7 = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         """
@@ -180,7 +192,9 @@ class PySightOutput:
         self.available_channels = list(self._channels)
         self.data_shape = self._parse_data_shape()
         for channel in self._channels:
-            cur_stack = MultiDimensionalData(self._stack[channel], self._summed_mem[channel], self.data_shape)
+            cur_stack = MultiDimensionalData(
+                self._stack[channel], self._summed_mem[channel], self.data_shape
+            )
             setattr(self, "ch" + channel, cur_stack)
 
     def _parse_data_shape(self):
@@ -193,11 +207,11 @@ class PySightOutput:
                 shape += self._data_shape[3]
             shape += self._data_shape[4]
         elif len(self._data_shape) == 4:  # take TAG shape regardless
-            shape += (self._data_shape[3], )
-            shape += (None, )
+            shape += (self._data_shape[3],)
+            shape += (None,)
         else:
             shape += (None, None)
-        shape += (len(self._channels), )
+        shape += (len(self._channels),)
 
         return DataShape(*shape)
 
@@ -207,6 +221,7 @@ class MultiDimensionalData:
     """
     Internal representation of a stack of data
     """
+
     full = attr.ib(validator=instance_of(np.ndarray))
     time_summed = attr.ib(validator=instance_of(np.ndarray))
     _data_shape = attr.ib(validator=instance_of(DataShape))
@@ -218,12 +233,3 @@ class MultiDimensionalData:
             self.z_summed = self.full.sum(axis=3)
         if self._data_shape.tau:
             self.tau_summed = self.full.sum(axis=4)
-
-
-
-
-
-
-
-
-
