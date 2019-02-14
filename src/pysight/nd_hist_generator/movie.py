@@ -141,7 +141,7 @@ class Movie:
 
         if "memory" in self.outputs:
             self.summed_mem = {i: 0 for i in self.channels}
-            self.stack = {i: deque() for i in self.channels}
+            self.stack = {i: list() for i in self.channels}
             funcs_to_execute_during.append(self.__create_memory_output)
             funcs_to_execute_end.append(self.__convert_deque_to_arr)
             if "stack" in self.outputs:
@@ -265,7 +265,7 @@ class Movie:
         """ Close the file pointer of the specific channel """
         self.outputs["stack"].file.close()
 
-    def __convert_deque_to_arr(self) -> None:
+    def __convert_list_to_arr(self) -> None:
         """ Convert a deque with a bunch of frames into a single numpy array with an extra
         dimension (0) containing the data.
         """
