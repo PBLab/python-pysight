@@ -152,7 +152,7 @@ class OutputParser(object):
         return (self.num_of_frames,) + shape  # we never "squeeze" the number of frames
 
 
-DataShape = namedtuple("DataShape", "t, x, y, z, tau, c")
+DataShape = namedtuple("DataShape", "t, x, y, z, tau")
 
 
 @attr.s(frozen=True)
@@ -189,13 +189,13 @@ class PySightOutput:
         """
         Populate the different attributes of the class
         """
-        self.available_channels = list(self._channels)
-        self.data_shape = self._parse_data_shape()
+        object.__setattr__(self, "available_channels", list(self._channels))
+        object.__setattr__(self, "data_shape", self._parse_data_shape())
         for channel in self._channels:
             cur_stack = MultiDimensionalData(
                 self._stack[channel], self._summed_mem[channel], self.data_shape
             )
-            setattr(self, "ch" + channel, cur_stack)
+            object.__setattr__(self, "ch" + str(channel), cur_stack)
 
     def _parse_data_shape(self):
         """
@@ -204,14 +204,15 @@ class PySightOutput:
         shape = self._data_shape[:3]
         if self._flim:
             if len(self._data_shape) == 5:
-                shape += self._data_shape[3]
-            shape += self._data_shape[4]
+                shape += (self._data_shape[3], )
+                shape += (self._data_shape[4], )
+            else:
+                shape += (None, self._data_shape[3])  # no Z but tau exists
         elif len(self._data_shape) == 4:  # take TAG shape regardless
             shape += (self._data_shape[3],)
             shape += (None,)
         else:
             shape += (None, None)
-        shape += (len(self._channels),)
 
         return DataShape(*shape)
 
@@ -230,6 +231,6 @@ class MultiDimensionalData:
 
     def __attrs_post_init__(self):
         if self._data_shape.z:
-            self.z_summed = self.full.sum(axis=3)
+            object.__setattr__(self, "z_summed", self.full.sum(axis=3))
         if self._data_shape.tau:
-            self.tau_summed = self.full.sum(axis=4)
+            object.__setattr__(self, "tau_summed", self.full.sum(axis=-1))

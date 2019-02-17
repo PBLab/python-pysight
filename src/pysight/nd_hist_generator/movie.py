@@ -141,7 +141,7 @@ class Movie:
             self.summed_mem = {i: 0 for i in self.channels}
             self.stack = {i: list() for i in self.channels}
             funcs_to_execute_during.append(self.__create_memory_output)
-            funcs_to_execute_end.append(self.__convert_deque_to_arr)
+            funcs_to_execute_end.append(self.__convert_list_to_arr)
             if "stack" in self.outputs:
                 funcs_to_execute_end.append(self.__save_stack_at_once)
             if "summed" in self.outputs:

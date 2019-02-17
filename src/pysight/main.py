@@ -29,7 +29,7 @@ from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
 from pysight.ascii_list_file_parser import timepatch_switch
-# from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
+from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
 from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
@@ -252,10 +252,11 @@ def main_data_readout(gui):
     if "memory" in outputs.outputs:
         pysight_output = PySightOutput(
             photons=data_for_movie,
-            _summed_mem=final_movie.summed_mem,
-            _stack=final_movie.stack,
-            _channels=data_for_movie.index.levels[0],
-            _data_shape=outputs.data_shape,
+            summed_mem=final_movie.summed_mem,
+            stack=final_movie.stack,
+            channels=data_for_movie.index.levels[0],
+            data_shape=outputs.data_shape,
+            flim=gui.flim,
             )
         return pysight_output
 
