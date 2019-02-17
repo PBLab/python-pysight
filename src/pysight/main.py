@@ -29,7 +29,7 @@ from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
 from pysight.ascii_list_file_parser import timepatch_switch
-from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
+# from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
 from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
