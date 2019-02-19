@@ -50,10 +50,17 @@ from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def main_data_readout(gui):
+def main_data_readout(gui: GuiAppLst):
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
+
+    Parameters:
+    :param GuiAppLst gui: The serialized GUI object.
+
+    Return:
+    :PySightOutput out: An object containing the relevant data,
+    if "memory" option was checked in the GUI.
     """
     # Read the .lst file
     if gui.filename.endswith(".lst"):
@@ -261,7 +268,7 @@ def main_data_readout(gui):
         return pysight_output
 
 
-def mp_main_data_readout(gui):
+def mp_main_data_readout(gui: GuiAppLst):
     """
     Wrapper for main_data_readout that
     wraps it with a try block. To be used with the
