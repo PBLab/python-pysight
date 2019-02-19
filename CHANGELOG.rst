@@ -6,9 +6,9 @@ Changelog
 
 This is a minor release containing new features and bug fixes.
 
-* Added support for FLIM and image deinterleaving. For more information please refer to the docs.
+* Added support for FLIM and image deinterleaving. This allows the user utilize the time-of-arrival of each photon relative to the last laser pulse for various applications. For more information please refer to the docs.
 
-* Fixed several minor issues with build process and installation.
+* Fixed several minor issues with the build process and installation.
 
 * Upgrades depenedencies, now supports Python 3.7.
 

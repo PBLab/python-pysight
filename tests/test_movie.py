@@ -77,7 +77,7 @@ class TestMovies(TestCase):
         self.assertTrue(len(end) == 1)
         during, end = str(during), str(end)
         self.assertTrue("create_memory_output" in during)
-        self.assertTrue("convert_deque_to_arr" in end)
+        self.assertTrue("convert_list_to_arr" in end)
 
     def test_slice_df(self):
         sl = slice(0, 23000)

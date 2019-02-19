@@ -111,6 +111,11 @@ class Movie:
             self.bins_bet_pulses = self.data_shape[-1]
             if len(self.data_shape) == 5:
                 self.z_pixels = self.data_shape[3]
+        else:
+            try:
+                self.z_pixels = self.data_shape[3]
+            except IndexError:
+                pass
 
     def run(self) -> None:
         """

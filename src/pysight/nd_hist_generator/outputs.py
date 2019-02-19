@@ -169,21 +169,21 @@ class PySightOutput:
         :param bool _flim: Whether data has Tau channel.
     """
 
-    photons = attr.ib(validator=instance_of(pd.DataFrame))
-    _summed_mem = attr.ib(validator=instance_of(dict))
-    _stack = attr.ib(validator=instance_of(dict))
-    _channels = attr.ib(validator=instance_of(pd.CategoricalIndex))
-    _data_shape = attr.ib(validator=instance_of(tuple))
-    _flim = attr.ib(validator=instance_of(bool))
+    photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
+    _summed_mem = attr.ib(validator=instance_of(dict), repr=False)
+    _stack = attr.ib(validator=instance_of(dict), repr=False)
+    _channels = attr.ib(validator=instance_of(pd.CategoricalIndex), repr=False)
+    _data_shape = attr.ib(validator=instance_of(tuple), repr=False)
+    _flim = attr.ib(validator=instance_of(bool), repr=False)
     available_channels = attr.ib(init=False)
     data_shape = attr.ib(init=False)
-    ch1 = attr.ib(init=False)
-    ch2 = attr.ib(init=False)
-    ch3 = attr.ib(init=False)
-    ch4 = attr.ib(init=False)
-    ch5 = attr.ib(init=False)
-    ch6 = attr.ib(init=False)
-    ch7 = attr.ib(init=False)
+    ch1 = attr.ib(init=False, repr=False)
+    ch2 = attr.ib(init=False, repr=False)
+    ch3 = attr.ib(init=False, repr=False)
+    ch4 = attr.ib(init=False, repr=False)
+    ch5 = attr.ib(init=False, repr=False)
+    ch6 = attr.ib(init=False, repr=False)
+    ch7 = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self):
         """
@@ -223,11 +223,11 @@ class MultiDimensionalData:
     Internal representation of a stack of data
     """
 
-    full = attr.ib(validator=instance_of(np.ndarray))
-    time_summed = attr.ib(validator=instance_of(np.ndarray))
+    full = attr.ib(validator=instance_of(np.ndarray), repr=False)
+    time_summed = attr.ib(validator=instance_of(np.ndarray), repr=False)
     _data_shape = attr.ib(validator=instance_of(DataShape))
-    z_summed = attr.ib(init=False)
-    tau_summed = attr.ib(init=False)
+    z_summed = attr.ib(init=False, repr=False)
+    tau_summed = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self):
         if self._data_shape.z:

@@ -6,6 +6,8 @@ from unittest import TestCase
 from pysight.nd_hist_generator.outputs import *
 from os import sep
 
+import pytest
+
 
 class TestOutput(TestCase):
     """ Test how well we parse the outputs """
@@ -89,3 +91,58 @@ class TestOutput(TestCase):
         )
         for shape, obj in zip(squeezed_shapes, output_obj):
             self.assertEqual(shape, obj.determine_data_shape_full())
+
+
+class TestPySightOutput:
+
+    @pytest.fixture
+    def generate_output_obj(self):
+        def _generate(shape, flim, di=None):
+            if not di:
+                di = {1: np.array([1, 2, 3])}
+            photons = pd.DataFrame({1: np.array([1, 2, 3])})
+            summed_mem = di
+            stack = di
+            channels = pd.CategoricalIndex([1])
+            return PySightOutput(photons, summed_mem, stack, channels, shape, flim)
+        return _generate
+
+    def test_data_shape_txy(self, generate_output_obj):
+        shape = (10, 10, 10)
+        flim = False
+        obj = generate_output_obj(shape, flim)
+        shape = DataShape(10, 10, 10, None, None)
+        assert shape == obj._parse_data_shape()
+
+    def test_data_shape_txyz(self, generate_output_obj):
+        shape = (10, 10, 10, 10)
+        flim = False
+        di = {1: np.random.random(shape)}
+        obj = generate_output_obj(shape, flim, di)
+        shape = DataShape(10, 10, 10, 10, None)
+        assert shape == obj._parse_data_shape()
+
+    def test_data_shape_txyztau(self, generate_output_obj):
+        shape = (10, 10, 10, 10, 5)
+        flim = True
+        di = {1: np.random.random(shape)}
+        obj = generate_output_obj(shape, flim, di)
+        shape = DataShape(10, 10, 10, 10, 5)
+        assert shape == obj._parse_data_shape()
+
+    @pytest.mark.xfail
+    def test_data_shape_txyz_notau(self, generate_output_obj):
+        shape = (10, 10, 10, 10, 5)
+        flim = False
+        di = {1: np.random.random(shape)}
+        obj = generate_output_obj(shape, flim, di)
+        shape = DataShape(10, 10, 10, 10, 5)
+        assert shape == obj._parse_data_shape()
+
+    def test_data_shape_txy_tau(self, generate_output_obj):
+        shape = (10, 10, 10, 5)
+        flim = True
+        di = {1: np.random.random(shape)}
+        obj = generate_output_obj(shape, flim, di)
+        shape = DataShape(10, 10, 10, None, 5)
+        assert shape == obj._parse_data_shape()
