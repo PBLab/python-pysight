@@ -1,0 +1,18 @@
+sphinx < 1.8
+
+-e .
+
+numpy < 1.16
+matplotlib < 2.3
+pandas < 0.24
+attrs < 18.2
+cython < 0.29
+tables < 3.5
+scipy < 1.2
+scikit-learn < 0.20
+h5py < 2.9
+h5py-cache < 1.1
+tqdm < 4.24
+numba < 0.40
+ansimarkup < 1.5
+psutil < 5.5

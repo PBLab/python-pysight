@@ -1,0 +1,16 @@
+[paths]
+source =
+   src/pysight
+   */site-packages/pysight
+
+[run]
+branch = true
+source =
+    pysight
+    tests
+parallel = true
+
+[report]
+show_missing = true
+precision = 2
+omit = *migrations*
