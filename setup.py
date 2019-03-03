@@ -94,7 +94,6 @@ setup(
         "pandas >= 0.24",
         "attrs == 18.2",
         "cython >= 0.29",
-        "tables >= 3.4",
         "scipy >= 1.2",
         "scikit-learn >= 0.19",
         "h5py >= 2.8",
@@ -117,6 +116,6 @@ setup(
     ],
     data_files=[
         "src" + os.sep + "pysight" + os.sep + "configs" + os.sep + "default.json",
-        str((pathlib.Path("logs") / "general.log").resolve()),
+        str(pathlib.Path('.') / "logs" / "general.log"),
     ],
 )
