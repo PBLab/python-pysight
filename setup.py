@@ -102,6 +102,7 @@ setup(
         "numba >= 0.41",
         "ansimarkup >= 1.4",
         "psutil >= 5.4",
+        "toml >= 0.9"
     ],
     extras_require={"dev": ["pytest", "bumpversion", "twine", "black"]},
     setup_requires=["cython", "numpy"] if Cython else ["numpy"],
