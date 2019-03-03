@@ -58,9 +58,9 @@ def verify_gui_input(gui: GuiAppLst):
     if len(list_of_keys) != len(
         set_of_keys
     ):  # making sure only a single option was chosen in the GUI
-        if [x for x in list_of_keys if x != "Empty"] != list(
-            set_of_keys.difference({"Empty"})
-        ):
+        non_empty_keys = sorted([x for x in list_of_keys if x != "Empty"])
+        sorted_set_of_keys = sorted(list(set_of_keys.difference({"Empty"})))
+        if non_empty_keys != sorted_set_of_keys:
             raise KeyError(
                 'Input consisted of two or more similar names which are not "Empty".'
             )
