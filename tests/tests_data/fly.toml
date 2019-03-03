@@ -1,0 +1,56 @@
+cfg_title = "fly"
+
+[inputs]
+stop1 = "Empty"
+stop2 = "Lines"
+stop3 = "Empty"
+stop4 = "Empty"
+stop5 = "Empty"
+start = "PMT1"
+
+[image]
+num_of_frames = 1
+x_pixels = 64
+y_pixels = 512
+z_pixels = 1
+imaging_software = "MScan"
+
+[tagbits]
+tag_bits = false
+[tagbits.group1]
+label = "None"
+start = 1
+end = 3
+[tagbits.group2]
+label = "None"
+start = 4
+end = 5
+[tagbits.group3]
+label = "None"
+start = 6
+end = 16
+
+[outputs]
+data_filename = "tests/tests_data/fly.lst"
+summed = false
+memory = true
+stack = false
+
+[advanced]
+debug = false
+phase = 10.0
+reprate = 80e6
+gating = false
+binwidth = 8e-10
+tag_freq = 189e3
+tag_pulses = 1
+tag_offset = 0
+fill_frac = 76.0
+bidir = true
+keep_unidir = false
+flim = false
+censor = false
+line_freq = 7930.0
+sweeps_as_lines = false
+frame_delay = 1e-5
+interleaved = false
