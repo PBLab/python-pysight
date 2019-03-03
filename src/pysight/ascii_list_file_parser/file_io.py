@@ -30,6 +30,9 @@ class ReadMeta:
     input_start = attr.ib(default="Frames", validator=instance_of(str))
     input_stop1 = attr.ib(default="PMT1", validator=instance_of(str))
     input_stop2 = attr.ib(default="Lines", validator=instance_of(str))
+    input_stop3 = attr.ib(default="Empty", validator=instance_of(str))
+    input_stop4 = attr.ib(default="Empty", validator=instance_of(str))
+    input_stop5 = attr.ib(default="Empty", validator=instance_of(str))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     use_sweeps = attr.ib(default=False, validator=instance_of(bool))
     mirror_phase = attr.ib(default=-2.78, validator=instance_of(float))
@@ -157,7 +160,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str: str = b"time_patch=(\w+)"
+            format_str: bytes = b"time_patch=(\w+)"
         else:
             format_str: str = r"time_patch=(\w+)"
 
@@ -240,7 +243,7 @@ class ReadMeta:
         :return int: Final time that has to be added to all sweeps, in timebins
         """
         if self.is_binary:
-            format_str: str = b"holdafter=([\w\+]+)"
+            format_str: bytes = b"holdafter=([\w\+]+)"
         else:
             format_str: str = r"holdafter=([\w\+]+)"
 
@@ -259,7 +262,7 @@ class ReadMeta:
         :return int: Acq delay in timebins
         """
         if self.is_binary:
-            format_str: str = b"fstchan=(\w+)"
+            format_str: bytes = b"fstchan=(\w+)"
         else:
             format_str: str = r"fstchan=(\w+)"
 
@@ -288,6 +291,15 @@ class ReadMeta:
         if self.input_stop2 != "Empty":
             dict_of_inputs[self.input_stop2] = "010"
 
+        if self.input_stop3 != "Empty":
+            dict_of_inputs[self.input_stop3] = "011"
+
+        if self.input_stop4 != "Empty":
+            dict_of_inputs[self.input_stop4] = "100"
+
+        if self.input_stop5 != "Empty":
+            dict_of_inputs[self.input_stop5] = "101"
+
         assert len(dict_of_inputs) >= 1
         assert "Empty" not in list(dict_of_inputs.keys())
 
@@ -311,7 +323,14 @@ class ReadMeta:
                 + f"({recorded}) to the multiscaler."
             )
 
-        help_dict = {"001": 0, "010": 1, "110": 2}
+        help_dict = {
+            "001": 0,
+            "010": 1,
+            "011": 2,
+            "100": 3,
+            "101": 4,
+            "110": 5,
+        }
 
         for key in self.dict_of_input_channels:
             if not self.list_of_recorded_data_channels[
