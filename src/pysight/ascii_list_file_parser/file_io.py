@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from attr.validators import instance_of
 import numpy as np
 import attr
@@ -63,8 +63,7 @@ class ReadMeta:
         self.time_after: int = self.__get_hold_after(cur_str=metadata)
         self.acq_delay: int = self.__get_fstchan(cur_str=metadata)
         self.fill_fraction: float = self.__calc_actual_fill_fraction()
-        self.dict_of_input_channels: dict = self.create_inputs_dict()
-        self.list_of_recorded_data_channels: list = self.find_active_channels(metadata)
+        self.dict_of_input_channels, self.num_of_channels = self.find_active_channels(metadata)
         self.compare_recorded_and_input_channels()
         # Grab some additional metadata from the file, to be saved later
         self.__parse_extra_metadata(metadata)
@@ -179,7 +178,7 @@ class ReadMeta:
                 )
             return timepatch
 
-    def find_active_channels(self, cur_str) -> List[bool]:
+    def find_active_channels(self, cur_str) -> Tuple[Dict[str, str], int]:
         """
         Create a dictionary containing the active channels.
 
@@ -189,21 +188,36 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = b"active=(\d)"
+            format_str = b'\[CHN(\d)\].+?active=(\d)'
             match = b"1"
         else:
-            format_str = r"active=(\d)"
+            format_str = r'\[CHN(\d)\].+?active=(\d)'
             match = "1"
 
-        format_active = re.compile(format_str)
-        active_channels: List[bool] = [False, False, False, False, False, False]
-        list_of_matches = re.findall(format_active, cur_str)
+        format_active = re.compile(format_str, re.DOTALL)
+        matches = format_active.findall(cur_str)
+        help_dict = {
+            '1': (self.input_stop1, "001"),
+            '2': (self.input_stop2, "010"),
+            '3': (self.input_stop3, "011"),
+            '4': (self.input_stop4, "100"),
+            '5': (self.input_stop5, "101"),
+            '6': (self.input_start, "110"),
+        }
+        dict_of_inputs = {}
 
-        for idx, cur_match in enumerate(list_of_matches):
-            if cur_match == match:
-                active_channels[idx] = True
+        for cur_match in matches[:-1]:
+            if cur_match[1] == match:
+                dict_of_inputs[help_dict[str(cur_match[0])][0]] = help_dict[str(cur_match[0])][1]
+        if matches[-1][1] == match:
+            dict_of_inputs[help_dict['6'][0]] = help_dict['6'][1]
 
-        return active_channels
+        num_of_channels = sum([1 for key in dict_of_inputs if "PMT" in key])
+
+        assert len(dict_of_inputs) >= 1
+        assert "Empty" not in list(dict_of_inputs.keys())
+
+        return dict_of_inputs, num_of_channels
 
     def get_start_pos(self) -> int:
         """
@@ -232,6 +246,7 @@ class ReadMeta:
                 if match is not None:
                     pos_in_file = f.tell()
                     return pos_in_file  # to have the [DATA] as header
+        return -1
 
     def __get_hold_after(self, cur_str) -> int:
         """
@@ -275,45 +290,21 @@ class ReadMeta:
         acq_delay = int(fstchan / self.binwidth)
         return acq_delay
 
-    def create_inputs_dict(self) -> Dict[str, str]:
-        """
-        Create a dictionary for all input channels. Currently allows for three channels.
-        'Empty' channels will not be checked.
-        """
-        dict_of_inputs = {}
-
-        if self.input_start != "Empty":
-            dict_of_inputs[self.input_start] = "110"
-
-        if self.input_stop1 != "Empty":
-            dict_of_inputs[self.input_stop1] = "001"
-
-        if self.input_stop2 != "Empty":
-            dict_of_inputs[self.input_stop2] = "010"
-
-        if self.input_stop3 != "Empty":
-            dict_of_inputs[self.input_stop3] = "011"
-
-        if self.input_stop4 != "Empty":
-            dict_of_inputs[self.input_stop4] = "100"
-
-        if self.input_stop5 != "Empty":
-            dict_of_inputs[self.input_stop5] = "101"
-
-        assert len(dict_of_inputs) >= 1
-        assert "Empty" not in list(dict_of_inputs.keys())
-
-        # Calculate the number of channels
-        self.num_of_channels = sum([1 for key in dict_of_inputs if "PMT" in key])
-
-        return dict_of_inputs
-
     def compare_recorded_and_input_channels(self) -> None:
         """
         Raise error if user gave wrong amount of inputs
         """
 
         # If a user assumes an input exists, but it doesn't - raise an error
+        list_of_recorded_data_channels = [
+            self.input_stop1,
+            self.input_stop2,
+            self.input_stop3,
+            self.input_stop4,
+            self.input_stop5,
+            self.input_start,
+        ]
+        self.list_of_recorded_data_channels = [True for chan in list_of_recorded_data_channels if chan != 'Empty']
         recorded = self.list_of_recorded_data_channels.count(True)
         input_chans = len(self.dict_of_input_channels)
         if recorded < input_chans:
@@ -322,24 +313,6 @@ class ReadMeta:
                 + f"compared to number of actual inputs "
                 + f"({recorded}) to the multiscaler."
             )
-
-        help_dict = {
-            "001": 0,
-            "010": 1,
-            "011": 2,
-            "100": 3,
-            "101": 4,
-            "110": 5,
-        }
-
-        for key in self.dict_of_input_channels:
-            if not self.list_of_recorded_data_channels[
-                help_dict[self.dict_of_input_channels[key]]
-            ]:
-                raise UserWarning(
-                    f'Wrong channel specification - the key "{key}" is on an empty channel'
-                    f" (number {int(self.dict_of_input_channels[key], 2)})."
-                )
 
     def __parse_extra_metadata(self, metadata):
         """

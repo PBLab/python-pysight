@@ -95,7 +95,7 @@ setup(
         "attrs == 18.2",
         "cython >= 0.29",
         "scipy >= 1.2",
-        "scikit-learn >= 0.19",
+        "scikit-learn >= 0.20",
         "h5py >= 2.8",
         "h5py-cache >= 1",
         "tqdm >= 4.29",
@@ -116,6 +116,6 @@ setup(
     ],
     data_files=[
         "src" + os.sep + "pysight" + os.sep + "configs" + os.sep + "default.json",
-        str(pathlib.Path('.') / "logs" / "general.log"),
+        "logs/general.log",
     ],
 )
