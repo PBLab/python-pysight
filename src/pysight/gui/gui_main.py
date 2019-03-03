@@ -69,7 +69,7 @@ class GuiAppLst(object):
         style.theme_use("clam")
         self.normal_font = tkfont.Font(family="Helvetica", size=10)
         self.bold_font = tkfont.Font(family="Helvetica", size=12, weight="bold")
-        self.config_row = 11
+        self.config_row = 14
         self.__create_vars()
 
         # Run widgets
@@ -89,7 +89,7 @@ class GuiAppLst(object):
 
         # Define the last quit button and wrap up GUI
         quit_button = ttk.Button(main_frame, text="Start", command=self.root.destroy)
-        quit_button.grid(row=13, column=4, sticky="ns")
+        quit_button.grid(row=16, column=2, sticky="ns")
 
         self.root.bind("<Return>", self.__dest)
         for child in main_frame.winfo_children():
@@ -130,18 +130,18 @@ class GuiAppLst(object):
         browse_button.grid(column=0, row=file_row, sticky="ns")
 
         browse_entry = ttk.Entry(main_frame, textvariable=self.filename, width=80)
-        browse_entry.grid(column=1, row=file_row, sticky="we", columnspan=4)
+        browse_entry.grid(column=1, row=file_row, sticky="we", columnspan=2)
 
     def __imaging_software(self, main_frame):
         imaging_software_label = ttk.Label(
             main_frame, text="Imaging Software", font=self.bold_font
         )
-        imaging_software_label.grid(row=1, column=4, sticky="ns")
+        imaging_software_label.grid(row=5, column=2, sticky="ns")
         self.imaging_software = StringVar()
         cb_image = ttk.Combobox(
             main_frame, textvariable=self.imaging_software, width=10
         )
-        cb_image.grid(row=2, column=4, sticky="ns")
+        cb_image.grid(row=6, column=2, sticky="ns")
         cb_image.set(ImagingSoftware.SCANIMAGE.value)
         cb_image["values"] = [item.value for item in ImagingSoftware]
 
@@ -157,6 +157,9 @@ class GuiAppLst(object):
         self.input_start = StringVar()
         self.input_stop1 = StringVar()
         self.input_stop2 = StringVar()
+        self.input_stop3 = StringVar()
+        self.input_stop4 = StringVar()
+        self.input_stop5 = StringVar()
         self.tuple_of_data_sources = self._data_sources
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=1, row=inputs_row + 1, sticky="w")
@@ -170,6 +173,18 @@ class GuiAppLst(object):
         mb3.grid(column=1, row=inputs_row + 3, sticky="w")
         mb3.set("Lines")
         mb3["values"] = self.tuple_of_data_sources
+        mb4 = ttk.Combobox(main_frame, textvariable=self.input_stop3, width=10)
+        mb4.grid(column=1, row=inputs_row + 4, sticky="w")
+        mb4.set("Empty")
+        mb4["values"] = self.tuple_of_data_sources
+        mb5 = ttk.Combobox(main_frame, textvariable=self.input_stop4, width=10)
+        mb5.grid(column=1, row=inputs_row + 5, sticky="w")
+        mb5.set("Empty")
+        mb5["values"] = self.tuple_of_data_sources
+        mb6 = ttk.Combobox(main_frame, textvariable=self.input_stop5, width=10)
+        mb6.grid(column=1, row=inputs_row + 6, sticky="w")
+        mb6.set("Empty")
+        mb6["values"] = self.tuple_of_data_sources
 
         # Labels
         input_channel_1 = ttk.Label(main_frame, text="START", font=self.normal_font)
@@ -178,6 +193,12 @@ class GuiAppLst(object):
         input_channel_2.grid(column=0, row=inputs_row + 2, sticky="ns")
         input_channel_3 = ttk.Label(main_frame, text="STOP2", font=self.normal_font)
         input_channel_3.grid(column=0, row=inputs_row + 3, sticky="ns")
+        input_channel_4 = ttk.Label(main_frame, text="STOP3", font=self.normal_font)
+        input_channel_4.grid(column=0, row=inputs_row + 4, sticky="ns")
+        input_channel_5 = ttk.Label(main_frame, text="STOP4", font=self.normal_font)
+        input_channel_5.grid(column=0, row=inputs_row + 5, sticky="ns")
+        input_channel_6 = ttk.Label(main_frame, text="STOP5", font=self.normal_font)
+        input_channel_6.grid(column=0, row=inputs_row + 6, sticky="ns")
 
     def __num_of_frames(self, main_frame):
 
@@ -191,7 +212,7 @@ class GuiAppLst(object):
         self.num_frames_entry = ttk.Entry(
             main_frame, textvariable=self.num_of_frames, width=3
         )
-        self.num_frames_entry.grid(column=2, row=4, sticky="e")
+        self.num_frames_entry.grid(column=2, row=4, sticky="ns")
         self.num_frames_entry.config(state="disabled")
 
         # Disable number of frames unless all inputs but one are empty
@@ -201,24 +222,31 @@ class GuiAppLst(object):
         self.input_stop1.trace("w", self.__check_if_tag_lens_exists)
         self.input_stop2.trace("w", self.__check_if_empty)
         self.input_stop2.trace("w", self.__check_if_tag_lens_exists)
+        self.input_stop3.trace("w", self.__check_if_empty)
+        self.input_stop3.trace("w", self.__check_if_tag_lens_exists)
+        self.input_stop4.trace("w", self.__check_if_empty)
+        self.input_stop4.trace("w", self.__check_if_tag_lens_exists)
+        self.input_stop5.trace("w", self.__check_if_empty)
+        self.input_stop5.trace("w", self.__check_if_tag_lens_exists)
 
     def __outputs(self, main_frame):
         """ Wanted outputs """
-        outputs_row = 6
+        outputs_row = 9
+        outputs_column = 2
         outputs_label = ttk.Label(main_frame, text="Outputs", font=self.bold_font)
-        outputs_label.grid(column=4, row=outputs_row - 1, sticky="ns")
+        outputs_label.grid(column=outputs_column, row=outputs_row - 1, sticky="ns")
 
         self.summed = BooleanVar(value=False)
         summed_array = ttk.Checkbutton(
             main_frame, text="Summed Stack", variable=self.summed
         )
-        summed_array.grid(column=4, row=outputs_row, sticky="ns")
+        summed_array.grid(column=outputs_column, row=outputs_row, sticky="ns")
         self.memory = BooleanVar(value=False)
         in_memory = ttk.Checkbutton(main_frame, text="In Memory", variable=self.memory)
-        in_memory.grid(column=4, row=outputs_row + 1, sticky="ns")
+        in_memory.grid(column=outputs_column, row=outputs_row + 1, sticky="ns")
         self.stack = BooleanVar(value=True)
         tif = ttk.Checkbutton(main_frame, text="Full Stack", variable=self.stack)
-        tif.grid(column=4, row=outputs_row + 2, sticky="ns")
+        tif.grid(column=outputs_column, row=outputs_row + 2, sticky="ns")
 
     def __image_size(self, main_frame):
         image_size_row = 1
@@ -307,7 +335,7 @@ class GuiAppLst(object):
 
     def __tag_bits(self, main_frame):
         """ TAG bits """
-        tag_bits_row = 6
+        tag_bits_row = 9
         tag_bits_label = ttk.Label(
             main_frame, text="TAG Bits Allocation", font=self.bold_font
         )
@@ -315,7 +343,7 @@ class GuiAppLst(object):
 
         self.tag_bits = BooleanVar(value=False)
         tag_bit_check = ttk.Checkbutton(main_frame, text="Use?", variable=self.tag_bits)
-        tag_bit_check.grid(column=2, row=tag_bits_row, sticky="w")
+        tag_bit_check.grid(column=1, row=tag_bits_row, sticky="w")
 
         self.bits_grp_1_start = IntVar(value=1)
         self.bits_grp_1_end = IntVar(value=3)
@@ -447,6 +475,9 @@ class GuiAppLst(object):
             self.input_start.get(),
             self.input_stop1.get(),
             self.input_stop2.get(),
+            self.input_stop3.get(),
+            self.input_stop4.get(),
+            self.input_stop5.get(),
         ]
         if 2 == list_of_values.count("Empty"):
             if "PMT1" in list_of_values or "PMT2" in list_of_values:
@@ -459,6 +490,9 @@ class GuiAppLst(object):
             self.input_start.get(),
             self.input_stop1.get(),
             self.input_stop2.get(),
+            self.input_stop3.get(),
+            self.input_stop4.get(),
+            self.input_stop5.get(),
         ]
         if "TAG Lens" in list_of_values:
             self.z_pixels_entry.config(state="normal")
@@ -541,7 +575,7 @@ class GuiAppLst(object):
         advanced_but = ttk.Button(
             main_frame, text="Advanced", command=self.__open_advanced
         )
-        advanced_but.grid(row=10, column=4, sticky="ns")
+        advanced_but.grid(row=13, column=2, sticky="ns")
 
     def __open_advanced(self, *args):
         self.advanced_win = Toplevel(self.root)

@@ -8,14 +8,27 @@ from pysight.gui.gui_main import GuiAppLst, ImagingSoftware
 def verify_gui_input(gui: GuiAppLst):
     """Validate all GUI inputs"""
     data_sources = set(gui.tuple_of_data_sources)
-    channel_inputs = {gui.input_start, gui.input_stop1, gui.input_stop2}
+    channel_inputs = {
+        gui.input_start,
+        gui.input_stop1,
+        gui.input_stop2,
+        gui.input_stop3,
+        gui.input_stop4,
+        gui.input_stop5,
+    }
     MINIMAL_TAG_BIT = 1
     MAXIMAL_TAG_BIT = 16
 
-    if gui.input_start != "PMT1":
-        if gui.input_stop1 != "PMT1":
-            if gui.input_stop2 != "PMT1":
-                raise BrokenPipeError("PMT1 value has to be entered in inputs.")
+    list_of_keys = [
+        gui.input_start,
+        gui.input_stop1,
+        gui.input_stop2,
+        gui.input_stop3,
+        gui.input_stop4,
+        gui.input_stop5,
+    ]
+    if "PMT1" not in list_of_keys:
+        raise BrokenPipeError("PMT1 value has to be entered in inputs.")
 
     if gui.num_of_frames == None:
         if "Frames" not in data_sources:
@@ -35,12 +48,11 @@ def verify_gui_input(gui: GuiAppLst):
             "Please choose a list (*.lst) or pickle (*.p) file for analysis."
         )
 
-    if channel_inputs > data_sources:
+    if len(channel_inputs) > len(data_sources):
         raise ValueError(
             "Wrong inputs in channels. Please choose a value from the list."
         )
 
-    list_of_keys = [gui.input_start, gui.input_stop1, gui.input_stop2]
     set_of_keys = set(list_of_keys)
 
     if len(list_of_keys) != len(
@@ -128,9 +140,11 @@ def verify_gui_input(gui: GuiAppLst):
         raise UserWarning("Laser repetition rate must be positive.")
 
     if (gui.reprate % 10 != 0) and (gui.flim or gui.interleaved):
-        raise UserWarning("FLIM or Deinterleaving isn't supported for laser "
-        "reprates that can't be used with a 10 MHz external clock."
-        " Please contact package authors.")
+        raise UserWarning(
+            "FLIM or Deinterleaving isn't supported for laser "
+            "reprates that can't be used with a 10 MHz external clock."
+            " Please contact package authors."
+        )
 
     if gui.binwidth < 0:
         raise UserWarning("Binwidth must be a positive number.")

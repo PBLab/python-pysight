@@ -5,11 +5,11 @@
     ],
     "phase": [
         "PY_VAR1",
-        -2.78
+        -2.79
     ],
     "reprate": [
         "PY_VAR2",
-        80300000.0
+        80000000.0
     ],
     "gating": [
         "PY_VAR3",
@@ -37,7 +37,7 @@
     ],
     "bidir": [
         "PY_VAR9",
-        false
+        true
     ],
     "keep_unidir": [
         "PY_VAR10",
@@ -83,80 +83,92 @@
         "PY_VAR20",
         "Lines"
     ],
-    "num_of_frames": [
+    "input_stop3": [
         "PY_VAR21",
+        "Empty"
+    ],
+    "input_stop4": [
+        "PY_VAR22",
+        "Empty"
+    ],
+    "input_stop5": [
+        "PY_VAR23",
+        "Empty"
+    ],
+    "num_of_frames": [
+        "PY_VAR24",
         1
     ],
     "summed": [
-        "PY_VAR22",
+        "PY_VAR25",
         true
     ],
     "memory": [
-        "PY_VAR23",
+        "PY_VAR26",
         true
     ],
     "stack": [
-        "PY_VAR24",
+        "PY_VAR27",
         true
     ],
     "x_pixels": [
-        "PY_VAR25",
+        "PY_VAR28",
         512
     ],
     "y_pixels": [
-        "PY_VAR26",
+        "PY_VAR29",
         512
     ],
     "z_pixels": [
-        "PY_VAR27",
+        "PY_VAR30",
         1
     ],
     "tag_bits": [
-        "PY_VAR28",
-        false
+        "PY_VAR31",
+        true
     ],
     "bits_grp_1_start": [
-        "PY_VAR29",
+        "PY_VAR32",
         1
     ],
     "bits_grp_1_end": [
-        "PY_VAR30",
+        "PY_VAR33",
         3
     ],
     "bits_grp_2_start": [
-        "PY_VAR31",
+        "PY_VAR34",
         4
     ],
     "bits_grp_2_end": [
-        "PY_VAR32",
-        5
-    ],
-    "bits_grp_3_start": [
-        "PY_VAR33",
+        "PY_VAR35",
         6
     ],
+    "bits_grp_3_start": [
+        "PY_VAR36",
+        7
+    ],
     "bits_grp_3_end": [
-        "PY_VAR34",
+        "PY_VAR37",
         16
     ],
     "bits_grp_1_label": [
-        "PY_VAR35",
+        "PY_VAR38",
         "None"
     ],
     "bits_grp_2_label": [
-        "PY_VAR36",
+        "PY_VAR39",
         "None"
     ],
     "bits_grp_3_label": [
-        "PY_VAR37",
+        "PY_VAR40",
         "None"
     ],
     "imaging_software": [
-        "PY_VAR38",
+        "PY_VAR41",
         "ScanImage"
     ],
     "save_as": [
-        "PY_VAR39",
+        "PY_VAR42",
         "default"
     ]
 }

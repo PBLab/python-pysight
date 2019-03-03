@@ -1,5 +1,0 @@
-INFO :: movie.py :: 2019-03-03 10:02:24,694 :: ======================================================= 
-Outputs:
---------
-INFO :: movie.py :: 2019-03-03 10:02:24,694 :: The full data is present in dictionary form (key per channel) under `movie.stack`, and in stacked form under `movie.summed_mem`.
-INFO :: movie.py :: 2019-03-03 10:02:24,694 :: Movie object created, analysis done.
