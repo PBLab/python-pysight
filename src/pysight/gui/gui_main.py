@@ -2,16 +2,19 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
 from tkinter import font as tkfont
-import json
 from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
 from os import sep, utime
 import time
+from enum import Enum
+import logging
+
+import toml
 import attr
 from attr.validators import instance_of
-from enum import Enum
+
+from .config_parser import Config
 import pysight
-import logging
 
 
 def is_positive(instance, attribute, value):
@@ -40,7 +43,7 @@ class TagBits(object):
     end = attr.ib(default=1, validator=[instance_of(int), is_positive, end_is_greater])
 
 
-class GuiAppLst(object):
+class GuiAppLst:
     """
     Main GUI for the multiscaler code.
     Note - class variables should contain "entry" in their name if they point
@@ -624,7 +627,7 @@ class GuiAppLst(object):
     ####### ONLY SAVE\LOAD FUNCS AFTER THIS POINT ########
 
     def __save_cfg(self, main_frame):
-        """ A button to write a .json with current configs """
+        """ A button to write a .toml with current configs """
         config_label = ttk.Label(
             main_frame, text="Configuration File", font=self.bold_font
         )
@@ -643,36 +646,14 @@ class GuiAppLst(object):
 
     def __callback_save_cur_cfg(self) -> None:
         """
-        Takes a GUIApp() instance and saves it to a .json file
+        Takes a GUIApp() instance and saves it to a .toml file
         """
-        cfg_dict_to_save: Dict[str, Tuple[str]] = {}
-        for key, val in self.__dict__.items():
-            if (
-                key.find("entry") == -1
-                and key.find("root") == -1
-                and key.find("check") == -1
-                and key.find("cfg") == -1
-                and key.find("dict") == -1
-                and key.find("config") == -1
-            ):
-                try:
-                    data_to_save = (str(val), val.get())
-                    cfg_dict_to_save[key] = data_to_save
-                except AttributeError:
-                    pass  # don't save non-tkinter variables
-                except TypeError:  # The TAG bits variable
-                    # logging.warning(f"Error with value {val} under key {key}. Configuration file not saved. ")
-                    cfg_dict_to_save[key] = val
-
-        path_to_save_to: str = str(Path(__file__).parents[1] / "configs") + sep + str(
-            self.save_as.get()
-        ) + ".json"
-        with open(path_to_save_to, "w+") as f:
-            json.dump(cfg_dict_to_save, f, indent=4)
+        cfg_dict_to_save = Config.from_gui(self)
+        cfg_dict_to_save.to_disk()
 
     def __load_cfg(self, main_frame: ttk.Frame):
         """
-        Load a specific .json file and change all variables accordingly
+        Load a specific .toml file and change all variables accordingly
         """
         self.cfg_filename: StringVar = StringVar(value="default")
         load_button: Button = ttk.Button(
@@ -684,7 +665,7 @@ class GuiAppLst(object):
         if not new_cfg:
             self.cfg_filename.set(
                 filedialog.askopenfilename(
-                    filetypes=[("Config files", "*.json")],
+                    filetypes=[("Config files", "*.toml")],
                     title=f"Choose a configuration file",
                     initialdir=str(Path(__file__).parents[1] / "configs"),
                 )
@@ -692,44 +673,30 @@ class GuiAppLst(object):
         else:
             self.cfg_filename.set(new_cfg)
         with open(self.cfg_filename.get(), "r") as f:
-            self.config = json.load(f)
+            self.config = toml.load(f)
             utime(self.cfg_filename.get(), (time.time(), time.time()))
         self.__modify_vars()
 
     def __modify_vars(self):
         """
-        With the dictionary loaded from the .json file, change all variables
+        With the dictionary loaded from the TOML file, change all variables
         """
-        for key, val in self.config.items():
-            try:
-                self.x_pixels._tk.globalsetvar(val[0], val[1])
-            except:
-                pass
+        from_cfg_to_vars = self._build_config_dict()
+        for cfg_key, cfg_val in self.config.items():
+            if isinstance(cfg_val, dict):
+                for inner_key, inner_val in cfg_val.items():
+                    if isinstance(inner_val, dict):
+                        for innner_key, innner_val in inner_val.items():
+                            from_cfg_to_vars[innner_key].set(innner_val)
+                    else:
+                        from_cfg_to_vars[inner_key].set(inner_val)
+            else:
+                from_cfg_to_vars[cfg_key].set(cfg_val)
         self.root.update_idletasks()
-
-    def __get_matching_tkinter_var(
-        self, val: Union[StringVar, DoubleVar, IntVar]
-    ) -> Union[StringVar, DoubleVar, IntVar, BooleanVar]:
-        """
-        Create a tkinter variable (StringVar(), for example) that will
-        be set after reading a config file.
-        :param val: Value to be set
-        :return: A Tkinter variable object.
-        """
-        if type(val) == str:
-            return StringVar(value=val)
-        elif type(val) == int:
-            return IntVar(value=val)
-        elif type(val) == float:
-            return DoubleVar(value=val)
-        elif type(val) == bool:
-            return BooleanVar(value=val)
-        else:
-            raise ValueError(f"Type not recognized for value {val}.")
 
     def __load_last_used_cfg(self, main_frame):
         direc = Path(__file__).parents[1] / "configs"
-        all_cfg_files: Iterable = direc.glob("*.json")
+        all_cfg_files: Iterable = direc.glob("*.toml")
         latest_filename: str = ""
         latest_file_date: int = 0
         for cfg_file in all_cfg_files:
@@ -741,10 +708,59 @@ class GuiAppLst(object):
         if latest_filename != "":
             with open(latest_filename, "r") as f:
                 try:
-                    self.config = json.load(f)
-                except json.decoder.JSONDecodeError:  # Unable to load .json config
+                    self.config = toml.load(f)
+                except ValueError:
                     self.config = {}
             self.__modify_vars()
+
+    def _build_config_dict(self):
+        """ Helper method to populate a new GUI instance from a config file """
+        from_config_to_vars = {
+            'cfg_title': self.save_as,
+            'stop1': self.input_stop1,
+            'stop2': self.input_stop2,
+            'stop3': self.input_stop3,
+            'stop4': self.input_stop4,
+            'stop5': self.input_stop5,
+            'start': self.input_start,
+            'num_of_frames': self.num_of_frames,
+            'x_pixels': self.x_pixels,
+            'y_pixels': self.y_pixels,
+            'z_pixels': self.z_pixels,
+            'imaging_software': self.imaging_software,
+            'data_filename': self.filename,
+            'summed': self.summed,
+            'memory': self.memory,
+            'stack': self.stack,
+            'debug': self.debug,
+            'phase': self.phase,
+            'reprate': self.reprate,
+            'gating': self.gating,
+            'binwidth': self.binwidth,
+            'tag_freq': self.tag_freq,
+            'tag_pulses': self.tag_pulses,
+            'tag_offset': self.tag_offset,
+            'fill_frac': self.fill_frac,
+            'bidir': self.bidir,
+            'keep_unidir': self.keep_unidir,
+            'flim': self.flim,
+            'censor': self.censor,
+            'line_freq': self.line_freq,
+            'sweeps_as_lines': self.sweeps_as_lines,
+            'frame_delay': self.frame_delay,
+            'interleaved': self.interleaved,
+            'tag_bits': self.tag_bits,
+            'label1': self.bits_grp_1_label,
+            'start1': self.bits_grp_1_start,
+            'end1': self.bits_grp_1_end,
+            'label2': self.bits_grp_2_label,
+            'start2': self.bits_grp_2_start,
+            'end2': self.bits_grp_2_end,
+            'label3': self.bits_grp_3_label,
+            'start3': self.bits_grp_3_start,
+            'end3': self.bits_grp_3_end,
+        }
+        return from_config_to_vars
 
 
 if __name__ == "__main__":

@@ -1,9 +1,11 @@
 from typing import Dict, List, Tuple
+import logging
+import re
+from enum import Enum
+
 from attr.validators import instance_of
 import numpy as np
 import attr
-import re
-from enum import Enum
 
 
 class LstFormat(Enum):
@@ -63,8 +65,9 @@ class ReadMeta:
         self.time_after: int = self.__get_hold_after(cur_str=metadata)
         self.acq_delay: int = self.__get_fstchan(cur_str=metadata)
         self.fill_fraction: float = self.__calc_actual_fill_fraction()
-        self.dict_of_input_channels, self.num_of_channels = self.find_active_channels(metadata)
-        self.compare_recorded_and_input_channels()
+        self.dict_of_input_channels, self.num_of_channels = self.find_active_channels(
+            metadata
+        )
         # Grab some additional metadata from the file, to be saved later
         self.__parse_extra_metadata(metadata)
 
@@ -188,34 +191,53 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = b'\[CHN(\d)\].+?active=(\d)'
+            format_str = b"\[CHN(\d)\].+?active=(\d)"
             match = b"1"
+            mismatch = b"0"
         else:
-            format_str = r'\[CHN(\d)\].+?active=(\d)'
+            format_str = r"\[CHN(\d)\].+?active=(\d)"
             match = "1"
+            mismatch = "0"
 
         format_active = re.compile(format_str, re.DOTALL)
         matches = format_active.findall(cur_str)
         help_dict = {
-            '1': (self.input_stop1, "001"),
-            '2': (self.input_stop2, "010"),
-            '3': (self.input_stop3, "011"),
-            '4': (self.input_stop4, "100"),
-            '5': (self.input_stop5, "101"),
-            '6': (self.input_start, "110"),
+            "1": (self.input_stop1, "001"),
+            "2": (self.input_stop2, "010"),
+            "3": (self.input_stop3, "011"),
+            "4": (self.input_stop4, "100"),
+            "5": (self.input_stop5, "101"),
+            "6": (self.input_start, "110"),
         }
-        dict_of_inputs = {}
+        dict_of_inputs = {}  # DataType: BinaryNumber (e.g. "Lines": "010")
 
         for cur_match in matches[:-1]:
-            if cur_match[1] == match:
-                dict_of_inputs[help_dict[str(cur_match[0])][0]] = help_dict[str(cur_match[0])][1]
+            if cur_match[1] == match:  # channel is active, populate dict
+                dict_of_inputs[help_dict[str(cur_match[0])][0]] = help_dict[
+                    str(cur_match[0])
+                ][1]
+            elif (cur_match[1] == mismatch) and (
+                help_dict[cur_match[0]][0] != "Empty"
+            ):  # Inactive channel accroding to the multiscaler, but was marked as active by the user
+                raise UserWarning(
+                    f"Channel {cur_match[0]} didn't record data but was marked as active by the user."
+                )
+
         if matches[-1][1] == match:
-            dict_of_inputs[help_dict['6'][0]] = help_dict['6'][1]
+            dict_of_inputs[help_dict["6"][0]] = help_dict["6"][1]
+        elif (matches[-1][0] == mismatch) and (help_dict["6"][0] != "Empty"):
+            raise UserWarning(
+                "Channel 6 (START) didn't record data but was marked as active by the user."
+            )
 
         num_of_channels = sum([1 for key in dict_of_inputs if "PMT" in key])
 
         assert len(dict_of_inputs) >= 1
-        assert "Empty" not in list(dict_of_inputs.keys())
+        if "Empty" in dict_of_inputs.keys():
+            logging.warning(
+                f"At least one channel ({dict_of_inputs['Empty']})"
+                " contained recorded data but was marked as 'Empty'."
+            )
 
         return dict_of_inputs, num_of_channels
 
@@ -289,30 +311,6 @@ class ReadMeta:
         )  # in nanoseconds
         acq_delay = int(fstchan / self.binwidth)
         return acq_delay
-
-    def compare_recorded_and_input_channels(self) -> None:
-        """
-        Raise error if user gave wrong amount of inputs
-        """
-
-        # If a user assumes an input exists, but it doesn't - raise an error
-        list_of_recorded_data_channels = [
-            self.input_stop1,
-            self.input_stop2,
-            self.input_stop3,
-            self.input_stop4,
-            self.input_stop5,
-            self.input_start,
-        ]
-        self.list_of_recorded_data_channels = [True for chan in list_of_recorded_data_channels if chan != 'Empty']
-        recorded = self.list_of_recorded_data_channels.count(True)
-        input_chans = len(self.dict_of_input_channels)
-        if recorded < input_chans:
-            raise UserWarning(
-                f"Wrong number of user inputs ({input_chans}) "
-                + f"compared to number of actual inputs "
-                + f"({recorded}) to the multiscaler."
-            )
 
     def __parse_extra_metadata(self, metadata):
         """

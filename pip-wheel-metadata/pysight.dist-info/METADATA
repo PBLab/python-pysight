@@ -23,13 +23,14 @@ Requires-Dist: pandas (>=0.24)
 Requires-Dist: attrs (==18.2)
 Requires-Dist: cython (>=0.29)
 Requires-Dist: scipy (>=1.2)
-Requires-Dist: scikit-learn (>=0.19)
+Requires-Dist: scikit-learn (>=0.20)
 Requires-Dist: h5py (>=2.8)
 Requires-Dist: h5py-cache (>=1)
 Requires-Dist: tqdm (>=4.29)
 Requires-Dist: numba (>=0.41)
 Requires-Dist: ansimarkup (>=1.4)
 Requires-Dist: psutil (>=5.4)
+Requires-Dist: toml (>=0.9)
 Provides-Extra: dev
 Requires-Dist: pytest ; extra == 'dev'
 Requires-Dist: bumpversion ; extra == 'dev'

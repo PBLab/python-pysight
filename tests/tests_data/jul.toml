@@ -1,37 +1,37 @@
-cfg_title = "fly"
+cfg_title = "jul"
 
 [inputs]
-stop1 = "Empty"
-stop2 = "Lines"
+stop1 = "PMT1"
+stop2 = "Empty"
 stop3 = "Empty"
 stop4 = "Empty"
 stop5 = "Empty"
-start = "PMT1"
+start = "Lines"
 
 [image]
 num_of_frames = 1
-x_pixels = 64
-y_pixels = 512
+x_pixels = 2048
+y_pixels = 2048
 z_pixels = 1
-imaging_software = "MScan"
+imaging_software = "ScanImage"
 
 [outputs]
-data_filename = "tests/tests_data/fly.lst"
+data_filename = "tests/tests_data/jul.lst"
 summed = false
 memory = true
 stack = false
 
 [advanced]
 debug = false
-phase = 10.0
+phase = -2.78
 reprate = 80e6
 gating = false
 binwidth = 8e-10
 tag_freq = 189e3
 tag_pulses = 1
 tag_offset = 0
-fill_frac = 76.0
-bidir = true
+fill_frac = 72.0
+bidir = false
 keep_unidir = false
 flim = false
 censor = false
