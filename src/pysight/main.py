@@ -159,7 +159,10 @@ def main_data_readout(config: Dict[str, Any]):
 
     validated_data.run()
 
-    del separated_data
+    try:
+        del separated_data
+    except UnboundLocalError:
+        del binary_parser
 
     photon_df = PhotonDF(
         dict_of_data=validated_data.dict_of_data,
@@ -223,7 +226,7 @@ def main_data_readout(config: Dict[str, Any]):
         debug=config["advanced"]["debug"],
     )
     outputs.run()
-    
+
     line_delta = validated_data.line_delta
     del validated_data
 
