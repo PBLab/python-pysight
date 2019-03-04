@@ -202,32 +202,29 @@ class ReadMeta:
 
         if self.is_binary:
             format_str = b"\[CHN(\d)\].+?active=(\d)"
-            match = b"1"
-            mismatch = b"0"
         else:
             format_str = r"\[CHN(\d)\].+?active=(\d)"
-            match = "1"
-            mismatch = "0"
 
         format_active = re.compile(format_str, re.DOTALL)
         matches = format_active.findall(cur_str)
         dict_of_inputs = {}  # DataType: BinaryNumber (e.g. "Lines": "010")
-
+        if self.is_binary:
+            matches = [(match[0].decode(), match[1].decode()) for match in matches]
         for cur_match in matches[:-1]:
-            if cur_match[1] == match:  # channel is active, populate dict
+            if cur_match[1] == "1":  # channel is active, populate dict
                 dict_of_inputs[self.help_dict[str(cur_match[0])][0]] = self.help_dict[
-                    str(cur_match[0])
+                    cur_match[0]
                 ][1]
-            elif (cur_match[1] == mismatch) and (
+            elif (cur_match[1] == "0") and (
                 self.help_dict[cur_match[0]][0] != "Empty"
             ):  # Inactive channel accroding to the multiscaler, but was marked as active by the user
                 raise UserWarning(
                     f"Channel {cur_match[0]} didn't record data but was marked as active by the user."
                 )
 
-        if matches[-1][1] == match:
+        if matches[-1][1] == "1":
             dict_of_inputs[self.help_dict["6"][0]] = self.help_dict["6"][1]
-        elif (matches[-1][0] == mismatch) and (self.help_dict["6"][0] != "Empty"):
+        elif (matches[-1][0] == "0") and (self.help_dict["6"][0] != "Empty"):
             raise UserWarning(
                 "Channel 6 (START) didn't record data but was marked as active by the user."
             )

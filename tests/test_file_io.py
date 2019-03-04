@@ -60,6 +60,14 @@ class TestMetaTools:
         assert resdict == {"Frames": "110", "PMT1": "001", "Lines": "010"}
         assert res_num_channels == 1
 
+    def test_find_active_channels_from_bytes(self):
+        from test_string_for_fileio import meta_bytes
+        self.file_io_objects[0].is_binary = True
+        resdict, res_num_channels = self.file_io_objects[0].find_active_channels(meta_bytes)
+        self.file_io_objects[0].is_binary = False
+        assert resdict == {"Frames": "110", "PMT1": "001", "Lines": "010"}
+        assert res_num_channels == 1
+
     def test_create_inputs_dict(self):
         real_list_of_real_inputs_dict = [
             {"Frames": "110", "PMT1": "001", "Lines": "010"},

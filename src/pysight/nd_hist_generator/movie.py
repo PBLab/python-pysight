@@ -269,11 +269,17 @@ class Movie:
         self.outputs["stack"].file.close()
 
     def __convert_list_to_arr(self) -> None:
-        """ Convert a deque with a bunch of frames into a single numpy array with an extra
-        dimension (0) containing the data.
+        """ Convert a list with a bunch of frames into a single numpy array with an extra
+        dimension (0) containing the data. There will always be at least one
+        frame of time data, this dimension is never squeezed out.
         """
         for channel in self.channels:
-            self.stack[channel] = np.squeeze(np.vstack(self.stack[channel]))
+            new_stack = np.vstack(self.stack[channel])
+            squeezed = np.squeeze(new_stack)
+            if new_stack.shape[0] != squeezed.shape[0]:  # a single frame that was squeezed out
+                self.stack[channel] = np.expand_dims(squeezed, axis=0)
+            else:
+                self.stack[channel] = squeezed
 
     def __create_memory_output(self, data: np.ndarray, channel: int, idx: int) -> None:
         """

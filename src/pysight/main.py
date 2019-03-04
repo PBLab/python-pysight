@@ -112,6 +112,8 @@ def main_data_readout(config: Dict[str, Any]):
             )
             tabulated_data.run()
 
+            del raw_data
+            del raw_data_obj
             separated_data = DistributeData(
                 df=tabulated_data.df_after_timepatch,
                 dict_of_inputs=tabulated_data.dict_of_inputs,
@@ -157,6 +159,8 @@ def main_data_readout(config: Dict[str, Any]):
 
     validated_data.run()
 
+    del separated_data
+
     photon_df = PhotonDF(
         dict_of_data=validated_data.dict_of_data,
         interleaved=config["advanced"]["interleaved"],
@@ -188,6 +192,9 @@ def main_data_readout(config: Dict[str, Any]):
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
 
+    del photons
+    del photon_df
+
     if config["advanced"]["interleaved"]:
         logging.warning(
             """Deinterleaving a data channel is currently highly experimental and
@@ -216,6 +223,9 @@ def main_data_readout(config: Dict[str, Any]):
         debug=config["advanced"]["debug"],
     )
     outputs.run()
+    
+    line_delta = validated_data.line_delta
+    del validated_data
 
     if config["advanced"]["gating"]:
         logging.warning(
@@ -251,7 +261,7 @@ def main_data_readout(config: Dict[str, Any]):
         flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
-        line_delta=int(validated_data.line_delta),
+        line_delta=int(line_delta),
         use_sweeps=config["advanced"]["sweeps_as_lines"],
         tag_as_phase=True,
         tag_freq=float(config["advanced"]["tag_freq"]),

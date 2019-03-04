@@ -57,7 +57,7 @@ class GuiAppLst:
             "PMT1",
             "PMT2",
             "PMT3",
-            "PMT4"
+            "PMT4",
             "Lines",
             "Frames",
             "Laser",
