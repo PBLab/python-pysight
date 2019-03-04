@@ -117,6 +117,5 @@ setup(
     ],
     data_files=[
         "src" + os.sep + "pysight" + os.sep + "configs" + os.sep + "default.json",
-        "logs/general.log",
     ],
 )

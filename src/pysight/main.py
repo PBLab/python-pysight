@@ -10,7 +10,7 @@ import logging
 import pathlib
 
 logging.basicConfig(
-    filename="logs/general.log",
+    filename=str(pathlib.Path('.') / "general.log"),
     filemode="w",
     format="%(levelname)s :: %(filename)s :: %(asctime)s :: %(message)s",
     level=logging.INFO,
