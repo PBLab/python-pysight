@@ -87,4 +87,5 @@ target/
 .pytest_cache/
 src/pysight/configs
 logs/
+*.log
 *.nfs*
