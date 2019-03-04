@@ -22,6 +22,7 @@ import colorama
 import numpy as np
 matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
+import toml
 colorama.init()
 
 from pysight.ascii_list_file_parser.file_io import ReadMeta
@@ -38,52 +39,48 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
 from pysight.gui.gui_main import GuiAppLst
-from pysight.gui.gui_helpers import (
-    verify_gui_input,
-    convert_json_to_input_dict,
-    GuiHelper,
-    tkinter_to_object,
-)
+from pysight.gui.gui_helpers import verify_input
+from pysight.gui.config_parser import Config
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
 from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def main_data_readout(gui: GuiAppLst):
+def main_data_readout(config: dict):
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
 
     Parameters:
-    :param GuiAppLst gui: The serialized GUI object.
+    :param dict config: Loaded configuration file as a dictionary.
 
     Return:
     :PySightOutput out: An object containing the relevant data,
     if "memory" option was checked in the GUI.
     """
     # Read the .lst file
-    if gui.filename.endswith(".lst"):
+    if config['outputs']['data_filename'].endswith(".lst"):
         cur_file = ReadMeta(
-            filename=gui.filename,
-            input_start=gui.input_start,
-            input_stop1=gui.input_stop1,
-            input_stop2=gui.input_stop2,
-            input_stop3=gui.input_stop3,
-            input_stop4=gui.input_stop4,
-            input_stop5=gui.input_stop5,
-            binwidth=gui.binwidth,
-            use_sweeps=gui.sweeps_as_lines,
-            mirror_phase=gui.phase,
+            filename=config['outputs']['data_filename'],
+            input_start=config['inputs']['start'],
+            input_stop1=config['inputs']['stop1'],
+            input_stop2=config['inputs']['stop2'],
+            input_stop3=config['inputs']['stop3'],
+            input_stop4=config['inputs']['stop4'],
+            input_stop5=config['inputs']['stop5'],
+            binwidth=config['advanced']['binwidth'],
+            use_sweeps=config['advanced']['sweeps_as_lines'],
+            mirror_phase=config['adanced']['phase'],
         )
         cur_file.run()
 
         raw_data_obj = ReadData(
-            filename=gui.filename,
+            filename=config['outputs']['data_filename'],
             start_of_data_pos=cur_file.start_of_data_pos,
             timepatch=cur_file.timepatch,
             is_binary=cur_file.is_binary,
-            debug=gui.debug,
+            debug=config['advanced']['debug'],
         )
         raw_data = raw_data_obj.read_lst()
 
@@ -92,7 +89,7 @@ def main_data_readout(gui: GuiAppLst):
                 data=raw_data,
                 data_range=cur_file.data_range,
                 timepatch=cur_file.timepatch,
-                use_tag_bits=gui.tag_bits,
+                use_tag_bits=config['tagbits']['tag_bits'],
                 dict_of_inputs=cur_file.dict_of_input_channels,
             )
             binary_parser.run()
@@ -105,7 +102,7 @@ def main_data_readout(gui: GuiAppLst):
                 data_range=cur_file.data_range,
                 data=raw_data,
                 dict_of_inputs=cur_file.dict_of_input_channels,
-                use_tag_bits=gui.tag_bits,
+                use_tag_bits=config['tagbits']['tag_bits'],
                 dict_of_slices_hex=dict_of_slices_hex,
                 time_after_sweep=cur_file.time_after,
                 acq_delay=cur_file.acq_delay,
@@ -116,7 +113,7 @@ def main_data_readout(gui: GuiAppLst):
             separated_data = DistributeData(
                 df=tabulated_data.df_after_timepatch,
                 dict_of_inputs=tabulated_data.dict_of_inputs,
-                use_tag_bits=gui.tag_bits,
+                use_tag_bits=config['tagbits']['tag_bits'],
             )
             separated_data.run()
 
@@ -130,63 +127,63 @@ def main_data_readout(gui: GuiAppLst):
             dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
         fill_frac = (
-            gui.fill_frac if cur_file.fill_fraction == -1 else cur_file.fill_fraction
+            config['advanced']['fill_frac'] if cur_file.fill_fraction == -1 else cur_file.fill_fraction
         )
     except NameError:  # dealing with a pickle file
-        logging.info(f"Reading file {gui.filename}...")
-        with open(gui.filename, "rb") as f:
+        logging.info(f"Reading file {config['output']['data_filename']}...")
+        with open(config['output']['filename'], "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
-        fill_frac = gui.fill_frac
+        fill_frac = config['advanced']['fill_frac']
 
     validated_data = SignalValidator(
         dict_of_data=dict_of_data,
-        num_of_frames=gui.num_of_frames,
-        binwidth=float(gui.binwidth),
-        use_sweeps=gui.sweeps_as_lines,
-        delay_between_frames=float(gui.frame_delay),
+        num_of_frames=config['image']['num_of_frames'],
+        binwidth=float(config['advanced']['binwidth']),
+        use_sweeps=config['advanced']['sweeps_as_lines'],
+        delay_between_frames=float(config['advanced']['frame_delay']),
         data_to_grab=relevant_columns,
-        line_freq=gui.line_freq,
-        num_of_lines=gui.x_pixels,
-        bidir=gui.bidir,
-        bidir_phase=gui.phase,
-        image_soft=gui.imaging_software,
+        line_freq=config['advanced']['line_freq'],
+        num_of_lines=config['image']['x_pixels'],
+        bidir=config['advanced']['bidir'],
+        bidir_phase=config['advanced']['phase'],
+        image_soft=config['image']['imaging_software'],
     )
 
     validated_data.run()
 
     photon_df = PhotonDF(
-        dict_of_data=validated_data.dict_of_data, interleaved=gui.interleaved
+        dict_of_data=validated_data.dict_of_data, interleaved=config['advanced']['interleaved'],
     )
     photons = photon_df.run()
     tag_bit_parser = ParseTAGBits(
         dict_of_data=validated_data.dict_of_data,
         photons=photons,
-        use_tag_bits=gui.tag_bits,
-        bits_dict=gui.tag_bits_dict,
+        use_tag_bits=config['tagbits']['tag_bits'],
+        bits_dict=config['tagbits'],
     )
 
     analyzed_struct = Allocate(
-        bidir=gui.bidir,
-        tag_offset=gui.tag_offset,
-        laser_freq=float(gui.reprate),
-        binwidth=float(gui.binwidth),
-        tag_pulses=int(gui.tag_pulses),
-        phase=gui.phase,
-        keep_unidir=gui.keep_unidir,
-        flim=gui.flim,
-        censor=gui.censor,
+        bidir=config['advanced']['bidir'],
+        tag_offset=config['advanced']['tag_offset'],
+        laser_freq=float(config['advanced']['reprate']),
+        binwidth=float(config['advanced']['binwidth']),
+        tag_pulses=int(config['advanced']['tag_pulses']),
+        phase=config['advanced']['phase'],
+        keep_unidir=config['advanced']['keep_unidir'],
+        flim=config['advanced']['flim'],
+        censor=config['advanced']['censor'],
         dict_of_data=validated_data.dict_of_data,
         df_photons=tag_bit_parser.gen_df(),
-        tag_freq=float(gui.tag_freq),
+        tag_freq=float(config['advanced']['tag_freq']),
         tag_to_phase=True,
-        deinterleave=gui.interleaved,
+        deinterleave=config['advanced']['interleaved'],
     )
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
 
-    if gui.interleaved:
+    if config['advanced']['interleaved']:
         logging.warning(
             """Deinterleaving a data channel is currently highly experimental and
             is supported only on data in the PMT1 channel. Inexperienced users
@@ -194,33 +191,33 @@ def main_data_readout(gui: GuiAppLst):
         )
         deinter = Deinterleave(
             photons=analyzed_struct.df_photons,
-            reprate=gui.reprate,
-            binwidth=gui.binwidth,
+            reprate=config['advanced']['reprate'],
+            binwidth=config['advanced']['binwidth'],
         )
         data_for_movie = deinter.run()
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
-        output_dict=gui.outputs,
-        filename=gui.filename,
-        x_pixels=gui.x_pixels,
-        y_pixels=gui.y_pixels,
-        z_pixels=gui.z_pixels if analyzed_struct.tag_interp_ok else 1,
+        output_dict=config['outputs'],
+        filename=config['outputs']['data_filename'],
+        x_pixels=config['image']['x_pixels'],
+        y_pixels=config['image']['y_pixels'],
+        z_pixels=config['image']['z_pixels'] if analyzed_struct.tag_interp_ok else 1,
         channels=data_for_movie.index.levels[0],
-        flim=gui.flim or gui.interleaved,
-        binwidth=gui.binwidth,
-        reprate=gui.reprate,
+        flim=config['advanced']['flim'] or config['advanced']['interleaved'],
+        binwidth=config['advanced']['binwidth'],
+        reprate=config['advanced']['reprate'],
         lst_metadata=lst_metadata,
-        debug=gui.debug,
+        debug=config['advanced']['debug'],
     )
     outputs.run()
 
-    if gui.gating:
+    if config['advanced']['gating']:
         logging.warning(
             "Gating is currently not implemented. Please contact package authors."
         )
         # gated = GatedDetection(
-        #     raw=analyzed_struct.df_photons, reprate=gui.reprate, binwidth=gui.binwidth
+        #     raw=analyzed_struct.df_photons, reprate=config['advanced']['reprate'], binwidth=config['advanced']['binwidth']
         # )
         # gated.run()
 
@@ -235,25 +232,25 @@ def main_data_readout(gui: GuiAppLst):
         frames=analyzed_struct.dict_of_data["Frames"],
         frame_slices=frame_slices,
         num_of_frame_chunks=volume_chunks.num_of_chunks,
-        reprate=float(gui.reprate),
-        name=gui.filename,
+        reprate=float(config['advanced']['reprate']),
+        name=config['outputs']['data_filename'],
         data_shape=outputs.data_shape,
-        binwidth=float(gui.binwidth),
-        bidir=gui.bidir,
+        binwidth=float(config['advanced']['binwidth']),
+        bidir=config['advanced']['bidir'],
         fill_frac=fill_frac,
         outputs=outputs.outputs,
-        censor=gui.censor,
-        mirror_phase=gui.phase,
+        censor=config['advanced']['censor'],
+        mirror_phase=config['advanced']['phase'],
         lines=analyzed_struct.dict_of_data["Lines"],
         channels=data_for_movie.index.levels[0],
-        flim=gui.flim or gui.interleaved,
+        flim=config['advanced']['flim'] or config['advanced']['interleaved'],
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
         line_delta=int(validated_data.line_delta),
-        use_sweeps=gui.sweeps_as_lines,
+        use_sweeps=config['advanced']['sweeps_as_lines'],
         tag_as_phase=True,
-        tag_freq=float(gui.tag_freq),
-        image_soft=gui.imaging_software,
+        tag_freq=float(config['advanced']['tag_freq']),
+        image_soft=config['outputs']['imaging_software'],
         frames_per_chunk=volume_chunks.frames_per_chunk,
     )
 
@@ -266,40 +263,41 @@ def main_data_readout(gui: GuiAppLst):
             stack=final_movie.stack,
             channels=data_for_movie.index.levels[0],
             data_shape=outputs.data_shape,
-            flim=gui.flim,
+            flim=config['advanced']['flim'],
             )
         return pysight_output
 
 
-def mp_main_data_readout(gui: GuiAppLst):
+def mp_main_data_readout(config: dict):
     """
     Wrapper for main_data_readout that
     wraps it with a try block. To be used with the
     multiprocessing run option.
     """
     try:
-        out = main_data_readout(gui)
+        out = main_data_readout(config)
     except:
         pass
     else:
         return out
 
 
-def run(cfg_file: str = None) -> Tuple[pd.DataFrame, Movie]:
+def run(cfg_file: str = None) -> PySightOutput:
     """ Run PySight.
 
     :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
 
-    :return (pd.DataFrame, Movie): DataFrame with all the data, and a ``Movie`` object.
+    :return PySightOutput: Object containing raw and processed data
     """
     if cfg_file:
-        gui = convert_json_to_input_dict(cfg_file)
+        with open(cfg_file, "r") as f:
+            gui = toml.load(f)
     else:
         gui = GuiAppLst()
         gui.root.mainloop()
-    gui_as_object = tkinter_to_object(gui)
-    verify_gui_input(gui_as_object)
-    return main_data_readout(gui_as_object)
+    gui_as_object = Config.from_gui(gui)
+    verify_input(gui_as_object.config_data)
+    return main_data_readout(gui_as_object.config_data)
 
 
 def run_batch_lst(
@@ -343,19 +341,21 @@ def run_batch_lst(
     try:
         cfg_dict = convert_json_to_input_dict(cfg_file)
         named_gui = tkinter_to_object(cfg_dict)
-    except TypeError:
+        with open(cfg_file, 'r') as f:
+            config = toml.load(f)
+    except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
         gui.root.mainloop()
         gui.filename.set(".lst")  # no need to choose a list file
-        named_gui = tkinter_to_object(gui)
-    verify_gui_input(named_gui)
+        config = Config.from_gui(gui).config_data
+    verify_input(config)
 
     try:
         for idx, lst_file in enumerate(all_lst_files):
-            named_gui.filename = str(lst_file)
+            config['outputs']['data_filename'] = str(lst_file)
             data_record.loc[idx, "fname"] = str(lst_file)
             try:
-                main_data_readout(named_gui)
+                main_data_readout(config)
             except BaseException as e:
                 logging.warning(f"File {str(lst_file)} returned an error. Moving onwards.")
                 data_record.loc[idx, "done"] = False
@@ -398,19 +398,20 @@ def mp_batch(
 
     all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
     try:
-        gui = convert_json_to_input_dict(cfg_file)
-    except TypeError:
+        with open(cfg_file, 'r') as f:
+            config = toml.load(f)
+    except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
         gui.root.mainloop()
         gui.filename.set(".lst")  # no need to choose a list file
-    g = tkinter_to_object(gui)
-    verify_gui_input(g)
-    all_guis = []
+        config = Config.from_gui(g).config_data
+    verify_input(config)
+    all_cfgs = []
     for file in all_lst_files:
-        g.filename = str(file)
-        all_guis.append(g)
+        config['outputs']['data_filename'] = str(file)
+        all_cfgs.append(config)
     pool = mp.Pool(n_proc)
-    pool.map(mp_main_data_readout, all_guis)
+    pool.map(mp_main_data_readout, all_cfgs)
 
 
 if __name__ == "__main__":

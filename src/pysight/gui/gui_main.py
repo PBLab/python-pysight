@@ -56,6 +56,8 @@ class GuiAppLst:
         self._data_sources = (
             "PMT1",
             "PMT2",
+            "PMT3",
+            "PMT4"
             "Lines",
             "Frames",
             "Laser",
@@ -163,31 +165,30 @@ class GuiAppLst:
         self.input_stop3 = StringVar()
         self.input_stop4 = StringVar()
         self.input_stop5 = StringVar()
-        self.tuple_of_data_sources = self._data_sources
         mb1 = ttk.Combobox(main_frame, textvariable=self.input_start, width=10)
         mb1.grid(column=1, row=inputs_row + 1, sticky="w")
         mb1.set("PMT1")
-        mb1["values"] = self.tuple_of_data_sources
+        mb1["values"] = self._data_sources
         mb2 = ttk.Combobox(main_frame, textvariable=self.input_stop1, width=10)
         mb2.grid(column=1, row=inputs_row + 2, sticky="w")
         mb2.set("Empty")
-        mb2["values"] = self.tuple_of_data_sources
+        mb2["values"] = self._data_sources
         mb3 = ttk.Combobox(main_frame, textvariable=self.input_stop2, width=10)
         mb3.grid(column=1, row=inputs_row + 3, sticky="w")
         mb3.set("Lines")
-        mb3["values"] = self.tuple_of_data_sources
+        mb3["values"] = self._data_sources
         mb4 = ttk.Combobox(main_frame, textvariable=self.input_stop3, width=10)
         mb4.grid(column=1, row=inputs_row + 4, sticky="w")
         mb4.set("Empty")
-        mb4["values"] = self.tuple_of_data_sources
+        mb4["values"] = self._data_sources
         mb5 = ttk.Combobox(main_frame, textvariable=self.input_stop4, width=10)
         mb5.grid(column=1, row=inputs_row + 5, sticky="w")
         mb5.set("Empty")
-        mb5["values"] = self.tuple_of_data_sources
+        mb5["values"] = self._data_sources
         mb6 = ttk.Combobox(main_frame, textvariable=self.input_stop5, width=10)
         mb6.grid(column=1, row=inputs_row + 6, sticky="w")
         mb6.set("Empty")
-        mb6["values"] = self.tuple_of_data_sources
+        mb6["values"] = self._data_sources
 
         # Labels
         input_channel_1 = ttk.Label(main_frame, text="START", font=self.normal_font)
