@@ -4,7 +4,7 @@
 __author__ = Hagai Har-Gil
 """
 
-from typing import Union, Tuple
+from typing import Union, Tuple, Dict, Any
 import pickle
 import logging
 import pathlib
@@ -20,9 +20,11 @@ import matplotlib
 import pandas as pd
 import colorama
 import numpy as np
+
 matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
 import toml
+
 colorama.init()
 
 from pysight.ascii_list_file_parser.file_io import ReadMeta
@@ -47,7 +49,7 @@ from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def main_data_readout(config: dict):
+def main_data_readout(config: Dict[str, Any]):
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
@@ -60,27 +62,27 @@ def main_data_readout(config: dict):
     if "memory" option was checked in the GUI.
     """
     # Read the .lst file
-    if config['outputs']['data_filename'].endswith(".lst"):
+    if config["outputs"]["data_filename"].endswith(".lst"):
         cur_file = ReadMeta(
-            filename=config['outputs']['data_filename'],
-            input_start=config['inputs']['start'],
-            input_stop1=config['inputs']['stop1'],
-            input_stop2=config['inputs']['stop2'],
-            input_stop3=config['inputs']['stop3'],
-            input_stop4=config['inputs']['stop4'],
-            input_stop5=config['inputs']['stop5'],
-            binwidth=config['advanced']['binwidth'],
-            use_sweeps=config['advanced']['sweeps_as_lines'],
-            mirror_phase=config['adanced']['phase'],
+            filename=config["outputs"]["data_filename"],
+            input_start=config["inputs"]["start"],
+            input_stop1=config["inputs"]["stop1"],
+            input_stop2=config["inputs"]["stop2"],
+            input_stop3=config["inputs"]["stop3"],
+            input_stop4=config["inputs"]["stop4"],
+            input_stop5=config["inputs"]["stop5"],
+            binwidth=config["advanced"]["binwidth"],
+            use_sweeps=config["advanced"]["sweeps_as_lines"],
+            mirror_phase=config["advanced"]["phase"],
         )
         cur_file.run()
 
         raw_data_obj = ReadData(
-            filename=config['outputs']['data_filename'],
+            filename=config["outputs"]["data_filename"],
             start_of_data_pos=cur_file.start_of_data_pos,
             timepatch=cur_file.timepatch,
             is_binary=cur_file.is_binary,
-            debug=config['advanced']['debug'],
+            debug=config["advanced"]["debug"],
         )
         raw_data = raw_data_obj.read_lst()
 
@@ -89,7 +91,7 @@ def main_data_readout(config: dict):
                 data=raw_data,
                 data_range=cur_file.data_range,
                 timepatch=cur_file.timepatch,
-                use_tag_bits=config['tagbits']['tag_bits'],
+                use_tag_bits=config["tagbits"]["tag_bits"],
                 dict_of_inputs=cur_file.dict_of_input_channels,
             )
             binary_parser.run()
@@ -102,7 +104,7 @@ def main_data_readout(config: dict):
                 data_range=cur_file.data_range,
                 data=raw_data,
                 dict_of_inputs=cur_file.dict_of_input_channels,
-                use_tag_bits=config['tagbits']['tag_bits'],
+                use_tag_bits=config["tagbits"]["tag_bits"],
                 dict_of_slices_hex=dict_of_slices_hex,
                 time_after_sweep=cur_file.time_after,
                 acq_delay=cur_file.acq_delay,
@@ -113,7 +115,7 @@ def main_data_readout(config: dict):
             separated_data = DistributeData(
                 df=tabulated_data.df_after_timepatch,
                 dict_of_inputs=tabulated_data.dict_of_inputs,
-                use_tag_bits=config['tagbits']['tag_bits'],
+                use_tag_bits=config["tagbits"]["tag_bits"],
             )
             separated_data.run()
 
@@ -127,63 +129,66 @@ def main_data_readout(config: dict):
             dict_of_data = separated_data.dict_of_data
         lst_metadata = cur_file.lst_metadata
         fill_frac = (
-            config['advanced']['fill_frac'] if cur_file.fill_fraction == -1 else cur_file.fill_fraction
+            config["advanced"]["fill_frac"]
+            if cur_file.fill_fraction == -1
+            else cur_file.fill_fraction
         )
     except NameError:  # dealing with a pickle file
         logging.info(f"Reading file {config['output']['data_filename']}...")
-        with open(config['output']['filename'], "rb") as f:
+        with open(config["output"]["filename"], "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
-        fill_frac = config['advanced']['fill_frac']
+        fill_frac = config["advanced"]["fill_frac"]
 
     validated_data = SignalValidator(
         dict_of_data=dict_of_data,
-        num_of_frames=config['image']['num_of_frames'],
-        binwidth=float(config['advanced']['binwidth']),
-        use_sweeps=config['advanced']['sweeps_as_lines'],
-        delay_between_frames=float(config['advanced']['frame_delay']),
+        num_of_frames=config["image"]["num_of_frames"],
+        binwidth=float(config["advanced"]["binwidth"]),
+        use_sweeps=config["advanced"]["sweeps_as_lines"],
+        delay_between_frames=float(config["advanced"]["frame_delay"]),
         data_to_grab=relevant_columns,
-        line_freq=config['advanced']['line_freq'],
-        num_of_lines=config['image']['x_pixels'],
-        bidir=config['advanced']['bidir'],
-        bidir_phase=config['advanced']['phase'],
-        image_soft=config['image']['imaging_software'],
+        line_freq=config["advanced"]["line_freq"],
+        num_of_lines=config["image"]["x_pixels"],
+        bidir=config["advanced"]["bidir"],
+        bidir_phase=config["advanced"]["phase"],
+        image_soft=config["image"]["imaging_software"],
     )
 
     validated_data.run()
 
     photon_df = PhotonDF(
-        dict_of_data=validated_data.dict_of_data, interleaved=config['advanced']['interleaved'],
+        dict_of_data=validated_data.dict_of_data,
+        interleaved=config["advanced"]["interleaved"],
     )
     photons = photon_df.run()
     tag_bit_parser = ParseTAGBits(
         dict_of_data=validated_data.dict_of_data,
         photons=photons,
-        use_tag_bits=config['tagbits']['tag_bits'],
-        bits_dict=config['tagbits'],
+        use_tag_bits=config["tagbits"]["tag_bits"],
+        bits_dict=config["tagbits"],
     )
 
     analyzed_struct = Allocate(
-        bidir=config['advanced']['bidir'],
-        tag_offset=config['advanced']['tag_offset'],
-        laser_freq=float(config['advanced']['reprate']),
-        binwidth=float(config['advanced']['binwidth']),
-        tag_pulses=int(config['advanced']['tag_pulses']),
-        phase=config['advanced']['phase'],
-        keep_unidir=config['advanced']['keep_unidir'],
-        flim=config['advanced']['flim'],
-        censor=config['advanced']['censor'],
+        bidir=config["advanced"]["bidir"],
+        tag_offset=config["advanced"]["tag_offset"],
+        laser_freq=float(config["advanced"]["reprate"]),
+        binwidth=float(config["advanced"]["binwidth"]),
+        tag_pulses=int(config["advanced"]["tag_pulses"]),
+        phase=config["advanced"]["phase"],
+        keep_unidir=config["advanced"]["keep_unidir"],
+        flim=config["advanced"]["flim"],
+        censor=config["advanced"]["censor"],
         dict_of_data=validated_data.dict_of_data,
         df_photons=tag_bit_parser.gen_df(),
-        tag_freq=float(config['advanced']['tag_freq']),
+        tag_freq=float(config["advanced"]["tag_freq"]),
         tag_to_phase=True,
-        deinterleave=config['advanced']['interleaved'],
+        deinterleave=config["advanced"]["interleaved"],
     )
     analyzed_struct.run()
     data_for_movie = analyzed_struct.df_photons
 
-    if config['advanced']['interleaved']:
+    if config["advanced"]["interleaved"]:
         logging.warning(
             """Deinterleaving a data channel is currently highly experimental and
             is supported only on data in the PMT1 channel. Inexperienced users
@@ -191,28 +196,28 @@ def main_data_readout(config: dict):
         )
         deinter = Deinterleave(
             photons=analyzed_struct.df_photons,
-            reprate=config['advanced']['reprate'],
-            binwidth=config['advanced']['binwidth'],
+            reprate=config["advanced"]["reprate"],
+            binwidth=config["advanced"]["binwidth"],
         )
         data_for_movie = deinter.run()
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
-        output_dict=config['outputs'],
-        filename=config['outputs']['data_filename'],
-        x_pixels=config['image']['x_pixels'],
-        y_pixels=config['image']['y_pixels'],
-        z_pixels=config['image']['z_pixels'] if analyzed_struct.tag_interp_ok else 1,
+        output_dict=config["outputs"],
+        filename=config["outputs"]["data_filename"],
+        x_pixels=config["image"]["x_pixels"],
+        y_pixels=config["image"]["y_pixels"],
+        z_pixels=config["image"]["z_pixels"] if analyzed_struct.tag_interp_ok else 1,
         channels=data_for_movie.index.levels[0],
-        flim=config['advanced']['flim'] or config['advanced']['interleaved'],
-        binwidth=config['advanced']['binwidth'],
-        reprate=config['advanced']['reprate'],
+        flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
+        binwidth=config["advanced"]["binwidth"],
+        reprate=config["advanced"]["reprate"],
         lst_metadata=lst_metadata,
-        debug=config['advanced']['debug'],
+        debug=config["advanced"]["debug"],
     )
     outputs.run()
 
-    if config['advanced']['gating']:
+    if config["advanced"]["gating"]:
         logging.warning(
             "Gating is currently not implemented. Please contact package authors."
         )
@@ -232,25 +237,25 @@ def main_data_readout(config: dict):
         frames=analyzed_struct.dict_of_data["Frames"],
         frame_slices=frame_slices,
         num_of_frame_chunks=volume_chunks.num_of_chunks,
-        reprate=float(config['advanced']['reprate']),
-        name=config['outputs']['data_filename'],
+        reprate=float(config["advanced"]["reprate"]),
+        name=config["outputs"]["data_filename"],
         data_shape=outputs.data_shape,
-        binwidth=float(config['advanced']['binwidth']),
-        bidir=config['advanced']['bidir'],
+        binwidth=float(config["advanced"]["binwidth"]),
+        bidir=config["advanced"]["bidir"],
         fill_frac=fill_frac,
         outputs=outputs.outputs,
-        censor=config['advanced']['censor'],
-        mirror_phase=config['advanced']['phase'],
+        censor=config["advanced"]["censor"],
+        mirror_phase=config["advanced"]["phase"],
         lines=analyzed_struct.dict_of_data["Lines"],
         channels=data_for_movie.index.levels[0],
-        flim=config['advanced']['flim'] or config['advanced']['interleaved'],
+        flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
         line_delta=int(validated_data.line_delta),
-        use_sweeps=config['advanced']['sweeps_as_lines'],
+        use_sweeps=config["advanced"]["sweeps_as_lines"],
         tag_as_phase=True,
-        tag_freq=float(config['advanced']['tag_freq']),
-        image_soft=config['outputs']['imaging_software'],
+        tag_freq=float(config["advanced"]["tag_freq"]),
+        image_soft=config["image"]["imaging_software"],
         frames_per_chunk=volume_chunks.frames_per_chunk,
     )
 
@@ -263,12 +268,12 @@ def main_data_readout(config: dict):
             stack=final_movie.stack,
             channels=data_for_movie.index.levels[0],
             data_shape=outputs.data_shape,
-            flim=config['advanced']['flim'],
-            )
+            flim=config["advanced"]["flim"],
+        )
         return pysight_output
 
 
-def mp_main_data_readout(config: dict):
+def mp_main_data_readout(config: Dict[str, Any]):
     """
     Wrapper for main_data_readout that
     wraps it with a try block. To be used with the
@@ -291,13 +296,13 @@ def run(cfg_file: str = None) -> PySightOutput:
     """
     if cfg_file:
         with open(cfg_file, "r") as f:
-            gui = toml.load(f)
+            config = toml.load(f)
     else:
         gui = GuiAppLst()
         gui.root.mainloop()
-    gui_as_object = Config.from_gui(gui)
-    verify_input(gui_as_object.config_data)
-    return main_data_readout(gui_as_object.config_data)
+        config = Config.from_gui(gui).config_data
+    verify_input(config)
+    return main_data_readout(config)
 
 
 def run_batch_lst(
@@ -341,7 +346,7 @@ def run_batch_lst(
     try:
         cfg_dict = convert_json_to_input_dict(cfg_file)
         named_gui = tkinter_to_object(cfg_dict)
-        with open(cfg_file, 'r') as f:
+        with open(cfg_file, "r") as f:
             config = toml.load(f)
     except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
@@ -352,12 +357,14 @@ def run_batch_lst(
 
     try:
         for idx, lst_file in enumerate(all_lst_files):
-            config['outputs']['data_filename'] = str(lst_file)
+            config["outputs"]["data_filename"] = str(lst_file)
             data_record.loc[idx, "fname"] = str(lst_file)
             try:
                 main_data_readout(config)
             except BaseException as e:
-                logging.warning(f"File {str(lst_file)} returned an error. Moving onwards.")
+                logging.warning(
+                    f"File {str(lst_file)} returned an error. Moving onwards."
+                )
                 data_record.loc[idx, "done"] = False
                 data_record.loc[idx, "error"] = repr(e)
             else:
@@ -398,7 +405,7 @@ def mp_batch(
 
     all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
     try:
-        with open(cfg_file, 'r') as f:
+        with open(cfg_file, "r") as f:
             config = toml.load(f)
     except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
@@ -408,7 +415,7 @@ def mp_batch(
     verify_input(config)
     all_cfgs = []
     for file in all_lst_files:
-        config['outputs']['data_filename'] = str(file)
+        config["outputs"]["data_filename"] = str(file)
         all_cfgs.append(config)
     pool = mp.Pool(n_proc)
     pool.map(mp_main_data_readout, all_cfgs)

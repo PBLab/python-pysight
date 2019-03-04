@@ -45,10 +45,10 @@ class ReadMeta:
     acq_delay = attr.ib(init=False)
     start_of_data_pos = attr.ib(init=False)
     dict_of_input_channels = attr.ib(init=False)
-    list_of_recorded_data_channels = attr.ib(init=False)
     lst_metadata = attr.ib(init=False)
     fill_fraction = attr.ib(init=False)
     num_of_channels = attr.ib(init=False)
+    help_dict = attr.ib(init=False)
 
     def run(self):
         """ Open file and find the needed parameters """
@@ -70,6 +70,16 @@ class ReadMeta:
         )
         # Grab some additional metadata from the file, to be saved later
         self.__parse_extra_metadata(metadata)
+
+    def __attrs_post_init__(self):
+        self.help_dict = {
+            "1": (self.input_stop1, "001"),
+            "2": (self.input_stop2, "010"),
+            "3": (self.input_stop3, "011"),
+            "4": (self.input_stop4, "100"),
+            "5": (self.input_stop5, "101"),
+            "6": (self.input_start, "110"),
+        }
 
     def __get_metadata(self) -> str:
         """
@@ -201,31 +211,23 @@ class ReadMeta:
 
         format_active = re.compile(format_str, re.DOTALL)
         matches = format_active.findall(cur_str)
-        help_dict = {
-            "1": (self.input_stop1, "001"),
-            "2": (self.input_stop2, "010"),
-            "3": (self.input_stop3, "011"),
-            "4": (self.input_stop4, "100"),
-            "5": (self.input_stop5, "101"),
-            "6": (self.input_start, "110"),
-        }
         dict_of_inputs = {}  # DataType: BinaryNumber (e.g. "Lines": "010")
 
         for cur_match in matches[:-1]:
             if cur_match[1] == match:  # channel is active, populate dict
-                dict_of_inputs[help_dict[str(cur_match[0])][0]] = help_dict[
+                dict_of_inputs[self.help_dict[str(cur_match[0])][0]] = self.help_dict[
                     str(cur_match[0])
                 ][1]
             elif (cur_match[1] == mismatch) and (
-                help_dict[cur_match[0]][0] != "Empty"
+                self.help_dict[cur_match[0]][0] != "Empty"
             ):  # Inactive channel accroding to the multiscaler, but was marked as active by the user
                 raise UserWarning(
                     f"Channel {cur_match[0]} didn't record data but was marked as active by the user."
                 )
 
         if matches[-1][1] == match:
-            dict_of_inputs[help_dict["6"][0]] = help_dict["6"][1]
-        elif (matches[-1][0] == mismatch) and (help_dict["6"][0] != "Empty"):
+            dict_of_inputs[self.help_dict["6"][0]] = self.help_dict["6"][1]
+        elif (matches[-1][0] == mismatch) and (self.help_dict["6"][0] != "Empty"):
             raise UserWarning(
                 "Channel 6 (START) didn't record data but was marked as active by the user."
             )

@@ -1,11 +1,11 @@
 import json
 import logging
-from typing import Union
+from typing import Union, Dict, Any
 
 from pysight.gui.gui_main import ImagingSoftware
 
 
-def verify_input(config: dict):
+def verify_input(config: Dict[str, Any]):
     """Validate all GUI inputs"""
     data_sources = (
             "PMT1",
@@ -156,7 +156,7 @@ def verify_input(config: dict):
     if float(config['image']['y_pixels']) != config['image']['y_pixels']:
         raise UserWarning("Enter an integer number for the y-axis pixels.")
 
-    if float(config['image']['z_pixels']) != config['imaeg']['z_pixels']:
+    if float(config['image']['z_pixels']) != config['image']['z_pixels']:
         raise UserWarning("Enter an integer number for the z-axis pixels.")
 
     if config['advanced']['reprate'] < 0:

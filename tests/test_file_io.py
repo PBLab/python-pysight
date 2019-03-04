@@ -54,20 +54,6 @@ class TestMetaTools:
 
         assert list_of_real_start_loc == list_of_returned_locs
 
-    def test_find_active_channels_simple(self):
-        real_list_of_active_channels = [
-            [True, True, True],
-            [True, True, True],
-        ]
-        returned_list_of_active_channels = []
-        for oname in self.file_io_objects:
-            metadata = oname._ReadMeta__get_metadata()
-            returned_list_of_active_channels.append(
-                oname.list_of_recorded_data_channels
-            )
-
-        assert returned_list_of_active_channels == real_list_of_active_channels
-
     def test_find_active_channels_from_str(self):
         from test_string_for_fileio import meta
         resdict, res_num_channels = self.file_io_objects[0].find_active_channels(meta)
