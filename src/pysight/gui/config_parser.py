@@ -1,3 +1,4 @@
+from typing import Dict, Any
 import pathlib
 
 import toml
@@ -9,7 +10,7 @@ class Config:
     """
     Load, parse and save a TOML config file.
     """
-    config_data = attr.ib(validator=instance_of(dict))
+    config_data = attr.ib(validator=instance_of(Dict[str, Any]))
 
     @classmethod
     def from_gui(cls, gui):

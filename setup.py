@@ -116,6 +116,6 @@ setup(
         for path in glob(join(root, "*.pyx" if Cython else "*.c"))
     ],
     data_files=[
-        str(pathlib.Path(__file__).parent / "src/pysight/configs/default.toml"),
+        "src/pysight/configs/default.toml",
     ],
 )

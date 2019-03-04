@@ -14,8 +14,8 @@ Download and install Anaconda_ for Python 3.6.
 
 It's usually good habit to create a new environment for new projects. At the command line:
 ::
-    conda create --name py36 python=3.6 -c conda-forge
-    source activate py36
+    conda create --name py36 python=3 -c conda-forge
+    source activate py3
     pip install pysight
 
 Users who already installed Python

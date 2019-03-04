@@ -6,6 +6,7 @@ Subpackages
     pysight.ascii_list_file_parser
     pysight.binary_list_file_parser
     pysight.nd_hist_generator
+    pysight.gui
 
 Submodules
 ----------
@@ -19,18 +20,18 @@ pysight.main module
     :show-inheritance:
     :functions:
 
-.. function:: main_data_readout(gui)
+.. function:: main_data_readout(config)
 
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
-    
 
-.. function:: run(cfg_file: str = None) -> Tuple[pd.DataFrame, Movie]
+
+.. function:: run(cfg_file: str = None) -> PySightOuput
     Run PySight.
 
     :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
 
-    :return (pd.DataFrame, Movie): DataFrame with all the data, and a ``Movie`` object.
+    :return PySightOutput: A special object which allows for easy access to the raw and processed data.
 
 
 .. function:: run_batch_lst(foldername: str, glob_str: str = "*.lst", recursive: bool = False, cfg_file: str = "") -> pd.DataFrame
@@ -47,7 +48,7 @@ pysight.read\_lst module
 ------------------------
 
 .. automodule:: pysight.read_lst
-    :members: 
+    :members:
     :undoc-members:
     :show-inheritance:
 
