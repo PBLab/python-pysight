@@ -16,6 +16,10 @@ This is a minor release containing new features and bug fixes.
 
 * The "memory" output of PySight is now a ``PySightOutput`` object with simpler handles to the data, both raw and processed.
 
+* Configuration files are now TOML. Please look at ``default.toml`` in the repo for reference.
+
+* Improvemnets to use less RAM during runtime.
+
 
 0.9.8 (2018-12-13)
 ------------------
