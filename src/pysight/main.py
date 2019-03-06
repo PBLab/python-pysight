@@ -8,10 +8,12 @@ from typing import Union, Tuple, Dict, Any
 import pickle
 import logging
 import pathlib
+import sys
 
 logging.basicConfig(
-    filename=str(pathlib.Path('.') / "general.log"),
-    filemode="w",
+    stream=sys.stdout,
+    # filename=str(pathlib.Path('.') / "general.log"),
+    # filemode="w",
     format="%(levelname)s :: %(filename)s :: %(asctime)s :: %(message)s",
     level=logging.INFO,
 )
