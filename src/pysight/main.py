@@ -359,8 +359,6 @@ def run_batch_lst(
         np.zeros((num_of_files, 3)), columns=data_columns
     )  # store result of PySight
     try:
-        cfg_dict = convert_json_to_input_dict(cfg_file)
-        named_gui = tkinter_to_object(cfg_dict)
         with open(cfg_file, "r") as f:
             config = toml.load(f)
     except (TypeError, FileNotFoundError):
@@ -426,7 +424,7 @@ def mp_batch(
         gui = GuiAppLst()
         gui.root.mainloop()
         gui.filename.set(".lst")  # no need to choose a list file
-        config = Config.from_gui(g).config_data
+        config = Config.from_gui(gui).config_data
     verify_input(config)
     all_cfgs = []
     for file in all_lst_files:

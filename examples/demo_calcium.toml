@@ -1,0 +1,59 @@
+cfg_title = "demo_calcium"
+
+[inputs]
+stop1 = "Lines"
+stop2 = "Empty"
+stop3 = "Empty"
+stop4 = "Empty"
+stop5 = "Empty"
+start = "PMT1"
+
+[image]
+num_of_frames = 1
+x_pixels = 1024
+y_pixels = 1024
+z_pixels = 1
+imaging_software = "ScanImage"
+
+[outputs]
+data_filename = "demo_calcium.lst"
+summed = false
+memory = true
+stack = false
+
+[advanced]
+debug = false
+phase = -2.78
+reprate = 80e6
+gating = false
+binwidth = 8e-10
+tag_freq = 189000.0
+tag_pulses = 1
+tag_offset = 0
+fill_frac = 71.0
+bidir = false
+keep_unidir = false
+flim = false
+censor = false
+line_freq = 7930.0
+sweeps_as_lines = false
+frame_delay = 0.001
+interleaved = false
+
+[tagbits]
+tag_bits = false
+
+[tagbits.group1]
+label1 = "None"
+start1 = 1
+end1 = 3
+
+[tagbits.group2]
+label2 = "None"
+start2 = 4
+end2 = 5
+
+[tagbits.group3]
+label3 = "None"
+start3 = 6
+end3 = 16
