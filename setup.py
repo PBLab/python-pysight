@@ -102,7 +102,7 @@ setup(
         "numba >= 0.42",
         "ansimarkup >= 1.4",
         "psutil >= 5.4",
-        "toml >= 0.9"
+        "toml >= 0.9",
     ],
     extras_require={"dev": ["pytest", "bumpversion", "twine", "black"]},
     setup_requires=["cython", "numpy"] if Cython else ["numpy"],
@@ -115,7 +115,5 @@ setup(
         for root, _, _ in os.walk("src")
         for path in glob(join(root, "*.pyx" if Cython else "*.c"))
     ],
-    data_files=[
-        "src/pysight/configs/default.toml",
-    ],
+    data_files=["src/pysight/configs/default.toml"],
 )

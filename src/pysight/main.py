@@ -361,6 +361,7 @@ def run_batch_lst(
     try:
         with open(cfg_file, "r") as f:
             config = toml.load(f)
+            config["outputs"]["data_filename"] = ".lst"
     except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
         gui.root.mainloop()
@@ -420,6 +421,7 @@ def mp_batch(
     try:
         with open(cfg_file, "r") as f:
             config = toml.load(f)
+            config["outputs"]["data_filename"] = ".lst"
     except (TypeError, FileNotFoundError):
         gui = GuiAppLst()
         gui.root.mainloop()
