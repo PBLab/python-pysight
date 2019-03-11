@@ -307,11 +307,11 @@ class Allocate(object):
         """
         # Frames
         self.dict_of_data["Frames"] = pd.Series(
-            self.dict_of_data["Frames"].abs_time.values,
-            index=self.dict_of_data["Frames"].abs_time.values,
+            self.dict_of_data["Frames"].abs_time.to_numpy(),
+            index=self.dict_of_data["Frames"].abs_time.to_numpy(),
         )
         # Lines
-        lines = self.dict_of_data["Lines"].abs_time.values
+        lines = self.dict_of_data["Lines"].abs_time.to_numpy()
         sorted_indices = np.digitize(lines, self.dict_of_data["Frames"].values) - 1
         positive_mask = sorted_indices >= 0
         lines = lines[positive_mask].copy()
