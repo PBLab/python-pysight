@@ -39,8 +39,12 @@ from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
 from pysight.ascii_list_file_parser.distribute_data import DistributeData
-from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
-from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import add_bidir_lines
+from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
+    SignalValidator,
+)
+from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import (
+    add_bidir_lines,
+)
 from pysight.gui.gui_main import GuiAppLst
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
@@ -178,9 +182,7 @@ def main_data_readout(config: Dict[str, Any]):
     )
 
     if not config["advanced"]["bidir"]:
-        validated_data.dict_of_data = add_bidir_lines.add_bidir_lines(
-            validated_data.dict_of_data
-        )
+        validated_data.dict_of_data = add_bidir_lines(validated_data.dict_of_data)
 
     analyzed_struct = Allocate(
         bidir=config["advanced"]["bidir"],
@@ -192,7 +194,7 @@ def main_data_readout(config: Dict[str, Any]):
         keep_unidir=config["advanced"]["keep_unidir"],
         flim=config["advanced"]["flim"],
         censor=config["advanced"]["censor"],
-        dict_of_data=data,
+        dict_of_data=validated_data.dict_of_data,
         df_photons=tag_bit_parser.gen_df(),
         tag_freq=float(config["advanced"]["tag_freq"]),
         tag_to_phase=True,
