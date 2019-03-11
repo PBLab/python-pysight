@@ -39,9 +39,8 @@ from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
 from pysight.ascii_list_file_parser.distribute_data import DistributeData
-from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
-    SignalValidator,
-)
+from pysight.nd_hist_generator.line_signal_validators.validation_tools import SignalValidator
+from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import add_bidir_lines
 from pysight.gui.gui_main import GuiAppLst
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
@@ -124,7 +123,7 @@ def main_data_readout(config: Dict[str, Any]):
             separated_data.run()
 
     ####### START OF "PUBLIC API" ##########
-    try:
+    try:  # list file branch
         if cur_file.is_binary:
             relevant_columns = binary_parser.data_to_grab
             dict_of_data = binary_parser.dict_of_data
@@ -178,6 +177,11 @@ def main_data_readout(config: Dict[str, Any]):
         bits_dict=config["tagbits"],
     )
 
+    if not config["advanced"]["bidir"]:
+        validated_data.dict_of_data = add_bidir_lines.add_bidir_lines(
+            validated_data.dict_of_data
+        )
+
     analyzed_struct = Allocate(
         bidir=config["advanced"]["bidir"],
         tag_offset=config["advanced"]["tag_offset"],
@@ -188,7 +192,7 @@ def main_data_readout(config: Dict[str, Any]):
         keep_unidir=config["advanced"]["keep_unidir"],
         flim=config["advanced"]["flim"],
         censor=config["advanced"]["censor"],
-        dict_of_data=validated_data.dict_of_data,
+        dict_of_data=data,
         df_photons=tag_bit_parser.gen_df(),
         tag_freq=float(config["advanced"]["tag_freq"]),
         tag_to_phase=True,
@@ -432,8 +436,8 @@ def mp_batch(
     for file in all_lst_files:
         config["outputs"]["data_filename"] = str(file)
         all_cfgs.append(config)
-    pool = mp.Pool(n_proc)
-    pool.map(mp_main_data_readout, all_cfgs)
+    with mp.Pool(n_proc) as pool:
+        pool.map(mp_main_data_readout, all_cfgs)
 
 
 if __name__ == "__main__":

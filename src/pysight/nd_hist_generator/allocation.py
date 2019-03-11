@@ -58,9 +58,6 @@ class Allocate(object):
         logging.info(
             "Channels of events found. Allocating photons to their frames and lines..."
         )
-        # Unidirectional scan - create fake lines
-        if not self.bidir:
-            self.__add_unidirectional_lines()
         self.__allocate_photons()
         self.__allocate_tag()
         if self.flim or self.deinterleave:
@@ -209,23 +206,6 @@ class Allocate(object):
             else:  # either false alarm, or a third photon is on its way
                 self.__requires_censoring(diffs2)
                 return True
-
-    def __add_unidirectional_lines(self):
-        """
-        For unidirectional scans fake line signals have to be inserted for us to identify forward- and
-        back-phase photons.
-        """
-
-        length_of_lines = self.dict_of_data["Lines"].shape[0]
-        new_line_arr = np.zeros(length_of_lines * 2 - 1)
-        new_line_arr[::2] = self.dict_of_data["Lines"].loc[:, "abs_time"].values
-        new_line_arr[1::2] = (
-            self.dict_of_data["Lines"].loc[:, "abs_time"].rolling(window=2).mean()[1:]
-        )
-
-        self.dict_of_data["Lines"] = pd.DataFrame(
-            new_line_arr, columns=["abs_time"], dtype="uint64"
-        )
 
     def __interpolate_laser(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, List]:
         """
