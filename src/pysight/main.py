@@ -42,6 +42,9 @@ from pysight.ascii_list_file_parser.distribute_data import DistributeData
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
+from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import (
+    add_bidir_lines,
+)
 from pysight.gui.gui_main import GuiAppLst
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
@@ -124,7 +127,7 @@ def main_data_readout(config: Dict[str, Any]):
             separated_data.run()
 
     ####### START OF "PUBLIC API" ##########
-    try:
+    try:  # list file branch
         if cur_file.is_binary:
             relevant_columns = binary_parser.data_to_grab
             dict_of_data = binary_parser.dict_of_data
@@ -177,6 +180,9 @@ def main_data_readout(config: Dict[str, Any]):
         use_tag_bits=config["tagbits"]["tag_bits"],
         bits_dict=config["tagbits"],
     )
+
+    if not config["advanced"]["bidir"]:
+        validated_data.dict_of_data = add_bidir_lines(validated_data.dict_of_data)
 
     analyzed_struct = Allocate(
         bidir=config["advanced"]["bidir"],
@@ -432,8 +438,8 @@ def mp_batch(
     for file in all_lst_files:
         config["outputs"]["data_filename"] = str(file)
         all_cfgs.append(config)
-    pool = mp.Pool(n_proc)
-    pool.map(mp_main_data_readout, all_cfgs)
+    with mp.Pool(n_proc) as pool:
+        pool.map(mp_main_data_readout, all_cfgs)
 
 
 if __name__ == "__main__":
