@@ -138,8 +138,8 @@ def main_data_readout(config: Dict[str, Any]):
             else cur_file.fill_fraction
         )
     except NameError:  # dealing with a pickle file
-        logging.info(f"Reading file {config['output']['data_filename']}...")
-        with open(config["output"]["filename"], "rb") as f:
+        logging.info(f"Reading file {config['outputs']['data_filename']}...")
+        with open(config["outputs"]["data_filename"], "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
