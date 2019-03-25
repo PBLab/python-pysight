@@ -147,6 +147,7 @@ def main_data_readout(config: Dict[str, Any]):
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
         fill_frac = config["advanced"]["fill_frac"]
+        binary_parser = None  # to be deleted later
 
     validated_data = SignalValidator(
         dict_of_data=dict_of_data,
