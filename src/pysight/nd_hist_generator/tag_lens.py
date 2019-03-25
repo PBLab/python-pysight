@@ -9,8 +9,8 @@ from attr.validators import instance_of
 from itertools import chain
 
 
-@attr.s(slots=True)
-class TagPipeline(object):
+@attr.s
+class TagPipeline:
     """
     Pipeline to interpolate TAG lens pulses
 
@@ -39,6 +39,14 @@ class TagPipeline(object):
         default=0, validator=instance_of(int)
     )  # offset the TAG phase [degrees]
     finished_pipe = attr.ib(init=False)
+
+    @property
+    def first_photon(self):
+        return self.photons.abs_time.min().astype(np.uint64)
+
+    @property
+    def last_photon(self):
+        return self.photons.abs_time.max().astype(np.uint64)
 
     def run(self):
         """ Main pipeline """
@@ -80,17 +88,9 @@ class TagPipeline(object):
         )
         return self.tag_pulses.loc[relevant_tag_pulses]
 
-    @property
-    def first_photon(self):
-        return self.photons.abs_time.min()
 
-    @property
-    def last_photon(self):
-        return self.photons.abs_time.max()
-
-
-@attr.s(slots=True)
-class TagPeriodVerifier(object):
+@attr.s
+class TagPeriodVerifier:
     """ Verify input to the TAG pipeline, and add missing pulses accordingly """
 
     tag = attr.ib(validator=instance_of(pd.Series))
@@ -205,8 +205,8 @@ class TagPeriodVerifier(object):
         assert self.tag.dtype == np.uint64
 
 
-@attr.s(slots=True)
-class TagPhaseAllocator(object):
+@attr.s
+class TagPhaseAllocator:
     """ Assign a phase to each photon """
 
     photons = attr.ib(validator=instance_of(pd.DataFrame))
