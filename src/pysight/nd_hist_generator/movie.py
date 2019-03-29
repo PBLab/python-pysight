@@ -10,6 +10,7 @@ from collections import OrderedDict, namedtuple, deque
 import warnings
 import h5py_cache
 from tqdm import tqdm
+import memory_profiler
 
 from pysight.gui.gui_main import ImagingSoftware
 from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
@@ -121,11 +122,13 @@ class Movie:
         """
         Main pipeline for the movie object
         """
+        mem = memory_profiler.memory_usage(proc=-1, interval=15, timeout=None)
         funcs_during, funcs_end = self.__determine_outputs()
         self.__validate_df_indices()
         self.__process_data(funcs_during, funcs_end)
         self.__print_outputs()
         logging.info("Movie object created, analysis done.")
+        print(mem)
 
     def __determine_outputs(self) -> Tuple[List[Callable], List[Callable]]:
         """
