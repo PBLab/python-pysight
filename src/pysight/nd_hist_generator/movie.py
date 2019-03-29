@@ -186,6 +186,7 @@ class Movie:
             leave=False,
         )
         for idx, frame_chunk in enumerate(self.frame_slices):
+            print("slice number:", idx)
             sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
             chunk = FrameChunk(
                 movie=self,
