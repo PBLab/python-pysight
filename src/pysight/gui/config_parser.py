@@ -10,7 +10,7 @@ class Config:
     """
     Load, parse and save a TOML config file.
     """
-    config_data = attr.ib(validator=instance_of(Dict[str, Any]))
+    config_data = attr.ib(validator=instance_of(dict))
 
     @classmethod
     def from_gui(cls, gui):

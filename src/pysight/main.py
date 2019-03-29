@@ -26,9 +26,8 @@ import numpy as np
 matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
 import toml
-
+import objgraph
 colorama.init()
-
 from pysight.ascii_list_file_parser.file_io import ReadMeta
 from pysight.ascii_list_file_parser.tabulation import Tabulate
 from pysight.nd_hist_generator.allocation import Allocate
@@ -81,7 +80,7 @@ def main_data_readout(config: Dict[str, Any]):
             mirror_phase=config["advanced"]["phase"],
         )
         cur_file.run()
-
+        objgraph.show_most_common_types()
         raw_data_obj = ReadData(
             filename=config["outputs"]["data_filename"],
             start_of_data_pos=cur_file.start_of_data_pos,
@@ -90,7 +89,7 @@ def main_data_readout(config: Dict[str, Any]):
             debug=config["advanced"]["debug"],
         )
         raw_data = raw_data_obj.read_lst()
-
+        objgraph.show_growth(limit=10)
         if cur_file.is_binary:
             binary_parser = BinaryDataParser(
                 data=raw_data,
@@ -127,6 +126,7 @@ def main_data_readout(config: Dict[str, Any]):
             separated_data.run()
 
     ####### START OF "PUBLIC API" ##########
+    objgraph.show_growth(limit=10)
     try:  # list file branch
         if cur_file.is_binary:
             relevant_columns = binary_parser.data_to_grab
@@ -140,6 +140,7 @@ def main_data_readout(config: Dict[str, Any]):
             if cur_file.fill_fraction == -1
             else cur_file.fill_fraction
         )
+        objgraph.show_growth(limit=10)
     except NameError:  # dealing with a pickle file
         logging.info(f"Reading file {config['outputs']['data_filename']}...")
         with open(config["outputs"]["data_filename"], "rb") as f:
@@ -164,7 +165,7 @@ def main_data_readout(config: Dict[str, Any]):
     )
 
     validated_data.run()
-
+    objgraph.show_growth(limit=10)
     try:
         del separated_data
     except UnboundLocalError:
@@ -175,6 +176,7 @@ def main_data_readout(config: Dict[str, Any]):
         interleaved=config["advanced"]["interleaved"],
     )
     photons = photon_df.run()
+    objgraph.show_growth(limit=10)
     tag_bit_parser = ParseTAGBits(
         dict_of_data=validated_data.dict_of_data,
         photons=photons,
@@ -184,7 +186,7 @@ def main_data_readout(config: Dict[str, Any]):
 
     if not config["advanced"]["bidir"]:
         validated_data.dict_of_data = add_bidir_lines(validated_data.dict_of_data)
-
+    objgraph.show_growth(limit=10)
     analyzed_struct = Allocate(
         bidir=config["advanced"]["bidir"],
         tag_offset=config["advanced"]["tag_offset"],
@@ -206,7 +208,7 @@ def main_data_readout(config: Dict[str, Any]):
 
     del photons
     del photon_df
-
+    objgraph.show_growth(limit=10)
     if config["advanced"]["interleaved"]:
         logging.warning(
             """Deinterleaving a data channel is currently highly experimental and
@@ -238,7 +240,7 @@ def main_data_readout(config: Dict[str, Any]):
 
     line_delta = validated_data.line_delta
     del validated_data
-
+    objgraph.show_growth(limit=10)
     if config["advanced"]["gating"]:
         logging.warning(
             "Gating is currently not implemented. Please contact package authors."
@@ -253,7 +255,7 @@ def main_data_readout(config: Dict[str, Any]):
         frames=analyzed_struct.dict_of_data["Frames"], data_shape=outputs.data_shape
     )
     frame_slices = volume_chunks.create_frame_slices()
-
+    objgraph.show_growth(limit=10)
     final_movie = Movie(
         data=data_for_movie,
         frames=analyzed_struct.dict_of_data["Frames"],
@@ -282,7 +284,7 @@ def main_data_readout(config: Dict[str, Any]):
     )
 
     final_movie.run()
-
+    objgraph.show_growth(limit=10)
     if "memory" in outputs.outputs:
         pysight_output = PySightOutput(
             photons=data_for_movie,
