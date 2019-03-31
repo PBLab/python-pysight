@@ -26,6 +26,7 @@ import numpy as np
 matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
 import toml
+
 colorama.init()
 from pysight.ascii_list_file_parser.file_io import ReadMeta
 from pysight.ascii_list_file_parser.tabulation import Tabulate
@@ -52,7 +53,7 @@ from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def main_data_readout(config: Dict[str, Any]):
+def main_data_readout(config: Dict[str, Any]) -> Union[None, PySightOutput]:
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
@@ -299,7 +300,7 @@ def mp_main_data_readout(config: Dict[str, Any]):
         return out
 
 
-def run(cfg_file: str = None) -> PySightOutput:
+def run(cfg_file: str = None) -> Union[None, PySightOutput]:
     """ Run PySight.
 
     :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
