@@ -3,7 +3,7 @@ from attr.validators import instance_of
 from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
 import pandas as pd
-import h5py_cache
+import h5py
 import os
 import logging
 from collections import namedtuple
@@ -45,27 +45,26 @@ class OutputParser(object):
         self.data_shape = self.determine_data_shape_full()
         if not self.output_dict:
             return
-        try:
-            self.outputs["memory"] = self.output_dict["memory"]
-        except KeyError:
-            pass
+        if self.output_dict["memory"]:
+            self.outputs["memory"] = 1
         f = self.__create_prelim_file()
         if f is not None:
             self.__populate_hdf(f)
 
     def __create_prelim_file(self):
         """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
-        if "stack" in self.output_dict or "summed" in self.output_dict:
+        if self.output_dict["stack"] or self.output_dict["summed"]:
             try:
                 split = os.path.splitext(self.filename)[0]
                 debugged = "_DEBUG" if self.debug else ""
                 fullfile = f"{split + debugged}.hdf5"
-                f = h5py_cache.File(
+                f = h5py.File(
                     fullfile,
                     "w",
-                    chunk_cache_mem_size=self.cache_size,
-                    libver="latest",
-                    w0=1,
+                    libver='latest',
+                    rdcc_nbytes=10 * 1024**2,
+                    rdcc_nslots=521,
+                    rdcc_w0=1,
                 )
                 self.outputs["filename"] = fullfile
             except (PermissionError, OSError):
@@ -84,7 +83,7 @@ class OutputParser(object):
         data_shape_summed = self.data_shape[1:]
         chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
-        if "stack" in self.output_dict:
+        if self.output_dict["stack"]:
             try:
                 self.outputs["stack"] = [
                     f.require_group("Full Stack").require_dataset(
@@ -92,7 +91,7 @@ class OutputParser(object):
                         shape=self.data_shape,
                         dtype=np.uint8,
                         chunks=tuple(chunk_shape),
-                        compression="gzip",
+                        compression="lzf",
                     )
                     for channel in self.channels
                 ]
@@ -105,7 +104,7 @@ class OutputParser(object):
 
             except (PermissionError, OSError):
                 self.file_pointer_created = False
-        if "summed" in self.output_dict:
+        if self.output_dict["summed"]:
             try:
                 self.outputs["summed"] = [
                     f.require_group("Summed Stack").require_dataset(
@@ -113,7 +112,7 @@ class OutputParser(object):
                         shape=data_shape_summed,
                         dtype=np.uint16,
                         chunks=True,
-                        compression="gzip",
+                        compression="lzf",
                     )
                     for channel in self.channels
                 ]
