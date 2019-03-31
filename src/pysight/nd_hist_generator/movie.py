@@ -8,7 +8,7 @@ from typing import List, Tuple, Iterable, Dict, Generator, Callable
 from numba import jit, float64, uint64, int64
 from collections import OrderedDict, namedtuple, deque
 import warnings
-import h5py_cache
+import h5py
 from tqdm import tqdm
 
 from pysight.gui.gui_main import ImagingSoftware
@@ -154,12 +154,13 @@ class Movie:
 
         else:
             if "stack" in self.outputs:
-                self.outputs["stack"] = h5py_cache.File(
+                self.outputs["stack"] = h5py.File(
                     f'{self.outputs["filename"]}',
-                    "a",
-                    chunk_cache_mem_size=self.cache_size,
-                    libver="latest",
-                    w0=1,
+                    "r+",
+                    libver='latest',
+                    rdcc_nbytes=10 * 1024**2,
+                    rdcc_nslots=2053,
+                    rdcc_w0=1,
                 ).require_group("Full Stack")
                 funcs_to_execute_during.append(self.__save_stack_incr)
                 funcs_to_execute_end.append(self.__close_file)
@@ -239,12 +240,13 @@ class Movie:
 
     def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
-        with h5py_cache.File(
+        with h5py.File(
             f'{self.outputs["filename"]}',
-            "a",
-            chunk_cache_mem_size=self.cache_size,
-            libver="latest",
-            w0=1,
+            "r+",
+            libver='latest',
+            rdcc_nbytes=10 * 1024**2,
+            rdcc_nslots=2053,
+            rdcc_w0=1,
         ) as f:
             logging.info("Saving full stack to disk...")
             for channel in self.channels:
@@ -254,10 +256,11 @@ class Movie:
         """ Save the entire in-memory summed data into .hdf5 file """
         with h5py_cache.File(
             f'{self.outputs["filename"]}',
-            "a",
-            chunk_cache_mem_size=self.cache_size,
-            libver="latest",
-            w0=1,
+            "r+",
+            libver='latest',
+            rdcc_nbytes=10 * 1024**2,
+            rdcc_nslots=2053,
+            rdcc_w0=1,
         ) as f:
             for channel in self.channels:
                 f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
@@ -345,24 +348,3 @@ class Movie:
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
-
-    def show_summed(self, channel: int = 1) -> None:
-        """ Show the summed Movie """
-
-        plt.figure()
-        try:
-            num_of_dims = len(self.summed_mem[channel].shape)
-            if num_of_dims > 2:
-                plt.imshow(
-                    np.sum(self.summed_mem[channel], axis=-(num_of_dims - 2)),
-                    cmap="gray",
-                )
-            else:
-                plt.imshow(self.summed_mem[channel], cmap="gray")
-        except:
-            logging.warning(
-                "Can't show summed image when memory output wasn't asked for."
-            )
-
-        plt.title(f"Channel number {channel}")
-        plt.axis("off")
