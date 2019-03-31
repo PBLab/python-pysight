@@ -152,7 +152,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = b"range=(\d+)"
+            format_str = rb"range=(\d+)"
         else:
             format_str = r"range=(\d+)"
 
@@ -172,7 +172,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str: bytes = b"time_patch=(\w+)"
+            format_str: bytes = rb"time_patch=(\w+)"
         else:
             format_str: str = r"time_patch=(\w+)"
 
@@ -201,7 +201,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = b"\[CHN(\d)\].+?active=(\d)"
+            format_str = rb"\[CHN(\d)\].+?active=(\d)"
         else:
             format_str = r"\[CHN(\d)\].+?active=(\d)"
 
@@ -250,7 +250,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = b"DATA]\r\n"
+            format_str = rb"DATA]\r\n"
             file_mode = "rb"
         else:
             format_str = r"DATA]\n"
@@ -279,7 +279,7 @@ class ReadMeta:
         :return int: Final time that has to be added to all sweeps, in timebins
         """
         if self.is_binary:
-            format_str: bytes = b"holdafter=([\w\+]+)"
+            format_str: bytes = rb"holdafter=([\w\+]+)"
         else:
             format_str: str = r"holdafter=([\w\+]+)"
 
@@ -298,7 +298,7 @@ class ReadMeta:
         :return int: Acq delay in timebins
         """
         if self.is_binary:
-            format_str: bytes = b"fstchan=(\w+)"
+            format_str: bytes = rb"fstchan=(\w+)"
         else:
             format_str: str = r"fstchan=(\w+)"
 
@@ -340,7 +340,7 @@ class ReadMeta:
         the dictionary self.lst_metadata
         """
         if self.is_binary:
-            format_str: str = str_to_parse.encode("utf-8") + b"=(\w+)"
+            format_str: str = str_to_parse.encode("utf-8") + rb"=(\w+)"
         else:
             format_str: str = str_to_parse + "=(\w+)"
 
