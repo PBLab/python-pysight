@@ -309,7 +309,7 @@ def run(cfg_file: str = None) -> Union[None, PySightOutput]:
     """
     if cfg_file:
         with open(cfg_file, "r") as f:
-            config = toml.load(f)
+            config: Dict[str, Any] = toml.load(f)
     else:
         gui = GuiAppLst()
         gui.root.mainloop()
