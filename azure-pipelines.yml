@@ -50,5 +50,5 @@ jobs:
       versionSpec: '3.x'
       architecture: 'x64'
 
-  - script: python setup.py --clean all sdist
+  - script: python setup.py clean --all sdist
     displayName: 'Build sdist'

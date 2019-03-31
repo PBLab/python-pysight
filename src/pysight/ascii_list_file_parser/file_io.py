@@ -342,7 +342,7 @@ class ReadMeta:
         if self.is_binary:
             format_str: str = str_to_parse.encode("utf-8") + rb"=(\w+)"
         else:
-            format_str: str = str_to_parse + "=(\w+)"
+            format_str: str = str_to_parse + r"=(\w+)"
 
         format_regex = re.compile(format_str)
         try:
