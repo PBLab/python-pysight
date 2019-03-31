@@ -77,7 +77,9 @@ class Movie:
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     fill_frac = attr.ib(default=71.0, validator=instance_of(float))
     bidir = attr.ib(default=False, validator=instance_of(bool))
-    channels = attr.ib(default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex))
+    channels = attr.ib(
+        default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex)
+    )
     outputs = attr.ib(factory=dict, validator=instance_of(dict))
     censor = attr.ib(default=False, validator=instance_of(bool))
     flim = attr.ib(default=False, validator=instance_of(bool))
@@ -157,8 +159,8 @@ class Movie:
                 self.outputs["stack"] = h5py.File(
                     f'{self.outputs["filename"]}',
                     "r+",
-                    libver='latest',
-                    rdcc_nbytes=10 * 1024**2,
+                    libver="latest",
+                    rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=2053,
                     rdcc_w0=1,
                 ).require_group("Full Stack")
@@ -243,8 +245,8 @@ class Movie:
         with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver='latest',
-            rdcc_nbytes=10 * 1024**2,
+            libver="latest",
+            rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
         ) as f:
@@ -257,8 +259,8 @@ class Movie:
         with h5py_cache.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver='latest',
-            rdcc_nbytes=10 * 1024**2,
+            libver="latest",
+            rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
         ) as f:
@@ -279,7 +281,9 @@ class Movie:
         for channel in self.channels:
             new_stack = np.vstack(self.stack[channel])
             squeezed = np.squeeze(new_stack)
-            if new_stack.shape[0] != squeezed.shape[0]:  # a single frame that was squeezed out
+            if (
+                new_stack.shape[0] != squeezed.shape[0]
+            ):  # a single frame that was squeezed out
                 self.stack[channel] = np.expand_dims(squeezed, axis=0)
             else:
                 self.stack[channel] = squeezed
