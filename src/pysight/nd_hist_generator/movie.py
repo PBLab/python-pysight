@@ -256,7 +256,7 @@ class Movie:
 
     def __save_summed_at_once(self) -> None:
         """ Save the entire in-memory summed data into .hdf5 file """
-        with h5py_cache.File(
+        with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
             libver="latest",
