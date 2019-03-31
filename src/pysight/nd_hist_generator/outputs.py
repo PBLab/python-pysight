@@ -61,8 +61,8 @@ class OutputParser(object):
                 f = h5py.File(
                     fullfile,
                     "w",
-                    libver='latest',
-                    rdcc_nbytes=10 * 1024**2,
+                    libver="latest",
+                    rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=521,
                     rdcc_w0=1,
                 )
@@ -203,8 +203,8 @@ class PySightOutput:
         shape = self._data_shape[:3]
         if self._flim:
             if len(self._data_shape) == 5:
-                shape += (self._data_shape[3], )
-                shape += (self._data_shape[4], )
+                shape += (self._data_shape[3],)
+                shape += (self._data_shape[4],)
             else:
                 shape += (None, self._data_shape[3])  # no Z but tau exists
         elif len(self._data_shape) == 4:  # take TAG shape regardless
