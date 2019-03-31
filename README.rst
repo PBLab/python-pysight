@@ -10,7 +10,7 @@
     * - docs
       - |docs| |gitter|
     * - tests
-      - | |travis| |codecov|
+      - | |azure| |codecov|
     * - package
       - | |version| |wheel| |supported_versions|
         | |supported_implementations| |codestyle|
@@ -23,9 +23,9 @@
 			:target:  https://gitter.im/python-pysight/Lobby
 			:alt: Gitter Chat
 
-.. |travis| image:: https://travis-ci.org/PBLab/python-pysight.svg?branch=master
-    :alt: Travis-CI Build Status
-    :target: https://travis-ci.org/PBLab/python-pysight
+.. |azure| image:: https://dev.azure.com/pblabgeneral/pysight/_apis/build/status/PBLab.python-pysight?branchName=master
+    :alt: Azure Pipelines Build Status
+    :target: https://dev.azure.com/pblabgeneral/pysight/_build/latest?definitionId=1&branchName=master
 
 .. |codecov| image:: https://codecov.io/github/PBLab/python-pysight/coverage.svg?branch=master
     :alt: Coverage Status
@@ -76,5 +76,5 @@ issue tracker.
 References
 ==========
 
-PySight is fully described in `this Optica article <https://www.osapublishing.org/optica/abstract.cfm?uri=optica-5-9-1104>`_, 
+PySight is fully described in `this Optica article <https://www.osapublishing.org/optica/abstract.cfm?uri=optica-5-9-1104>`_,
 released in September 2018.
