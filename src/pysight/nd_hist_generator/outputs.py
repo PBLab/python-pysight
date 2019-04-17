@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 import attr
 from attr.validators import instance_of
 from pysight.nd_hist_generator.movie import trunc_end_of_file
@@ -61,7 +63,7 @@ class OutputParser(object):
                 f = h5py.File(
                     fullfile,
                     "w",
-                    libver="latest",
+                    libver="earliest",
                     rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=521,
                     rdcc_w0=1,
@@ -91,7 +93,7 @@ class OutputParser(object):
                         shape=self.data_shape,
                         dtype=np.uint8,
                         chunks=tuple(chunk_shape),
-                        compression="lzf",
+                        compression="gzip",
                     )
                     for channel in self.channels
                 ]
@@ -112,7 +114,7 @@ class OutputParser(object):
                         shape=data_shape_summed,
                         dtype=np.uint16,
                         chunks=True,
-                        compression="lzf",
+                        compression="gzip",
                     )
                     for channel in self.channels
                 ]
@@ -160,12 +162,14 @@ class PySightOutput:
     Keeps the relevant data from the run of the algorithm for later
     in-memory processing.
     Parameters:
+    -----------
         :param pd.DataFrame photons: The 'raw' photon DataFrame.
         :param dict _summed_mem: Summed-over-time arrays of the data - one per channel.
         :param dict _stack: Full data arrays, one per channel.
         :param pd.CategoricalIndex _channels: Actual data channels analyzed.
         :param tuple _data_shape: Data dimensions
         :param bool _flim: Whether data has Tau channel.
+        :param Dict[str, Any] config: Configuration file used in this run.
     """
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
@@ -174,6 +178,7 @@ class PySightOutput:
     _channels = attr.ib(validator=instance_of(pd.CategoricalIndex), repr=False)
     _data_shape = attr.ib(validator=instance_of(tuple), repr=False)
     _flim = attr.ib(validator=instance_of(bool), repr=False)
+    config = attr.ib(validator=instance_of(dict), repr=False)
     available_channels = attr.ib(init=False)
     data_shape = attr.ib(init=False)
     ch1 = attr.ib(init=False, repr=False)

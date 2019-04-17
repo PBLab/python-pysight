@@ -93,20 +93,20 @@ class TestOutput(TestCase):
             self.assertEqual(shape, obj.determine_data_shape_full())
 
 
+@pytest.fixture
+def generate_output_obj():
+    def _generate(shape, flim, di=None):
+        if di is None:
+            di = {1: np.array([1, 2, 3])}
+        photons = pd.DataFrame({1: np.array([1, 2, 3])})
+        summed_mem = di
+        stack = di
+        channels = pd.CategoricalIndex([1])
+        return PySightOutput(photons, summed_mem, stack, channels, shape, flim, dict())
+    return _generate
+
+
 class TestPySightOutput:
-
-    @pytest.fixture
-    def generate_output_obj(self):
-        def _generate(shape, flim, di=None):
-            if not di:
-                di = {1: np.array([1, 2, 3])}
-            photons = pd.DataFrame({1: np.array([1, 2, 3])})
-            summed_mem = di
-            stack = di
-            channels = pd.CategoricalIndex([1])
-            return PySightOutput(photons, summed_mem, stack, channels, shape, flim)
-        return _generate
-
     def test_data_shape_txy(self, generate_output_obj):
         shape = (10, 10, 10)
         flim = False

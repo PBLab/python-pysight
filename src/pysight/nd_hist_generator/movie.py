@@ -159,7 +159,7 @@ class Movie:
                 self.outputs["stack"] = h5py.File(
                     f'{self.outputs["filename"]}',
                     "r+",
-                    libver="latest",
+                    libver="earliest",
                     rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=2053,
                     rdcc_w0=1,
@@ -245,7 +245,7 @@ class Movie:
         with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver="latest",
+            libver="earliest",
             rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
@@ -259,7 +259,7 @@ class Movie:
         with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver="latest",
+            libver="earliest",
             rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,

@@ -4,7 +4,7 @@
 __author__ = Hagai Har-Gil
 """
 
-from typing import Union, Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 import pickle
 import logging
 import pathlib
@@ -53,7 +53,7 @@ from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def main_data_readout(config: Dict[str, Any]) -> Union[None, PySightOutput]:
+def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
@@ -282,6 +282,7 @@ def main_data_readout(config: Dict[str, Any]) -> Union[None, PySightOutput]:
             channels=data_for_movie.index.levels[0],
             data_shape=outputs.data_shape,
             flim=config["advanced"]["flim"],
+            config=config,
         )
         return pysight_output
 
@@ -300,7 +301,7 @@ def mp_main_data_readout(config: Dict[str, Any]):
         return out
 
 
-def run(cfg_file: str = None) -> Union[None, PySightOutput]:
+def run(cfg_file: str = None) -> Optional[PySightOutput]:
     """ Run PySight.
 
     :param str cfg_file: Optionally supply an existing configuration filename. Otherwise a GUI will open.
