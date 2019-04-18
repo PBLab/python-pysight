@@ -2,7 +2,7 @@
 Methods to calculate the lifetime of the generated
 stacks
 """
-from typing import Union
+from typing import Union, Optional
 import logging
 
 import numpy as np
@@ -33,19 +33,21 @@ class LifetimeCalc:
     params = attr.ib(init=False)
     cov = attr.ib(init=False)
 
-    def fit_entire_fov(self):
+    def fit_entire_fov(self) -> Optional["ExpFitParams"]:
         """
-        Main method for class
+        Main method for class. Returns an ExpFitParams object
+        which contains the result of the fitting done.
         """
         self.raw_arrival_times = self._get_photons()
-        self.hist = self._generate_aligned_hist(self.raw_arrival_times)
+        self.hist = self._gen_aligned_hist(self.raw_arrival_times)
         try:
             lowest_bin = self._get_low_bin_idx(self.hist)
         except ValueError:  # no valid lowest bin
             logging.warning("No valid decay curve found in the histogram.")
             return
         chopped_hist = self.hist[:lowest_bin]
-        self._fit_decay(chopped_hist)
+        self.params, self.cov = self._fit_decay(chopped_hist)
+        return ExpFitParams(self.params[0], self.params[1], self.params[2])
 
     def _get_photons(self):
         """
@@ -74,16 +76,16 @@ class LifetimeCalc:
             raise ValueError
         return lowest
 
-    def _get_bin_idx(self):
-        """ Finds the highest and lowest bins in the histogram of the photon arrival times """
-        high_bin = self.hist.argmax()
-
     def _fit_decay(self, y):
         """
         Use a curve fitting method to find the parameters of the
         exponential decay of the data
         """
-
+        xdata = np.arange(len(y)) / (self.data.config["binwidth"] * 10 ** 9)
+        popt, pcov = scipy.optimize.curve_fit(
+            self.single_exp, xdata, y, (y.max(), 4, np.median(y))
+        )
+        return popt, pcov
 
     @staticmethod
     def single_exp(x, amp, tau, c):
@@ -99,4 +101,20 @@ class LifetimeCalc:
         :param Union[float, int] c: Baseline level of the function
         """
         return amp * np.exp(-x / tau) + c
+
+
+@attr.s(frozen=True)
+class ExpFitParams:
+    """
+    Returned parameters from fitting a decay curve to a
+    single exponential decay function.
+
+    Parameters:
+        :param float amplitude: Initial amplitude of decay.
+        :param float tau: Fluorophore lifetime.
+        :param float c: Constant offset of the decay above baseline.
+    """
+    amplitude = attr.ib(validator=instance_of(float))
+    tau = attr.ib(validator=instance_of(float))
+    c = attr.ib(validator=instance_of(float))
 
