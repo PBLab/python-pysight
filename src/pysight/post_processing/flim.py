@@ -2,8 +2,9 @@
 Methods to calculate the lifetime of the generated
 stacks
 """
-from typing import Union, Optional
+from typing import Union, Optional, Tuple, Iterator, Any
 import logging
+import itertools
 
 import numpy as np
 import scipy.optimize
@@ -28,6 +29,7 @@ class LifetimeCalc:
     data = attr.ib(validator=instance_of(PySightOutput))
     channel = attr.ib(validator=[instance_of(int), in_channel])
     num_of_bins = attr.ib(default=125, validator=instance_of(int))
+    bin_factor = attr.ib(default=2, validator=instance_of(int))
     raw_arrival_times = attr.ib(init=False)
     hist = attr.ib(init=False)
     params = attr.ib(init=False)
@@ -49,6 +51,19 @@ class LifetimeCalc:
         self.params, self.cov = self._fit_decay(chopped_hist)
         return ExpFitParams(self.params[0], self.params[1], self.params[2])
 
+    def flim_binned(self) -> np.ndarray:
+        """
+        Create an image of the FOV colored by the lifetime of each
+        2x2 square in the image.
+        """
+        channel_data = getattr(self.data, f"ch{self.channel}")
+        shape_x = channel_data.shape[0]
+        shape_y = channel_data.shape[1]
+        assert ( shape_x == shape_y)  # supports only square images ATM
+        slices = self._gen_slices(shape_x)
+        flim_img = self._populate_binned_image(slices, channel_data)
+        return flim_img
+
     def _get_photons(self):
         """
         Returns an array of the photon arrival times relative to the
@@ -57,6 +72,47 @@ class LifetimeCalc:
         return self.data.photons.xs(
             self.channel, level="Channel"
         ).time_rel_pulse.to_numpy()
+
+    def _create_indices_per_ax(self, start, length=512) -> Tuple[Iterator[Any], ...]:
+        """
+        Create a vector which contains the indices at which we'll cut
+        the original data in order to bin it.
+        """
+        idx = np.arange(start, length)
+        idx = np.concatenate([None], idx, [None])
+        idx2 = itertools.tee(idx)
+        next(idx2[1])
+        return idx2
+
+    def _gen_slices(self, shape):
+        """
+        Create slice objects that will slice up the original
+        array into a binned image.
+        Each element of the returned list is a length 3 tuple, each
+        of its elements being a slice, and each such slice details
+        the starting and ending index of that bin.
+        """
+
+        idx_x = self._create_indices_per_ax(
+            self.bin_factor, length=shape
+        )
+        idx_y = self._create_indices_per_ax(
+            self.bin_factor, length=shape
+        )
+        xs = [slice(start, end) for start, end in zip(idx_x[0], idx_x[1])]
+        ys = [slice(start, end) for start, end in zip(idx_y[0], idx_y[1])]
+        return [(x, y, slice(None)) for x, y in zip(xs, ys)]
+
+    def _populate_binned_image(self, slices, img):
+        """
+        Creates a binned image which contains the FLIM data from each of the
+        original pixels of that bin.
+        """
+        flim_img = img.copy()
+        for sl in slices:
+            cur_data = img[sl].sum(axis=(0, 1))
+            flim_img[sl] = cur_data
+        return flim_img
 
     def _gen_aligned_hist(self, photons):
         """ Creates a histogram from the photon list and then moves it so that the highest
@@ -114,6 +170,7 @@ class ExpFitParams:
         :param float tau: Fluorophore lifetime.
         :param float c: Constant offset of the decay above baseline.
     """
+
     amplitude = attr.ib(validator=instance_of(float))
     tau = attr.ib(validator=instance_of(float))
     c = attr.ib(validator=instance_of(float))
