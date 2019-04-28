@@ -1,7 +1,5 @@
 sphinx < 1.8
 
--e .
-
 numpy >= 1.16
 matplotlib >= 3.0
 pandas >= 0.24
