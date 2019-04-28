@@ -58,11 +58,9 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
 
-    Parameters:
     :param dict config: Loaded configuration file as a dictionary.
 
-    Return:
-    :PySightOutput out: An object containing the relevant data,
+    :return PySightOutput: An object containing the relevant data,\
     if "memory" option was checked in the GUI.
     """
     # Read the .lst file

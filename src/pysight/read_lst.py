@@ -49,7 +49,12 @@ class ReadData:
         }
 
     def read_lst(self) -> np.ndarray:
-        """ Main method to load the .lst file into memory """
+        """
+        Main method to load the .lst file into memory.
+        
+        :return np.ndarray: An array with the ascii or binary data \
+        that was read to memory using one of the helper functions.
+        """
         bytes_to_add = self._check_carriage_return()
         data_length_bytes = self._get_data_length_bytes(self.timepatch, bytes_to_add)
         num_of_lines_in_bits = self._determine_num_of_lines(
