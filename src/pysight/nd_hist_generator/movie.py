@@ -1,13 +1,16 @@
 import logging
+import gc
+from typing import List, Tuple, Iterable, Dict, Generator, Callable
+import warnings
+from collections import OrderedDict, namedtuple, deque
+
 import attr
 from attr.validators import instance_of
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from typing import List, Tuple, Iterable, Dict, Generator, Callable
+
 from numba import jit, float64, uint64, int64
-from collections import OrderedDict, namedtuple, deque
-import warnings
 import h5py
 from tqdm import tqdm
 
@@ -203,6 +206,7 @@ class Movie:
                     func(data=hist, channel=chan, idx=idx)
 
             tq.update(1)
+            gc.collect()
 
         tq.close()
         [func() for func in funcs_end]
