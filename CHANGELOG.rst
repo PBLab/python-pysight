@@ -5,7 +5,7 @@ Changelog
 Latest version
 ==============
 
-0.10.0 (2019-XX-XX)
+0.10.0 (2019-04-XX)
 -------------------
 
 This is a minor release containing new features and bug fixes.
@@ -23,6 +23,8 @@ This is a minor release containing new features and bug fixes.
 * Configuration files are now TOML. Please look at ``default.toml`` in the repo for reference.
 
 * Improvemnets to use less RAM during runtime.
+
+* Fixed a memory leak affecting mostly the processing of large ``.lst`` files.
 
 Previous Versions
 =================
