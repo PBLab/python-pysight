@@ -111,7 +111,7 @@ class LifetimeCalc:
         flim_img = img.copy()
         for sl in slices:
             cur_data = img[sl].sum(axis=(0, 1))
-            flim_img[sl] = cur_data
+            flim_img[sl] = self._fit_decay(cur_data)[0][1]  # computed tau
         return flim_img
 
     def _gen_aligned_hist(self, photons):
