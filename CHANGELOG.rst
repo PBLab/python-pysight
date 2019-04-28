@@ -1,5 +1,9 @@
+=========
 Changelog
 =========
+
+Latest version
+==============
 
 0.10.0 (2019-XX-XX)
 -------------------
@@ -20,6 +24,8 @@ This is a minor release containing new features and bug fixes.
 
 * Improvemnets to use less RAM during runtime.
 
+Previous Versions
+=================
 
 0.9.8 (2018-12-13)
 ------------------
@@ -293,7 +299,7 @@ This is a minor release containing new features and bug fixes.
 0.6.17 (2017-12-04)
 -------------------
 
-* Fixed a bug with the filename of the ``DEBUG``ged version.
+* Fixed a bug with the filename of the ``DEBUG``-ged version.
 
 0.6.16 (2017-11-20)
 -------------------
@@ -416,7 +422,7 @@ This is a minor release containing new features and bug fixes.
 0.6.0 (2017-08-27)
 ------------------
 
-* Changed output file format to ``.hdf5`` due to compatibility issues of ``.tif``s.
+* Changed output file format to ``.hdf5`` due to compatibility issues of ``.tif`` s.
 
 0.5.25 (2017-08-26)
 -------------------

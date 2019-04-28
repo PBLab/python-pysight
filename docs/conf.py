@@ -22,7 +22,7 @@ if os.getenv("SPELLCHECK"):
 source_suffix = ".rst"
 master_doc = "index"
 project = "PySight"
-year = "2018"
+year = "2019"
 author = "Hagai Har-Gil"
 copyright = "{0}, {1}".format(year, author)
 version = release = "0.10.0"

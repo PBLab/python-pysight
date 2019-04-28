@@ -12,7 +12,7 @@ from collections import namedtuple
 
 
 @attr.s(slots=True)
-class OutputParser(object):
+class OutputParser:
     """
     Parse the wanted outputs and produce a dictionary with
     file pointers to the needed outputs
@@ -161,15 +161,14 @@ class PySightOutput:
     """
     Keeps the relevant data from the run of the algorithm for later
     in-memory processing.
-    Parameters:
-    -----------
-        :param pd.DataFrame photons: The 'raw' photon DataFrame.
-        :param dict _summed_mem: Summed-over-time arrays of the data - one per channel.
-        :param dict _stack: Full data arrays, one per channel.
-        :param pd.CategoricalIndex _channels: Actual data channels analyzed.
-        :param tuple _data_shape: Data dimensions
-        :param bool _flim: Whether data has Tau channel.
-        :param Dict[str, Any] config: Configuration file used in this run.
+
+    :param pd.DataFrame photons: The 'raw' photon DataFrame.
+    :param dict _summed_mem: Summed-over-time arrays of the data - one per channel.
+    :param dict _stack: Full data arrays, one per channel.
+    :param pd.CategoricalIndex _channels: Actual data channels analyzed.
+    :param tuple _data_shape: Data dimensions
+    :param bool _flim: Whether data has Tau channel.
+    :param Dict[str,Any] config: Configuration file used in this run.
     """
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
@@ -224,7 +223,16 @@ class PySightOutput:
 @attr.s(frozen=True)
 class MultiDimensionalData:
     """
-    Internal representation of a stack of data
+    Internal representation of a stack of data.
+
+    :param np.ndarray full: The entirety of the data.
+    :param np.ndarray time_summed: All data summed across the \
+        time dimension.
+    :param DataShape _data_shape: List of valid dimensions.
+    :param np.ndarray z_summed: All data summed across the \
+        z dimension.
+    :param np.ndarray tau_summed: All data summed across the \
+        lifetime dimension.
     """
 
     full = attr.ib(validator=instance_of(np.ndarray), repr=False)
