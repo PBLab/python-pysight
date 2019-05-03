@@ -64,8 +64,21 @@ class TestMetaTools:
         from test_string_for_fileio import meta_bytes
         self.file_io_objects[0].is_binary = True
         resdict, res_num_channels = self.file_io_objects[0].find_active_channels(meta_bytes)
-        self.file_io_objects[0].is_binary = False
         assert resdict == {"Frames": "110", "PMT1": "001", "Lines": "010"}
+        assert res_num_channels == 1
+
+    def test_empty_channel_with_data_works(self):
+        from test_string_for_fileio import meta
+        cur_obj = ReadMeta(
+            str(next(pathlib.Path("tests/").rglob("*1.lst")).absolute()),
+            debug=False,
+            input_start="Empty",
+            input_stop1="PMT1",
+            input_stop2="Lines",
+        )
+        cur_obj.is_binary = False
+        resdict, res_num_channels = cur_obj.find_active_channels(meta)
+        assert resdict == {"PMT1": "001", "Lines": "010"}
         assert res_num_channels == 1
 
     def test_create_inputs_dict(self):

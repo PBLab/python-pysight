@@ -237,7 +237,7 @@ class ReadMeta:
                 f"At least one channel ({dict_of_inputs['Empty']})"
                 " contained recorded data but was marked as 'Empty'."
             )
-        dict_of_inputs.pop("Empty")
+            dict_of_inputs.pop("Empty")
 
         return dict_of_inputs, num_of_channels
 
