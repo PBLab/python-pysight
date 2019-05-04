@@ -5,7 +5,7 @@ Changelog
 Latest version
 ==============
 
-0.10.0 (2019-04-XX)
+0.10.0 (2019-05-04)
 -------------------
 
 This is a minor release containing new features and bug fixes.
