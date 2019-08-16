@@ -43,6 +43,7 @@ class ReadMeta:
     data_range = attr.ib(init=False)
     time_after = attr.ib(init=False)
     acq_delay = attr.ib(init=False)
+    bitshift = attr.ib(init=False)
     start_of_data_pos = attr.ib(init=False)
     dict_of_input_channels = attr.ib(init=False)
     lst_metadata = attr.ib(init=False)
@@ -64,6 +65,7 @@ class ReadMeta:
         self.start_of_data_pos: int = self.get_start_pos()
         self.time_after: int = self.__get_hold_after(cur_str=metadata)
         self.acq_delay: int = self.__get_fstchan(cur_str=metadata)
+        self.bitshift: int = self.__get_bitshift(cur_str=metadata)
         self.fill_fraction: float = self.__calc_actual_fill_fraction()
         self.dict_of_input_channels, self.num_of_channels = self.find_active_channels(
             metadata
@@ -190,6 +192,32 @@ class ReadMeta:
                     "Please disallow this option in the MPANT software."
                 )
             return timepatch
+
+    def __get_bitshift(self, cur_str: str) -> int:
+        """
+        Finds and parses the bitshift in the current file's metadata.
+        The bitshift is the power of two which represents the value,
+        in time bins, of the "range" value of the list file.
+        The bitshift is given in a hexadecimal format, so the function
+        has to convert it to decimal aswell.
+        :param cur_str: Text metadata of the current file.
+        :return int: Bitshift value (2 ** bitshift)
+        """
+        if self.is_binary:
+            format_str: bytes = rb"bitshift=(\w+)"
+        else:
+            format_str: str = r"bitshift=(\w+)"
+
+        format_timepatch = re.compile(format_str)
+        bitshift = re.search(format_timepatch, cur_str).group(1)
+        try:
+            bitshift = bitshift.decode("utf-8")
+        except AttributeError:
+            assert isinstance(bitshift, str)
+
+        bitshift = 2 ** int(bitshift, 16)
+        return bitshift
+
 
     def find_active_channels(self, cur_str) -> Tuple[Dict[str, str], int]:
         """

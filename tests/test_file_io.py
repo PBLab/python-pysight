@@ -108,6 +108,29 @@ class TestMetaTools:
 
         assert real_time_after == returned_time_after
 
+    def test_bitshifts(self):
+        list_of_filenames_for_bitshift = [
+            str(next(pathlib.Path("tests/").rglob("*2.lst")).absolute()),
+            str(next(pathlib.Path("tests/").rglob("*fly.lst")).absolute()),
+            str(next(pathlib.Path("tests/").rglob("*tag.lst")).absolute()),
+        ]
+        real_bitshifts = [
+            2 ** 0,
+            2 ** 14,
+            2 ** 10,
+        ]
+        for file, bitshift in zip(list_of_filenames_for_bitshift, real_bitshifts):
+            cur_obj = ReadMeta(
+                file,
+                debug=False,
+                input_start="Frames",
+                input_stop1="PMT1",
+                input_stop2="Lines",
+            )
+            cur_obj.run()
+            assert cur_obj.bitshift == bitshift
+
+
 
 if __name__ == "__main__":
     TestMetaTools()
