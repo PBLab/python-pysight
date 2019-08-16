@@ -8,6 +8,9 @@ import numpy as np
 import attr
 
 
+NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
+MULTISCALER_RESOLUTION = 100e-12  # 100 picoseconds resolution
+
 class LstFormat(Enum):
     ASCII = "ascii"
     BINARY = "binary"
@@ -331,13 +334,11 @@ class ReadMeta:
         else:
             format_str: str = r"fstchan=(\w+)"
 
-        NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
-
         format_fstchan = re.compile(format_str)
         fstchan = (
             int(re.search(format_fstchan, cur_str).group(1)) * NANOSECONDS_PER_FSTCHAN
         )  # in nanoseconds
-        acq_delay = int(fstchan / self.binwidth)
+        acq_delay = int(fstchan / MULTISCALER_RESOLUTION)
         return acq_delay
 
     def __parse_extra_metadata(self, metadata):

@@ -34,6 +34,9 @@ class BinaryDataParser:
     data = attr.ib(validator=instance_of(np.ndarray))
     timepatch = attr.ib(validator=instance_of(str))
     data_range = attr.ib(default=0, validator=instance_of(int))
+    bitshift = attr.ib(default=0, validator=instance_of(int))
+    acq_delay = attr.ib(default=0, validator=instance_of(int))
+    holdafter = attr.ib(default=0, validator=instance_of(int))
     dict_of_inputs = attr.ib(default=attr.Factory(dict), validator=instance_of(dict))
     use_tag_bits = attr.ib(default=False, validator=instance_of(bool))
     dict_of_inputs_bin = attr.ib(init=False)
@@ -207,7 +210,7 @@ class BinaryDataParser:
             self.time, index=[self.channel, self.edge], columns=["abs_time"]
         )
         try:
-            df.abs_time += (self.sweep - 1) * self.data_range
+            df.abs_time += (self.sweep - 1) * ((self.data_range * self.bitshift) + self.acq_delay + self.holdafter)
         except AttributeError:
             pass
         try:

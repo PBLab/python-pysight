@@ -91,6 +91,9 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
                 data=raw_data,
                 data_range=cur_file.data_range,
                 timepatch=cur_file.timepatch,
+                bitshift=cur_file.bitshift,
+                acq_delay=cur_file.acq_delay,
+                holdafter=cur_file.time_after,
                 use_tag_bits=config["tagbits"]["tag_bits"],
                 dict_of_inputs=cur_file.dict_of_input_channels,
             )
@@ -106,6 +109,7 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
                 dict_of_inputs=cur_file.dict_of_input_channels,
                 use_tag_bits=config["tagbits"]["tag_bits"],
                 dict_of_slices_hex=dict_of_slices_hex,
+                bitshift=cur_file.bitshift,
                 time_after_sweep=cur_file.time_after,
                 acq_delay=cur_file.acq_delay,
                 num_of_channels=cur_file.num_of_channels,
