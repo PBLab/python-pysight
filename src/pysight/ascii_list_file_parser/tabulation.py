@@ -34,6 +34,7 @@ class Tabulate(object):
     dict_of_slices_hex = attr.ib(validator=instance_of(dict))
     data_range = attr.ib(default=1, validator=instance_of(int))
     use_tag_bits = attr.ib(default=False, validator=instance_of(bool))
+    bitshift = attr.ib(default=0, validator=instance_of(int))
     time_after_sweep = attr.ib(default=int(96), validator=instance_of(int))
     acq_delay = attr.ib(default=int(0), validator=instance_of(int))
     num_of_channels = attr.ib(default=3, validator=instance_of(int))
@@ -185,7 +186,7 @@ class Tabulate(object):
                 self.dict_of_slices_hex["time_rel_sweep"].processed
                 + (
                     (self.dict_of_slices_hex["sweep"].processed - 1)
-                    * (self.data_range + self.time_after_sweep)
+                    * ((self.data_range * self.bitshift) + self.time_after_sweep)
                 )
                 + self.dict_of_slices_hex["sweep"].processed * self.acq_delay
             )

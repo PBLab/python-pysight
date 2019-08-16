@@ -10,6 +10,7 @@ import attr
 
 NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
 MULTISCALER_RESOLUTION = 100e-12  # 100 picoseconds resolution
+MULTISCALER_EOS_DEADTIME = 96  # 96 nanoseconds end-of-sweep deadtime
 
 class LstFormat(Enum):
     ASCII = "ascii"
@@ -317,9 +318,8 @@ class ReadMeta:
 
         format_holdafter = re.compile(format_str)
         holdafter = float(re.search(format_holdafter, cur_str).group(1))
-        EOS_DEADTIME = 96  # ns, current spec of Multiscaler
 
-        time_after_sweep = int((EOS_DEADTIME + holdafter) * 10 ** (-9) / self.binwidth)
+        time_after_sweep = int((MULTISCALER_EOS_DEADTIME + (holdafter * 6.4)) * 10 ** (-9) / MULTISCALER_RESOLUTION)
         return time_after_sweep
 
     def __get_fstchan(self, cur_str: str) -> int:
