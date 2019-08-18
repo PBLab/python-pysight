@@ -31,8 +31,8 @@ jobs:
       curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
       export PATH="$HOME/.pyenv/bin:$PATH"
       pyenv install $(python.version)
-      exec "$SHELL"
       alias python="~/.pyenv/versions/$(python.version)/bin/python"
+      alias pip="~/.pyenv/versions/$(python.version)/bin/pip"
       pip install -r docs/requirements.txt --no-use-pep517
       python setup.py build_ext --inplace
     displayName: 'Install dependencies'
