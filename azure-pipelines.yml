@@ -26,20 +26,11 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      sudo apt-get install tk-dev python3-tk
-      unset PYENV_ROOT
-      curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
-      export PATH="$HOME/.pyenv/bin:$PATH"
-      pyenv install $(python.version)
-      alias python="~/.pyenv/versions/$(python.version)/bin/python"
-      alias pip="~/.pyenv/versions/$(python.version)/bin/pip"
       pip install -r docs/requirements.txt --no-use-pep517
       python setup.py build_ext --inplace
     displayName: 'Install dependencies'
 
   - script: |
-      echo $(which pip)
-      echo $(which python)
       pip install pytest
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
