@@ -20,8 +20,8 @@
     :alt: Documentation Status
 
 .. |gitter| image:: https://badges.gitter.im/python-pysight/gitter.png
-			:target:  https://gitter.im/python-pysight/Lobby
-			:alt: Gitter Chat
+    :target: https://gitter.im/python-pysight/Lobby
+    :alt: Gitter Chat
 
 .. |azure| image:: https://dev.azure.com/pblabgeneral/pysight/_apis/build/status/PBLab.python-pysight?branchName=master
     :alt: Azure Pipelines Build Status

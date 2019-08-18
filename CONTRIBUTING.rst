@@ -83,4 +83,4 @@ To create and publish a new version, once all code changes are made, follow thes
 2. ``black .`` from the project's home directory.
 3. ``bumpversion --allow-dirty patch`` to bump the version. Other options include ``minor`` and ``major``.
 4. ``python setup.py clean --all sdist bdist_wheel``
-5.
+5. ``twine upload --skip-existing dist/*``
