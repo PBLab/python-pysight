@@ -2,7 +2,7 @@ sphinx < 1.9
 numpy >= 1.16
 matplotlib >= 3.0
 pandas >= 0.24
-attrs == 18.2
+attrs == 19.1
 cython >= 0.29
 scipy >= 1.2
 scikit-learn >= 0.20
