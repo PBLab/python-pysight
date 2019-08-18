@@ -27,12 +27,12 @@ jobs:
 
   - script: |
       sudo apt-get install tk-dev python3-tk
-      python -m pip install --upgrade pip
       unset PYENV_ROOT
       curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash
       export PATH="$HOME/.pyenv/bin:$PATH"
       pyenv install $(python.version)
-      which python
+      exec "$SHELL"
+      alias python="~/.pyenv/versions/$(python.version)/bin/python"
       pip install -r docs/requirements.txt --no-use-pep517
       python setup.py build_ext --inplace
     displayName: 'Install dependencies'
