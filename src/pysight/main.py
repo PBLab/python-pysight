@@ -44,7 +44,6 @@ from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
 from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import (
     add_bidir_lines,
 )
-from pysight.gui.gui_main import GuiAppLst
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
@@ -310,6 +309,8 @@ def run(cfg_file: str = None) -> Optional[PySightOutput]:
 
     :return PySightOutput: Object containing raw and processed data
     """
+    from pysight.gui.gui_main import GuiAppLst
+
     if cfg_file:
         with open(cfg_file, "r") as f:
             config: Dict[str, Any] = toml.load(f)
@@ -336,6 +337,8 @@ def run_batch_lst(
     :param str cfg_file: Name of config file to use
     :return pd.DataFrame: Record of analyzed data
     """
+    from pysight.gui.gui_main import GuiAppLst
+
     path = pathlib.Path(foldername)
     num_of_files = 0
     if not path.exists():
@@ -406,6 +409,8 @@ def mp_batch(
     """
     import pathlib
     import multiprocessing as mp
+
+    from pysight.gui.gui_main import GuiAppLst
 
     path = pathlib.Path(foldername)
     if not path.exists():
