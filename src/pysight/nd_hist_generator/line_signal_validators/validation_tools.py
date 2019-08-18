@@ -6,7 +6,7 @@ import warnings
 import attr
 from attr.validators import instance_of
 from enum import Enum
-from pysight.gui.gui_main import ImagingSoftware
+from pysight.nd_hist_generator.movie import ImagingSoftware
 from ..line_signal_validators.scanimage import ScanImageLineValidator
 from ..line_signal_validators.mscan import MScanLineValidator
 

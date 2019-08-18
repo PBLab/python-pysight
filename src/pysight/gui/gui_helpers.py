@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Union, Dict, Any
 
-from pysight.gui.gui_main import ImagingSoftware
+from pysight.nd_hist_generator.movie import ImagingSoftware
 
 
 def verify_input(config: Dict[str, Any]):

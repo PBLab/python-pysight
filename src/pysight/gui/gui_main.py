@@ -6,7 +6,6 @@ from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
 from os import sep, utime
 import time
-from enum import Enum
 import logging
 
 import toml
@@ -15,6 +14,8 @@ from attr.validators import instance_of
 
 from .config_parser import Config
 import pysight
+
+from pysight.nd_hist_generator.movie import ImagingSoftware
 
 
 def is_positive(instance, attribute, value):
@@ -25,11 +26,6 @@ def is_positive(instance, attribute, value):
 def end_is_greater(instance, attribute, value):
     if value < instance.start:
         return ValueError("TAG Bit 'end' value has to be equal or greater to 'start'.")
-
-
-class ImagingSoftware(Enum):
-    SCANIMAGE = "ScanImage"
-    MSCAN = "MScan"
 
 
 @attr.s(slots=True)

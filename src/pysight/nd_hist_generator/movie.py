@@ -3,6 +3,7 @@ import gc
 from typing import List, Tuple, Iterable, Dict, Generator, Callable
 import warnings
 from collections import OrderedDict, namedtuple, deque
+from enum import Enum
 
 import attr
 from attr.validators import instance_of
@@ -14,9 +15,13 @@ from numba import jit, float64, uint64, int64
 import h5py
 from tqdm import tqdm
 
-from pysight.gui.gui_main import ImagingSoftware
 from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 from .frame_chunk import FrameChunk
+
+
+class ImagingSoftware(Enum):
+    SCANIMAGE = "ScanImage"
+    MSCAN = "MScan"
 
 
 def trunc_end_of_file(name) -> str:
