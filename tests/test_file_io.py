@@ -93,7 +93,7 @@ class TestMetaTools:
         assert list_of_returned_inputs_dict == real_list_of_real_inputs_dict
 
     def test_fstchan(self):
-        real_fstchan = [0, 54 * 8]
+        real_fstchan = [0, int((int("54", 16) * 64))]
         returned_fstchan = []
         for oname in self.file_io_objects:
             returned_fstchan.append(oname.acq_delay)
@@ -101,7 +101,7 @@ class TestMetaTools:
         assert real_fstchan == returned_fstchan
 
     def test_time_after_sweep(self):
-        real_time_after = [120, 120]
+        real_time_after = [960, 960]
         returned_time_after = []
         for oname in self.file_io_objects:
             returned_time_after.append(oname.time_after)

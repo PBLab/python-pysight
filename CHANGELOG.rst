@@ -5,6 +5,18 @@ Changelog
 Latest version
 ==============
 
+0.10.1 (2019-08-18)
+-------------------
+
+This is a critical bug fix release, which deals with list files containing
+multiple sweeps. Up untill the previous version (0.10.0), list files with
+more than one sweep weren't parsed correctly due to a bug in PySight. This
+issue is now considered resolved.
+
+
+Previous Versions
+=================
+
 0.10.0 (2019-05-04)
 -------------------
 
@@ -25,9 +37,6 @@ This is a minor release containing new features and bug fixes.
 * Improvemnets to use less RAM during runtime.
 
 * Fixed a memory leak affecting mostly the processing of large ``.lst`` files.
-
-Previous Versions
-=================
 
 0.9.8 (2018-12-13)
 ------------------
