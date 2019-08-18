@@ -70,7 +70,7 @@ class ScanImageLineValidator:
         rel_idx: np.ndarray,
     ) -> np.ndarray:
         """
-        Check for missing\extra lines in the matrix of lines.
+        Check for missing/extra lines in the matrix of lines.
 
         :param np.ndarray diff_mat:
         :param np.ndarray last_idx: Last index of relevant lines in the frame

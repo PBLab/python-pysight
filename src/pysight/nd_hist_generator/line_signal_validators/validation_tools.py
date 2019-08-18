@@ -123,13 +123,13 @@ class SignalValidator:
     def __calc_last_event_time(self) -> int:
         """
         Find the last event time for the experiment. Logic as follows:
-        No lines \ frames data given: Last event time is the last photon time.
+        No lines / frames data given: Last event time is the last photon time.
         Only lines data given: The last start-of-frame time is created, and the difference between subsequent frames
         in the data is added.
         Frames data exists: The last frame time plus the difference between subsequent frames is the last event time.
         :return int: Last event time
         """
-        ##
+
         if "Frames" in self.dict_of_data:
             last_frame_time = self.dict_of_data["Frames"].loc[:, "abs_time"].iloc[-1]
 

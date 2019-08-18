@@ -9,7 +9,7 @@ import logging
 class PhotonDF:
     """
     Create initial photon dataframe and set the channel as its index. It will
-    contain a PMT\photons column for every recorded data channel.
+    contain a PMT/photons column for every recorded data channel.
 
     :param Dict[str, pd.DataFrame] dict_of_data: A dictionary with keys
     being the input analog channels and values are the DataFrames that contains the raw data.

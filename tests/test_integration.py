@@ -5,7 +5,6 @@ from unittest import TestCase
 import numpy as np
 import pathlib
 import h5py
-import tkinter
 
 from pysight.main import run
 
