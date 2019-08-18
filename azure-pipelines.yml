@@ -25,7 +25,7 @@ jobs:
       versionSpec: '$(python.version)'
       architecture: 'x64'
 
-  - script: sudo apt-get install tk-dev python3-tk && pyenv install $(python.version) && python -m pip install --upgrade pip && pip install -r docs/requirements.txt --no-use-pep517 && python setup.py build_ext --inplace
+  - script: sudo apt-get install tk-dev python3-tk && python -m pip install --upgrade pip && pip install pyenv && pyenv install $(python.version) && pip install -r docs/requirements.txt --no-use-pep517 && python setup.py build_ext --inplace
     displayName: 'Install dependencies'
 
   - script: |
