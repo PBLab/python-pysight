@@ -38,8 +38,8 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      which pip
-      which python
+      echo $(which pip)
+      echo $(which python)
       pip install pytest
       pytest tests --doctest-modules --junitxml=junit/test-results.xml
     displayName: 'pytest'
