@@ -331,7 +331,6 @@ class GuiAppLst:
             main_frame, textvariable=self.tag_offset, width=3
         )
         self.tag_offset_entry.grid(column=0, row=tag_row + 1, sticky="w")
-        self.tag_offset_entry.config(state="disabled")
 
     def __tag_bits(self, main_frame):
         """ TAG bits """
