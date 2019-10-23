@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Dict, Any
 import logging
 import numpy as np
 import pandas as pd
