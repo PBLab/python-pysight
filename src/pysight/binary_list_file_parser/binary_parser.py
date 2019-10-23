@@ -6,6 +6,7 @@ import pandas as pd
 import attr
 from attr.validators import instance_of
 
+from pysight.ascii_list_file_parser.file_io import ReadMeta
 
 class TimepatchBits(NamedTuple):
     total: int
@@ -242,3 +243,19 @@ class BinaryDataParser:
                 dict_of_data[key] = relevant_vals.sort_values(by=["abs_time"]).reset_index(drop=True)
 
         return dict_of_data
+
+
+def binary_parsing(cur_file: ReadMeta, raw_data: np.ndarray, config: Dict[str, Any]):
+    """Reads a binary file to memory."""
+    binary_parser = BinaryDataParser(
+        data=raw_data,
+        data_range=cur_file.data_range,
+        timepatch=cur_file.timepatch,
+        bitshift=cur_file.bitshift,
+        acq_delay=cur_file.acq_delay,
+        holdafter=cur_file.time_after,
+        use_tag_bits=config["tagbits"]["tag_bits"],
+        dict_of_inputs=cur_file.dict_of_input_channels,
+    )
+    binary_parser.run()
+    return binary_parser.data_to_grab, binary_parser.dict_of_data

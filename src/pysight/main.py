@@ -28,16 +28,13 @@ import matplotlib.pyplot as plt
 import toml
 
 colorama.init()
-from pysight.ascii_list_file_parser.file_io import ReadMeta
-from pysight.ascii_list_file_parser.tabulation import Tabulate
+from pysight.ascii_list_file_parser.file_io import ReadMeta, ascii_parsing
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.movie import Movie
-from pysight.ascii_list_file_parser import timepatch_switch
 from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
 from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits
-from pysight.ascii_list_file_parser.distribute_data import DistributeData
 from pysight.nd_hist_generator.line_signal_validators.validation_tools import (
     SignalValidator,
 )
@@ -47,7 +44,7 @@ from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import (
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
-from pysight.binary_list_file_parser.binary_parser import BinaryDataParser
+from pysight.binary_list_file_parser.binary_parser import BinaryDataParser, binary_parsing
 from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
@@ -62,90 +59,15 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
     :return PySightOutput: An object containing the relevant data,\
     if "memory" option was checked in the GUI.
     """
-    # Read the .lst file
     if config["outputs"]["data_filename"].endswith(".lst"):
-        cur_file = ReadMeta(
-            filename=config["outputs"]["data_filename"],
-            input_start=config["inputs"]["start"],
-            input_stop1=config["inputs"]["stop1"],
-            input_stop2=config["inputs"]["stop2"],
-            input_stop3=config["inputs"]["stop3"],
-            input_stop4=config["inputs"]["stop4"],
-            input_stop5=config["inputs"]["stop5"],
-            binwidth=config["advanced"]["binwidth"],
-            use_sweeps=config["advanced"]["sweeps_as_lines"],
-            mirror_phase=config["advanced"]["phase"],
-        )
-        cur_file.run()
-        raw_data_obj = ReadData(
-            filename=config["outputs"]["data_filename"],
-            start_of_data_pos=cur_file.start_of_data_pos,
-            timepatch=cur_file.timepatch,
-            is_binary=cur_file.is_binary,
-            debug=config["advanced"]["debug"],
-        )
-        raw_data = raw_data_obj.read_lst()
-        if cur_file.is_binary:
-            binary_parser = BinaryDataParser(
-                data=raw_data,
-                data_range=cur_file.data_range,
-                timepatch=cur_file.timepatch,
-                bitshift=cur_file.bitshift,
-                acq_delay=cur_file.acq_delay,
-                holdafter=cur_file.time_after,
-                use_tag_bits=config["tagbits"]["tag_bits"],
-                dict_of_inputs=cur_file.dict_of_input_channels,
-            )
-            binary_parser.run()
-        else:
-            # Create input structures and create a DataFrame
-            dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(
-                cur_file.timepatch
-            )
-            tabulated_data = Tabulate(
-                data_range=cur_file.data_range,
-                data=raw_data,
-                dict_of_inputs=cur_file.dict_of_input_channels,
-                use_tag_bits=config["tagbits"]["tag_bits"],
-                dict_of_slices_hex=dict_of_slices_hex,
-                bitshift=cur_file.bitshift,
-                time_after_sweep=cur_file.time_after,
-                acq_delay=cur_file.acq_delay,
-                num_of_channels=cur_file.num_of_channels,
-            )
-            tabulated_data.run()
-
-            del raw_data
-            del raw_data_obj
-            separated_data = DistributeData(
-                df=tabulated_data.df_after_timepatch,
-                dict_of_inputs=tabulated_data.dict_of_inputs,
-                use_tag_bits=config["tagbits"]["tag_bits"],
-            )
-            separated_data.run()
-
-    ####### START OF "PUBLIC API" ##########
-    try:  # list file branch
-        if cur_file.is_binary:
-            relevant_columns = binary_parser.data_to_grab
-            dict_of_data = binary_parser.dict_of_data
-        else:
-            relevant_columns = separated_data.data_to_grab
-            dict_of_data = separated_data.dict_of_data
-        lst_metadata = cur_file.lst_metadata
-        fill_frac = (
-            config["advanced"]["fill_frac"]
-            if cur_file.fill_fraction == -1.0
-            else cur_file.fill_fraction
-        )
-    except NameError:  # dealing with a pickle file
+        relevant_columns, dict_of_data, lst_metadata, fill_frac = _read_lst_file(config)
+    else:
         logging.info(f"Reading file {config['outputs']['data_filename']}...")
         with open(config["outputs"]["data_filename"], "rb") as f:
             dict_of_data = pickle.load(f)
         lst_metadata = dict()
         relevant_columns = ["abs_time"]
         fill_frac = config["advanced"]["fill_frac"]
-        binary_parser = None  # to be deleted later
 
     validated_data = SignalValidator(
         dict_of_data=dict_of_data,
@@ -162,10 +84,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
     )
 
     validated_data.run()
-    try:
-        del separated_data
-    except UnboundLocalError:
-        del binary_parser
 
     photon_df = PhotonDF(
         dict_of_data=validated_data.dict_of_data,
@@ -286,6 +204,45 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
             config=config,
         )
         return pysight_output
+
+
+def _read_lst_file(config: Dict[str, Any]):
+    """Read out the data in the .lst file. This function won't be called
+    if PySight was called on already-parsed data, i.e. data which came
+    from a source other than a multiscaler.
+    """
+    cur_file = ReadMeta(
+            filename=config["outputs"]["data_filename"],
+            input_start=config["inputs"]["start"],
+            input_stop1=config["inputs"]["stop1"],
+            input_stop2=config["inputs"]["stop2"],
+            input_stop3=config["inputs"]["stop3"],
+            input_stop4=config["inputs"]["stop4"],
+            input_stop5=config["inputs"]["stop5"],
+            binwidth=config["advanced"]["binwidth"],
+            use_sweeps=config["advanced"]["sweeps_as_lines"],
+            mirror_phase=config["advanced"]["phase"],
+        )
+    cur_file.run()
+    raw_data_obj = ReadData(
+        filename=config["outputs"]["data_filename"],
+        start_of_data_pos=cur_file.start_of_data_pos,
+        timepatch=cur_file.timepatch,
+        is_binary=cur_file.is_binary,
+        debug=config["advanced"]["debug"],
+    )
+    raw_data = raw_data_obj.read_lst()
+    if cur_file.is_binary:
+        relevant_columns, dict_of_data = binary_parsing(cur_file, raw_data, config)
+    else:
+        relevant_columns, dict_of_data = ascii_parsing(cur_file, raw_data, config)
+    lst_metadata = cur_file.lst_metadata
+    fill_frac = (
+        config["advanced"]["fill_frac"]
+        if cur_file.fill_fraction == -1.0
+        else cur_file.fill_fraction
+    )
+    return relevant_columns, dict_of_data, lst_metadata, fill_frac
 
 
 def mp_main_data_readout(config: Dict[str, Any]):

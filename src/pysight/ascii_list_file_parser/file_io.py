@@ -7,6 +7,10 @@ from attr.validators import instance_of
 import numpy as np
 import attr
 
+from pysight.ascii_list_file_parser import timepatch_switch
+from pysight.ascii_list_file_parser.tabulation import Tabulate
+from pysight.ascii_list_file_parser.distribute_data import DistributeData
+
 
 NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
 MULTISCALER_RESOLUTION = 100e-12  # 100 picoseconds resolution
@@ -396,3 +400,31 @@ class ReadMeta:
             return fill_frac * 100  # in percent
         else:
             return -1.0
+
+
+def ascii_parsing(cur_file: ReadMeta, raw_data: np.ndarray, config: Dict[str, Any]):
+    """Preliminary readout of data from ASCII file."""
+    dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(
+        cur_file.timepatch
+    )
+    tabulated_data = Tabulate(
+        data_range=cur_file.data_range,
+        data=raw_data,
+        dict_of_inputs=cur_file.dict_of_input_channels,
+        use_tag_bits=config["tagbits"]["tag_bits"],
+        dict_of_slices_hex=dict_of_slices_hex,
+        bitshift=cur_file.bitshift,
+        time_after_sweep=cur_file.time_after,
+        acq_delay=cur_file.acq_delay,
+        num_of_channels=cur_file.num_of_channels,
+    )
+    tabulated_data.run()
+
+    del raw_data
+    separated_data = DistributeData(
+        df=tabulated_data.df_after_timepatch,
+        dict_of_inputs=tabulated_data.dict_of_inputs,
+        use_tag_bits=config["tagbits"]["tag_bits"],
+    )
+    separated_data.run()
+    return separated_data.data_to_grab, separated_data.dict_of_data
