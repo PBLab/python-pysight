@@ -135,7 +135,7 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         lst_metadata = cur_file.lst_metadata
         fill_frac = (
             config["advanced"]["fill_frac"]
-            if cur_file.fill_fraction == -1
+            if cur_file.fill_fraction == -1.0
             else cur_file.fill_fraction
         )
     except NameError:  # dealing with a pickle file

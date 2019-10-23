@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple
 @attr.s(slots=True)
 class FrameChunk:
     """
-    Holds a chunk of data and can histogram ir efficiently.
+    Holds a chunk of data and can histogram it efficiently.
     Composed out of a Movie - any attribute or method not defined here is
     taken from the self.movie object with the __getattr__ method
     """

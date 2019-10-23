@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 import logging
 import re
 from enum import Enum
@@ -28,7 +28,8 @@ class ReadMeta:
     :param str input_stop1: Data type in analog channel 'STOP1' (1)
     :param str input_stop2: Data type in analog channel 'STOP2' (2)
     :param float binwidth: Multiscaler resolution in seconds (100-800 picoseconds)
-    :param bool use_sweeps: Use the sweeps counter as a new frame indicator (dev mode)
+    :param bool use_sweeps: Use the sweeps counter as a new line indicator
+    :param float mirror_phase: Phase delay for the line signal (in us)
     """
 
     filename = attr.ib(validator=instance_of(str))
@@ -158,7 +159,7 @@ class ReadMeta:
             raise ValueError("No filename given.")
 
         if self.is_binary:
-            format_str = rb"range=(\d+)"
+            format_str: Union[str, bytes] = rb"range=(\d+)"
         else:
             format_str = r"range=(\d+)"
 
@@ -330,9 +331,9 @@ class ReadMeta:
         :return int: Acq delay in timebins
         """
         if self.is_binary:
-            format_str: bytes = rb"fstchan=(\w+)"
+            format_str: Union[bytes, str] = rb"fstchan=(\w+)"
         else:
-            format_str: str = r"fstchan=(\w+)"
+            format_str = r"fstchan=(\w+)"
 
         format_fstchan = re.compile(format_str)
         fstchan = (
