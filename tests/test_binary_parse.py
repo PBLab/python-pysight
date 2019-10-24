@@ -131,3 +131,63 @@ class BinaryTest(TestCase):
         timepatch = "f3"
         binda = BinaryDataParser(data, timepatch)
         binda.run()
+
+    def test_sweep_unfold_not_needed_8bit(self):
+        timepatch = "5"
+        data = np.array(
+            [
+                0b00000000001_01010101010101010101_0101,
+                0b00000000111_01010101010101010101_0101,
+                0b10010101_01010101010101010101_0101,
+                0b11010101_01010101010101010101_0101,
+                0b00010101_01010101010101010101_0101,
+                0b11111110_01010101010101010101_0101,
+            ]
+        )
+        binda = BinaryDataParser(data, timepatch)
+        sweeps = np.array([1, 7, 149, 213, 21, 254], dtype=np.uint16)
+        calced = binda._BinaryDataParser__get_sweep()
+        after_unfolding = binda._BinaryDataParser__unfold_sweeps(calced)
+        np.testing.assert_array_equal(after_unfolding, calced)
+
+    def test_sweep_unfold_not_needed_7bit(self):
+        timepatch = "f3"
+        data = np.array(
+            [
+                0b1111111111111111_0_0000001_111111111111111111111111111111111111_0101,
+                0b1111111111111111_0_0000111_111111111111111111111111111111111111_0101,
+                0b1111111111111111_0_1111110_111111111111111111111111111111111111_0101,
+            ]
+        )
+        binda = BinaryDataParser(data, timepatch)
+        sweeps = np.array([1, 7, 126], dtype=np.uint16)
+        calced = binda._BinaryDataParser__get_sweep()
+        after_unfolding = binda._BinaryDataParser__unfold_sweeps(calced)
+        np.testing.assert_array_equal(after_unfolding, calced)
+
+    def test_sweep_unfold_not_needed_16bit(self):
+        timepatch = "Db"
+        data = np.array(
+            [
+                0b1111111111111111_0000000000000001_1111111111111111111111111111_1001,
+                0b1111111111111111_0000000000000101_1111111111111111111111111111_1001,
+                0b1111111111111111_1111111111111110_1111111111111111111111111111_1001,
+            ]
+        )
+        binda = BinaryDataParser(data, timepatch)
+        sweeps = np.array([1, 5, (2 ** 16) - 2], dtype=np.uint16)
+        calced = binda._BinaryDataParser__get_sweep()
+        after_unfolding = binda._BinaryDataParser__unfold_sweeps(calced)
+        np.testing.assert_array_equal(after_unfolding, calced)
+
+    def test_sweep_max_num_of_sweeps(self):
+        timepatch = "Db"
+        data = np.array(
+            [
+                0b1111111111111111_1111111111111110_1111111111111111111111111111_1001,
+                0b1111111111111111_1111111111111110_1111111111111111111111111111_1001,
+                0b1111111111111111_1111111111111111_1111111111111111111111111111_1001,
+                0b1111111111111111_1111111111111111_1111111111111111111111111111_1001,
+
+            ]
+        )

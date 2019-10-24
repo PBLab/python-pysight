@@ -67,8 +67,6 @@ class Allocate(object):
         # Censor correction addition:
         if "Laser" not in self.dict_of_data.keys():
             self.dict_of_data["Laser"] = 0
-            # if self.use_sweeps:
-            #     out = self.train_dataset()
         self.__reindex_dict_of_data()
 
         logging.info("Relative times calculated. Creating Movie object...")

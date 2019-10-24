@@ -185,7 +185,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         lst_metadata=lst_metadata,
         exp_params=analyzed_struct.exp_params,
         line_delta=int(line_delta),
-        use_sweeps=config["advanced"]["sweeps_as_lines"],
         tag_as_phase=True,
         tag_freq=float(config["advanced"]["tag_freq"]),
         image_soft=config["image"]["imaging_software"],

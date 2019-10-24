@@ -16,6 +16,7 @@ NANOSECONDS_PER_FSTCHAN = 6.4e-9  # Multiscaler const parameter
 MULTISCALER_RESOLUTION = 100e-12  # 100 picoseconds resolution
 MULTISCALER_EOS_DEADTIME = 96  # 96 nanoseconds end-of-sweep deadtime
 
+
 class LstFormat(Enum):
     ASCII = "ascii"
     BINARY = "binary"

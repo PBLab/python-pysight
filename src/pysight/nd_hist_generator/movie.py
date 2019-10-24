@@ -62,7 +62,6 @@ class Movie:
     :param dict lst_metadata: Metadata of the ``.lst`` file
     :param dict exp_params: Parameters used for fitting when using censor correction (currently NotImplemented)
     :param int line_delta: Number of bins between subsequent line signals
-    :param bool use_sweeps: Whether to count each sweep as a line in the resulting image
     :param float cache_size: Size of cache in bytes
     :param bool tag_as_phase: Whether to take into consideration the sinusoidal pattern of the TAG lens
     :param float tag_freq: Frequency of TAG lens in Hz
@@ -94,7 +93,6 @@ class Movie:
     lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
     exp_params = attr.ib(factory=dict, validator=instance_of(dict))
     line_delta = attr.ib(default=158_000, validator=instance_of(int))
-    use_sweeps = attr.ib(default=False, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
     tag_as_phase = attr.ib(default=True, validator=instance_of(bool))
     tag_freq = attr.ib(default=189e3, validator=instance_of(float))

@@ -8,6 +8,7 @@ from attr.validators import instance_of
 
 from pysight.ascii_list_file_parser.file_io import ReadMeta
 
+
 class TimepatchBits(NamedTuple):
     total: int
     time: int
@@ -82,6 +83,7 @@ class BinaryDataParser:
         self.time = self.__get_time()
         if self.timepatch_bits.value.sweep != 0:
             self.sweep = self.__get_sweep()
+            # self.sweep = self.__unfold_sweeps(self.sweep)
         if self.timepatch != "f3":
             if self.timepatch_bits.value.tag != 0:
                 self.tag = self.__get_tag()
@@ -136,6 +138,21 @@ class BinaryDataParser:
         right_shift_by = 4 + self.timepatch_bits.value.time
         sweep = np.right_shift(self.data, right_shift_by) & ones
         return sweep.astype(np.uint16)
+
+    def __unfold_sweeps(self, sweeps: np.ndarray) -> np.ndarray:
+        """In some cases more than the real sweep number in the list file
+        exceeds the available numbers of represented sweeps. That is, an
+        experiment can be coducted using 1000 sweeps, while the sweep counter
+        only has 8 bits. This causes 'folding' in the sweep values. The goal of
+        this method is to unfold the sweep numbers such that they're (almost)
+        monotonically increasing.
+        """
+        max_possible_sweep_value = (2 ** self.timepatch_bits.value.sweep) - 1
+        if sweeps.max() < max_possible_sweep_value:
+            return sweeps
+        folding_idx = np.where(sweeps == max_possible_sweep_value)
+        if len(folding_idx) == 1:
+            return sweeps
 
     def __get_tag(self) -> np.ndarray:
         """
