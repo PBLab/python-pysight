@@ -4,7 +4,7 @@
 __author__ = Hagai Har-Gil
 """
 
-from typing import Tuple, Dict, Any, Optional
+from typing import Dict, Any, Optional
 import pickle
 import logging
 import pathlib
@@ -252,7 +252,7 @@ def mp_main_data_readout(config: Dict[str, Any]):
     """
     try:
         out = main_data_readout(config)
-    except:
+    except Exception:
         pass
     else:
         return out

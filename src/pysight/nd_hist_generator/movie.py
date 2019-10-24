@@ -1,21 +1,16 @@
 import logging
 import gc
-from typing import List, Tuple, Iterable, Dict, Generator, Callable
-import warnings
-from collections import OrderedDict, namedtuple, deque
+from typing import List, Tuple, Dict, Callable
 from enum import Enum
 
 import attr
 from attr.validators import instance_of
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from numba import jit, float64, uint64, int64
 import h5py
 from tqdm import tqdm
 
-from pysight.nd_hist_generator.line_signal_validators.rectify_lines import LineRectifier
 from .frame_chunk import FrameChunk
 
 

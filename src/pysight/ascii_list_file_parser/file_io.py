@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Union, Any
+from typing import Dict, Tuple, Union, Any
 import logging
 import re
 from enum import Enum
@@ -143,7 +143,7 @@ class ReadMeta:
         except UnicodeDecodeError:
             with open(self.filename, "rb") as f:
                 txt = f.read(400).decode()
-        except:
+        except Exception:
             raise Exception(f"File {self.filename} read unsuccessfully.")
 
         reg = re.compile(r"\nmpafmt=(\w{3})")
@@ -227,7 +227,6 @@ class ReadMeta:
 
         bitshift = 2 ** int(bitshift, 16)
         return bitshift
-
 
     def find_active_channels(self, cur_str) -> Tuple[Dict[str, str], int]:
         """
