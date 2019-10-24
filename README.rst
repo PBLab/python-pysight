@@ -10,7 +10,7 @@
     * - docs
       - |docs| |gitter|
     * - tests
-      - | |azure| |codecov|
+      - | |azure|
     * - package
       - | |version| |wheel| |supported_versions|
         | |supported_implementations| |codestyle|
@@ -26,10 +26,6 @@
 .. |azure| image:: https://dev.azure.com/pblabgeneral/pysight/_apis/build/status/PBLab.python-pysight?branchName=master
     :alt: Azure Pipelines Build Status
     :target: https://dev.azure.com/pblabgeneral/pysight/_build/latest?definitionId=1&branchName=master
-
-.. |codecov| image:: https://codecov.io/github/PBLab/python-pysight/coverage.svg?branch=master
-    :alt: Coverage Status
-    :target: https://codecov.io/github/HagaiHargil/python-pysight
 
 .. |version| image:: https://img.shields.io/pypi/v/pysight.svg
     :alt: PyPI Package latest release
@@ -79,3 +75,11 @@ References
 
 PySight is fully described in `this Optica article <https://www.osapublishing.org/optica/abstract.cfm?uri=optica-5-9-1104>`_,
 released in September 2018.
+
+Project Status
+==============
+
+PySight is currently in maintenance mode. The application is working well and
+should be usable for new users. However, new features are unlikely to be added,
+and activity in the repo will probably be mainly limited to bug fixes and some
+documentation improvements.
