@@ -45,9 +45,15 @@ These command will open a GUI in which you'll have to choose either a ``.lst`` o
 If you use option #1, The algorithm will create a PySightOutput object which grants access to raw and processed data.
 Other outputs come in the form of in-memory numpy arrays and ``.hdf5`` compressed multidimensional files. The output options are:
 
-* **In Memory** - The returned objects contain all photons and generated histograms. Use it if you wish to further process the data in Python.
-* **Full Stack** - PySight will save to disk a multidimensional histogram, one per spectral channel, with all of the events recorded. Dimensions are [t, x, y, z, tau].
-* **Summed Stack** - PySight will sum the _t_ dimension of the Full Stack to received a summed projection over time of the entire experiment.
+* **In Memory** - The returned objects contain all photons and generated
+  histograms. Use it if you wish to further process the data in Python,
+  or view it using tools like `matplotlib <https://matplotlib.org/>`_ or
+  `napari <napari.org>`_.
+* **Full Stack** - PySight will save to disk a multidimensional histogram,
+  one per spectral channel, with all of the events recorded.
+  Dimensions are [t, x, y, z, tau].
+* **Summed Stack** - PySight will sum the _t_ dimension of the Full Stack to
+  received a summed projection over time of the entire experiment.
 
 .. note:: If you run the script from the command line (option #2) or in batch mode you can only interact with the final ``.hdf5`` files.
 
