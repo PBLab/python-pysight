@@ -82,6 +82,7 @@ class ReadMeta:
         )
         # Grab some additional metadata from the file, to be saved later
         self.__parse_extra_metadata(metadata)
+        self.lst_metadata["data_range"] = str(self.data_range)
 
     def __attrs_post_init__(self):
         self.help_dict = {
@@ -362,6 +363,7 @@ class ReadMeta:
             "range",
             "sweepmode",
             "fdac",
+            "swpreset",
         ]
         self.lst_metadata = {}
         for cur_str in list_to_parse:
@@ -375,15 +377,25 @@ class ReadMeta:
         the dictionary self.lst_metadata
         """
         if self.is_binary:
-            format_str: str = str_to_parse.encode("utf-8") + rb"=(\w+)"
+            self.__parse_str_bin(metadata, str_to_parse)
         else:
-            format_str: str = str_to_parse + r"=(\w+)"
+            self.__parse_str_ascii(metadata, str_to_parse)
 
+    def __parse_str_bin(self, metadata, str_to_parse):
+        """Parse a binary file for metadata."""
+        format_str: bytes = str_to_parse.encode("utf-8") + rb"=(\w+)"
         format_regex = re.compile(format_str)
         try:
-            self.lst_metadata[str_to_parse] = str(
-                re.search(format_regex, metadata).group(1)
-            )
+            self.lst_metadata[str_to_parse] = re.search(format_regex, metadata).group(1).decode()
+        except AttributeError:  # field is non-existent
+            pass
+
+    def __parse_str_ascii(self, metadata, str_to_parse):
+        """Parse an ASCII file for metadata."""
+        format_str: str = str_to_parse + r"=(\w+)"
+        format_regex = re.compile(format_str)
+        try:
+            self.lst_metadata[str_to_parse] = re.search(format_regex, metadata).group(1)
         except AttributeError:  # field is non-existent
             pass
 

@@ -81,6 +81,7 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         bidir=config["advanced"]["bidir"],
         bidir_phase=config["advanced"]["phase"],
         image_soft=config["image"]["imaging_software"],
+        lst_metadata=lst_metadata,
     )
 
     validated_data.run()

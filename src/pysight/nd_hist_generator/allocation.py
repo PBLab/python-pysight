@@ -62,7 +62,7 @@ class Allocate(object):
         self.__allocate_tag()
         if self.flim or self.deinterleave:
             self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
-            if self.censor:
+            if self.flim or self.censor:
                 self.exp_params = self.__fit_data_to_exponent(rel_time)
         # Censor correction addition:
         if "Laser" not in self.dict_of_data.keys():
@@ -74,6 +74,10 @@ class Allocate(object):
     @property
     def num_of_channels(self):
         return sum([1 for key in self.dict_of_data.keys() if "PMT" in key])
+
+    @property
+    def hist_bins_between_laser_pulses(self):
+        return int(np.ceil((1 / self.laser_freq) * 1e9))
 
     def __allocate_photons(self):
         """
@@ -164,12 +168,12 @@ class Allocate(object):
         """
         params = {}
         for chan, data_of_channel in enumerate(list_of_channels, 1):
-            yn = np.histogram(data_of_channel, 16)[0]
+            yn = np.histogram(data_of_channel, self.hist_bins_between_laser_pulses)[0]
             peakind = find_peaks_cwt(yn, np.arange(1, 10))
-            if self.__requires_censoring(data=yn[peakind[0] :]):
+            if self.__requires_censoring(data=yn[peakind[0]:]):
                 min_value = min(yn[yn > 0])
                 max_value = yn[peakind[0]]
-                y_filt = yn[peakind[0] :]
+                y_filt = yn[peakind[0]:]
                 x = np.arange(len(y_filt))
                 popt, _ = curve_fit(
                     self.__nano_flim_exp,

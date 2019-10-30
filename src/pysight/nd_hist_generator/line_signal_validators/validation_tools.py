@@ -43,6 +43,7 @@ class SignalValidator:
     :param ImagingSoftware imaging_software: Software used for imaging.
     :param float change_thresh: Percent-like [0, 1] threshold to discard irregular line signals.
                                 Above which PySight will terminate with an exception.
+    :param dict lst_metadata: Acquisiton parameters as recorded in the multiscaler.
     """
 
     dict_of_data = attr.ib(validator=instance_of(dict))
@@ -59,6 +60,7 @@ class SignalValidator:
         default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
     )
     change_thresh = attr.ib(default=0.3, validator=instance_of(float))
+    lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
     handle_line_cases = attr.ib(init=False)
     last_event_time = attr.ib(init=False)
     line_type_data = attr.ib(init=False)
@@ -81,11 +83,11 @@ class SignalValidator:
 
     @property
     def total_sweep_time(self):
-        return self.acq_delay + self.data_range + self.time_after_sweep
+        return int(self.lst_metadata["fstchan"]) + int(self.lst_metadata["data_range"]) + int(self.lst_metadata["holdafter"])
 
     @property
     def max_sweep(self):
-        return self.df.sweep.max()
+        return int(self.lst_metadata["swpreset"])
 
     def run(self):
         """ Main pipeline """
@@ -205,7 +207,7 @@ class SignalValidator:
         if self.use_sweeps and "Lines" in self.dict_of_data.keys():
             return LinesType.SWEEPS_REBUILD
 
-        if self.use_sweeps and not "Lines" in self.dict_of_data.keys():
+        if self.use_sweeps and "Lines" not in self.dict_of_data.keys():
             return LinesType.SWEEPS_FROM_SCRATCH
 
         if "Lines" in self.dict_of_data.keys():
@@ -506,7 +508,6 @@ class SignalValidator:
         :param pulses: Laser data
         :return:
         """
-        import warnings
 
         diffs = pulses.loc[:, "abs_time"].diff()
         rel_idx = (diffs <= 1.05 * np.ceil((1 / (self.laser_freq * self.binwidth)))) & (
