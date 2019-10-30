@@ -89,3 +89,4 @@ src/pysight/configs
 logs/
 *.log
 *.nfs*
+pip-wheel-metadata/*

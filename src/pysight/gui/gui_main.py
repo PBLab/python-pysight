@@ -670,7 +670,10 @@ class GuiAppLst:
             self.cfg_filename.set(new_cfg)
         with open(self.cfg_filename.get(), "r") as f:
             self.config = toml.load(f)
-            utime(self.cfg_filename.get(), (time.time(), time.time()))
+            try:
+                utime(self.cfg_filename.get(), (time.time(), time.time()))
+            except PermissionError:
+                pass
         self.__modify_vars()
 
     def __modify_vars(self):
