@@ -7,9 +7,9 @@ import attr
 from attr.validators import instance_of
 import numpy as np
 import pandas as pd
-
 import h5py
 from tqdm import tqdm
+from scipy.optimize import curve_fit
 
 from .frame_chunk import FrameChunk
 
@@ -127,8 +127,6 @@ class Movie:
         funcs_during, funcs_end = self.__determine_outputs()
         self.__validate_df_indices()
         self.__process_data(funcs_during, funcs_end)
-        if self.flim:
-            self.__run_flim()
         self.__print_outputs()
         logging.info("Movie object created, analysis done.")
 
@@ -357,17 +355,71 @@ class Movie:
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
 
-    def __run_flim(self):
-        """Runner for the FlimCalc object."""
-        if ("memory" in self.outputs) or ("stack" in self.outputs):
-            self.flim_calc = FlimCalc(self.data, self.stack)
-        elif "summed_mem" in self.outputs:
-            self.flim_calc = FlimCalc(self.data, self.summed_mem, only_summed=True)
-        self.flim_calc.run()
-
 
 @attr.s
 class FlimCalc:
     """An object designed to calculate the lifetime decay constant
-    of the generated movie. 
-    I
+    of the generated movie.
+    It receives as input the list of photons and their binning edges, and
+    creates a histogram of the photons (as happens when PySight runs without
+    FLIM), but also adds another layer to the stack with the calculated
+    lifetime of each of the pixels.
+
+    Parameters
+    --------
+    data : list of np.ndarray
+        The data in a list, each dimension represnted as a vector of arrival times
+
+    edges : list of np.ndarray
+        The edges into which we should bin the photons
+
+    downsample : int, optional
+        How much downsampling should be conducted on the stack.
+    """
+    data = attr.ib(validator=instance_of(list))
+    edges = attr.ib(validator=instance_of(list))
+    downsample = attr.ib(default=10, validator=instance_of(int))
+    hist_photons = attr.ib(init=False)
+    hist_indices = attr.ib(init=False)
+    hist_arrivals = attr.ib(init=False)
+
+    def run(self):
+        """Run the calculation pipeline."""
+        pass
+
+    def _get_indices_for_photons(self):
+        """For the given data and edges, find the indices in which each photon should
+        belong. This is the first step in computing a histogram, and can be thought
+        of as 'arghistogramdd'.
+        """
+        pass
+
+    def _populate_hist_with_photons(self):
+        """Populates an empty n-d array with the photons in the indices
+        which were calculate in "_get_indices_for_photons".
+        """
+        pass
+
+    def _partition_photons_into_bins(self):
+        """Once we have the indices for each photon belongs, we can cluster them and
+        calculate the lifetime of them all. This method clusters the photons into
+        groups and sends this group off for lifetime calculation. The partitioning
+        is dependent on the downsampling factor required by the user.
+        """
+        pass
+
+    def _calculate_lifetime_mp(self):
+        """Dispatches the groups into parallel lifetime calculations using a method
+        outside of the object.
+        """
+
+
+
+def calc_lifetime(data: np.ndarray) -> float:
+    """Calculate the lifetime of the given data by fitting it to a decaying exponent
+    with a lifetime around 3 ns.
+    """
+    pass
+
+
+

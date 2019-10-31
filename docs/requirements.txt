@@ -13,3 +13,10 @@ ansimarkup >= 1.4
 psutil >= 5.4
 toml >= 0.9
 -e .
+pytest
+sphinx
+bumpversion
+twine
+black
+mypy
+flake8

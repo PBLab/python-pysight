@@ -103,7 +103,7 @@ setup(
         "psutil >= 5.4",
         "toml >= 0.9",
     ],
-    extras_require={"dev": ["pytest", "sphinx", "bumpversion", "twine", "black"]},
+    extras_require={"dev": ["pytest", "sphinx", "bumpversion", "twine", "black", "mypy", "flake8"]},
     setup_requires=["cython", "numpy"] if Cython else ["numpy"],
     ext_modules=[
         Extension(

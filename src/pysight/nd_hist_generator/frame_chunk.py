@@ -43,22 +43,25 @@ class FrameChunk:
         for chan in self.df_dict:
             list_of_edges = self.__create_hist_edges(chan)
             data_columns: List[np.ndarray] = []
-            data_columns.append(self.df_dict[chan]["abs_time"].values)
-            data_columns.append(self.df_dict[chan]["time_rel_line"].values)
+            data_columns.append(self.df_dict[chan]["abs_time"].to_numpy())
+            data_columns.append(self.df_dict[chan]["time_rel_line"].to_numpy())
             try:
-                data_columns.append(self.df_dict[chan]["Phase"].values)
+                data_columns.append(self.df_dict[chan]["Phase"].to_numpy())
             except KeyError:
                 pass
-            try:
+            # try:
+            #     data_columns.append(self.df_dict[chan]["time_rel_pulse"].values)
+            # except KeyError:
+            #     pass
+            if not self.flim:
+                hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
+                hist = hist.astype(np.uint8).reshape(
+                    (self.frames_per_chunk,) + self.data_shape[1:]
+                )
+            else:
                 data_columns.append(self.df_dict[chan]["time_rel_pulse"].values)
-            except KeyError:
-                pass
-
-            hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            hist = hist.astype(np.uint8).reshape(
-                (self.frames_per_chunk,) + self.data_shape[1:]
-            )
-
+                flimcalc = self.flim_calc(data_columns, list_of_edges)
+                hist, edges = flimcalc.run()
             if self.bidir:
                 hist[:, 1::2, ...] = np.flip(hist[:, 1::2, ...], axis=2)
             if self.censor:
@@ -82,8 +85,8 @@ class FrameChunk:
         if "Phase" in self.df_dict[chan].columns:
             edges.append(self.__linspace_along_sine())
 
-        if "time_rel_pulse" in self.df_dict[chan].columns:
-            edges.append(self.__create_laser_edges())
+        # if "time_rel_pulse" in self.df_dict[chan].columns:
+        #     edges.append(self.__create_laser_edges())
 
         return edges
 
