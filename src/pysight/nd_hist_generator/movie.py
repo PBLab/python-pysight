@@ -357,13 +357,11 @@ class Movie:
 
 
 @attr.s
-class FlimCalc:
-    """An object designed to calculate the lifetime decay constant
-    of the generated movie.
-    It receives as input the list of photons and their binning edges, and
-    creates a histogram of the photons (as happens when PySight runs without
-    FLIM), but also adds another layer to the stack with the calculated
-    lifetime of each of the pixels.
+class HistWithIndex:
+    """A 'manual' implementation of np.histogramdd which also returns
+    the indices of the partitioned photons, so that we could take these
+    indices and copy them to be used with other data - the lifetime
+    of these pixels, in our case.
 
     Parameters
     --------
@@ -378,13 +376,11 @@ class FlimCalc:
     """
     data = attr.ib(validator=instance_of(list))
     edges = attr.ib(validator=instance_of(list))
-    downsample = attr.ib(default=10, validator=instance_of(int))
     hist_photons = attr.ib(init=False)
     hist_indices = attr.ib(init=False)
-    hist_arrivals = attr.ib(init=False)
 
     def run(self):
-        """Run the calculation pipeline."""
+        """Main class pipeline."""
         pass
 
     def _get_indices_for_photons(self):
@@ -398,6 +394,36 @@ class FlimCalc:
         """Populates an empty n-d array with the photons in the indices
         which were calculate in "_get_indices_for_photons".
         """
+        pass
+
+
+@attr.s
+class FlimCalc:
+    """An object designed to calculate the lifetime decay constant
+    of the generated movie.
+    It receives as input the photon arrival times and their binning index, and
+    it then bins these arrival times and calculates the parameters of the
+    observed exponential decay curve which rises from these bins. The final
+    value of each of the bins is the tau calculated from that fit.
+
+    Parameters
+    --------
+    data : np.ndarray
+        The arrival times of all photons in the experiment
+
+    indices : np.ndarray
+        The bin indices of each of the photons
+
+    downsample : int, optional
+        How much downsampling should be conducted on the stack.
+    """
+    data = attr.ib(validator=instance_of(np.ndarray))
+    indices = attr.ib(validator=instance_of(np.ndarray))
+    downsample = attr.ib(default=10, validator=instance_of(int))
+    hist_arrivals = attr.ib(init=False)
+
+    def run(self):
+        """Run the calculation pipeline."""
         pass
 
     def _partition_photons_into_bins(self):
@@ -414,12 +440,8 @@ class FlimCalc:
         """
 
 
-
 def calc_lifetime(data: np.ndarray) -> float:
     """Calculate the lifetime of the given data by fitting it to a decaying exponent
     with a lifetime around 3 ns.
     """
     pass
-
-
-
