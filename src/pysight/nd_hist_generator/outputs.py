@@ -132,9 +132,9 @@ class OutputParser:
             logging.warning("Permission Error: Couldn't write data to disk.")
 
     @property
-    def bins_bet_pulses(self) -> int:
+    def flim_dim(self) -> int:
         if self.flim:
-            return int(np.ceil(1 / (self.reprate * self.binwidth)))
+            return 2
         else:
             return 1
 
@@ -147,10 +147,10 @@ class OutputParser:
             self.x_pixels,
             self.y_pixels,
             self.z_pixels,
-            self.bins_bet_pulses,
+            self.flim_dim,
         )
-        shape = tuple([dim for dim in non_squeezed if dim != 1])
-        return (self.num_of_frames,) + shape  # we never "squeeze" the number of frames
+        squeezed_shape = tuple([dim for dim in non_squeezed if dim != 1])
+        return (self.num_of_frames,) + squeezed_shape  # we never "squeeze" the number of frames
 
 
 DataShape = namedtuple("DataShape", "t, x, y, z, tau")

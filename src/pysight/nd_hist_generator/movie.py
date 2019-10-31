@@ -86,7 +86,6 @@ class Movie:
     censor = attr.ib(default=False, validator=instance_of(bool))
     flim = attr.ib(default=False, validator=instance_of(bool))
     lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
-    exp_params = attr.ib(factory=dict, validator=instance_of(dict))
     line_delta = attr.ib(default=158_000, validator=instance_of(int))
     cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
     tag_as_phase = attr.ib(default=True, validator=instance_of(bool))
@@ -104,6 +103,7 @@ class Movie:
     y_pixels = attr.ib(init=False)
     z_pixels = attr.ib(init=False)
     bins_bet_pulses = attr.ib(init=False)
+    flim_calc = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.x_pixels = self.data_shape[1]
@@ -127,6 +127,8 @@ class Movie:
         funcs_during, funcs_end = self.__determine_outputs()
         self.__validate_df_indices()
         self.__process_data(funcs_during, funcs_end)
+        if self.flim:
+            self.__run_flim()
         self.__print_outputs()
         logging.info("Movie object created, analysis done.")
 
@@ -354,3 +356,18 @@ class Movie:
 
     def __nano_flim(self, data: np.ndarray) -> None:
         pass
+
+    def __run_flim(self):
+        """Runner for the FlimCalc object."""
+        if ("memory" in self.outputs) or ("stack" in self.outputs):
+            self.flim_calc = FlimCalc(self.data, self.stack)
+        elif "summed_mem" in self.outputs:
+            self.flim_calc = FlimCalc(self.data, self.summed_mem, only_summed=True)
+        self.flim_calc.run()
+
+
+@attr.s
+class FlimCalc:
+    """An object designed to calculate the lifetime decay constant
+    of the generated movie. 
+    I

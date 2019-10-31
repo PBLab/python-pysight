@@ -184,7 +184,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         channels=data_for_movie.index.levels[0],
         flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
         lst_metadata=lst_metadata,
-        exp_params=analyzed_struct.exp_params,
         line_delta=int(line_delta),
         tag_as_phase=True,
         tag_freq=float(config["advanced"]["tag_freq"]),
