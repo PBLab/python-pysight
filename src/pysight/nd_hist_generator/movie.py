@@ -379,22 +379,52 @@ class HistWithIndex:
     hist_photons = attr.ib(init=False)
     hist_indices = attr.ib(init=False)
 
+    def __attrs_post_init__(self):
+        """A few asserts regarding the data's shape and validity."""
+        if len(self.data) != len(self.edges):
+            raise TypeError(f"Data and bin length are unequal. Data length is {len(self.data)} while edges are {len(self.edges)}.")
+
     def run(self):
         """Main class pipeline."""
-        pass
+        self.hist_indices, nedges = self._get_indices_for_photons()
+        self.hist_photons = self._populate_hist_with_photons(nedges)
 
     def _get_indices_for_photons(self):
         """For the given data and edges, find the indices in which each photon should
         belong. This is the first step in computing a histogram, and can be thought
         of as 'arghistogramdd'.
         """
-        pass
+        indices = tuple(
+            np.searchsorted(edges, self.data[idx], side='right') for idx, edges in enumerate(self.edges)
+        )
 
-    def _populate_hist_with_photons(self):
+        nedges = []
+        for dim, edge in enumerate(self.edges):
+            on_edge = (self.data[dim] == edge[-1])
+            indices[dim][on_edge] -= 1
+            nedges.append(len(edge) + 1)
+
+        nedges = np.array(nedges)
+        return np.ravel_multi_index(indices, nedges), nedges
+
+    def _populate_hist_with_photons(self, nedges: np.ndarray):
         """Populates an empty n-d array with the photons in the indices
         which were calculate in "_get_indices_for_photons".
+
+        Parameters
+        --------
+
+        nedges : np.ndarray
+            number of edges per dimension
+
         """
-        pass
+        hist = np.bincount(self.hist_indices, minlength=nedges.prod())
+        hist = hist.reshape(nedges)
+
+        # remove outliers
+        core = len(self.edges)*(slice(1, -1),)
+        hist = hist[core]
+        return hist
 
 
 @attr.s
