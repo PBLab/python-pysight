@@ -36,24 +36,19 @@ class TestOutput(TestCase):
         )
     )
 
-    def test_bins_bet_pulses(self):
-        bins_bet_pulses = [16, 8, 1]
-        for obj, bins in zip(self.parser_objects, bins_bet_pulses):
-            self.assertEqual(obj.bins_bet_pulses, bins)
-
     def test_determine_shape(self):
-        shapes = [(1, 512, 512, 16), (2, 512, 512, 10, 8), (2, 512, 512)]
+        shapes = [(1, 512, 512, 2), (2, 512, 512, 10, 2), (2, 512, 512)]
         for shape, obj in zip(shapes, self.parser_objects):
             self.assertEqual(shape, obj.determine_data_shape_full())
 
     def test_non_squeezed_shapes(self):
         shapes = [
-            (1, 512, 512, 16, 1),
+            (1, 512, 512, 2, 1),
             (1, 1, 512, 100),
-            (10, 512, 1, 16),
+            (10, 512, 1, 2),
             (10, 512, 1),
         ]
-        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 16), (10, 512)]
+        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 2), (10, 512)]
         output_obj = []
         output_obj.append(
             OutputParser(
