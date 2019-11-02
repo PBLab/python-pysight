@@ -376,6 +376,7 @@ class HistWithIndex:
     """
     data = attr.ib(validator=instance_of(list))
     edges = attr.ib(validator=instance_of(list))
+    clean_data = attr.ib(init=False)
     hist_photons = attr.ib(init=False)
     hist_indices = attr.ib(init=False)
 
@@ -385,8 +386,9 @@ class HistWithIndex:
             raise TypeError(f"Data and bin length are unequal. Data length is {len(self.data)} while edges are {len(self.edges)}.")
 
     def run(self):
+        # TODO: OFF BY ONE ERROR
         """Main class pipeline."""
-        self.hist_indices, nedges = self._get_indices_for_photons()
+        self.hist_indices, nedges, self.clean_data = self._get_indices_for_photons()
         self.hist_photons = self._populate_hist_with_photons(nedges)
 
     def _get_indices_for_photons(self):
@@ -394,18 +396,23 @@ class HistWithIndex:
         belong. This is the first step in computing a histogram, and can be thought
         of as 'arghistogramdd'.
         """
+        clean_data = []
+        for idx, data in enumerate(self.data):
+            out_of_bounds = np.where(data < self.edges[idx][0])
+            clean_data.append(np.delete(data, out_of_bounds))
+
         indices = tuple(
-            np.searchsorted(edges, self.data[idx], side='right') for idx, edges in enumerate(self.edges)
+            np.searchsorted(edges, clean_data[idx], side='right') - 1 for idx, edges in enumerate(self.edges)
         )
 
         nedges = []
         for dim, edge in enumerate(self.edges):
-            on_edge = (self.data[dim] == edge[-1])
+            on_edge = (clean_data[dim] == edge[-1])
             indices[dim][on_edge] -= 1
             nedges.append(len(edge) + 1)
 
         nedges = np.array(nedges)
-        return np.ravel_multi_index(indices, nedges), nedges
+        return np.ravel_multi_index(indices, nedges), nedges, clean_data
 
     def _populate_hist_with_photons(self, nedges: np.ndarray):
         """Populates an empty n-d array with the photons in the indices

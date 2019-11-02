@@ -116,13 +116,24 @@ class TestMovies(TestCase):
 
 class TestMyHist:
     """Tests for my own implementation of an histogram."""
-    data = [np.array([5, 15, 25])]
-    bins = [np.array([0, 10, 20, 30])]
-    hist = HistWithIndex(data, bins)
+    def test_basic_indices(self):
+        data = [np.array([5, 15, 25])]
+        bins = [np.array([0, 10, 20, 30])]
+        hist = HistWithIndex(data, bins)
+        idx, _, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([0, 1, 2]))
 
-    def test_instatiation(self):
-        assert isinstance(self.hist, HistWithIndex)
+    def test_out_of_bounds(self):
+        data = [np.array([-1, 5, 30, 40])]
+        bins = [np.array([0, 10, 20, 30])]
+        hist = HistWithIndex(data, bins)
+        idx, _, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([-1, 0, 2, 3]))
 
-    def test_indices(self):
-        idx, _ =  self.hist._get_indices_for_photons()
-        np.testing.assert_equal(idx, np.array([1, 2, 3]))
+    def test_indices_on_edge(self):
+        data = [np.array([0, 5, 20, 30, 40])]
+        bins = [np.array([0, 10, 20, 30])]
+        hist = HistWithIndex(data, bins)
+        idx, _, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([0, 0, 2, 2, 3]))
+
