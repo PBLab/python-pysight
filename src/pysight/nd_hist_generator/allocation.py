@@ -106,7 +106,7 @@ class Allocate(object):
             self.df_photons[key] = (
                 self.dict_of_data[key].iloc[sorted_indices, 0].values
             )  # columns 0 is abs_time,
-            # but this .iloc method is amazingly faster than .loc
+            # but the .iloc method is amazingly faster than .loc
             positive_mask = sorted_indices >= 0
             # drop photons that came before the first line
             self.df_photons = self.df_photons.iloc[positive_mask].copy()

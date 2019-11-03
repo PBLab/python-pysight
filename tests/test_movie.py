@@ -120,20 +120,48 @@ class TestMyHist:
         data = [np.array([5, 15, 25])]
         bins = [np.array([0, 10, 20, 30])]
         hist = HistWithIndex(data, bins)
-        idx, _, _ =  hist._get_indices_for_photons()
-        np.testing.assert_equal(idx, np.array([0, 1, 2]))
+        idx, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([1, 2, 3]))
 
     def test_out_of_bounds(self):
         data = [np.array([-1, 5, 30, 40])]
         bins = [np.array([0, 10, 20, 30])]
         hist = HistWithIndex(data, bins)
-        idx, _, _ =  hist._get_indices_for_photons()
-        np.testing.assert_equal(idx, np.array([-1, 0, 2, 3]))
+        idx, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([0, 1, 3, 4]))
 
     def test_indices_on_edge(self):
         data = [np.array([0, 5, 20, 30, 40])]
         bins = [np.array([0, 10, 20, 30])]
         hist = HistWithIndex(data, bins)
-        idx, _, _ =  hist._get_indices_for_photons()
-        np.testing.assert_equal(idx, np.array([0, 0, 2, 2, 3]))
+        idx, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([1, 1, 3, 3, 4]))
 
+    def test_multidim(self):
+        data = [np.array([0, 5, 20, 30, 40]), np.array([100, 200, 200, 300, 400])]
+        bins = [np.array([0, 10, 20, 30]), np.array([100, 150, 200])]
+        hist = HistWithIndex(data, bins)
+        idx, _ =  hist._get_indices_for_photons()
+        np.testing.assert_equal(idx, np.array([5, 6, 14, 15, 19]))
+
+    def test_hist_populate_basic(self):
+        data = [np.array([5, 15, 25])]
+        bins = [np.array([0, 10, 20, 30])]
+        hist = HistWithIndex(data, bins)
+        hist.run()
+        np.testing.assert_equal(hist.hist_photons, np.array([1, 1, 1]))
+
+    def test_myhist_against_histdd(self):
+        data = [np.array([5, 15, 25])]
+        bins = [np.array([0, 10, 20, 30])]
+        hist = HistWithIndex(data, bins)
+        hist.run()
+        np.testing.assert_equal(hist.hist_photons, np.histogramdd(data, bins)[0])
+
+    def test_my_multidim_against_histdd(self):
+        data = [np.array([0, 5, 20, 30, 40]), np.array([100, 200, 200, 300, 400]), np.array([13, 14, 15, 16, 16])]
+        bins = [np.array([0, 10, 20, 30]), np.array([100, 150, 200]), np.array([10, 20])]
+        hist = HistWithIndex(data, bins)
+        hist.run()
+        histdd = np.histogramdd(data, bins)[0]
+        np.testing.assert_equal(hist.hist_photons, histdd)
