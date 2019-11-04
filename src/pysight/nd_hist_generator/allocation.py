@@ -296,5 +296,5 @@ class Allocate(object):
         peaks, params = find_peaks(hist, height=(None, None))
         if len(peaks) == 0:
             return
-        max_peak_idx = (peaks[np.argmax(params["peak_heights"])] + 1) % bins_for_flim_hist
+        max_peak_idx = (peaks[np.argmax(params["peak_heights"])] - 1) % bins_for_flim_hist
         self.df["time_rel_pules"] = (self.df["time_rel_pulse"] - max_peak_idx) % bins_for_flim_hist

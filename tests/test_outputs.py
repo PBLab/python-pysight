@@ -43,12 +43,13 @@ class TestOutput(TestCase):
 
     def test_non_squeezed_shapes(self):
         shapes = [
-            (1, 512, 512, 2, 1),
+            (1, 512, 512, 16, 1),
             (1, 1, 512, 100),
-            (10, 512, 1, 2),
+            (10, 512, 16, 2),
             (10, 512, 1),
+            (1, 512, 512, 100, 2)
         ]
-        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 2), (10, 512)]
+        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 16, 2), (10, 512), (1, 512, 512, 100, 2)]
         output_obj = []
         output_obj.append(
             OutputParser(
@@ -74,6 +75,7 @@ class TestOutput(TestCase):
                 z_pixels=16,
                 num_of_frames=10,
                 y_pixels=1,
+                flim=True,
             )
         )
         output_obj.append(
@@ -82,6 +84,15 @@ class TestOutput(TestCase):
                 filename="tests_data" + sep + f"output_6.hdf5",
                 num_of_frames=10,
                 y_pixels=1,
+            )
+        )
+        output_obj.append(
+            OutputParser(
+                output_dict={},
+                filename="tests_data" + sep + f"output_7.hdf5",
+                num_of_frames=1,
+                z_pixels=100,
+                flim=True,
             )
         )
         for shape, obj in zip(squeezed_shapes, output_obj):
