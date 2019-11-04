@@ -53,15 +53,14 @@ class FrameChunk:
             #     data_columns.append(self.df_dict[chan]["time_rel_pulse"].values)
             # except KeyError:
             #     pass
-            if not self.flim:
-                hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-                hist = hist.astype(np.uint8).reshape(
-                    (self.frames_per_chunk,) + self.data_shape[1:]
-                )
+            if self.flim:
+                data_columns.append(self.df_dict[chan]["time_rel_pulse"].to_numpy())
+                hist, edges = self._hist_with_flim(data_columns, list_of_edges)
             else:
-                data_columns.append(self.df_dict[chan]["time_rel_pulse"].values)
-                flimcalc = self.flim_calc(data_columns, list_of_edges)
-                hist, edges = flimcalc.run()
+                hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
+            hist = hist.astype(np.uint8).reshape(
+                (self.frames_per_chunk,) + self.data_shape[1:]
+            )
             if self.bidir:
                 hist[:, 1::2, ...] = np.flip(hist[:, 1::2, ...], axis=2)
             if self.censor:
@@ -165,3 +164,6 @@ class FrameChunk:
             pts.append(sinx[idx_to_append])
 
         return np.array(pts)
+
+    def _hist_with_flim(self, data, edges):
+        """Run a slightly more complex processing pipeline when we need to cal
