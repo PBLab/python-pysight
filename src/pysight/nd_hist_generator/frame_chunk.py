@@ -1,8 +1,11 @@
+from typing import List, Dict, Tuple
+
 import attr
 from attr.validators import instance_of
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Tuple
+from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 
 
 @attr.s(slots=True)
@@ -49,10 +52,6 @@ class FrameChunk:
                 data_columns.append(self.df_dict[chan]["Phase"].to_numpy())
             except KeyError:
                 pass
-            # try:
-            #     data_columns.append(self.df_dict[chan]["time_rel_pulse"].values)
-            # except KeyError:
-            #     pass
             if self.flim:
                 data_columns.append(self.df_dict[chan]["time_rel_pulse"].to_numpy())
                 hist, edges = self._hist_with_flim(data_columns, list_of_edges)
@@ -83,9 +82,6 @@ class FrameChunk:
 
         if "Phase" in self.df_dict[chan].columns:
             edges.append(self.__linspace_along_sine())
-
-        # if "time_rel_pulse" in self.df_dict[chan].columns:
-        #     edges.append(self.__create_laser_edges())
 
         return edges
 
@@ -166,4 +162,208 @@ class FrameChunk:
         return np.array(pts)
 
     def _hist_with_flim(self, data, edges):
-        """Run a slightly more complex processing pipeline when we need to cal
+        """Run a slightly more complex processing pipeline when we need to calculate
+        the lifetime of each pixel in the image.
+        We first generate the standard histogram without taking the FLIM dimension
+        into consideration, but we do keep the bin index of each of the photons
+        in the image.
+        Then we groupby the photons based on their hist index, and each such group
+        goes to function which calculates the decay curve constants there.
+
+        Parameters
+        ----------
+        data : list of np.ndarray
+            Photon arrival times in each of the dimensions
+        edges : list of np.ndarray
+            Histogram edges for each dimension.
+
+        Returns
+        -------
+        hist : np.ndarray
+            N-dimensional histogram, where N = len(data)
+        edges : tuple of np.ndarray
+            Edges for each dimension
+        """
+        hist = HistWithIndex(data, edges)
+        hist.run()
+        flim = FlimCalc(data[-1], hist.hist_indices)
+        flim.run()
+        only_flim_hist = np.full_like(hist.hist_photons, np.nan)
+        only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime_uint8"]
+        hist_with_flim = np.concatenate(
+            [hist.hist_photons[..., np.newaxis], only_flim_hist[..., np.newaxis]],
+            axis=-1,
+        )
+        assert hist_with_flim.shape[-1] == 2
+        assert hist_with_flim.shape[:-1] == hist.hist_photons.shape
+        edges_with_flim = edges.append(np.array([0, 1, 2]))
+        return hist_with_flim, edges_with_flim
+
+
+@attr.s
+class HistWithIndex:
+    """A 'manual' implementation of np.histogramdd which also returns
+    the indices of the partitioned photons, so that we could take these
+    indices and copy them to be used with other data - the lifetime
+    of these pixels, in our case.
+
+    Parameters
+    --------
+    data : list of np.ndarray
+        The data in a list, each dimension represnted as a vector of arrival times
+
+    edges : list of np.ndarray
+        The edges into which we should bin the photons
+    """
+
+    data = attr.ib(validator=instance_of(list))
+    edges = attr.ib(validator=instance_of(list))
+    hist_photons = attr.ib(init=False)
+    hist_indices = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        """A few asserts regarding the data's shape and validity."""
+        if len(self.data) != len(self.edges):
+            raise TypeError(
+                f"Data and bin length are unequal. Data length is {len(self.data)} while edges are {len(self.edges)}."
+            )
+
+    def run(self):
+        """Main class pipeline."""
+        self.hist_indices, nedges = self._get_indices_for_photons()
+        self.hist_photons = self._populate_hist_with_photons(nedges)
+
+    def _get_indices_for_photons(self):
+        """For the given data and edges, find the indices in which each photon should
+        belong. This is the first step in computing a histogram, and can be thought
+        of as 'arghistogramdd'.
+        """
+        indices = tuple(
+            np.searchsorted(edges, self.data[idx], side="right")
+            for idx, edges in enumerate(self.edges)
+        )
+
+        nedges = []
+        for dim, edge in enumerate(self.edges):
+            on_edge = self.data[dim] == edge[-1]
+            indices[dim][on_edge] -= 1
+            nedges.append(len(edge) + 1)
+
+        nedges = np.array(nedges)
+        return np.ravel_multi_index(indices, nedges), nedges
+
+    def _populate_hist_with_photons(self, nedges: np.ndarray):
+        """Populates an empty n-d array with the photons in the indices
+        which were calculate in "_get_indices_for_photons".
+
+        Parameters
+        --------
+
+        nedges : np.ndarray
+            number of edges per dimension
+
+        """
+        hist = np.bincount(self.hist_indices, minlength=nedges.prod())
+        hist = hist.reshape(nedges)
+
+        # remove outliers
+        core = len(self.edges) * (slice(1, -1),)
+        hist = hist[core]
+        return hist
+
+
+@attr.s(hash=True)
+class FlimCalc:
+    """An object designed to calculate the lifetime decay constant
+    of the generated movie.
+    It receives as input the photon arrival times and their binning index, and
+    it then bins these arrival times and calculates the parameters of the
+    observed exponential decay curve which rises from these bins. The final
+    value of each of the bins is the tau calculated from that fit.
+
+    Parameters
+    --------
+    data : np.ndarray
+        The arrival times of all photons in the experiment
+
+    indices : np.ndarray
+        The bin indices of each of the photons
+
+    downsample : int, optional
+        How much downsampling should be conducted on the stack.
+    """
+
+    data = attr.ib(validator=instance_of(np.ndarray))
+    indices = attr.ib(validator=instance_of(np.ndarray))
+    downsample = attr.ib(default=10, validator=instance_of(int))
+    bins_bet_pulses = attr.ib(default=125, validator=instance_of(int))
+    all_data = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        self.all_data = pd.DataFrame({"since_laser": self.data, "bin": self.indices})
+
+    def run(self):
+        """Run the calculation pipeline."""
+        self._partition_photons_into_bins()
+        self._normalize_taus_to_uint8()
+
+    def _partition_photons_into_bins(self):
+        """Once we have the indices where each photon belongs, we can cluster them and
+        calculate the lifetime of them all. This method clusters the photons into
+        groups and sends this group off for lifetime calculation. The partitioning
+        is dependent on the downsampling factor required by the user.
+        """
+        self.hist_arrivals = self.all_data.groupby(
+            "bin", as_index=False, sort=False
+        ).agg(calc_lifetime)
+
+    def _normalize_taus_to_uint8(self):
+        """We wish to show uint8 images, and not floating point images.
+        To do so we scale tau into the [0, 256) range and leave the user
+        to interpret the number of nanoseconds.
+        """
+        factor = np.iinfo(np.uint8).max / self.bins_bet_pulses
+        self.hist_arrivals["lifetime_uint8"] = (
+            self.hist_arrivals["since_laser"] * factor
+        ).astype(np.uint8)
+
+
+def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
+    """Calculate the lifetime of the given data by fitting it to a decaying exponent
+    with a lifetime around 3 ns.
+    # TODO: bins_bet_pulses
+    """
+    hist = np.histogram(data, bins_bet_pulses)[0]
+    peaks, props = find_peaks(hist, height=(None, None))
+    # If no peak is found we'll try using the first bin as a peak.
+    # scipy.signal.find_peaks is not good at detecting that the first
+    # data point is the highest. If it's not true then the curve fit
+    # will eventually fail, leaving us with a nan instead of tau.
+    if len(peaks) == 0:
+        peaks, props = np.array([0]), {"peak_heights": hist[0]}
+    decay_curve, max_val, min_val = find_decay_borders(hist, peaks, props)
+    popt, _ = curve_fit(
+        _exp_decay,
+        np.arange(len(decay_curve)),
+        decay_curve,
+        p0=(max_val, 1 / 35, min_val),
+        maxfev=10_000,
+    )
+    return 1 / popt[1]
+
+
+def _exp_decay(x, a, b, c):
+    """ Exponential function for FLIM and censor correction """
+    return a * np.exp(-b * x) + c
+
+
+def find_decay_borders(
+    hist: np.ndarray, peaks: np.ndarray, props: Dict[str, np.ndarray]
+):
+    """Trims a given histogram which contains an exponential decay curve so that
+    it starts at the peak and ends at the lowest point after it."""
+    highest_peak_idx = peaks[np.argmax(props["peak_heights"])]
+    decay_curve = hist[highest_peak_idx:]
+    end_of_decay = np.argmin(decay_curve)
+    decay_curve = decay_curve[: end_of_decay + 1]
+    return decay_curve, decay_curve[0], decay_curve[-1]
