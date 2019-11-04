@@ -300,7 +300,12 @@ class Movie:
         """
         self.stack[channel].append(data)
         assert len(data.shape) > 2
-        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+        if self.flim:
+            self.summed_mem[channel][..., 0] += np.uint16(data.sum(axis=0))
+            mean_lifetime = data[..., 1].mean(axis=0, dtype=np.uint16)
+            self.summed_mem[channel][..., 1] = ((self.summed_mem[channel][..., 1] + mean_lifetime) / 2).astype(np.uint16)
+        else:
+            self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __save_stack_incr(self, data: np.ndarray, channel: int, idx: int) -> None:
         """
@@ -323,7 +328,12 @@ class Movie:
         :param int idx: Index of frame chunk
         """
         assert len(data.shape) > 2
-        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+        if self.flim:
+            self.summed_mem[channel][..., 0] += np.uint16(data.sum(axis=0))
+            mean_lifetime = data[..., 1].mean(axis=0, dtype=np.uint16)
+            self.summed_mem[channel][..., 1] = ((self.summed_mem[channel][..., 1] + mean_lifetime) / 2).astype(np.uint16)
+        else:
+            self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """

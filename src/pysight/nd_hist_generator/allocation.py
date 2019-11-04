@@ -6,7 +6,7 @@ import numpy as np
 import attr
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
-from scipy.signal import find_peaks_cwt
+from scipy.signal import find_peaks
 
 from pysight.nd_hist_generator.tag_lens import TagPipeline
 
@@ -63,7 +63,7 @@ class Allocate(object):
         if self.flim or self.deinterleave:
             self.df_photons, rel_time = self.__interpolate_laser(self.df_photons)
             if self.flim or self.censor:
-                self.exp_params = self.__fit_data_to_exponent(rel_time)
+                self._rotate_laser_timings()
         # Censor correction addition:
         if "Laser" not in self.dict_of_data.keys():
             self.dict_of_data["Laser"] = 0
@@ -154,40 +154,6 @@ class Allocate(object):
 
             logging.info("TAG lens interpolation finished.")
 
-    def __nano_flim_exp(self, x, a, b, c):
-        """ Exponential function for FLIM and censor correction """
-        return a * np.exp(-b * x) + c
-
-    def __fit_data_to_exponent(self, list_of_channels: List) -> Dict:
-        """
-        Take the data after modulu BINS_BETWEEN_PULSES, in each channel,
-         and fit an exponential decay to it, with some lifetime.
-
-        :return dict (A, b, C): Parameters of the fit A * exp( -b * x ) + C as a numpy array,
-                        inside a dictionary with the channel number as its key.
-        """
-        params = {}
-        for chan, data_of_channel in enumerate(list_of_channels, 1):
-            yn = np.histogram(data_of_channel, self.hist_bins_between_laser_pulses)[0]
-            peakind = find_peaks_cwt(yn, np.arange(1, 10))
-            if self.__requires_censoring(data=yn[peakind[0]:]):
-                min_value = min(yn[yn > 0])
-                max_value = yn[peakind[0]]
-                y_filt = yn[peakind[0]:]
-                x = np.arange(len(y_filt))
-                popt, _ = curve_fit(
-                    self.__nano_flim_exp,
-                    x,
-                    y_filt,
-                    p0=(max_value, 1 / 3.5, min_value),
-                    maxfev=10000,
-                )
-                params[chan] = popt
-            else:
-                continue
-
-        return params
-
     def __requires_censoring(self, data: np.ndarray) -> bool:
         """
         Method to determine if we should undergo the censor correction process
@@ -217,7 +183,6 @@ class Allocate(object):
         :return: Modified dataframe and the relative times.
         """
         needed_bins = self._find_integer_gcd()
-        num_of_pulses_per_bintrain = self._find_num_pulses(needed_bins)
 
         rel_time = []
         for chan in range(1, self.num_of_channels + 1):
@@ -235,7 +200,8 @@ class Allocate(object):
 
     def _find_integer_gcd(self):
         """
-        Converts the binwidth and laser frequency to
+        Converts the binwidth and laser frequency to the interger
+        number of bins between pulses.
         """
         laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
         bins_bet_pulses = np.around(laser_freq / self.binwidth, decimals=3)
@@ -321,3 +287,14 @@ class Allocate(object):
         self.dict_of_data["Lines"] = pd.Series(
             lines, index=self.dict_of_data["Frames"].iloc[sorted_indices].values
         )
+
+    def _rotate_laser_timings(self):
+        """Rotate the histogram of the photon arrival times relative to the laser pulse,
+        so that the highest value is in the second bin."""
+        bins_for_flim_hist = self._find_integer_gcd() + 1
+        hist = np.histogram(self.df["time_rel_pulse"], bins_for_flim_hist - 1)
+        peaks, params = find_peaks(hist, height=(None, None))
+        if len(peaks) == 0:
+            return
+        max_peak_idx = (peaks[np.argmax(params["peak_heights"])] + 1) % bins_for_flim_hist
+        self.df["time_rel_pules"] = (self.df["time_rel_pulse"] - max_peak_idx) % bins_for_flim_hist
