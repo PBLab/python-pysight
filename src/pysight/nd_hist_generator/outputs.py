@@ -16,6 +16,7 @@ class OutputParser:
     """
     Parse the wanted outputs and produce a dictionary with
     file pointers to the needed outputs
+    # TODO: Handle the interleaved case
     """
 
     output_dict = attr.ib(validator=instance_of(dict))
@@ -27,7 +28,6 @@ class OutputParser:
     channels = attr.ib(
         default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex)
     )
-    flim = attr.ib(default=False, validator=instance_of(bool))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     reprate = attr.ib(default=80e6, validator=instance_of(float))
     lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
@@ -53,9 +53,17 @@ class OutputParser:
         if f is not None:
             self.__populate_hdf(f)
 
+    @property
+    def _group_names(self):
+        return {"summed": "Summed Stack", "stack": "Full Stack", "flim": "Lifetime"}
+
     def __create_prelim_file(self):
         """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
-        if self.output_dict["stack"] or self.output_dict["summed"]:
+        if (
+            self.output_dict["stack"]
+            or self.output_dict["summed"]
+            or self.output_dict["flim"]
+        ):
             try:
                 split = os.path.splitext(self.filename)[0]
                 debugged = "_DEBUG" if self.debug else ""
@@ -63,7 +71,7 @@ class OutputParser:
                 f = h5py.File(
                     fullfile,
                     "w",
-                    libver="earliest",
+                    libver="latest",
                     rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=521,
                     rdcc_w0=1,
@@ -87,56 +95,59 @@ class OutputParser:
         chunk_shape[0] = 1
         if self.output_dict["stack"]:
             try:
-                self.outputs["stack"] = [
-                    f.require_group("Full Stack").require_dataset(
-                        name=f"Channel {channel}",
-                        shape=self.data_shape,
-                        dtype=np.uint8,
-                        chunks=tuple(chunk_shape),
-                        compression="gzip",
-                    )
-                    for channel in self.channels
-                ]
-
-                for key, val in self.lst_metadata.items():
-                    for chan in range(self.num_of_channels):
-                        self.outputs["stack"][chan].attrs.create(
-                            name=key, data=val.encode()
-                        )
-
+                self._create_hdf5_group(
+                    file=f,
+                    output_type="stack",
+                    shape=self.data_shape,
+                    chunks=tuple(chunk_shape),
+                    dtype=np.uint8,
+                )
             except (PermissionError, OSError):
                 self.file_pointer_created = False
         if self.output_dict["summed"]:
             try:
-                self.outputs["summed"] = [
-                    f.require_group("Summed Stack").require_dataset(
-                        name=f"Channel {channel}",
-                        shape=data_shape_summed,
-                        dtype=np.uint16,
-                        chunks=True,
-                        compression="gzip",
-                    )
-                    for channel in self.channels
-                ]
-                for key, val in self.lst_metadata.items():
-                    for chan in range(self.num_of_channels):
-                        self.outputs["summed"][chan].attrs.create(
-                            name=key, data=val.encode()
-                        )
-
+                self._create_hdf5_group(
+                    file=f,
+                    output_type="summed",
+                    shape=data_shape_summed,
+                    chunks=True,
+                    dtype=np.uint16,
+                )
             except (PermissionError, OSError):
                 self.file_pointer_created = False
 
+        if self.output_dict["flim"]:
+            try:
+                self._create_hdf5_group(
+                    file=f,
+                    output_type="flim",
+                    shape=self.data_shape,
+                    chunks=tuple(chunk_shape),
+                    dtype=np.float32,
+                )
+            except (PermissionError, OSError):
+                self.file_pointer_created = False
+        f.flush()
         f.close()
         if self.file_pointer_created is False:
             logging.warning("Permission Error: Couldn't write data to disk.")
 
-    @property
-    def flim_dim(self) -> int:
-        if self.flim:
-            return 2
-        else:
-            return 1
+    def _create_hdf5_group(self, file, output_type, shape, chunks, dtype):
+        """Create a group in the open file with the given parameters."""
+        groupname = self._group_names[output_type]
+        self.outputs[output_type] = [
+            file.require_group(groupname).require_dataset(
+                name=f"Channel {channel}",
+                shape=shape,
+                dtype=dtype,
+                chunks=chunks,
+                compression="gzip",
+            )
+            for channel in self.channels
+        ]
+        for key, val in self.lst_metadata.items():
+            for chan in range(self.num_of_channels):
+                self.outputs[output_type][chan].attrs.create(name=key, data=val.encode())
 
     def determine_data_shape_full(self):
         """
@@ -147,13 +158,14 @@ class OutputParser:
             self.x_pixels,
             self.y_pixels,
             self.z_pixels,
-            self.flim_dim,
         )
         squeezed_shape = tuple([dim for dim in non_squeezed if dim != 1])
-        return (self.num_of_frames,) + squeezed_shape  # we never "squeeze" the number of frames
+        return (
+            self.num_of_frames,
+        ) + squeezed_shape  # we never "squeeze" the number of frames
 
 
-DataShape = namedtuple("DataShape", "t, x, y, z, tau")
+DataShape = namedtuple("DataShape", "t, x, y, z")
 
 
 @attr.s(frozen=True)
@@ -169,6 +181,7 @@ class PySightOutput:
     :param tuple _data_shape: Data dimensions
     :param bool _flim: Whether data has Tau channel.
     :param Dict[str,Any] config: Configuration file used in this run.
+    # TODO: Add new FLIM handler
     """
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)

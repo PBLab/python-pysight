@@ -23,7 +23,6 @@ class TestOutput(TestCase):
             output_dict={"memory": True},
             filename="tests_data" + sep + f"output_2.hdf5",
             reprate=160.3e6,
-            flim=True,
             z_pixels=10,
             num_of_frames=2,
         )
@@ -37,7 +36,7 @@ class TestOutput(TestCase):
     )
 
     def test_determine_shape(self):
-        shapes = [(1, 512, 512, 2), (2, 512, 512, 10, 2), (2, 512, 512)]
+        shapes = [(1, 512, 512), (2, 512, 512, 10), (2, 512, 512)]
         for shape, obj in zip(shapes, self.parser_objects):
             self.assertEqual(shape, obj.determine_data_shape_full())
 
@@ -45,11 +44,11 @@ class TestOutput(TestCase):
         shapes = [
             (1, 512, 512, 16, 1),
             (1, 1, 512, 100),
-            (10, 512, 16, 2),
+            (10, 512, 16),
             (10, 512, 1),
-            (1, 512, 512, 100, 2)
+            (1, 512, 512, 100)
         ]
-        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 16, 2), (10, 512), (1, 512, 512, 100, 2)]
+        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 16), (10, 512), (1, 512, 512, 100)]
         output_obj = []
         output_obj.append(
             OutputParser(
@@ -75,7 +74,6 @@ class TestOutput(TestCase):
                 z_pixels=16,
                 num_of_frames=10,
                 y_pixels=1,
-                flim=True,
             )
         )
         output_obj.append(
@@ -92,7 +90,6 @@ class TestOutput(TestCase):
                 filename="tests_data" + sep + f"output_7.hdf5",
                 num_of_frames=1,
                 z_pixels=100,
-                flim=True,
             )
         )
         for shape, obj in zip(squeezed_shapes, output_obj):
@@ -117,7 +114,7 @@ class TestPySightOutput:
         shape = (10, 10, 10)
         flim = False
         obj = generate_output_obj(shape, flim)
-        shape = DataShape(10, 10, 10, None, None)
+        shape = DataShape(10, 10, 10, None)
         assert shape == obj._parse_data_shape()
 
     def test_data_shape_txyz(self, generate_output_obj):
@@ -125,15 +122,15 @@ class TestPySightOutput:
         flim = False
         di = {1: np.random.random(shape)}
         obj = generate_output_obj(shape, flim, di)
-        shape = DataShape(10, 10, 10, 10, None)
+        shape = DataShape(10, 10, 10, 10)
         assert shape == obj._parse_data_shape()
 
     def test_data_shape_txyztau(self, generate_output_obj):
-        shape = (10, 10, 10, 10, 5)
+        shape = (10, 10, 10, 10)
         flim = True
         di = {1: np.random.random(shape)}
         obj = generate_output_obj(shape, flim, di)
-        shape = DataShape(10, 10, 10, 10, 5)
+        shape = DataShape(10, 10, 10, 10)
         assert shape == obj._parse_data_shape()
 
     @pytest.mark.xfail
@@ -142,7 +139,7 @@ class TestPySightOutput:
         flim = False
         di = {1: np.random.random(shape)}
         obj = generate_output_obj(shape, flim, di)
-        shape = DataShape(10, 10, 10, 10, 5)
+        shape = DataShape(10, 10, 10, 10)
         assert shape == obj._parse_data_shape()
 
     def test_data_shape_txy_tau(self, generate_output_obj):

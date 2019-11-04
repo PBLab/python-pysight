@@ -10,7 +10,7 @@ import pandas as pd
 import h5py
 from tqdm import tqdm
 
-from .frame_chunk import FrameChunk
+from .frame_chunk import FrameChunk, FlimCalc
 
 
 class ImagingSoftware(Enum):
@@ -96,28 +96,28 @@ class Movie:
     image_soft = attr.ib(
         default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
     )
+    libver = attr.ib(default="latest", validator=instance_of(str))
     summed_mem = attr.ib(init=False, repr=False)
     stack = attr.ib(init=False, repr=False)
     x_pixels = attr.ib(init=False)
     y_pixels = attr.ib(init=False)
     z_pixels = attr.ib(init=False)
-    bins_bet_pulses = attr.ib(init=False)
-    flim_calc = attr.ib(init=False)
+    flim_df = attr.ib(init=False)
+    lifetime = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.x_pixels = self.data_shape[1]
         self.y_pixels = self.data_shape[2]
         self.z_pixels = 1
-        self.bins_bet_pulses = 1
         if self.flim:
-            self.bins_bet_pulses = self.data_shape[-1]
-            if len(self.data_shape) == 5:
-                self.z_pixels = self.data_shape[3]
+            self.flim_df = {i: list() for i in self.channels}
+            self.lifetime = {i: 0 for i in self.channels}
         else:
             try:
                 self.z_pixels = self.data_shape[3]
             except IndexError:
                 pass
+        self.line_delta = np.uint64(self.line_delta)
 
     def run(self) -> None:
         """
@@ -153,13 +153,16 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_stack_at_once)
             if "summed" in self.outputs:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
+            # TODO: Figure out what to do here
+            # if "flim" in self.outputs:
+            #     funcs_to_execute_end.append(self.__save_flim_at_once)
 
         else:
             if "stack" in self.outputs:
                 self.outputs["stack"] = h5py.File(
                     f'{self.outputs["filename"]}',
                     "r+",
-                    libver="earliest",
+                    libver=self.libver,
                     rdcc_nbytes=10 * 1024 ** 2,
                     rdcc_nslots=2053,
                     rdcc_w0=1,
@@ -172,6 +175,9 @@ class Movie:
                 funcs_to_execute_during.append(self.__append_summed_data)
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
+            if "flim" in self.outputs:
+                funcs_to_execute_during.append(self.__append_flim_data)
+                funcs_to_execute_end.append(self.__save_flim_at_once)
         return funcs_to_execute_during, funcs_to_execute_end
 
     def __process_data(
@@ -199,8 +205,8 @@ class Movie:
             )
             hist_dict = chunk.create_hist()
             for func in funcs_during:
-                for chan, (hist, _) in hist_dict.items():
-                    func(data=hist, channel=chan, idx=idx)
+                for chan, (hist, flim_hist) in hist_dict.items():
+                    func(data=hist, channel=chan, idx=idx, flim_hist=flim_hist)
 
             tq.update(1)
             gc.collect()
@@ -246,7 +252,7 @@ class Movie:
         with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver="earliest",
+            libver=self.libver,
             rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
@@ -260,7 +266,7 @@ class Movie:
         with h5py.File(
             f'{self.outputs["filename"]}',
             "r+",
-            libver="earliest",
+            libver=self.libver,
             rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
@@ -289,7 +295,7 @@ class Movie:
             else:
                 self.stack[channel] = squeezed
 
-    def __create_memory_output(self, data: np.ndarray, channel: int, idx: int) -> None:
+    def __create_memory_output(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
         """
         If the user desired, create two memory constructs -
         A summed array of all images (for a specific channel), and a stack containing
@@ -297,17 +303,13 @@ class Movie:
         :param np.ndarray data: Data to be saved
         :param int channel: Current spectral channel of data
         :param int idx: Index of frame chunk
+        :param np.ndarray flim_hist: FLIM data to be saved
         """
         self.stack[channel].append(data)
         assert len(data.shape) > 2
-        if self.flim:
-            self.summed_mem[channel][..., 0] += np.uint16(data.sum(axis=0))
-            mean_lifetime = data[..., 1].mean(axis=0, dtype=np.uint16)
-            self.summed_mem[channel][..., 1] = ((self.summed_mem[channel][..., 1] + mean_lifetime) / 2).astype(np.uint16)
-        else:
-            self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
-    def __save_stack_incr(self, data: np.ndarray, channel: int, idx: int) -> None:
+    def __save_stack_incr(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
         """
         Save incrementally new data to an open file on the disk
         :param np.ndarray data: Data to save
@@ -320,7 +322,7 @@ class Movie:
             cur_slice_start:cur_slice_end, ...
         ] = np.squeeze(data)
 
-    def __append_summed_data(self, data: np.ndarray, channel: int, idx: int) -> None:
+    def __append_summed_data(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
         """
         Create a summed variable later to be saved as the channel's data
         :param np.ndarray data: Data to be saved
@@ -328,12 +330,30 @@ class Movie:
         :param int idx: Index of frame chunk
         """
         assert len(data.shape) > 2
-        if self.flim:
-            self.summed_mem[channel][..., 0] += np.uint16(data.sum(axis=0))
-            mean_lifetime = data[..., 1].mean(axis=0, dtype=np.uint16)
-            self.summed_mem[channel][..., 1] = ((self.summed_mem[channel][..., 1] + mean_lifetime) / 2).astype(np.uint16)
-        else:
-            self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+        self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+
+    def __append_flim_data(self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame):
+        self.flim_df[channel].append(flim_hist)
+
+    def __save_flim_at_once(self):
+        for chan in self.channels:
+            concat_data = pd.concat(self.flim_df[chan])
+            flimcalc = FlimCalc(concat_data["since_laser"].to_numpy(), concat_data["bin"].to_numpy())
+            flimcalc.run()
+            only_flim_hist = np.full(self.data_shape, np.nan).ravel()
+            only_flim_hist[flimcalc.hist_arrivals["bin"]] = flimcalc.hist_arrivals["lifetime_uint8"]
+            only_flim_hist.reshape(self.data_shape)
+            with h5py.File(
+                f'{self.outputs["filename"]}',
+                "r+",
+                libver=self.libver,
+                rdcc_nbytes=10 * 1024 ** 2,
+                rdcc_nslots=2053,
+                rdcc_w0=1,
+            ) as f:
+                f["Lifetime"][f"Channel {chan}"][...] = np.squeeze(
+                    only_flim_hist
+                )
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """

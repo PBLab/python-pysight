@@ -20,6 +20,7 @@ data_filename = ""
 summed = true
 memory = true
 stack = true
+flim = false
 
 [advanced]
 debug = false

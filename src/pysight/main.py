@@ -142,7 +142,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         y_pixels=config["image"]["y_pixels"],
         z_pixels=config["image"]["z_pixels"] if analyzed_struct.tag_interp_ok else 1,
         channels=data_for_movie.index.levels[0],
-        flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
         binwidth=config["advanced"]["binwidth"],
         reprate=config["advanced"]["reprate"],
         lst_metadata=lst_metadata,

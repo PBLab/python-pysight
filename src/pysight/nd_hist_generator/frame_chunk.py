@@ -53,20 +53,31 @@ class FrameChunk:
             except KeyError:
                 pass
             if self.flim:
-                data_columns.append(self.df_dict[chan]["time_rel_pulse"].to_numpy())
-                hist, edges = self._hist_with_flim(data_columns, list_of_edges)
+                hist, flim_hist = self._hist_with_flim(
+                    data_columns, list_of_edges, chan
+                )
             else:
-                hist, edges = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            hist = hist.astype(np.uint8).reshape(
-                (self.frames_per_chunk,) + self.data_shape[1:]
-            )
-            if self.bidir:
-                hist[:, 1::2, ...] = np.flip(hist[:, 1::2, ...], axis=2)
-            if self.censor:
-                hist = self.__censor_correction(hist)
-
-            self.hist_dict[chan] = hist, edges
+                flim_hist = None
+                hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
+            hists = self._post_process_hist([hist.astype(np.uint8)])
+            # TODO: Throw this away once we do FLIM properly
+            hists = hists + (flim_hist, )
+            self.hist_dict[chan] = hists
         return self.hist_dict
+
+    def _post_process_hist(self, hists: List[np.ndarray]):
+        processed = []
+        for hist in hists:
+            if hist is not None:
+                reshaped = hist.reshape(
+                    (self.frames_per_chunk,) + (self.data_shape[1:])
+                )
+                if self.bidir:
+                    reshaped[:, 1::2, ...] = np.flip(reshaped[:, 1::2, ...], axis=2)
+                    processed.append(reshaped)
+            else:
+                processed.append(None)
+        return tuple(processed)
 
     def __create_hist_edges(self, chan) -> List[np.ndarray]:
         """
@@ -128,10 +139,6 @@ class FrameChunk:
             dtype=np.uint64,
         )
 
-    def __create_laser_edges(self) -> np.ndarray:
-        """ Creates self.bins_bet_pulses bins for a histogram """
-        return np.arange(1, self.bins_bet_pulses + 2)
-
     def __linspace_along_sine(self) -> np.ndarray:
         """
         Find the points that are evenly spaced along a sine function between pi/2 and 3*pi/2
@@ -161,7 +168,9 @@ class FrameChunk:
 
         return np.array(pts)
 
-    def _hist_with_flim(self, data, edges):
+    def _hist_with_flim(
+        self, data: List[np.ndarray], edges: List[np.ndarray], chan: int
+    ) -> Tuple[np.ndarray, Tuple[np.ndarray]]:
         """Run a slightly more complex processing pipeline when we need to calculate
         the lifetime of each pixel in the image.
         We first generate the standard histogram without taking the FLIM dimension
@@ -176,28 +185,33 @@ class FrameChunk:
             Photon arrival times in each of the dimensions
         edges : list of np.ndarray
             Histogram edges for each dimension.
+        chan : int
+            Channel number
 
         Returns
         -------
         hist : np.ndarray
             N-dimensional histogram, where N = len(data)
-        edges : tuple of np.ndarray
-            Edges for each dimension
+        hist_with_flim : np.ndarray
+            N-dimensional histogram, where N = len(data)
         """
         hist = HistWithIndex(data, edges)
         hist.run()
-        flim = FlimCalc(data[-1], hist.hist_indices)
-        flim.run()
-        only_flim_hist = np.full_like(hist.hist_photons, np.nan)
-        only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime_uint8"]
-        hist_with_flim = np.concatenate(
-            [hist.hist_photons[..., np.newaxis], only_flim_hist[..., np.newaxis]],
-            axis=-1,
+        valid_photons = hist.discard_out_of_bounds_photons()
+        # flim = FlimCalc(self.df_dict[chan]["time_rel_pulse"].to_numpy(), hist.hist_indices)
+        # flim.run()
+        # only_flim_hist = np.full_like(hist.hist_photons, np.nan)
+        # only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime_uint8"]
+        # assert only_flim_hist.shape == hist.hist_photons.shape
+        return (
+            hist.hist_photons,
+            pd.DataFrame(
+                {
+                    "since_laser": self.df_dict[chan]["time_rel_pulse"].to_numpy()[valid_photons],
+                    "bin": hist.hist_indices[valid_photons],
+                }
+            ),
         )
-        assert hist_with_flim.shape[-1] == 2
-        assert hist_with_flim.shape[:-1] == hist.hist_photons.shape
-        edges_with_flim = edges.append(np.array([0, 1, 2]))
-        return hist_with_flim, edges_with_flim
 
 
 @attr.s
@@ -220,6 +234,7 @@ class HistWithIndex:
     edges = attr.ib(validator=instance_of(list))
     hist_photons = attr.ib(init=False)
     hist_indices = attr.ib(init=False)
+    edges_with_outliers = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         """A few asserts regarding the data's shape and validity."""
@@ -230,8 +245,8 @@ class HistWithIndex:
 
     def run(self):
         """Main class pipeline."""
-        self.hist_indices, nedges = self._get_indices_for_photons()
-        self.hist_photons = self._populate_hist_with_photons(nedges)
+        self.hist_indices, self.edges_with_outliers = self._get_indices_for_photons()
+        self.hist_photons = self._populate_hist_with_photons(self.edges_with_outliers)
 
     def _get_indices_for_photons(self):
         """For the given data and edges, find the indices in which each photon should
@@ -270,6 +285,21 @@ class HistWithIndex:
         core = len(self.edges) * (slice(1, -1),)
         hist = hist[core]
         return hist
+
+    def discard_out_of_bounds_photons(self):
+        """The "run" methods automatically discards these photons, but if
+        we wish to create a histogram by hand we have to discard them
+        manually as well.
+        This method has to be run after self._get_indices_for_photons has.
+        """
+        unraveled = np.unravel_index(self.hist_indices, self.edges_with_outliers)
+        outliers = []
+        for indices, edge in zip(unraveled, self.edges_with_outliers):
+            outliers.append((indices != 0) & (indices != edge-1))
+        valid_photons = outliers[0]
+        for indices in range(1, len(outliers)):
+            valid_photons = np.logical_and(valid_photons, outliers[indices])
+        return valid_photons
 
 
 @attr.s(hash=True)
@@ -322,10 +352,9 @@ class FlimCalc:
         To do so we scale tau into the [0, 256) range and leave the user
         to interpret the number of nanoseconds.
         """
-        factor = np.iinfo(np.uint8).max / self.bins_bet_pulses
         self.hist_arrivals["lifetime_uint8"] = (
-            self.hist_arrivals["since_laser"] * factor
-        ).astype(np.uint8)
+            self.hist_arrivals["since_laser"]
+        ).astype(np.float32)
 
 
 def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
@@ -333,7 +362,11 @@ def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
     with a lifetime around 3 ns.
     # TODO: bins_bet_pulses
     """
+    if len(data) < 5:
+        return np.nan
     hist = np.histogram(data, bins_bet_pulses)[0]
+    if hist.max() < 5:
+        return np.nan
     peaks, props = find_peaks(hist, height=(None, None))
     # If no peak is found we'll try using the first bin as a peak.
     # scipy.signal.find_peaks is not good at detecting that the first
@@ -342,12 +375,14 @@ def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
     if len(peaks) == 0:
         peaks, props = np.array([0]), {"peak_heights": hist[0]}
     decay_curve, max_val, min_val = find_decay_borders(hist, peaks, props)
+    if len(decay_curve) < 4:
+        return np.nan
     popt, _ = curve_fit(
         _exp_decay,
         np.arange(len(decay_curve)),
         decay_curve,
         p0=(max_val, 1 / 35, min_val),
-        maxfev=10_000,
+        maxfev=1_000,
     )
     return 1 / popt[1]
 

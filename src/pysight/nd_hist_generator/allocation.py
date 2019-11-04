@@ -194,8 +194,9 @@ class Allocate(object):
                 1 / (self.binwidth * self.laser_freq)
             ).astype(np.uint8)
             rel_time.append(rel_time_per_pulse)
-            df.loc[chan, "time_rel_pulse"] = np.uint8(rel_time_per_pulse)
-
+            df.loc[chan, "time_rel_pulse"] = rel_time_per_pulse
+            
+        df["time_rel_pulse"] = np.uint8(df["time_rel_pulse"])
         return df, rel_time
 
     def _find_integer_gcd(self):
@@ -205,7 +206,7 @@ class Allocate(object):
         """
         laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
         bins_bet_pulses = np.around(laser_freq / self.binwidth, decimals=3)
-        ns_between_pulses = (1/laser_freq) * 1e9
+        ns_between_pulses = (1 / laser_freq) * 1e9
 
         while int(bins_bet_pulses) != bins_bet_pulses:
             bins_bet_pulses *= 10
@@ -216,9 +217,9 @@ class Allocate(object):
         return np.gcd(int(bins_bet_pulses), int(ns_between_pulses))
 
     def _find_num_pulses(self, needed_bins) -> int:
-        period = int(needed_bins * self.binwidth*1e9)
+        period = int(needed_bins * self.binwidth * 1e9)
         laser_freq = np.around(self.laser_freq, decimals=-6)  # MHz reprates
-        ns_between_pulses = (1/laser_freq) * 1e9
+        ns_between_pulses = (1 / laser_freq) * 1e9
         return int(period / ns_between_pulses)
 
     def __add_phase_offset_to_bidir_lines(self):
@@ -291,10 +292,11 @@ class Allocate(object):
     def _rotate_laser_timings(self):
         """Rotate the histogram of the photon arrival times relative to the laser pulse,
         so that the highest value is in the second bin."""
-        bins_for_flim_hist = self._find_integer_gcd() + 1
-        hist = np.histogram(self.df["time_rel_pulse"], bins_for_flim_hist - 1)
-        peaks, params = find_peaks(hist, height=(None, None))
-        if len(peaks) == 0:
-            return
-        max_peak_idx = (peaks[np.argmax(params["peak_heights"])] - 1) % bins_for_flim_hist
-        self.df["time_rel_pules"] = (self.df["time_rel_pulse"] - max_peak_idx) % bins_for_flim_hist
+        # bins_for_flim_hist = self._find_integer_gcd() + 1
+        # hist, _ = np.histogram(self.df_photons["time_rel_pulse"], np.arange(bins_for_flim_hist))
+        # peaks, params = find_peaks(hist, height=(None, None))
+        # if len(peaks) == 0:
+        #     return
+        # max_peak_idx = (peaks[np.argmax(params["peak_heights"])] - 2) % bins_for_flim_hist
+        # self.df_photons["time_rel_pules"] = (self.df_photons["time_rel_pulse"] - max_peak_idx) % bins_for_flim_hist
+        pass

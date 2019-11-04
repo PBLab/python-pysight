@@ -36,6 +36,7 @@ class Config:
                 'summed': gui.summed.get(),
                 'memory': gui.memory.get(),
                 'stack': gui.stack.get(),
+                'flim': gui.flim.get(),
             },
             'advanced': {
                 'debug': gui.debug.get(),
