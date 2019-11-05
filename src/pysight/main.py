@@ -159,7 +159,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         #     raw=analyzed_struct.df_photons, reprate=config['advanced']['reprate'], binwidth=config['advanced']['binwidth']
         # )
         # gated.run()
-
     # Create a movie object
     volume_chunks = VolumeGenerator(
         frames=analyzed_struct.dict_of_data["Frames"], data_shape=outputs.data_shape
@@ -202,6 +201,7 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
             config=config,
         )
         return pysight_output
+    return final_movie
 
 
 def _read_lst_file(config: Dict[str, Any]):

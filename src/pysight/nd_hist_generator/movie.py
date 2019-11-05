@@ -10,7 +10,8 @@ import pandas as pd
 import h5py
 from tqdm import tqdm
 
-from .frame_chunk import FrameChunk, FlimCalc
+from .frame_chunk import FrameChunk, FlimCalc, HistWithIndex
+from pysight.nd_hist_generator.outputs import DataShape
 
 
 class ImagingSoftware(Enum):
@@ -333,16 +334,19 @@ class Movie:
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __append_flim_data(self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame):
-        self.flim_df[channel].append(flim_hist)
+        flimcalc = FlimCalc(flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy())
+        flimcalc.run()
+        modified_data_shape = (self.frames_per_chunk,) + tuple(shape + 2 for shape in self.data_shape[1:])
+        modified_data_shape = DataShape(*modified_data_shape)
+        flim_hist = flimcalc.histogram_result(modified_data_shape)
+        flim_hist = np.nanmean(flim_hist, 0)
+        print(np.nansum(flim_hist))
+        self.flim_df[channel].append(np.nanmean(flim_hist, 0))
 
     def __save_flim_at_once(self):
         for chan in self.channels:
-            concat_data = pd.concat(self.flim_df[chan])
-            flimcalc = FlimCalc(concat_data["since_laser"].to_numpy(), concat_data["bin"].to_numpy())
-            flimcalc.run()
-            only_flim_hist = np.full(self.data_shape, np.nan).ravel()
-            only_flim_hist[flimcalc.hist_arrivals["bin"]] = flimcalc.hist_arrivals["lifetime_uint8"]
-            only_flim_hist.reshape(self.data_shape)
+            mean_flim = np.nanmean(self.flim_df[chan], axis=0)
+            np.save(f'data_chan_{chan}.npy', mean_flim)
             with h5py.File(
                 f'{self.outputs["filename"]}',
                 "r+",
@@ -352,7 +356,7 @@ class Movie:
                 rdcc_w0=1,
             ) as f:
                 f["Lifetime"][f"Channel {chan}"][...] = np.squeeze(
-                    only_flim_hist
+                    mean_flim
                 )
 
     def __print_outputs(self) -> None:

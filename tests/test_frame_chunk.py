@@ -427,4 +427,4 @@ class TestFlimCalc:
         fl = FlimCalc(arrivals["since_laser"].to_numpy(), np.array([1, 2, 3]))
         fl.hist_arrivals = arrivals
         fl._normalize_taus_to_uint8()
-        np.testing.assert_equal(fl.hist_arrivals["lifetime_uint8"], np.array([0, 127, 255], dtype=np.uint8))
+        np.testing.assert_equal(fl.hist_arrivals["lifetime"], np.array([0, 127, 255], dtype=np.uint8))

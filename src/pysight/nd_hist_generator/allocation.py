@@ -195,7 +195,7 @@ class Allocate(object):
             ).astype(np.uint8)
             rel_time.append(rel_time_per_pulse)
             df.loc[chan, "time_rel_pulse"] = rel_time_per_pulse
-            
+
         df["time_rel_pulse"] = np.uint8(df["time_rel_pulse"])
         return df, rel_time
 

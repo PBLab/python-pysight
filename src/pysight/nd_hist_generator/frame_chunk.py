@@ -1,4 +1,6 @@
 from typing import List, Dict, Tuple
+import functools
+import operator
 
 import attr
 from attr.validators import instance_of
@@ -7,6 +9,7 @@ import pandas as pd
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
+from pysight.nd_hist_generator.outputs import DataShape
 
 @attr.s(slots=True)
 class FrameChunk:
@@ -198,10 +201,11 @@ class FrameChunk:
         hist = HistWithIndex(data, edges)
         hist.run()
         valid_photons = hist.discard_out_of_bounds_photons()
+        # TODO
         # flim = FlimCalc(self.df_dict[chan]["time_rel_pulse"].to_numpy(), hist.hist_indices)
         # flim.run()
         # only_flim_hist = np.full_like(hist.hist_photons, np.nan)
-        # only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime_uint8"]
+        # only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime"]
         # assert only_flim_hist.shape == hist.hist_photons.shape
         return (
             hist.hist_photons,
@@ -295,7 +299,7 @@ class HistWithIndex:
         unraveled = np.unravel_index(self.hist_indices, self.edges_with_outliers)
         outliers = []
         for indices, edge in zip(unraveled, self.edges_with_outliers):
-            outliers.append((indices != 0) & (indices != edge-1))
+            outliers.append((indices != 0) & (indices < edge-1))
         valid_photons = outliers[0]
         for indices in range(1, len(outliers)):
             valid_photons = np.logical_and(valid_photons, outliers[indices])
@@ -347,17 +351,40 @@ class FlimCalc:
             "bin", as_index=False, sort=False
         ).agg(calc_lifetime)
 
-    def _normalize_taus_to_uint8(self):
-        """We wish to show uint8 images, and not floating point images.
-        To do so we scale tau into the [0, 256) range and leave the user
-        to interpret the number of nanoseconds.
+    def _normalize_taus(self):
+        """FLIM images will be displayed in a float32 scale
+        due to the nans.
         """
-        self.hist_arrivals["lifetime_uint8"] = (
+        self.hist_arrivals["lifetime"] = (
             self.hist_arrivals["since_laser"]
         ).astype(np.float32)
 
+    def histogram_result(self, shape: DataShape):
+        """Create a histogram with the bins and lifetimes for each of the photons
+        that were calculated in the "run" pipeline.
 
-def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
+        Parameters
+        ----------
+        shape : DataShape
+            Shape of data
+
+        Returns
+        -------
+        hist : np.ndarray
+            The histogrammed data
+        """
+        total_bins = functools.reduce(operator.mul, shape, 1)
+        assert total_bins >= self.hist_arrivals["bin"]
+        hist = np.full(shape, np.nan, dtype=np.float32).ravel()
+        hist[self.hist_arrivals["bin"]] = self.hist_arrivals["lifetime"]
+        hist = hist.reshape(shape)
+        core = (len(shape) - 1) * (slice(1, -1),)
+        core = (slice(None), ) + core
+        hist = hist[core]
+        return hist
+
+
+def calc_lifetime(data: pd.Series, bins_bet_pulses=124) -> float:
     """Calculate the lifetime of the given data by fitting it to a decaying exponent
     with a lifetime around 3 ns.
     # TODO: bins_bet_pulses
@@ -367,7 +394,7 @@ def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
     hist = np.histogram(data, bins_bet_pulses)[0]
     if hist.max() < 5:
         return np.nan
-    peaks, props = find_peaks(hist, height=(None, None))
+    peaks, props = find_peaks(hist, height=(None, None), prominence=(0.8, None))
     # If no peak is found we'll try using the first bin as a peak.
     # scipy.signal.find_peaks is not good at detecting that the first
     # data point is the highest. If it's not true then the curve fit
@@ -377,14 +404,20 @@ def calc_lifetime(data: pd.Series, bins_bet_pulses=125) -> float:
     decay_curve, max_val, min_val = find_decay_borders(hist, peaks, props)
     if len(decay_curve) < 4:
         return np.nan
-    popt, _ = curve_fit(
-        _exp_decay,
-        np.arange(len(decay_curve)),
-        decay_curve,
-        p0=(max_val, 1 / 35, min_val),
-        maxfev=1_000,
-    )
-    return 1 / popt[1]
+    try:
+        popt, _ = curve_fit(
+            _exp_decay,
+            np.arange(len(decay_curve)),
+            decay_curve,
+            p0=(max_val, 1 / 35, min_val),
+            maxfev=1_000,
+        )
+    except RuntimeError:
+        return np.nan
+    tau = np.array(1 / popt[1]).astype(np.float32, casting='safe')
+    if (tau > bins_bet_pulses) or (tau < 0):
+        return np.nan
+    return tau
 
 
 def _exp_decay(x, a, b, c):

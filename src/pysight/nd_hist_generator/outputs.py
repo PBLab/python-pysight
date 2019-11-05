@@ -62,7 +62,8 @@ class OutputParser:
         if (
             self.output_dict["stack"]
             or self.output_dict["summed"]
-            or self.output_dict["flim"]
+            # TODO: get rid of HDF5
+            # or self.output_dict["flim"]
         ):
             try:
                 split = os.path.splitext(self.filename)[0]
@@ -82,8 +83,8 @@ class OutputParser:
                 logging.warning("Permission Error: Couldn't write data to disk.")
                 return
             return f
-        else:
-            return
+        elif self.output_dict["flim"]:
+            self.outputs["flim"] = True
 
     def __populate_hdf(self, f):
         """
@@ -127,7 +128,6 @@ class OutputParser:
                 )
             except (PermissionError, OSError):
                 self.file_pointer_created = False
-        f.flush()
         f.close()
         if self.file_pointer_created is False:
             logging.warning("Permission Error: Couldn't write data to disk.")
