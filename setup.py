@@ -96,7 +96,7 @@ setup(
         "cython >= 0.29",
         "scipy >= 1.2",
         "scikit-learn >= 0.20",
-        "h5py >= 2.9",
+        "zarr >= 2.3",
         "tqdm >= 4.29",
         "numba >= 0.42",
         "ansimarkup >= 1.4",
