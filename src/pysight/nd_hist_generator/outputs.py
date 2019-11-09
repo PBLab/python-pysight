@@ -1,14 +1,15 @@
-from typing import Dict, Any
+from typing import Dict, Any, Tuple, Union
+from collections import namedtuple
+import pathlib
+import logging
 
 import attr
 from attr.validators import instance_of
 from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
 import pandas as pd
-import h5py
-import os
-import logging
-from collections import namedtuple
+import zarr
+from numcodecs import Blosc
 
 
 @attr.s(slots=True)
@@ -28,7 +29,7 @@ class OutputParser:
     channels = attr.ib(
         default=pd.CategoricalIndex([1]), validator=instance_of(pd.CategoricalIndex)
     )
-    binwidth = attr.ib(default=800e-12, validator=instance_of(float))
+    binwidth = attr.ib(default=100e-12, validator=instance_of(float))
     reprate = attr.ib(default=80e6, validator=instance_of(float))
     lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
@@ -49,44 +50,46 @@ class OutputParser:
             return
         if self.output_dict["memory"]:
             self.outputs["memory"] = 1
-        f = self.__create_prelim_file()
-        if f is not None:
-            self.__populate_hdf(f)
+        self.__create_prelim_file()
+        if self.file_pointer_created:
+            self.__populate_hdf()
 
     @property
     def _group_names(self):
-        return {"summed": "Summed Stack", "stack": "Full Stack", "flim": "Lifetime"}
+        return {
+            "summed": ["Summed Stack/Channel 1", "Summed Stack/Channel 2"],
+            "stack": ["Full Stack/Channel 1", "Full Stack/Channel 2"],
+            "flim": ["Lifetime/Channel 1", "Lifetime/Channel 2"],
+        }
 
     def __create_prelim_file(self):
         """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
         if (
             self.output_dict["stack"]
             or self.output_dict["summed"]
-            # TODO: get rid of HDF5
-            # or self.output_dict["flim"]
+            or self.output_dict["flim"]
         ):
             try:
-                split = os.path.splitext(self.filename)[0]
+                path = pathlib.Path(self.filename)
+                split = "/".join(path.parts[1:-1])
                 debugged = "_DEBUG" if self.debug else ""
-                fullfile = f"{split + debugged}.hdf5"
-                f = h5py.File(
-                    fullfile,
-                    "w",
-                    libver="latest",
-                    rdcc_nbytes=10 * 1024 ** 2,
-                    rdcc_nslots=521,
-                    rdcc_w0=1,
-                )
-                self.outputs["filename"] = fullfile
+                fullfile = pathlib.Path(f"{split + debugged}.zarr")
+                fullfile.touch()
+                self.outputs["filename"] = zarr.open(fullfile, mode="w", attrs=self.lst_metadata)
             except (PermissionError, OSError):
                 self.file_pointer_created = False
                 logging.warning("Permission Error: Couldn't write data to disk.")
-                return
-            return f
-        elif self.output_dict["flim"]:
-            self.outputs["flim"] = True
+            else:
+                self.file_pointer_created = True
+                self.outputs = {
+                    key: True for key, val in self.output_dict.items() if val
+                }
 
-    def __populate_hdf(self, f):
+    def __create_compressor(self):
+        """Generate a compressor object for the Zarr array"""
+        return Blosc(cname="zstd", clevel=3, shuffle=Blosc.BITSHUFFLE)
+
+    def __populate_hdf(self):
         """
         Generate files and add metadata to each group, write out the data in chunks
         f: HDF5 file pointer
@@ -94,21 +97,20 @@ class OutputParser:
         data_shape_summed = self.data_shape[1:]
         chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
+        chunk_shape = tuple(chunk_shape)
         if self.output_dict["stack"]:
             try:
-                self._create_hdf5_group(
-                    file=f,
+                self.__create_group(
                     output_type="stack",
                     shape=self.data_shape,
-                    chunks=tuple(chunk_shape),
+                    chunks=chunk_shape,
                     dtype=np.uint8,
                 )
             except (PermissionError, OSError):
                 self.file_pointer_created = False
         if self.output_dict["summed"]:
             try:
-                self._create_hdf5_group(
-                    file=f,
+                self.__create_group(
                     output_type="summed",
                     shape=data_shape_summed,
                     chunks=True,
@@ -119,35 +121,34 @@ class OutputParser:
 
         if self.output_dict["flim"]:
             try:
-                self._create_hdf5_group(
-                    file=f,
+                self.__create_group(
                     output_type="flim",
                     shape=self.data_shape,
-                    chunks=tuple(chunk_shape),
+                    chunks=chunk_shape,
                     dtype=np.float32,
                 )
             except (PermissionError, OSError):
                 self.file_pointer_created = False
-        f.close()
         if self.file_pointer_created is False:
             logging.warning("Permission Error: Couldn't write data to disk.")
 
-    def _create_hdf5_group(self, file, output_type, shape, chunks, dtype):
+    def __create_group(
+        self,
+        output_type: str,
+        shape: tuple,
+        chunks: Union[Tuple, bool],
+        dtype: np.dtype,
+    ):
         """Create a group in the open file with the given parameters."""
         groupname = self._group_names[output_type]
-        self.outputs[output_type] = [
-            file.require_group(groupname).require_dataset(
-                name=f"Channel {channel}",
+        for channel in range(self.num_of_channels):
+            self.outputs[output_type] = self.outputs["filename"].zeros(
+                groupname[channel],
                 shape=shape,
                 dtype=dtype,
                 chunks=chunks,
-                compression="gzip",
+                compressor=self.__create_compressor(),
             )
-            for channel in self.channels
-        ]
-        for key, val in self.lst_metadata.items():
-            for chan in range(self.num_of_channels):
-                self.outputs[output_type][chan].attrs.create(name=key, data=val.encode())
 
     def determine_data_shape_full(self):
         """
