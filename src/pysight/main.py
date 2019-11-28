@@ -30,8 +30,8 @@ import toml
 colorama.init()
 from pysight.ascii_list_file_parser.file_io import ReadMeta, ascii_parsing
 from pysight.nd_hist_generator.allocation import Allocate
-from pysight.nd_hist_generator.movie import Movie
 from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
+from pysight.nd_hist_generator.movie import Movie
 from pysight.nd_hist_generator.gating import GatedDetection
 from pysight.nd_hist_generator.photon_df import PhotonDF
 from pysight.nd_hist_generator.tag_bits import ParseTAGBits

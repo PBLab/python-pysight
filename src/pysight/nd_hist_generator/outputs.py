@@ -2,13 +2,22 @@ from typing import Dict, Any
 
 import attr
 from attr.validators import instance_of
-from pysight.nd_hist_generator.movie import trunc_end_of_file
 import numpy as np
 import pandas as pd
 import h5py
 import os
 import logging
 from collections import namedtuple
+
+
+def trunc_end_of_file(name) -> str:
+    """
+    Take only the start of the filename to avoid error with Python and Windows
+
+    :param str name: Filename to truncate
+    :return str:
+    """
+    return name[:240]
 
 
 @attr.s(slots=True)
