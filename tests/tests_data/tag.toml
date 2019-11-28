@@ -20,6 +20,7 @@ data_filename = "tests/tests_data/tag.lst"
 summed = false
 memory = true
 stack = false
+flim = false
 
 [advanced]
 debug = false

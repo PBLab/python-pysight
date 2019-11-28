@@ -15,13 +15,13 @@ class TestOutput(TestCase):
     parser_objects = []
     parser_objects.append(
         OutputParser(
-            output_dict={}, filename="tests_data" + sep + f"output_1.hdf5", flim=True
+            output_dict={}, filename="tests_data" + sep + "output_1.hdf5",
         )
     )
     parser_objects.append(
         OutputParser(
             output_dict={"memory": True},
-            filename="tests_data" + sep + f"output_2.hdf5",
+            filename="tests_data" + sep + "output_2.hdf5",
             reprate=160.3e6,
             z_pixels=10,
             num_of_frames=2,
@@ -30,7 +30,7 @@ class TestOutput(TestCase):
     parser_objects.append(
         OutputParser(
             output_dict={},
-            filename="tests_data" + sep + f"output_1.hdf5",
+            filename="tests_data" + sep + "output_1.hdf5",
             num_of_frames=2,
         )
     )
@@ -105,7 +105,7 @@ def generate_output_obj():
         summed_mem = di
         stack = di
         channels = pd.CategoricalIndex([1])
-        return PySightOutput(photons, summed_mem, stack, channels, shape, flim, dict())
+        return PySightOutput(photons, summed_mem, stack, channels, shape, dict())
     return _generate
 
 

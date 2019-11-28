@@ -194,8 +194,8 @@ class Movie:
             )
             hist_dict = chunk.create_hist()
             for func in funcs_during:
-                for chan, (hist, flim_hist) in hist_dict.items():
-                    func(data=hist, channel=chan, idx=idx, flim_hist=flim_hist)
+                for chan, hists in hist_dict.items():
+                    func(data=hists[0], channel=chan, idx=idx, flim_hist=hists[1])
 
             tq.update(1)
             gc.collect()

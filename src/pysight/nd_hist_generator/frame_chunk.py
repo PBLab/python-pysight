@@ -64,8 +64,8 @@ class FrameChunk:
                 hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
             hists = self._post_process_hist([hist.astype(np.uint8)])
             # TODO: Throw this away once we do FLIM properly
-            hists = hists + (flim_hist, )
-            self.hist_dict[chan] = hists
+            all_hists = hists + (flim_hist, )
+            self.hist_dict[chan] = all_hists
         return self.hist_dict
 
     def _post_process_hist(self, hists: List[np.ndarray]):
@@ -77,7 +77,7 @@ class FrameChunk:
                 )
                 if self.bidir:
                     reshaped[:, 1::2, ...] = np.flip(reshaped[:, 1::2, ...], axis=2)
-                    processed.append(reshaped)
+                processed.append(reshaped)
             else:
                 processed.append(None)
         return tuple(processed)

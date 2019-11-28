@@ -1,10 +1,12 @@
+from itertools import tee
+import logging
 from typing import Dict, Tuple
+
 import pandas as pd
 import numpy as np
 import attr
-from itertools import tee
-import warnings
-import logging
+import numba
+
 
 @attr.s(slots=True)
 class ScanImageLineValidator:
@@ -137,17 +139,7 @@ class ScanImageLineValidator:
         end_of_frames = change > 5
         end_of_frames_idx = np.where(end_of_frames)[0]  # scanimage specific
         rel_idx_non_end_frame = np.where(change <= self.change_thresh)[0]
-        idx_list = [
-            slice(st, sp) for st, sp in self.__pairwise([0] + list(end_of_frames_idx))
-        ]
-        lines_mat = np.zeros(
-            (len(end_of_frames_idx), self.num_of_lines * 2), dtype=np.uint64
-        )
-        last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)
-        for cur_row, cur_slice in enumerate(idx_list):
-            last_idx = cur_slice.stop - cur_slice.start
-            lines_mat[cur_row, :last_idx] = lines.values[cur_slice]
-            last_idx_of_row[cur_row] = last_idx
+        lines_mat, last_idx_of_row = iter_end_of_frames(lines.to_numpy(), end_of_frames_idx, self.num_of_lines)
         start_time_of_frames = lines[end_of_frames_idx].values
         start_time_of_frames = np.concatenate(
             (np.array([0], dtype=np.uint64), start_time_of_frames[:-1])
@@ -175,3 +167,24 @@ class ScanImageLineValidator:
         a, b = tee(iterable)
         next(b, None)
         return zip(a, b)
+
+
+@numba.jit(nopython=True)
+def iter_end_of_frames(lines, end_of_frames_idx, num_of_lines):
+    """Iterates over two signals - the start and end of each frame - and returns a
+    matrix containing the lines between those two signals.
+    """
+    lines_mat = np.zeros(
+        (len(end_of_frames_idx), num_of_lines * 2), dtype=np.uint64
+    )
+    last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)
+    frame_start = 0
+    for row, end in enumerate(end_of_frames_idx):
+        frame_end = end
+        last_idx = frame_end - frame_start
+        lines_mat[row, :last_idx] = lines[frame_start:frame_end]
+        last_idx_of_row[row] = last_idx
+        frame_start = end
+    return lines_mat, last_idx_of_row
+
+

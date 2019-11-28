@@ -227,17 +227,10 @@ class PySightOutput:
         Turns the data shape tuple into a namedtuple
         """
         shape = self._data_shape[:3]
-        if self._flim:
-            if len(self._data_shape) == 5:
-                shape += (self._data_shape[3],)
-                shape += (self._data_shape[4],)
-            else:
-                shape += (None, self._data_shape[3])  # no Z but tau exists
-        elif len(self._data_shape) == 4:  # take TAG shape regardless
+        if len(self._data_shape) == 4:  # take TAG shape regardless
             shape += (self._data_shape[3],)
-            shape += (None,)
         else:
-            shape += (None, None)
+            shape += (None,)
 
         return DataShape(*shape)
 
@@ -253,18 +246,13 @@ class MultiDimensionalData:
     :param DataShape _data_shape: List of valid dimensions.
     :param np.ndarray z_summed: All data summed across the \
         z dimension.
-    :param np.ndarray tau_summed: All data summed across the \
-        lifetime dimension.
     """
 
     full = attr.ib(validator=instance_of(np.ndarray), repr=False)
     time_summed = attr.ib(validator=instance_of(np.ndarray), repr=False)
     _data_shape = attr.ib(validator=instance_of(DataShape))
     z_summed = attr.ib(init=False, repr=False)
-    tau_summed = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self):
         if self._data_shape.z:
             object.__setattr__(self, "z_summed", self.full.sum(axis=3))
-        if self._data_shape.tau:
-            object.__setattr__(self, "tau_summed", self.full.sum(axis=-1))
