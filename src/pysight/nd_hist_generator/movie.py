@@ -19,16 +19,6 @@ class ImagingSoftware(Enum):
     MSCAN = "MScan"
 
 
-def trunc_end_of_file(name) -> str:
-    """
-    Take only the start of the filename to avoid error with Python and Windows
-
-    :param str name: Filename to truncate
-    :return str:
-    """
-    return name[:240]
-
-
 @attr.s
 class Movie:
     """
@@ -73,9 +63,7 @@ class Movie:
     frame_slices = attr.ib(repr=False)  # generator of frame slices from VolumeGenerator
     frames = attr.ib(validator=instance_of(pd.Series), repr=False)
     reprate = attr.ib(default=80e6, validator=instance_of(float))
-    name = attr.ib(
-        default="Movie", validator=instance_of(str), converter=trunc_end_of_file
-    )
+    name = attr.ib(default="Movie", validator=instance_of(str))
     binwidth = attr.ib(default=800e-12, validator=instance_of(float))
     fill_frac = attr.ib(default=71.0, validator=instance_of(float))
     bidir = attr.ib(default=False, validator=instance_of(bool))
@@ -206,8 +194,8 @@ class Movie:
             )
             hist_dict = chunk.create_hist()
             for func in funcs_during:
-                for chan, (hist, flim_hist) in hist_dict.items():
-                    func(data=hist, channel=chan, idx=idx, flim_hist=flim_hist)
+                for chan, hists in hist_dict.items():
+                    func(data=hists[0], channel=chan, idx=idx, flim_hist=hists[1])
 
             tq.update(1)
             gc.collect()
