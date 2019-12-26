@@ -11,22 +11,12 @@ import h5py
 from tqdm import tqdm
 
 from .frame_chunk import FrameChunk, FlimCalc, HistWithIndex
-from pysight.nd_hist_generator.outputs import DataShape
+from pysight.nd_hist_generator.outputs import DataShape, trunc_end_of_file
 
 
 class ImagingSoftware(Enum):
     SCANIMAGE = "ScanImage"
     MSCAN = "MScan"
-
-
-def trunc_end_of_file(name) -> str:
-    """
-    Take only the start of the filename to avoid error with Python and Windows
-
-    :param str name: Filename to truncate
-    :return str:
-    """
-    return name[:240]
 
 
 @attr.s
