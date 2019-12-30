@@ -16,6 +16,7 @@ include LICENSE
 include README.rst
 include docs/requirements.txt
 
-include tox.ini azure-pipelines.yml
+include tox.ini
+include azure-pipelines.yml
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib

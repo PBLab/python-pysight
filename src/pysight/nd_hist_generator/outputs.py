@@ -8,7 +8,7 @@ from attr.validators import instance_of
 import numpy as np
 import pandas as pd
 import zarr
-from numcodecs import Blosc
+from numcodecs import Zstd
 
 
 def trunc_end_of_file(name) -> str:
@@ -96,7 +96,7 @@ class OutputParser:
 
     def _create_compressor(self):
         """Generate a compressor object for the Zarr array"""
-        return Blosc(cname="zstd", clevel=3, shuffle=Blosc.BITSHUFFLE)
+        return Zstd(level=3)
 
     def __populate_file(self):
         """
