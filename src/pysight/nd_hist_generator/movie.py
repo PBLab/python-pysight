@@ -148,12 +148,8 @@ class Movie:
 
         else:
             if "stack" in self.outputs:
-                self.outputs["stack"] = zarr.open(
-                    f'{self.outputs["filename"]}',
-                    "r+",
-                ).require_group("Full Stack")
+                self.outputs["stack"] = self.outputs["filename"].require_group("Full Stack")
                 funcs_to_execute_during.append(self.__save_stack_incr)
-                funcs_to_execute_end.append(self.__close_file)
 
             if "summed" in self.outputs:
                 self.summed_mem = {i: 0 for i in self.channels}
@@ -233,33 +229,18 @@ class Movie:
         assert self.data.index.names[2] == "Lines"
 
     def __save_stack_at_once(self) -> None:
-        """ Save the entire in-memory stack into .hdf5 file """
-        z = zarr.open(
-            f'{self.outputs["filename"]}',
-            "r+",
-        )
+        """ Save the entire in-memory stack into a zarr file """
+        z = self.outputs["filename"]
         logging.info("Saving full stack to disk...")
         for channel in self.channels:
             z["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self) -> None:
-        """ Save the entire in-memory summed data into .hdf5 file """
-        z = zarr.open(
-            f'{self.outputs["filename"]}',
-            "r+",
-            libver=self.libver,
-            rdcc_nbytes=10 * 1024 ** 2,
-            rdcc_nslots=2053,
-            rdcc_w0=1,
-        )
+        """ Save the entire in-memory summed data into a zarr file """
         for channel in self.channels:
-            z["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
+            self.outputs["filename"]["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
                 self.summed_mem[channel]
             )
-
-    def __close_file(self) -> None:
-        """ Close the file pointer of the specific channel """
-        self.outputs["stack"].file.close()
 
     def __convert_list_to_arr(self) -> None:
         """ Convert a list with a bunch of frames into a single numpy array with an extra
@@ -345,7 +326,7 @@ class Movie:
         )
         if "stack" in self.outputs:
             logging.info(
-                f'Stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
+                f'Stack file created with name "{self.outputs["filename"].store.path}", \ncontaining a data group named'
                 ' "Full Stack", with one dataset per channel.'
             )
 
@@ -357,7 +338,7 @@ class Movie:
 
         if "summed" in self.outputs:
             logging.info(
-                f'Summed stack file created with name "{self.outputs["filename"]}", \ncontaining a data group named'
+                f'Summed stack file created with name "{self.outputs["filename"].store.path}", \ncontaining a data group named'
                 ' "Summed Stack", with one dataset per channel.'
             )
 

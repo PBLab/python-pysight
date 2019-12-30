@@ -5,6 +5,18 @@ Changelog
 Latest version
 ==============
 
+0.11.0 (2020-XX-XX)
+---------------
+
+* Output file format is now ``.zarr`` and not HDF5, due to repeated misbehaviors of the latter.
+
+* FLIM?
+
+# TODO
+
+Previous Versions
+=================
+
 0.10.1 (2019-08-18)
 -------------------
 
@@ -13,9 +25,6 @@ multiple sweeps. Up untill the previous version (0.10.0), list files with
 more than one sweep weren't parsed correctly due to a bug in PySight. This
 issue is now considered resolved.
 
-
-Previous Versions
-=================
 
 0.10.0 (2019-05-04)
 -------------------

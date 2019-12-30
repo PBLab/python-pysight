@@ -44,14 +44,14 @@ class OutputParser:
     file_pointer_created = attr.ib(default=True, validator=instance_of(bool))
     cache_size = attr.ib(default=10 * 1024 ** 3, validator=instance_of(int))
     debug = attr.ib(default=False, validator=instance_of(bool))
-    #: Dictionary with data - either the full or summed stack, with a list of HDF5 objects as channels
+    #: Dictionary with data - either the full or summed stack, with a list of zarr objects as channels
     outputs = attr.ib(init=False)
     #: Tuple of (num_of_frames, x, y, z, tau)
     data_shape = attr.ib(init=False)
     num_of_channels = attr.ib(init=False)
 
     def run(self):
-        """ Parse what the user required, creating a list of HDF5 dataset pointers for each channel """
+        """ Parse what the user required, creating a list of zarr dataset pointers for each channel """
         self.outputs = {}
         self.num_of_channels = len(self.channels)
         self.data_shape = self.determine_data_shape_full()
@@ -61,7 +61,7 @@ class OutputParser:
             self.outputs["memory"] = 1
         self.__create_prelim_file()
         if self.file_pointer_created:
-            self.__populate_hdf()
+            self.__populate_file()
 
     @property
     def _group_names(self):
@@ -72,7 +72,7 @@ class OutputParser:
         }
 
     def __create_prelim_file(self):
-        """ Try to create a preliminary .hdf5 file. Cache improves IO performance """
+        """ Try to create a preliminary zarr file. Cache improves IO performance """
         if (
             self.output_dict["stack"]
             or self.output_dict["summed"]
@@ -80,28 +80,28 @@ class OutputParser:
         ):
             try:
                 path = pathlib.Path(self.filename)
-                split = "/".join(path.parts[1:-1])
+                newpath = path.with_suffix('.zarr')
                 debugged = "_DEBUG" if self.debug else ""
-                fullfile = pathlib.Path(f"{split + debugged}.zarr")
-                fullfile.touch()
-                self.outputs["filename"] = zarr.open(fullfile, mode="w", attrs=self.lst_metadata)
+                fullfile = newpath.with_name(newpath.stem + debugged + newpath.suffix)
+                self.outputs["filename"] = zarr.open(str(fullfile), mode="w")
+                self.outputs["filename"].attr = self.lst_metadata
             except (PermissionError, OSError):
                 self.file_pointer_created = False
                 logging.warning("Permission Error: Couldn't write data to disk.")
             else:
                 self.file_pointer_created = True
-                self.outputs = {
+                self.outputs.update({
                     key: True for key, val in self.output_dict.items() if val
-                }
+                })
 
-    def __create_compressor(self):
+    def _create_compressor(self):
         """Generate a compressor object for the Zarr array"""
         return Blosc(cname="zstd", clevel=3, shuffle=Blosc.BITSHUFFLE)
 
-    def __populate_hdf(self):
+    def __populate_file(self):
         """
         Generate files and add metadata to each group, write out the data in chunks
-        f: HDF5 file pointer
+        f: zarr file pointer
         """
         data_shape_summed = self.data_shape[1:]
         chunk_shape = list(self.data_shape)
@@ -156,7 +156,7 @@ class OutputParser:
                 shape=shape,
                 dtype=dtype,
                 chunks=chunks,
-                compressor=self.__create_compressor(),
+                compressor=self._create_compressor(),
             )
 
     def determine_data_shape_full(self):

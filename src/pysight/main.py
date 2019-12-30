@@ -201,7 +201,6 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
             config=config,
         )
         return pysight_output
-    return final_movie
 
 
 def _read_lst_file(config: Dict[str, Any]):

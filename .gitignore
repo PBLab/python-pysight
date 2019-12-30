@@ -90,3 +90,4 @@ logs/
 *.log
 *.nfs*
 pip-wheel-metadata/*
+**/*.zarr/
