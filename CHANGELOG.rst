@@ -5,14 +5,14 @@ Changelog
 Latest version
 ==============
 
-0.11.0 (2020-XX-XX)
+0.11.0 (2019-12-30)
 --------------------
 
 * Output file format is now ``.zarr`` and not HDF5, due to repeated misbehaviors of the latter.
 
-* FLIM?
+* Initial support for FLIM.
 
-# TODO
+* General bug fixes.
 
 Previous Versions
 =================
