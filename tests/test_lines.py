@@ -110,14 +110,14 @@ class TestLineRectifier(TestCase):
     def test_multiple_single_lines_middle_unidir(self):
         raw_lines = np.arange(start=0, stop=1000, step=10, dtype=np.uint64)
         num_lines = len(raw_lines[:-1])
-        del_lines = np.delete(raw_lines, [2, 10, 100, 200, 300, 234])
+        del_lines = np.delete(raw_lines, [2, 10])
         rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines, bidir=False)
         self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
 
     def test_multiple_single_lines_middle_bidir(self):
         raw_lines = np.arange(start=0, stop=1000, step=10, dtype=np.uint64)
         num_lines = len(raw_lines[:-1])
-        del_lines = np.delete(raw_lines, [2, 10, 100, 200, 300, 234])
+        del_lines = np.delete(raw_lines, [2, 10])
         rect = LineRectifier(lines=del_lines[:-1], x_pixels=num_lines, bidir=True)
         self.assertSequenceEqual(list(rect.rectify()), list(raw_lines))
 

@@ -105,7 +105,7 @@ def generate_output_obj():
         summed_mem = di
         stack = di
         channels = pd.CategoricalIndex([1])
-        return PySightOutput(photons, summed_mem, stack, channels, shape, dict())
+        return PySightOutput(photons, summed_mem, stack, channels, shape, False, dict())
     return _generate
 
 
@@ -147,5 +147,5 @@ class TestPySightOutput:
         flim = True
         di = {1: np.random.random(shape)}
         obj = generate_output_obj(shape, flim, di)
-        shape = DataShape(10, 10, 10, None, 5)
+        shape = DataShape(10, 10, 10, 5)
         assert shape == obj._parse_data_shape()
