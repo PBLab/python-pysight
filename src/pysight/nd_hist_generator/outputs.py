@@ -191,8 +191,8 @@ class PySightOutput:
     :param tuple _data_shape: Data dimensions
     :param bool _flim: Whether data has Tau channel.
     :param Dict[str,Any] config: Configuration file used in this run.
-    # TODO: Add new FLIM handler
     """
+    # TODO: Add new FLIM handler
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     _summed_mem = attr.ib(validator=instance_of(dict), repr=False)

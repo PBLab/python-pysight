@@ -6,7 +6,7 @@ Latest version
 ==============
 
 0.11.0 (2020-XX-XX)
----------------
+--------------------
 
 * Output file format is now ``.zarr`` and not HDF5, due to repeated misbehaviors of the latter.
 
