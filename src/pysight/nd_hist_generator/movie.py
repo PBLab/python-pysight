@@ -7,7 +7,7 @@ import attr
 from attr.validators import instance_of
 import numpy as np
 import pandas as pd
-import h5py
+import zarr
 from tqdm import tqdm
 
 from .frame_chunk import FrameChunk, FlimCalc, HistWithIndex
@@ -148,13 +148,9 @@ class Movie:
 
         else:
             if "stack" in self.outputs:
-                self.outputs["stack"] = h5py.File(
+                self.outputs["stack"] = zarr.open(
                     f'{self.outputs["filename"]}',
                     "r+",
-                    libver=self.libver,
-                    rdcc_nbytes=10 * 1024 ** 2,
-                    rdcc_nslots=2053,
-                    rdcc_w0=1,
                 ).require_group("Full Stack")
                 funcs_to_execute_during.append(self.__save_stack_incr)
                 funcs_to_execute_end.append(self.__close_file)
@@ -238,32 +234,28 @@ class Movie:
 
     def __save_stack_at_once(self) -> None:
         """ Save the entire in-memory stack into .hdf5 file """
-        with h5py.File(
+        z = zarr.open(
             f'{self.outputs["filename"]}',
             "r+",
-            libver=self.libver,
-            rdcc_nbytes=10 * 1024 ** 2,
-            rdcc_nslots=2053,
-            rdcc_w0=1,
-        ) as f:
-            logging.info("Saving full stack to disk...")
-            for channel in self.channels:
-                f["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
+        )
+        logging.info("Saving full stack to disk...")
+        for channel in self.channels:
+            z["Full Stack"][f"Channel {channel}"][...] = self.stack[channel]
 
     def __save_summed_at_once(self) -> None:
         """ Save the entire in-memory summed data into .hdf5 file """
-        with h5py.File(
+        z = zarr.open(
             f'{self.outputs["filename"]}',
             "r+",
             libver=self.libver,
             rdcc_nbytes=10 * 1024 ** 2,
             rdcc_nslots=2053,
             rdcc_w0=1,
-        ) as f:
-            for channel in self.channels:
-                f["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
-                    self.summed_mem[channel]
-                )
+        )
+        for channel in self.channels:
+            z["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
+                self.summed_mem[channel]
+            )
 
     def __close_file(self) -> None:
         """ Close the file pointer of the specific channel """
@@ -335,17 +327,13 @@ class Movie:
         for chan in self.channels:
             mean_flim = np.nanmean(self.flim_df[chan], axis=0)
             np.save(f'data_chan_{chan}.npy', mean_flim)
-            with h5py.File(
+            z = zarr.open(
                 f'{self.outputs["filename"]}',
                 "r+",
-                libver=self.libver,
-                rdcc_nbytes=10 * 1024 ** 2,
-                rdcc_nslots=2053,
-                rdcc_w0=1,
-            ) as f:
-                f["Lifetime"][f"Channel {chan}"][...] = np.squeeze(
-                    mean_flim
-                )
+            )
+            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(
+                mean_flim
+            )
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """

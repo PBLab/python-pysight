@@ -20,6 +20,7 @@ def generate_flim():
         return LifetimeCalc(out, 1)
     return _generate_flim
 
+
 @pytest.mark.skip
 class TestFlim:
     shape = (10, 10, 10, 10)
