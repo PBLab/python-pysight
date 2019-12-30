@@ -148,7 +148,9 @@ class Movie:
 
         else:
             if "stack" in self.outputs:
-                self.outputs["stack"] = self.outputs["filename"].require_group("Full Stack")
+                self.outputs["stack"] = self.outputs["filename"].require_group(
+                    "Full Stack"
+                )
                 funcs_to_execute_during.append(self.__save_stack_incr)
 
             if "summed" in self.outputs:
@@ -238,9 +240,9 @@ class Movie:
     def __save_summed_at_once(self) -> None:
         """ Save the entire in-memory summed data into a zarr file """
         for channel in self.channels:
-            self.outputs["filename"]["Summed Stack"][f"Channel {channel}"][...] = np.squeeze(
-                self.summed_mem[channel]
-            )
+            self.outputs["filename"]["Summed Stack"][f"Channel {channel}"][
+                ...
+            ] = np.squeeze(self.summed_mem[channel])
 
     def __convert_list_to_arr(self) -> None:
         """ Convert a list with a bunch of frames into a single numpy array with an extra
@@ -257,7 +259,9 @@ class Movie:
             else:
                 self.stack[channel] = squeezed
 
-    def __create_memory_output(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
+    def __create_memory_output(
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
+    ) -> None:
         """
         If the user desired, create two memory constructs -
         A summed array of all images (for a specific channel), and a stack containing
@@ -271,7 +275,9 @@ class Movie:
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
-    def __save_stack_incr(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
+    def __save_stack_incr(
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
+    ) -> None:
         """
         Save incrementally new data to an open file on the disk
         :param np.ndarray data: Data to save
@@ -284,7 +290,9 @@ class Movie:
             cur_slice_start:cur_slice_end, ...
         ] = np.squeeze(data)
 
-    def __append_summed_data(self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray) -> None:
+    def __append_summed_data(
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
+    ) -> None:
         """
         Create a summed variable later to be saved as the channel's data
         :param np.ndarray data: Data to be saved
@@ -294,10 +302,16 @@ class Movie:
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
-    def __append_flim_data(self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame):
-        flimcalc = FlimCalc(flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy())
+    def __append_flim_data(
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame
+    ):
+        flimcalc = FlimCalc(
+            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy()
+        )
         flimcalc.run()
-        modified_data_shape = (self.frames_per_chunk,) + tuple(shape + 2 for shape in self.data_shape[1:])
+        modified_data_shape = (self.frames_per_chunk,) + tuple(
+            shape + 2 for shape in self.data_shape[1:]
+        )
         modified_data_shape = DataShape(*modified_data_shape)
         flim_hist = flimcalc.histogram_result(modified_data_shape)
         flim_hist = np.nanmean(flim_hist, 0)
@@ -307,14 +321,9 @@ class Movie:
     def __save_flim_at_once(self):
         for chan in self.channels:
             mean_flim = np.nanmean(self.flim_df[chan], axis=0)
-            np.save(f'data_chan_{chan}.npy', mean_flim)
-            z = zarr.open(
-                f'{self.outputs["filename"]}',
-                "r+",
-            )
-            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(
-                mean_flim
-            )
+            np.save(f"data_chan_{chan}.npy", mean_flim)
+            z = zarr.open(f'{self.outputs["filename"]}', "r+",)
+            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(mean_flim)
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """

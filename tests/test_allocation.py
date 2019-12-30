@@ -71,13 +71,16 @@ class TestAllocation:
         frames = np.concatenate((frames, np.repeat(np.array([90]), 10)))
         np.testing.assert_equal(allocat.dict_of_data["Lines"].index.values, frames)
 
-    @pytest.mark.parametrize("binwidth,laser_freq,expected", [
-        (800e-12, 80e6, 125),
-        (800e-12, 80.3e6, 125),
-        (400e-12, 80e6, 125),
-        (200e-12, 80.3e6, 125),
-        (100e-12, 80.4e6, 125)
-    ])
+    @pytest.mark.parametrize(
+        "binwidth,laser_freq,expected",
+        [
+            (800e-12, 80e6, 125),
+            (800e-12, 80.3e6, 125),
+            (400e-12, 80e6, 125),
+            (200e-12, 80.3e6, 125),
+            (100e-12, 80.4e6, 125),
+        ],
+    )
     def test_gcd(self, binwidth, laser_freq, expected):
         frames = pd.DataFrame(
             np.arange(30, 100, 10, dtype=np.uint64), columns=["abs_time"]
@@ -86,15 +89,16 @@ class TestAllocation:
             np.arange(0, 150, 5, dtype=np.uint64), columns=["abs_time"]
         )
         dict_of_data = dict(Frames=frames, Lines=lines)
-        allocat = Allocate(self.df_photons.copy(), dict_of_data,
-                           binwidth=binwidth, laser_freq=laser_freq)
+        allocat = Allocate(
+            self.df_photons.copy(),
+            dict_of_data,
+            binwidth=binwidth,
+            laser_freq=laser_freq,
+        )
         gcd = allocat._find_integer_gcd()
         assert gcd == expected
 
-
-    @pytest.mark.parametrize("binwidth,laser_freq,expected", [
-        (800e-12, 80e6, 8)
-    ])
+    @pytest.mark.parametrize("binwidth,laser_freq,expected", [(800e-12, 80e6, 8)])
     def test_num_pulse(self, binwidth, laser_freq, expected):
         frames = pd.DataFrame(
             np.arange(30, 100, 10, dtype=np.uint64), columns=["abs_time"]
@@ -103,8 +107,12 @@ class TestAllocation:
             np.arange(0, 150, 5, dtype=np.uint64), columns=["abs_time"]
         )
         dict_of_data = dict(Frames=frames, Lines=lines)
-        allocat = Allocate(self.df_photons.copy(), dict_of_data,
-                           binwidth=binwidth, laser_freq=laser_freq)
+        allocat = Allocate(
+            self.df_photons.copy(),
+            dict_of_data,
+            binwidth=binwidth,
+            laser_freq=laser_freq,
+        )
         needed_bins = allocat._find_integer_gcd()
         num_pulses = allocat._find_num_pulses(needed_bins)
         assert num_pulses == expected

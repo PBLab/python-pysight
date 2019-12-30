@@ -14,9 +14,7 @@ class TestOutput(TestCase):
 
     parser_objects = []
     parser_objects.append(
-        OutputParser(
-            output_dict={}, filename="tests_data" + sep + "output_1.hdf5",
-        )
+        OutputParser(output_dict={}, filename="tests_data" + sep + "output_1.hdf5",)
     )
     parser_objects.append(
         OutputParser(
@@ -46,9 +44,15 @@ class TestOutput(TestCase):
             (1, 1, 512, 100),
             (10, 512, 16),
             (10, 512, 1),
-            (1, 512, 512, 100)
+            (1, 512, 512, 100),
         ]
-        squeezed_shapes = [(1, 512, 512, 16), (1, 512, 100), (10, 512, 16), (10, 512), (1, 512, 512, 100)]
+        squeezed_shapes = [
+            (1, 512, 512, 16),
+            (1, 512, 100),
+            (10, 512, 16),
+            (10, 512),
+            (1, 512, 512, 100),
+        ]
         output_obj = []
         output_obj.append(
             OutputParser(
@@ -106,6 +110,7 @@ def generate_output_obj():
         stack = di
         channels = pd.CategoricalIndex([1])
         return PySightOutput(photons, summed_mem, stack, channels, shape, False, dict())
+
     return _generate
 
 

@@ -80,7 +80,7 @@ class OutputParser:
         ):
             try:
                 path = pathlib.Path(self.filename)
-                newpath = path.with_suffix('.zarr')
+                newpath = path.with_suffix(".zarr")
                 debugged = "_DEBUG" if self.debug else ""
                 fullfile = newpath.with_name(newpath.stem + debugged + newpath.suffix)
                 self.outputs["filename"] = zarr.open(str(fullfile), mode="w")
@@ -90,9 +90,9 @@ class OutputParser:
                 logging.warning("Permission Error: Couldn't write data to disk.")
             else:
                 self.file_pointer_created = True
-                self.outputs.update({
-                    key: True for key, val in self.output_dict.items() if val
-                })
+                self.outputs.update(
+                    {key: True for key, val in self.output_dict.items() if val}
+                )
 
     def _create_compressor(self):
         """Generate a compressor object for the Zarr array"""
@@ -192,6 +192,7 @@ class PySightOutput:
     :param bool _flim: Whether data has Tau channel.
     :param Dict[str,Any] config: Configuration file used in this run.
     """
+
     # TODO: Add new FLIM handler
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)

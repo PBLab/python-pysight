@@ -345,8 +345,16 @@ class TestMyHist:
         np.testing.assert_equal(hist.hist_photons, np.histogramdd(data, bins)[0])
 
     def test_my_multidim_against_histdd(self):
-        data = [np.array([0, 5, 20, 30, 40]), np.array([100, 200, 200, 300, 400]), np.array([13, 14, 15, 16, 16])]
-        bins = [np.array([0, 10, 20, 30]), np.array([100, 150, 200]), np.array([10, 20])]
+        data = [
+            np.array([0, 5, 20, 30, 40]),
+            np.array([100, 200, 200, 300, 400]),
+            np.array([13, 14, 15, 16, 16]),
+        ]
+        bins = [
+            np.array([0, 10, 20, 30]),
+            np.array([100, 150, 200]),
+            np.array([10, 20]),
+        ]
         hist = HistWithIndex(data, bins)
         hist.run()
         histdd = np.histogramdd(data, bins)[0]
@@ -410,10 +418,12 @@ class TestFlimCalc:
         data_of_single_bin = []
         bin_idx = []
         for index in range(1, length + 1):
-            data_of_single_bin.extend([index for _ in range(1, int(amp * np.exp(-index / tau)) + 1)])
+            data_of_single_bin.extend(
+                [index for _ in range(1, int(amp * np.exp(-index / tau)) + 1)]
+            )
         for pixel_idx in range(num_of_bins):
             bin_idx.extend([pixel_idx for _ in range(len(data_of_single_bin))])
-        data_of_single_bin  = num_of_bins * data_of_single_bin
+        data_of_single_bin = num_of_bins * data_of_single_bin
         data_of_single_bin = np.array(data_of_single_bin)
         bin_idx = np.array(bin_idx)
         fl = FlimCalc(data_of_single_bin, bin_idx)
@@ -425,8 +435,10 @@ class TestFlimCalc:
 
     @pytest.mark.skip
     def test_normalization(self):
-        arrivals = pd.DataFrame({'since_laser': np.array([0, 125 / 2, 125])})
+        arrivals = pd.DataFrame({"since_laser": np.array([0, 125 / 2, 125])})
         fl = FlimCalc(arrivals["since_laser"].to_numpy(), np.array([1, 2, 3]))
         fl.hist_arrivals = arrivals
         fl._normalize_taus()
-        np.testing.assert_equal(fl.hist_arrivals["lifetime"], np.array([0, 127, 255], dtype=np.float32))
+        np.testing.assert_equal(
+            fl.hist_arrivals["lifetime"], np.array([0, 127, 255], dtype=np.float32)
+        )

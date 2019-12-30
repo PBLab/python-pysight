@@ -325,7 +325,10 @@ class ReadMeta:
         format_holdafter = re.compile(format_str)
         holdafter = int(re.search(format_holdafter, cur_str).group(1), 16)
 
-        time_after_sweep = int(((MULTISCALER_EOS_DEADTIME + (holdafter * 6.4)) * 10 ** (-9)) / MULTISCALER_RESOLUTION)
+        time_after_sweep = int(
+            ((MULTISCALER_EOS_DEADTIME + (holdafter * 6.4)) * 10 ** (-9))
+            / MULTISCALER_RESOLUTION
+        )
         return time_after_sweep
 
     def __get_fstchan(self, cur_str: str) -> int:
@@ -342,7 +345,8 @@ class ReadMeta:
 
         format_fstchan = re.compile(format_str)
         fstchan = (
-            int(re.search(format_fstchan, cur_str).group(1), 16) * NANOSECONDS_PER_FSTCHAN
+            int(re.search(format_fstchan, cur_str).group(1), 16)
+            * NANOSECONDS_PER_FSTCHAN
         )  # in nanoseconds
         acq_delay = int(fstchan / MULTISCALER_RESOLUTION)
         return acq_delay
@@ -386,7 +390,9 @@ class ReadMeta:
         format_str: bytes = str_to_parse.encode("utf-8") + rb"=(\w+)"
         format_regex = re.compile(format_str)
         try:
-            self.lst_metadata[str_to_parse] = re.search(format_regex, metadata).group(1).decode()
+            self.lst_metadata[str_to_parse] = (
+                re.search(format_regex, metadata).group(1).decode()
+            )
         except AttributeError:  # field is non-existent
             pass
 
@@ -416,9 +422,7 @@ class ReadMeta:
 
 def ascii_parsing(cur_file: ReadMeta, raw_data: np.ndarray, config: Dict[str, Any]):
     """Preliminary readout of data from ASCII file."""
-    dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(
-        cur_file.timepatch
-    )
+    dict_of_slices_hex = timepatch_switch.ChoiceManagerHex().process(cur_file.timepatch)
     tabulated_data = Tabulate(
         data_range=cur_file.data_range,
         data=raw_data,

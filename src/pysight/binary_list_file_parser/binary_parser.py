@@ -94,7 +94,9 @@ class BinaryDataParser:
             self.lost = self.__get_lost_f3()
         self.aligned_data = self.__gen_df()
         self.dict_of_data = self.__slice_df_to_dict()
-        logging.info("Sorted dataframe created. Starting to set the proper data channel distribution...")
+        logging.info(
+            "Sorted dataframe created. Starting to set the proper data channel distribution..."
+        )
 
     def __get_channel(self) -> np.ndarray:
         """
@@ -161,7 +163,9 @@ class BinaryDataParser:
         :return np.ndarray tag: Array of the tag bits for each event.
         """
         ones = int("1" * self.timepatch_bits.value.tag, 2)
-        right_shift_by = 4 + self.timepatch_bits.value.time + self.timepatch_bits.value.sweep
+        right_shift_by = (
+            4 + self.timepatch_bits.value.time + self.timepatch_bits.value.sweep
+        )
         tag = np.right_shift(self.data, right_shift_by) & ones
         return tag.astype(np.uint16)
 
@@ -220,11 +224,13 @@ class BinaryDataParser:
 
         :return pd.DataFrame:
         """
-        df = pd.DataFrame(self.time, index=[self.channel, self.edge], columns=["abs_time"])
+        df = pd.DataFrame(
+            self.time, index=[self.channel, self.edge], columns=["abs_time"]
+        )
         try:
-            df.abs_time += (self.sweep - 1) * ((self.data_range * self.bitshift) + self.holdafter) + (
-                self.sweep * self.acq_delay
-            )
+            df.abs_time += (self.sweep - 1) * (
+                (self.data_range * self.bitshift) + self.holdafter
+            ) + (self.sweep * self.acq_delay)
         except AttributeError:
             pass
         try:
@@ -252,12 +258,18 @@ class BinaryDataParser:
         """
         dict_of_data = {}
         for key, analog_chan in self.dict_of_inputs_bin.items():
-            relevant_vals = self.aligned_data.xs(key=analog_chan, level=0).loc[:, self.data_to_grab]
+            relevant_vals = self.aligned_data.xs(key=analog_chan, level=0).loc[
+                :, self.data_to_grab
+            ]
             if key in ["PMT1", "PMT2"]:
                 dict_of_data[key] = relevant_vals.reset_index(drop=True)
-                dict_of_data[key]["Channel"] = 1 if "PMT1" == key else 2  # channel is the spectral channel
+                dict_of_data[key]["Channel"] = (
+                    1 if "PMT1" == key else 2
+                )  # channel is the spectral channel
             else:
-                dict_of_data[key] = relevant_vals.sort_values(by=["abs_time"]).reset_index(drop=True)
+                dict_of_data[key] = relevant_vals.sort_values(
+                    by=["abs_time"]
+                ).reset_index(drop=True)
 
         return dict_of_data
 

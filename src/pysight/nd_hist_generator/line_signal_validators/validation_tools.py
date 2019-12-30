@@ -83,7 +83,11 @@ class SignalValidator:
 
     @property
     def total_sweep_time(self):
-        return int(self.lst_metadata["fstchan"]) + int(self.lst_metadata["data_range"]) + int(self.lst_metadata["holdafter"])
+        return (
+            int(self.lst_metadata["fstchan"])
+            + int(self.lst_metadata["data_range"])
+            + int(self.lst_metadata["holdafter"])
+        )
 
     @property
     def max_sweep(self):

@@ -22,9 +22,13 @@ class ScanImageLineValidator:
         Returns a dictionary containing the data and the mean difference between subsequent lines
         """
         lines = self.dict_of_data["Lines"].loc[:, "abs_time"].copy()
-        lines_mat, rel_idx, end_of_frames_idx, last_idx_of_row, rel_idx_non_end_frame = self.__calc_line_parameters(
-            lines=lines
-        )
+        (
+            lines_mat,
+            rel_idx,
+            end_of_frames_idx,
+            last_idx_of_row,
+            rel_idx_non_end_frame,
+        ) = self.__calc_line_parameters(lines=lines)
         if lines_mat.shape[0] == 1:  # single frame
             lines = pd.Series(lines_mat[0, : self.num_of_lines], dtype=np.uint64)
             delta = np.uint64(lines.diff().mean())
@@ -112,7 +116,9 @@ class ScanImageLineValidator:
                     cur_missing_cols = np.where(diff_line > delta / 20)[0]
                     iters += 1
                 if iters == 1000:
-                    logging.warning("Line signal was corrupt during at least one frame.")
+                    logging.warning(
+                        "Line signal was corrupt during at least one frame."
+                    )
         return lines_mat
 
     def __finalize_lines(self, lines_mat: np.ndarray) -> pd.Series:
@@ -139,7 +145,9 @@ class ScanImageLineValidator:
         end_of_frames = change > 5
         end_of_frames_idx = np.where(end_of_frames)[0]  # scanimage specific
         rel_idx_non_end_frame = np.where(change <= self.change_thresh)[0]
-        lines_mat, last_idx_of_row = iter_end_of_frames(lines.to_numpy(), end_of_frames_idx, self.num_of_lines)
+        lines_mat, last_idx_of_row = iter_end_of_frames(
+            lines.to_numpy(), end_of_frames_idx, self.num_of_lines
+        )
         start_time_of_frames = lines[end_of_frames_idx].values
         start_time_of_frames = np.concatenate(
             (np.array([0], dtype=np.uint64), start_time_of_frames[:-1])
@@ -174,9 +182,7 @@ def iter_end_of_frames(lines, end_of_frames_idx, num_of_lines):
     """Iterates over two signals - the start and end of each frame - and returns a
     matrix containing the lines between those two signals.
     """
-    lines_mat = np.zeros(
-        (len(end_of_frames_idx), num_of_lines * 2), dtype=np.uint64
-    )
+    lines_mat = np.zeros((len(end_of_frames_idx), num_of_lines * 2), dtype=np.uint64)
     last_idx_of_row = np.zeros((end_of_frames_idx.shape[0]), dtype=np.int32)
     frame_start = 0
     for row, end in enumerate(end_of_frames_idx):
@@ -186,5 +192,3 @@ def iter_end_of_frames(lines, end_of_frames_idx, num_of_lines):
         last_idx_of_row[row] = last_idx
         frame_start = end
     return lines_mat, last_idx_of_row
-
-

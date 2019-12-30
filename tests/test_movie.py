@@ -28,7 +28,13 @@ def gen_data_df(frame_num=10, line_num=1000, end=100_000):
     assert len(lines) == len(frames) == len(photons)
 
     df = pd.DataFrame(
-        {"abs_time": photons, "time_rel_line": photons - lines, "Lines": lines, "Frames": frames, "Channel": channel,}
+        {
+            "abs_time": photons,
+            "time_rel_line": photons - lines,
+            "Lines": lines,
+            "Frames": frames,
+            "Channel": channel,
+        }
     )
     df["Channel"] = df["Channel"].astype("category")
     df.set_index(["Channel", "Frames", "Lines"], drop=True, inplace=True)
@@ -40,7 +46,9 @@ class TestMovies(TestCase):
     frame_num = 10
     end = 1000
     line_num = 100
-    data, frames, lines, x_pix, y_pix = gen_data_df(frame_num=frame_num, line_num=line_num, end=end)
+    data, frames, lines, x_pix, y_pix = gen_data_df(
+        frame_num=frame_num, line_num=line_num, end=end
+    )
     data_shape = (frame_num, x_pix, y_pix)
     volgen = VolumeGenerator(frames, data_shape)
     fr = volgen.create_frame_slices()
@@ -59,7 +67,9 @@ class TestMovies(TestCase):
     movie.run()
 
     def test_all_pipeline_basic(self):
-        self.assertTrue(np.all(self.movie.stack[1].ravel() == np.ones((self.end,), dtype=np.uint8)))
+        self.assertTrue(
+            np.all(self.movie.stack[1].ravel() == np.ones((self.end,), dtype=np.uint8))
+        )
 
     def test_baseline_outputs(self):
         during, end = self.movie._Movie__determine_outputs()

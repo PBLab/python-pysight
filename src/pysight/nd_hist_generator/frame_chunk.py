@@ -11,6 +11,7 @@ from scipy.signal import find_peaks
 
 from pysight.nd_hist_generator.outputs import DataShape
 
+
 @attr.s(slots=True)
 class FrameChunk:
     """
@@ -64,7 +65,7 @@ class FrameChunk:
                 hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
             hists = self._post_process_hist([hist.astype(np.uint8)])
             # TODO: Throw this away once we do FLIM properly
-            all_hists = hists + (flim_hist, )
+            all_hists = hists + (flim_hist,)
             self.hist_dict[chan] = all_hists
         return self.hist_dict
 
@@ -211,7 +212,9 @@ class FrameChunk:
             hist.hist_photons,
             pd.DataFrame(
                 {
-                    "since_laser": self.df_dict[chan]["time_rel_pulse"].to_numpy()[valid_photons],
+                    "since_laser": self.df_dict[chan]["time_rel_pulse"].to_numpy()[
+                        valid_photons
+                    ],
                     "bin": hist.hist_indices[valid_photons],
                 }
             ),
@@ -299,7 +302,7 @@ class HistWithIndex:
         unraveled = np.unravel_index(self.hist_indices, self.edges_with_outliers)
         outliers = []
         for indices, edge in zip(unraveled, self.edges_with_outliers):
-            outliers.append((indices != 0) & (indices < edge-1))
+            outliers.append((indices != 0) & (indices < edge - 1))
         valid_photons = outliers[0]
         for indices in range(1, len(outliers)):
             valid_photons = np.logical_and(valid_photons, outliers[indices])
@@ -355,9 +358,9 @@ class FlimCalc:
         """FLIM images will be displayed in a float32 scale
         due to the nans.
         """
-        self.hist_arrivals["lifetime"] = (
-            self.hist_arrivals["since_laser"]
-        ).astype(np.float32)
+        self.hist_arrivals["lifetime"] = (self.hist_arrivals["since_laser"]).astype(
+            np.float32
+        )
 
     def histogram_result(self, shape: DataShape):
         """Create a histogram with the bins and lifetimes for each of the photons
@@ -379,7 +382,7 @@ class FlimCalc:
         hist[self.hist_arrivals["bin"]] = self.hist_arrivals["lifetime"]
         hist = hist.reshape(shape)
         core = (len(shape) - 1) * (slice(1, -1),)
-        core = (slice(None), ) + core
+        core = (slice(None),) + core
         hist = hist[core]
         return hist
 
@@ -414,7 +417,7 @@ def calc_lifetime(data: pd.Series, bins_bet_pulses=124) -> float:
         )
     except RuntimeError:
         return np.nan
-    tau = np.array(1 / popt[1]).astype(np.float32, casting='safe')
+    tau = np.array(1 / popt[1]).astype(np.float32, casting="safe")
     if (tau > bins_bet_pulses) or (tau < 0):
         return np.nan
     return tau

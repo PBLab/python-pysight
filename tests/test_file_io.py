@@ -56,19 +56,24 @@ class TestMetaTools:
 
     def test_find_active_channels_from_str(self):
         from test_string_for_fileio import meta
+
         resdict, res_num_channels = self.file_io_objects[0].find_active_channels(meta)
         assert resdict == {"Frames": "110", "PMT1": "001", "Lines": "010"}
         assert res_num_channels == 1
 
     def test_find_active_channels_from_bytes(self):
         from test_string_for_fileio import meta_bytes
+
         self.file_io_objects[0].is_binary = True
-        resdict, res_num_channels = self.file_io_objects[0].find_active_channels(meta_bytes)
+        resdict, res_num_channels = self.file_io_objects[0].find_active_channels(
+            meta_bytes
+        )
         assert resdict == {"Frames": "110", "PMT1": "001", "Lines": "010"}
         assert res_num_channels == 1
 
     def test_empty_channel_with_data_works(self):
         from test_string_for_fileio import meta
+
         cur_obj = ReadMeta(
             str(next(pathlib.Path("tests/").rglob("*1.lst")).absolute()),
             debug=False,
@@ -129,7 +134,6 @@ class TestMetaTools:
             )
             cur_obj.run()
             assert cur_obj.bitshift == bitshift
-
 
 
 if __name__ == "__main__":

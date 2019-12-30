@@ -29,9 +29,15 @@ class TestTabulation:
         assert diction == self.tab.hex_to_bin_dict()
 
     def test_slice_string_array_1(self):
-        a = np.array(['hello', 'how', 'are', 'you'])
-        assert np.array_equal(slice_string_arrays(a, 1, 3), np.array(['el', 'ow', 're', 'ou'], dtype='|U2'))
+        a = np.array(["hello", "how", "are", "you"])
+        assert np.array_equal(
+            slice_string_arrays(a, 1, 3),
+            np.array(["el", "ow", "re", "ou"], dtype="|U2"),
+        )
 
     def test_slice_string_array_2(self):
-        a = np.array(['hello', 'how', 'are', 'you'])
-        assert np.array_equal(slice_string_arrays(a, 0, 3), np.array(['hel', 'how', 'are', 'you'], dtype='|U3'))
+        a = np.array(["hello", "how", "are", "you"])
+        assert np.array_equal(
+            slice_string_arrays(a, 0, 3),
+            np.array(["hel", "how", "are", "you"], dtype="|U3"),
+        )

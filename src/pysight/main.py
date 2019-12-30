@@ -44,7 +44,10 @@ from pysight.nd_hist_generator.line_signal_validators.add_bidir_lines import (
 from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
-from pysight.binary_list_file_parser.binary_parser import BinaryDataParser, binary_parsing
+from pysight.binary_list_file_parser.binary_parser import (
+    BinaryDataParser,
+    binary_parsing,
+)
 from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
@@ -209,17 +212,17 @@ def _read_lst_file(config: Dict[str, Any]):
     from a source other than a multiscaler.
     """
     cur_file = ReadMeta(
-            filename=config["outputs"]["data_filename"],
-            input_start=config["inputs"]["start"],
-            input_stop1=config["inputs"]["stop1"],
-            input_stop2=config["inputs"]["stop2"],
-            input_stop3=config["inputs"]["stop3"],
-            input_stop4=config["inputs"]["stop4"],
-            input_stop5=config["inputs"]["stop5"],
-            binwidth=config["advanced"]["binwidth"],
-            use_sweeps=config["advanced"]["sweeps_as_lines"],
-            mirror_phase=config["advanced"]["phase"],
-        )
+        filename=config["outputs"]["data_filename"],
+        input_start=config["inputs"]["start"],
+        input_stop1=config["inputs"]["stop1"],
+        input_stop2=config["inputs"]["stop2"],
+        input_stop3=config["inputs"]["stop3"],
+        input_stop4=config["inputs"]["stop4"],
+        input_stop5=config["inputs"]["stop5"],
+        binwidth=config["advanced"]["binwidth"],
+        use_sweeps=config["advanced"]["sweeps_as_lines"],
+        mirror_phase=config["advanced"]["phase"],
+    )
     cur_file.run()
     raw_data_obj = ReadData(
         filename=config["outputs"]["data_filename"],

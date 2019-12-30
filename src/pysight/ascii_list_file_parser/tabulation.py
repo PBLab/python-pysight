@@ -123,17 +123,15 @@ class Tabulate(object):
                         - self.dict_of_slices_hex[key].start
                     )
                     if key == "tag":
-                        self.list_of_losts, self.dict_of_slices_hex[
-                            key
-                        ].processed = get_lost_bit_tag(
-                            list_with_lost, step_size, len(self.data)
-                        )
+                        (
+                            self.list_of_losts,
+                            self.dict_of_slices_hex[key].processed,
+                        ) = get_lost_bit_tag(list_with_lost, step_size, len(self.data))
                     else:
-                        self.list_of_losts, self.dict_of_slices_hex[
-                            key
-                        ].processed = get_lost_bit_np(
-                            list_with_lost, step_size, len(self.data)
-                        )
+                        (
+                            self.list_of_losts,
+                            self.dict_of_slices_hex[key].processed,
+                        ) = get_lost_bit_np(list_with_lost, step_size, len(self.data))
                 else:
                     if key == "tag":
                         self.dict_of_slices_hex[key].processed = convert_hex_to_bin(

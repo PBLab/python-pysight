@@ -67,7 +67,7 @@ class LifetimeCalc:
         channel_data = getattr(self.data, f"ch{self.channel}")
         shape_x = channel_data.shape[0]
         shape_y = channel_data.shape[1]
-        assert ( shape_x == shape_y)  # supports only square images ATM
+        assert shape_x == shape_y  # supports only square images ATM
         slices = self._gen_slices(shape_x)
         flim_img = self._populate_binned_image(slices, channel_data)
         return flim_img
@@ -101,12 +101,8 @@ class LifetimeCalc:
         the starting and ending index of that bin.
         """
 
-        idx_x = self._create_indices_per_ax(
-            self.bin_factor, length=shape
-        )
-        idx_y = self._create_indices_per_ax(
-            self.bin_factor, length=shape
-        )
+        idx_x = self._create_indices_per_ax(self.bin_factor, length=shape)
+        idx_y = self._create_indices_per_ax(self.bin_factor, length=shape)
         xs = [slice(start, end) for start, end in zip(idx_x[0], idx_x[1])]
         ys = [slice(start, end) for start, end in zip(idx_y[0], idx_y[1])]
         return [(x, y, slice(None)) for x, y in zip(xs, ys)]
@@ -179,4 +175,3 @@ class ExpFitParams:
     amplitude = attr.ib(validator=instance_of(float))
     tau = attr.ib(validator=instance_of(float))
     c = attr.ib(validator=instance_of(float))
-

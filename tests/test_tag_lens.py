@@ -21,13 +21,17 @@ class TestTagPipeline:
         photons = pd.DataFrame([0, 10, 6531], columns=["abs_time"])
         pipe = TagPipeline(photons=photons, tag_pulses=self.tag_data)
         returned = pd.Series([0, 6530])
-        assert np.array_equal(returned, pipe._TagPipeline__preserve_relevant_tag_pulses())
+        assert np.array_equal(
+            returned, pipe._TagPipeline__preserve_relevant_tag_pulses()
+        )
 
     def test_preservation_without_zero(self):
         photons = pd.DataFrame([10, 6531], columns=["abs_time"])
         pipe = TagPipeline(photons=photons, tag_pulses=self.tag_data)
         returned = pd.Series([6530])
-        assert np.array_equal(returned, pipe._TagPipeline__preserve_relevant_tag_pulses())
+        assert np.array_equal(
+            returned, pipe._TagPipeline__preserve_relevant_tag_pulses()
+        )
 
 
 class TestTagPeriodVerifier:
