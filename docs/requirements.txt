@@ -1,7 +1,7 @@
 numpy >= 1.16
 matplotlib >= 3.0
 pandas >= 0.24
-attrs == 19.1
+attrs == 19.3
 cython >= 0.29
 scipy >= 1.2
 scikit-learn >= 0.20
@@ -18,4 +18,5 @@ twine
 black
 mypy
 flake8
+typed-ast
 -e .
