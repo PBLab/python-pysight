@@ -66,9 +66,9 @@ class OutputParser:
     @property
     def _group_names(self):
         return {
-            "summed": ["Summed Stack/Channel 1", "Summed Stack/Channel 2"],
-            "stack": ["Full Stack/Channel 1", "Full Stack/Channel 2"],
-            "flim": ["Lifetime/Channel 1", "Lifetime/Channel 2"],
+            "summed": "Summed Stack",
+            "stack": "Full Stack",
+            "flim": "Lifetime",
         }
 
     def __create_prelim_file(self):
@@ -90,13 +90,18 @@ class OutputParser:
                 logging.warning("Permission Error: Couldn't write data to disk.")
             else:
                 self.file_pointer_created = True
-                self.outputs.update(
-                    {key: True for key, val in self.output_dict.items() if val}
-                )
+                self._generate_parent_groups()
 
     def _create_compressor(self):
         """Generate a compressor object for the Zarr array"""
         return Zstd(level=3)
+
+    def _generate_parent_groups(self):
+        """Create the summed stack / full stack groups in the zarr array."""
+        for key, val in self.output_dict.items():
+            if val is True:  # val can be a string
+                self.outputs["filename"].require_group(self._group_names[key])
+                self.outputs[key] = True
 
     def __populate_file(self):
         """
@@ -150,9 +155,9 @@ class OutputParser:
     ):
         """Create a group in the open file with the given parameters."""
         groupname = self._group_names[output_type]
-        for channel in range(self.num_of_channels):
-            self.outputs[output_type] = self.outputs["filename"].zeros(
-                groupname[channel],
+        for channel in range(1, self.num_of_channels + 1):
+            self.outputs["filename"][groupname].require_dataset(
+                f"Channel {channel}",
                 shape=shape,
                 dtype=dtype,
                 chunks=chunks,
