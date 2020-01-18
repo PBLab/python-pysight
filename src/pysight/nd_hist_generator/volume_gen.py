@@ -3,7 +3,7 @@ from attr.validators import instance_of
 import pandas as pd
 import numpy as np
 import itertools
-from typing import List, Generator
+from typing import Generator
 import psutil
 
 
@@ -61,7 +61,7 @@ class VolumeGenerator:
 
     def __grouper(self) -> Generator:
         """ Chunk volume times into maximal-sized groups of values. """
-        args = [iter(self.frames.values)] * self.frames_per_chunk
+        args = [iter(self.frames.to_numpy())] * self.frames_per_chunk
         return itertools.zip_longest(*args, fillvalue=np.nan)
 
     def __generate_frame_slices(self) -> Generator:

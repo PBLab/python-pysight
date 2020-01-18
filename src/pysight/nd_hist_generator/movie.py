@@ -179,6 +179,9 @@ class Movie:
         )
         for idx, frame_chunk in enumerate(self.frame_slices):
             sliced_df_dict, num_of_frames, frames, lines = self.__slice_df(frame_chunk)
+            # Missing lines in the volume. Moving on.
+            if num_of_frames == -1:
+                continue
             chunk = FrameChunk(
                 movie=self,
                 df_dict=sliced_df_dict,
@@ -215,6 +218,12 @@ class Movie:
             logging.warning(
                 f"More-than-necessary line signals in the frame of chunk {frame_chunk}."
             )
+        if len(lines) < (self.x_pixels * num_of_frames):
+            logging.warning(
+                f"Fewer-than-necessary line signals in the frame of chunk {frame_chunk}."
+                " Trying to skip this chunk."
+            )
+            return {}, -1, [], []
         lines = lines.iloc[: self.x_pixels * num_of_frames]
         return slice_dict, num_of_frames, frames, lines
 
