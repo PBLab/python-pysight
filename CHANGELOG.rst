@@ -5,13 +5,18 @@ Changelog
 Latest version
 ==============
 
+0.11.4 (2020-01-19)
+-------------------
+
+* Better handling of full stack files with number of frames per chunk equals one.
+
+Previous Versions
+=================
+
 0.11.3 (2020-01-18)
 -------------------
 
 * When a frame chunk contains fewer-than-expected lines, PySight should now warn and move on to the next chunk instead of crashing.
-
-Previous Versions
-=================
 
 0.11.2 (2020-01-01)
 -------------------
