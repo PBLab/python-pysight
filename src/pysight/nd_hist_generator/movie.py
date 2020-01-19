@@ -295,9 +295,13 @@ class Movie:
         """
         cur_slice_start = self.frames_per_chunk * idx
         cur_slice_end = self.frames_per_chunk * (idx + 1)
+        if self.frames_per_chunk == 1:
+            data = np.squeeze(data)[np.newaxis, :]
+        else:
+            data = np.squeeze(data)
         self.outputs["stack"][f"Channel {channel}"][
             cur_slice_start:cur_slice_end, ...
-        ] = np.squeeze(data)
+        ] = data
 
     def __append_summed_data(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray

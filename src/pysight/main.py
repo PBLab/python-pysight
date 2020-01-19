@@ -401,3 +401,5 @@ def mp_batch(
 
 if __name__ == "__main__":
     out = run()
+    # glob_str = '*1p5x_zoom_512l_0p5slow*.lst'
+    # folder_name = '/data/Lior/lst/2020/2020_01_15'

@@ -2,11 +2,11 @@ cfg_title = "default"
 
 [inputs]
 stop1 = "Lines"
-stop2 = "Empty"
+stop2 = "PMT1"
 stop3 = "Empty"
 stop4 = "Empty"
 stop5 = "Empty"
-start = "PMT1"
+start = "TAG Lens"
 
 [image]
 num_of_frames = 1
@@ -24,7 +24,7 @@ flim = false
 
 [advanced]
 debug = false
-phase = -2.78
+phase = -0.4
 reprate = 80000000.0
 gating = false
 binwidth = 1e-10
@@ -32,7 +32,7 @@ tag_freq = 189000.0
 tag_pulses = 1
 tag_offset = 0
 fill_frac = 72.0
-bidir = false
+bidir = true
 keep_unidir = false
 flim = false
 censor = false

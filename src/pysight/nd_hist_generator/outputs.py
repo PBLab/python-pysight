@@ -100,7 +100,8 @@ class OutputParser:
         """Create the summed stack / full stack groups in the zarr array."""
         for key, val in self.output_dict.items():
             if val is True:  # val can be a string
-                self.outputs["filename"].require_group(self._group_names[key])
+                if key != 'memory':
+                    self.outputs["filename"].require_group(self._group_names[key])
                 self.outputs[key] = True
 
     def __populate_file(self):
