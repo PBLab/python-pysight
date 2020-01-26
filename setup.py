@@ -101,6 +101,7 @@ setup(
         "ansimarkup >= 1.4",
         "psutil >= 5.4",
         "toml >= 0.9",
+        "appdirs >= 1.4",
     ],
     extras_require={
         "dev": [

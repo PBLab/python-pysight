@@ -53,9 +53,9 @@ def verify_input(config: Dict[str, Any]):
         raise ValueError("Number of frames has to be a positive number.")
 
     filename = config["outputs"]["data_filename"]
-    if not filename.endswith(".lst") and not filename.endswith(".p"):
+    if not filename.endswith(".lst") and not filename.endswith(".npz") and not filename.endswith('*'):
         raise BrokenPipeError(
-            "Please choose a list (*.lst) or pickle (*.p) file for analysis."
+            "Please choose a list (*.lst) or numpy archive (*.npz) file for analysis."
         )
 
     if len(channel_inputs) > len(data_sources):

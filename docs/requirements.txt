@@ -19,4 +19,5 @@ black
 mypy
 flake8
 typed-ast
+appdirs >= 1.4
 -e .

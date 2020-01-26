@@ -9,6 +9,7 @@ import pickle
 import logging
 import pathlib
 import sys
+import enum
 
 logging.basicConfig(
     stream=sys.stdout,
@@ -22,6 +23,7 @@ import matplotlib
 import pandas as pd
 import colorama
 import numpy as np
+import typer
 
 matplotlib.rcParams["backend"] = "TkAgg"
 import matplotlib.pyplot as plt
@@ -50,6 +52,12 @@ from pysight.binary_list_file_parser.binary_parser import (
 )
 from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
+
+
+def RunType(enum.Enum):
+    GUI = enum.auto()
+    SINGLE = enum.auto()
+    BATCH = enum.auto()
 
 
 def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
@@ -259,6 +267,62 @@ def mp_main_data_readout(config: Dict[str, Any]):
         return out
 
 
+def run_from_cmd(cfg_file: str = typer.Argument(None), ):
+    """Runs PySight from the command line.
+
+    Parameters
+    ----------
+    :param Path-like cfg_file: Configuration file containing all needed data for PySight
+
+    """
+    if not cfg_file:
+        gui = GuiAppLst()
+        gui.root.mainloop()
+        config = Config.from_gui(gui).config_data
+
+    with open(cfg_file, "r") as f:
+        config: Dict[str, Any] = toml.load(f)
+    try:
+        verify_input(config)
+    except Exception as e:
+        typer.echo(f"Invalid configuration file detected: {repr(e)}")
+        raise Typer.Exit(code=1)
+    runtype = interpret_runtype(config.filename)
+    if runtype is RunType.GUI:
+        gui = GuiAppLst()
+        gui.root.mainloop()
+        config = Config.grom_gui(gui).config_data
+        main_data_readout(config)
+    elif runtype is RunType.SINGLE:
+        main_data_readout(config)
+    elif runtype is RunType.BATCH:
+        path = pathlib.Path(config.filename)
+        foldername = str(path.parent)
+        glob = path.name
+        recursive = True
+        run_batch_lst(foldername=foldername, glob=glob, recursive=recursive, cfg_file=config)
+
+
+def interpret_runtype(fname: str):
+    """Read the given file name and interpret what type of run the user wanted.
+    If the file name is an existing list file or npz file - simply run PySight
+    on it.
+    If the file is a glob pattern - run the glob, find all files, and run
+    PySight on them.
+    If the file is empty - open the GUI and let the user choose it by itself.
+
+    Parameters
+    ----------
+    :param str fname: The user's chosen file to parse
+    """
+    if fname is None or fname == '':
+        return RunType.GUI
+    elif '*' in fname:
+        return RunType.BATCH
+    else:
+        return RunType.SINGLE
+
+
 def run(cfg_file: str = None) -> Optional[PySightOutput]:
     """ Run PySight.
 
@@ -400,6 +464,4 @@ def mp_batch(
 
 
 if __name__ == "__main__":
-    out = run()
-    # glob_str = '*1p5x_zoom_512l_0p5slow*.lst'
-    # folder_name = '/data/Lior/lst/2020/2020_01_15'
+    typer.run(run_from_cmd)
