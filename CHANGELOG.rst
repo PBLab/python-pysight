@@ -5,13 +5,21 @@ Changelog
 Latest version
 ==============
 
+0.12.0 (2020-XX-XX)
+-------------------
+
+* Added a command line interface to PySight. When you ``pip install pysight`` the ``pysight`` command becomes available and is now the preferred way to run PySight. See the user manual for more details.
+
+* 
+
+Previous Versions
+=================
+
 0.11.4 (2020-01-19)
 -------------------
 
 * Better handling of full stack files with number of frames per chunk equals one.
 
-Previous Versions
-=================
 
 0.11.3 (2020-01-18)
 -------------------

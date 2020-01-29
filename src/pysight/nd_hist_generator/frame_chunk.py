@@ -322,17 +322,18 @@ class FlimCalc:
     --------
     data : np.ndarray
         The arrival times of all photons in the experiment
-
     indices : np.ndarray
         The bin indices of each of the photons
-
+    data_shape : tuple
+        Dimension sizes (not including the time domain)
     downsample : int, optional
         How much downsampling should be conducted on the stack.
     """
 
     data = attr.ib(validator=instance_of(np.ndarray))
     indices = attr.ib(validator=instance_of(np.ndarray))
-    downsample = attr.ib(default=10, validator=instance_of(int))
+    data_shape = attr.ib(validator=instance_of(tuple))
+    downsample = attr.ib(default=8, validator=instance_of(int))
     bins_bet_pulses = attr.ib(default=125, validator=instance_of(int))
     all_data = attr.ib(init=False)
 
@@ -342,7 +343,7 @@ class FlimCalc:
     def run(self):
         """Run the calculation pipeline."""
         self._partition_photons_into_bins()
-        self._normalize_taus_to_uint8()
+        self._normalize_taus()
 
     def _partition_photons_into_bins(self):
         """Once we have the indices where each photon belongs, we can cluster them and
@@ -350,9 +351,18 @@ class FlimCalc:
         groups and sends this group off for lifetime calculation. The partitioning
         is dependent on the downsampling factor required by the user.
         """
+        assert self.data_shape[0] == self.data_shape[1]
+        number_of_blocks = self.data_shape[0] // self.downsample
+        blocks = np.arange(number_of_blocks**2, dtype=np.uint32).reshape((number_of_blocks, number_of_blocks))
+        blocks = np.kron(blocks, np.ones((self.downsample, self.downsample), dtype=np.uint8)).ravel()
+        self.all_data["bin_per_frame"] = self.all_data["bin"] % (
+            functools.reduce(operator.mul, self.data_shape, 1)
+        )
+        self.all_data["block_num"] = blocks[self.all_data["bin_per_frame"]]
         self.hist_arrivals = self.all_data.groupby(
-            "bin", as_index=False, sort=False
-        ).agg(calc_lifetime)
+            "block_num", as_index=False, sort=False
+        ).agg({'since_laser': calc_lifetime})
+        self.hist_arrivals['bin_per_frame'] = self.all_data['bin_per_frame']
 
     def _normalize_taus(self):
         """FLIM images will be displayed in a float32 scale
@@ -376,13 +386,14 @@ class FlimCalc:
         hist : np.ndarray
             The histogrammed data
         """
+        shape = tuple(dim for dim in shape if dim != 1)
         total_bins = functools.reduce(operator.mul, shape, 1)
-        assert total_bins >= self.hist_arrivals["bin"]
+        assert total_bins >= self.hist_arrivals["bin_per_frame"].max()
         hist = np.full(shape, np.nan, dtype=np.float32).ravel()
-        hist[self.hist_arrivals["bin"]] = self.hist_arrivals["lifetime"]
+        hist[self.hist_arrivals["bin_per_frame"]] = self.hist_arrivals["lifetime"]
         hist = hist.reshape(shape)
-        core = (len(shape) - 1) * (slice(1, -1),)
-        core = (slice(None),) + core
+        core = len(shape) * (slice(1, -1),)
+        # core = (slice(None),) + core  # when the time dimension is needed
         hist = hist[core]
         return hist
 

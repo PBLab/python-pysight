@@ -3,7 +3,7 @@ from attr.validators import instance_of
 import pandas as pd
 import numpy as np
 import itertools
-from typing import Generator
+from typing import Optional, Generator
 import psutil
 
 
@@ -39,7 +39,7 @@ class VolumeGenerator:
             else:
                 self.MAX_BYTES_ALLOWED = avail // 32  # magic number
 
-    def create_frame_slices(self, create_slices=True) -> Generator:
+    def create_frame_slices(self, create_slices=True) -> Optional[Generator]:
         """
         Main method for the pipeline. Returns a generator with slices that
         signify the start time and end time of each chunk of frames. The indexing
@@ -50,7 +50,10 @@ class VolumeGenerator:
         """
         self.bytes_per_frames = np.prod(self.data_shape[1:]) * 8
         self.frames_per_chunk = int(
-            max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames)
+            min(
+                max(1, self.MAX_BYTES_ALLOWED // self.bytes_per_frames),
+                self.data_shape[0],
+            )
         )
         self.num_of_frames = len(self.frames)
         self.num_of_chunks = int(max(1, len(self.frames) // self.frames_per_chunk))

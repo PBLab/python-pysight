@@ -11,25 +11,12 @@ import pathlib
 import sys
 import enum
 
-logging.basicConfig(
-    stream=sys.stdout,
-    # filename=str(pathlib.Path('.') / "general.log"),
-    # filemode="w",
-    format="%(levelname)s :: %(filename)s :: %(asctime)s :: %(message)s",
-    level=logging.INFO,
-)
-
 import matplotlib
 import pandas as pd
 import colorama
 import numpy as np
-import typer
-
-matplotlib.rcParams["backend"] = "TkAgg"
-import matplotlib.pyplot as plt
 import toml
 
-colorama.init()
 from pysight.ascii_list_file_parser.file_io import ReadMeta, ascii_parsing
 from pysight.nd_hist_generator.allocation import Allocate
 from pysight.nd_hist_generator.outputs import OutputParser, PySightOutput
@@ -54,7 +41,18 @@ from pysight.read_lst import ReadData
 from pysight.nd_hist_generator.deinterleave import Deinterleave
 
 
-def RunType(enum.Enum):
+logging.basicConfig(
+    stream=sys.stdout,
+    # filename=str(pathlib.Path('.') / "general.log"),
+    # filemode="w",
+    format="%(levelname)s :: %(filename)s :: %(asctime)s :: %(message)s",
+    level=logging.INFO,
+)
+matplotlib.rcParams["backend"] = "TkAgg"
+colorama.init()
+
+
+class RunType(enum.Enum):
     GUI = enum.auto()
     SINGLE = enum.auto()
     BATCH = enum.auto()
@@ -267,42 +265,6 @@ def mp_main_data_readout(config: Dict[str, Any]):
         return out
 
 
-def run_from_cmd(cfg_file: str = typer.Argument(None), ):
-    """Runs PySight from the command line.
-
-    Parameters
-    ----------
-    :param Path-like cfg_file: Configuration file containing all needed data for PySight
-
-    """
-    if not cfg_file:
-        gui = GuiAppLst()
-        gui.root.mainloop()
-        config = Config.from_gui(gui).config_data
-
-    with open(cfg_file, "r") as f:
-        config: Dict[str, Any] = toml.load(f)
-    try:
-        verify_input(config)
-    except Exception as e:
-        typer.echo(f"Invalid configuration file detected: {repr(e)}")
-        raise Typer.Exit(code=1)
-    runtype = interpret_runtype(config.filename)
-    if runtype is RunType.GUI:
-        gui = GuiAppLst()
-        gui.root.mainloop()
-        config = Config.grom_gui(gui).config_data
-        main_data_readout(config)
-    elif runtype is RunType.SINGLE:
-        main_data_readout(config)
-    elif runtype is RunType.BATCH:
-        path = pathlib.Path(config.filename)
-        foldername = str(path.parent)
-        glob = path.name
-        recursive = True
-        run_batch_lst(foldername=foldername, glob=glob, recursive=recursive, cfg_file=config)
-
-
 def interpret_runtype(fname: str):
     """Read the given file name and interpret what type of run the user wanted.
     If the file name is an existing list file or npz file - simply run PySight
@@ -464,4 +426,4 @@ def mp_batch(
 
 
 if __name__ == "__main__":
-    typer.run(run_from_cmd)
+    out = run()

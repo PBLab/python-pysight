@@ -138,8 +138,8 @@ class OutputParser:
             try:
                 self.__create_group(
                     output_type="flim",
-                    shape=self.data_shape,
-                    chunks=chunk_shape,
+                    shape=data_shape_summed,
+                    chunks=True,
                     dtype=np.float32,
                 )
             except (PermissionError, OSError):

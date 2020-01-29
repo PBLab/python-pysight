@@ -319,24 +319,23 @@ class Movie:
         self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame
     ):
         flimcalc = FlimCalc(
-            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy()
+            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy(), self.data_shape[1:]
         )
         flimcalc.run()
         modified_data_shape = (self.frames_per_chunk,) + tuple(
             shape + 2 for shape in self.data_shape[1:]
         )
+        if len(modified_data_shape) == 3:
+            modified_data_shape += (1,)
         modified_data_shape = DataShape(*modified_data_shape)
-        flim_hist = flimcalc.histogram_result(modified_data_shape)
-        flim_hist = np.nanmean(flim_hist, 0)
-        print(np.nansum(flim_hist))
-        self.flim_df[channel].append(np.nanmean(flim_hist, 0))
+        flim_hist = flimcalc.histogram_result(modified_data_shape[1:])
+        self.flim_df[channel].append(flim_hist)
 
     def __save_flim_at_once(self):
         for chan in self.channels:
-            mean_flim = np.nanmean(self.flim_df[chan], axis=0)
-            np.save(f"data_chan_{chan}.npy", mean_flim)
-            z = zarr.open(f'{self.outputs["filename"]}', "r+",)
-            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(mean_flim)
+            np.save(f"data_chan_{chan}.npy", self.flim_df[chan])
+            z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
+            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """
@@ -348,7 +347,7 @@ class Movie:
         )
         if "stack" in self.outputs:
             logging.info(
-                f'Stack file created with name "{self.outputs["filename"].store.path}", \ncontaining a data group named'
+                f'Stack file created with name "{self.outputs["filename"].path}", containing a data group named'
                 ' "Full Stack", with one dataset per channel.'
             )
 
@@ -360,7 +359,7 @@ class Movie:
 
         if "summed" in self.outputs:
             logging.info(
-                f'Summed stack file created with name "{self.outputs["filename"].store.path}", \ncontaining a data group named'
+                f'Summed stack file created with name "{self.outputs["filename"].path}", containing a data group named'
                 ' "Summed Stack", with one dataset per channel.'
             )
 

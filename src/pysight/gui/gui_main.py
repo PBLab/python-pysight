@@ -1,20 +1,20 @@
-from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import font as tkfont
 from typing import Dict, Union, Tuple, Iterable
 from pathlib import Path, WindowsPath
 from os import sep, utime
 import time
 import logging
 
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter import font as tkfont
 import toml
 import attr
 from attr.validators import instance_of
+from appdirs import user_config_dir
 
 from .config_parser import Config
 import pysight
-
 from pysight.nd_hist_generator.movie import ImagingSoftware
 
 
@@ -663,7 +663,7 @@ class GuiAppLst:
                 filedialog.askopenfilename(
                     filetypes=[("Config files", "*.toml")],
                     title=f"Choose a configuration file",
-                    initialdir=str(Path(__file__).parents[1] / "configs"),
+                    initialdir=user_config_dir('pysight'),
                 )
             )
         else:
@@ -694,7 +694,7 @@ class GuiAppLst:
         self.root.update_idletasks()
 
     def __load_last_used_cfg(self, main_frame):
-        direc = Path(__file__).parents[1] / "configs"
+        direc = Path(user_config_dir('pysight'))
         all_cfg_files: Iterable = direc.glob("*.toml")
         latest_filename: str = ""
         latest_file_date: int = 0
