@@ -229,10 +229,9 @@ class HistWithIndex:
     of these pixels, in our case.
 
     Parameters
-    --------
+    ----------
     data : list of np.ndarray
         The data in a list, each dimension represnted as a vector of arrival times
-
     edges : list of np.ndarray
         The edges into which we should bin the photons
     """
@@ -329,8 +328,8 @@ class FlimCalc:
         How much downsampling should be conducted on the stack.
     """
 
-    data = attr.ib(validator=instance_of(np.ndarray))
-    indices = attr.ib(validator=instance_of(np.ndarray))
+    data = attr.ib(validator=instance_of(pd.Series))
+    indices = attr.ib(validator=instance_of(pd.Series))
     mod_data_shape = attr.ib(validator=instance_of(tuple))
     downsample = attr.ib(default=16, validator=instance_of(int))
     bins_bet_pulses = attr.ib(default=125, validator=instance_of(int))

@@ -322,7 +322,7 @@ class Movie:
             shape + 2 for shape in self.data_shape[1:]
         )
         flimcalc = FlimCalc(
-            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy(), modified_data_shape[1:]
+            flim_hist["since_laser"], flim_hist["bin"], modified_data_shape[1:]
         )
         flimcalc.partition_photons_into_bins()
         if len(modified_data_shape) == 3:
@@ -333,7 +333,7 @@ class Movie:
 
     def __save_flim_at_once(self):
         for chan in self.channels:
-            np.save(f"data_chan_{chan}.npy", self.flim_df[chan])
+            np.save(f"{self.outputs['filename'].store.path}_chan_{chan}.npy", self.flim_df[chan])
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
             if len(self.flim_df[chan]) > 1:
                 z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
