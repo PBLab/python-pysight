@@ -1,11 +1,11 @@
-from typing import List, Dict, Tuple
 import functools
 import operator
+from typing import Dict, List, Tuple
 
 import attr
-from attr.validators import instance_of
 import numpy as np
 import pandas as pd
+from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
@@ -279,8 +279,7 @@ class HistWithIndex:
         which were calculate in "_get_indices_for_photons".
 
         Parameters
-        --------
-
+        ----------
         nedges : np.ndarray
             number of edges per dimension
 
@@ -332,45 +331,60 @@ class FlimCalc:
 
     data = attr.ib(validator=instance_of(np.ndarray))
     indices = attr.ib(validator=instance_of(np.ndarray))
-    data_shape = attr.ib(validator=instance_of(tuple))
-    downsample = attr.ib(default=8, validator=instance_of(int))
+    mod_data_shape = attr.ib(validator=instance_of(tuple))
+    downsample = attr.ib(default=16, validator=instance_of(int))
     bins_bet_pulses = attr.ib(default=125, validator=instance_of(int))
     all_data = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         self.all_data = pd.DataFrame({"since_laser": self.data, "bin": self.indices})
+        self.original_data_shape = tuple(dim - 2 for dim in self.mod_data_shape)
 
-    def run(self):
-        """Run the calculation pipeline."""
-        self._partition_photons_into_bins()
-        self._normalize_taus()
-
-    def _partition_photons_into_bins(self):
+    def partition_photons_into_bins(self):
         """Once we have the indices where each photon belongs, we can cluster them and
         calculate the lifetime of them all. This method clusters the photons into
         groups and sends this group off for lifetime calculation. The partitioning
         is dependent on the downsampling factor required by the user.
         """
-        assert self.data_shape[0] == self.data_shape[1]
-        number_of_blocks = self.data_shape[0] // self.downsample
-        blocks = np.arange(number_of_blocks**2, dtype=np.uint32).reshape((number_of_blocks, number_of_blocks))
-        blocks = np.kron(blocks, np.ones((self.downsample, self.downsample), dtype=np.uint8)).ravel()
+        assert self.mod_data_shape[0] == self.mod_data_shape[1]
         self.all_data["bin_per_frame"] = self.all_data["bin"] % (
-            functools.reduce(operator.mul, self.data_shape, 1)
+            functools.reduce(operator.mul, self.mod_data_shape, 1)
         )
+        blocks = self._create_block_matrix()
         self.all_data["block_num"] = blocks[self.all_data["bin_per_frame"]]
-        self.hist_arrivals = self.all_data.groupby(
+        hist_arrivals = self.all_data.groupby(
             "block_num", as_index=False, sort=False
         ).agg({'since_laser': calc_lifetime})
-        self.hist_arrivals['bin_per_frame'] = self.all_data['bin_per_frame']
+        self.all_data = self.all_data.set_index('block_num')
+        self.all_data.loc[hist_arrivals['block_num'], 'lifetime'] = hist_arrivals['since_laser'].astype(np.float32)
 
-    def _normalize_taus(self):
-        """FLIM images will be displayed in a float32 scale
-        due to the nans.
+    def _create_block_matrix(self):
+        """Generates a block matrix to be used as the downsampling window
+        for FLIM calculation.
+
+        When calculating the lifetime we downsample the data by binning nearby pixels.
+        The block matrix returned from this function has an index corresponding
+        to each block, but is the size of the original data. For example, an 8x8
+        image downsampled by a factor of 2 will be expanded to 10x10, and the blocks
+        will be the following:
+        ``
+        -1  -1  -1  -1  -1  -1  -1  -1  -1  -1
+        -1  1   1   2   2   3   3   4   4   -1
+        -1  1   1   2   2   3   3   4   4   -1
+        -1  5   5   6   6   7   7   8   8   -1
+        -1  5   5   6   6   7   7   8   8   -1
+        -1  9   9   10  10  11  11  12  12  -1
+        -1  9   9   10  10  11  11  12  12  -1
+        -1  13  13  14  14  15  15  16  16  -1
+        -1  13  13  14  14  15  15  16  16  -1
+        -1  -1  -1  -1  -1  -1  -1  -1  -1  -1
+        ``
         """
-        self.hist_arrivals["lifetime"] = (self.hist_arrivals["since_laser"]).astype(
-            np.float32
-        )
+        number_of_blocks = self.original_data_shape[0] // self.downsample
+        blocks = np.arange(number_of_blocks**2, dtype=np.int32).reshape((number_of_blocks, number_of_blocks))
+        blocks = np.kron(blocks, np.ones((self.downsample, self.downsample), dtype=np.int8))
+        blocks = np.pad(blocks, ((1,), (1,)), constant_values=-1)
+        return blocks.ravel()
 
     def histogram_result(self, shape: DataShape):
         """Create a histogram with the bins and lifetimes for each of the photons
@@ -388,9 +402,9 @@ class FlimCalc:
         """
         shape = tuple(dim for dim in shape if dim != 1)
         total_bins = functools.reduce(operator.mul, shape, 1)
-        assert total_bins >= self.hist_arrivals["bin_per_frame"].max()
+        assert total_bins >= self.all_data["bin_per_frame"].max()
         hist = np.full(shape, np.nan, dtype=np.float32).ravel()
-        hist[self.hist_arrivals["bin_per_frame"]] = self.hist_arrivals["lifetime"]
+        hist[self.all_data["bin_per_frame"]] = self.all_data["lifetime"]
         hist = hist.reshape(shape)
         core = len(shape) * (slice(1, -1),)
         # core = (slice(None),) + core  # when the time dimension is needed

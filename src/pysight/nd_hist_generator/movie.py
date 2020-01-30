@@ -318,13 +318,13 @@ class Movie:
     def __append_flim_data(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame
     ):
-        flimcalc = FlimCalc(
-            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy(), self.data_shape[1:]
-        )
-        flimcalc.run()
         modified_data_shape = (self.frames_per_chunk,) + tuple(
             shape + 2 for shape in self.data_shape[1:]
         )
+        flimcalc = FlimCalc(
+            flim_hist["since_laser"].to_numpy(), flim_hist["bin"].to_numpy(), modified_data_shape[1:]
+        )
+        flimcalc.partition_photons_into_bins()
         if len(modified_data_shape) == 3:
             modified_data_shape += (1,)
         modified_data_shape = DataShape(*modified_data_shape)
@@ -335,7 +335,10 @@ class Movie:
         for chan in self.channels:
             np.save(f"data_chan_{chan}.npy", self.flim_df[chan])
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
-            z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
+            if len(self.flim_df[chan]) > 1:
+                z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
+            else:
+                z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """
@@ -347,7 +350,7 @@ class Movie:
         )
         if "stack" in self.outputs:
             logging.info(
-                f'Stack file created with name "{self.outputs["filename"].path}", containing a data group named'
+                f'Stack file created with name "{self.outputs["filename"].store.path}", containing a data group named'
                 ' "Full Stack", with one dataset per channel.'
             )
 
@@ -359,7 +362,7 @@ class Movie:
 
         if "summed" in self.outputs:
             logging.info(
-                f'Summed stack file created with name "{self.outputs["filename"].path}", containing a data group named'
+                f'Summed stack file created with name "{self.outputs["filename"].store.path}", containing a data group named'
                 ' "Summed Stack", with one dataset per channel.'
             )
 
