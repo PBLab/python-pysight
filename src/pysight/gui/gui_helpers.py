@@ -39,7 +39,7 @@ def verify_input(config: Dict[str, Any]):
     ]
     short_list_of_keys = [x[:-1] for x in list_of_keys]
     if "PMT" not in short_list_of_keys:
-        raise BrokenPipeError("At least one PMT value has to be entered in inputs.")
+        raise BrokenPipeError("At least one PMT channel has to be entered in inputs.")
 
     if config["image"]["num_of_frames"] == None:
         if "Frames" not in data_sources:
