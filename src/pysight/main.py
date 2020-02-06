@@ -4,7 +4,7 @@
 __author__ = Hagai Har-Gil
 """
 
-from typing import Dict, Any, Optional
+from typing import MutableMapping, Any, Optional
 import pickle
 import logging
 import pathlib
@@ -58,7 +58,7 @@ class RunType(enum.Enum):
     BATCH = enum.auto()
 
 
-def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
+def main_data_readout(config: MutableMapping[str, Any]) -> Optional[PySightOutput]:
     """
     Main function that reads the lst file and processes its data.
     Should not be run independently - only from other "run_X" functions.
@@ -212,7 +212,7 @@ def main_data_readout(config: Dict[str, Any]) -> Optional[PySightOutput]:
         return pysight_output
 
 
-def _read_lst_file(config: Dict[str, Any]):
+def _read_lst_file(config: MutableMapping[str, Any]):
     """Read out the data in the .lst file. This function won't be called
     if PySight was called on already-parsed data, i.e. data which came
     from a source other than a multiscaler.
@@ -251,7 +251,7 @@ def _read_lst_file(config: Dict[str, Any]):
     return relevant_columns, dict_of_data, lst_metadata, fill_frac
 
 
-def mp_main_data_readout(config: Dict[str, Any]):
+def mp_main_data_readout(config: MutableMapping[str, Any]):
     """
     Wrapper for main_data_readout that
     wraps it with a try block. To be used with the
@@ -296,7 +296,7 @@ def run(cfg_file: str = None) -> Optional[PySightOutput]:
 
     if cfg_file:
         with open(cfg_file, "r") as f:
-            config: Dict[str, Any] = toml.load(f)
+            config: MutableMapping[str, Any] = toml.load(f)
     else:
         gui = GuiAppLst()
         gui.root.mainloop()
