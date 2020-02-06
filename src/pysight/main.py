@@ -390,23 +390,14 @@ def mp_batch(
     :param int n_proc: Number of processes to use (None means all)
     :param str cfg_file: Configuration file name
     """
-    import pathlib
     import multiprocessing as mp
+    from copy import deepcopy
 
     from pysight.gui.gui_main import GuiAppLst
 
     path = pathlib.Path(foldername)
     if not path.exists():
         raise UserWarning(f"Folder {foldername} doesn't exist.")
-    if recursive:
-        all_lst_files = path.rglob(glob_str)
-    else:
-        all_lst_files = path.glob(glob_str)
-    logging.info(f"Running PySight on the following files:")
-    for file in list(all_lst_files):
-        logging.info(str(file))
-
-    all_lst_files = path.rglob(glob_str) if recursive else path.glob(glob_str)
     try:
         with open(cfg_file, "r") as f:
             config = toml.load(f)
@@ -417,10 +408,19 @@ def mp_batch(
         gui.filename.set(".lst")  # no need to choose a list file
         config = Config.from_gui(gui).config_data
     verify_input(config)
+
+    if recursive:
+        all_lst_files = path.rglob(glob_str)
+    else:
+        all_lst_files = path.glob(glob_str)
     all_cfgs = []
+
+    logging.info(f"Running PySight on the following files:")
     for file in all_lst_files:
+        logging.info(str(file))
         config["outputs"]["data_filename"] = str(file)
-        all_cfgs.append(config)
+        all_cfgs.append(deepcopy(config))
+
     with mp.Pool(n_proc) as pool:
         pool.map(mp_main_data_readout, all_cfgs)
 

@@ -134,6 +134,19 @@ class TestFrameChunk:
         lines = np.arange(0, 1010, 10)
         np.testing.assert_equal(li, lines)
 
+    def test_line_edges_downsample(self):
+        li = self.chunk_single._FrameChunk__create_line_edges(downsample=1)
+        lines = np.arange(0, 1010, 10)
+        np.testing.assert_equal(li, lines)
+
+    def test_line_edges_downsample_2(self):
+        li = self.chunk_single._FrameChunk__create_line_edges(downsample=2)
+        lines = np.arange(0, 1020, 20)
+
+    def test_line_edges_downsample_4(self):
+        li = self.chunk_single._FrameChunk__create_line_edges(downsample=4)
+        lines = np.arange(0, 1020, 40)
+
     def test_line_edges_multi_chunk(self):
         sl = pd.IndexSlice[slice(1), slice(100, 400)]
         movie = Movie(
@@ -162,6 +175,21 @@ class TestFrameChunk:
     def test_col_edges_single_frame(self):
         cr = self.chunk_single._FrameChunk__create_col_edges()
         cols = np.arange(11)
+        np.testing.assert_equal(cr, cols)
+
+    def test_col_edges_single_frame_downsample(self):
+        cr = self.chunk_single._FrameChunk__create_col_edges(downsample=1)
+        cols = np.arange(11)
+        np.testing.assert_equal(cr, cols)
+
+    def test_col_edges_single_frame_downsample_2(self):
+        cr = self.chunk_single._FrameChunk__create_col_edges(downsample=2)
+        cols = np.arange(0, 11, 2)
+        np.testing.assert_equal(cr, cols)
+
+    def test_col_edges_single_frame_downsample_5(self):
+        cr = self.chunk_single._FrameChunk__create_col_edges(downsample=5)
+        cols = np.arange(0, 11, 5)
         np.testing.assert_equal(cr, cols)
 
     def test_col_edges_multi_frame(self):
@@ -407,8 +435,8 @@ class TestFlimCalc:
         data = []
         for index in range(1, 126):
             data.extend([index for _ in range(1, int(amp * np.exp(-index / tau)) + 1)])
-        tau = calc_lifetime(data)
-        assert np.allclose([tau], [35], atol=0.5)
+        comp_tau = calc_lifetime(data)
+        assert np.allclose([comp_tau], [35], atol=0.5)
 
     def test_partition_pipe(self):
         amp = 100
@@ -424,14 +452,14 @@ class TestFlimCalc:
         for pixel_idx in range(num_of_bins):
             bin_idx.extend([pixel_idx for _ in range(len(data_of_single_bin))])
         data_of_single_bin = num_of_bins * data_of_single_bin
-        data_of_single_bin = np.array(data_of_single_bin)
-        bin_idx = np.array(bin_idx)
-        fl = FlimCalc(data_of_single_bin, bin_idx)
-        fl._partition_photons_into_bins()
+        data_of_single_bin = pd.Series(data_of_single_bin)
+        bin_idx = pd.Series(bin_idx)
+        fl = FlimCalc(data_of_single_bin, bin_idx, data_of_single_bin.shape)
+        fl.partition_photons_into_bins()
         true_taus = np.ones((num_of_bins)) * tau
         bins = np.arange(num_of_bins)
-        assert np.allclose(fl.hist_arrivals["since_laser"], true_taus, atol=0.5)
-        assert np.allclose(fl.hist_arrivals["bin"], bins)
+        assert np.allclose(fl.all_data["since_laser"], true_taus, atol=0.5)
+        assert np.allclose(fl.all_data["bin"], bins)
 
     @pytest.mark.skip
     def test_normalization(self):

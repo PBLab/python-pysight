@@ -1,11 +1,11 @@
 import json
 import logging
-from typing import Union, Dict, Any
+from typing import Union, MutableMapping, Any
 
 from pysight.nd_hist_generator.movie import ImagingSoftware
 
 
-def verify_input(config: Dict[str, Any]):
+def verify_input(config: MutableMapping[str, Any]):
     """Validate all GUI inputs"""
     data_sources = (
         "PMT1",

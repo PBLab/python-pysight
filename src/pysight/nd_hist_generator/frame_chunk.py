@@ -8,6 +8,7 @@ import pandas as pd
 from attr.validators import instance_of
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+from scipy.stats import binned_statistic_dd
 
 from pysight.nd_hist_generator.outputs import DataShape
 
@@ -56,17 +57,14 @@ class FrameChunk:
                 data_columns.append(self.df_dict[chan]["Phase"].to_numpy())
             except KeyError:
                 pass
+            hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
+            flim_hist = None
             if self.flim:
-                hist, flim_hist = self._hist_with_flim(
-                    data_columns, list_of_edges, chan
-                )
-            else:
-                flim_hist = None
-                hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
-            hists = self._post_process_hist([hist.astype(np.uint8)])
-            # TODO: Throw this away once we do FLIM properly
-            all_hists = hists + (flim_hist,)
-            self.hist_dict[chan] = all_hists
+                list_of_edges = self.__create_hist_edges(chan, self.flim_downsampling)
+                flim_hist = self._hist_with_flim(data_columns, list_of_edges, chan)
+
+            hists = (self._post_process_hist([hist.astype(np.uint8)]), flim_hist)
+            self.hist_dict[chan] = hists
         return self.hist_dict
 
     def _post_process_hist(self, hists: List[np.ndarray]):
@@ -83,17 +81,18 @@ class FrameChunk:
                 processed.append(None)
         return tuple(processed)
 
-    def __create_hist_edges(self, chan) -> List[np.ndarray]:
+    def __create_hist_edges(self, chan, downsample=1) -> List[np.ndarray]:
         """
         Generate the grid of the histogram.
 
         :param int chan: Channel number
+        :param int downsample: Downsampling factor
 
-        :return ``list`` of ``np.ndarray``: One for each dimension
+        :return List[np.ndarray]: One for each dimension
         """
         edges = []
-        edges.append(self.__create_line_edges())
-        edges.append(self.__create_col_edges())
+        edges.append(self.__create_line_edges(downsample))
+        edges.append(self.__create_col_edges(downsample))
 
         if "Phase" in self.df_dict[chan].columns:
             edges.append(self.__linspace_along_sine())
@@ -112,21 +111,30 @@ class FrameChunk:
         frames = np.hstack((self.frames.values, self.frames.values[-1] + np.uint64(1)))
         return frames
 
-    def __create_line_edges(self) -> np.ndarray:
+    def __create_line_edges(self, downsample=1) -> np.ndarray:
         """ Takes existing lines and turns them into bin edges. """
-
-        assert (
-            self.lines.shape[0] <= self.x_pixels * self.frames_per_chunk
-        )  # last chunk can have less frames
+        # last chunk can have less frames
+        assert self.lines.shape[0] <= self.x_pixels * self.frames_per_chunk
         all_lines = np.hstack(
-            (self.lines.values, self.lines.values[-1] + self.line_delta)
+            (self.lines.to_numpy(), self.lines.to_numpy()[-1] + self.line_delta)
         )
-        return all_lines
+        sampling_indices = np.linspace(
+            0,
+            len(self.lines),
+            num=(len(self.lines) // downsample) + 1,
+            endpoint=True,
+            dtype=np.uint64,
+        )
+        return all_lines[sampling_indices]
 
-    def __create_col_edges(self) -> np.ndarray:
+    def __create_col_edges(self, downsample=1) -> np.ndarray:
         if self.x_pixels == 1:
             return np.linspace(
-                0, self.end_time, num=self.y_pixels + 1, endpoint=True, dtype=np.uint64
+                0,
+                self.end_time,
+                num=(self.y_pixels // downsample) + 1,
+                endpoint=True,
+                dtype=np.uint64,
             )
 
         delta = self.line_delta if self.bidir else self.line_delta / 2
@@ -138,7 +146,7 @@ class FrameChunk:
         return np.linspace(
             start=start,
             stop=int(col_end),
-            num=self.y_pixels + 1,
+            num=(self.y_pixels // downsample) + 1,
             endpoint=True,
             dtype=np.uint64,
         )
@@ -177,11 +185,9 @@ class FrameChunk:
     ) -> Tuple[np.ndarray, Tuple[np.ndarray]]:
         """Run a slightly more complex processing pipeline when we need to calculate
         the lifetime of each pixel in the image.
-        We first generate the standard histogram without taking the FLIM dimension
-        into consideration, but we do keep the bin index of each of the photons
-        in the image.
-        Then we groupby the photons based on their hist index, and each such group
-        goes to function which calculates the decay curve constants there.
+        We use the scipy.binned_statistic function to histogram the photons again,
+        but we use their lifetime as an input for the histogram, and calculate it
+        for each bin.
 
         Parameters
         ----------
@@ -194,31 +200,30 @@ class FrameChunk:
 
         Returns
         -------
-        hist : np.ndarray
-            N-dimensional histogram, where N = len(data)
         hist_with_flim : np.ndarray
             N-dimensional histogram, where N = len(data)
         """
-        hist = HistWithIndex(data, edges)
-        hist.run()
-        valid_photons = hist.discard_out_of_bounds_photons()
-        # TODO
-        # flim = FlimCalc(self.df_dict[chan]["time_rel_pulse"].to_numpy(), hist.hist_indices)
-        # flim.run()
-        # only_flim_hist = np.full_like(hist.hist_photons, np.nan)
-        # only_flim_hist[flim.hist_arrivals["bin"]] = flim.hist_arrivals["lifetime"]
-        # assert only_flim_hist.shape == hist.hist_photons.shape
-        return (
-            hist.hist_photons,
-            pd.DataFrame(
-                {
-                    "since_laser": self.df_dict[chan]["time_rel_pulse"].to_numpy()[
-                        valid_photons
-                    ],
-                    "bin": hist.hist_indices[valid_photons],
-                }
-            ),
+        resulting_tau, edges, binnumber = binned_statistic_dd(
+            sample=data,
+            values=self.df_dict[chan]["time_rel_pulse"].to_numpy(),
+            statistic=calc_lifetime,
+            bins=edges,
         )
+        # hist = HistWithIndex(data, edges)
+        # hist.run()
+        # valid_photons = hist.discard_out_of_bounds_photons()
+        bloater = np.ones((self.flim_downsampling, self.flim_downsampling), dtype=np.uint8)
+        return np.kron(resulting_tau, bloater)
+        #     hist.hist_photons,
+        #     pd.DataFrame(
+        #         {
+        #             "since_laser": self.df_dict[chan]["time_rel_pulse"].to_numpy()[
+        #                 valid_photons
+        #             ],
+        #             "bin": hist.hist_indices[valid_photons],
+        #         }
+        #     ),
+        # )
 
 
 @attr.s
@@ -345,7 +350,8 @@ class FlimCalc:
         groups and sends this group off for lifetime calculation. The partitioning
         is dependent on the downsampling factor required by the user.
         """
-        assert self.mod_data_shape[0] == self.mod_data_shape[1]
+        if len(self.mod_data_shape) > 1:
+            assert self.mod_data_shape[0] == self.mod_data_shape[1]
         self.all_data["bin_per_frame"] = self.all_data["bin"] % (
             functools.reduce(operator.mul, self.mod_data_shape, 1)
         )
@@ -353,9 +359,11 @@ class FlimCalc:
         self.all_data["block_num"] = blocks[self.all_data["bin_per_frame"]]
         hist_arrivals = self.all_data.groupby(
             "block_num", as_index=False, sort=False
-        ).agg({'since_laser': calc_lifetime})
-        self.all_data = self.all_data.set_index('block_num')
-        self.all_data.loc[hist_arrivals['block_num'], 'lifetime'] = hist_arrivals['since_laser'].astype(np.float32)
+        ).agg({"since_laser": calc_lifetime})
+        self.all_data = self.all_data.set_index("block_num")
+        self.all_data.loc[hist_arrivals["block_num"], "lifetime"] = hist_arrivals[
+            "since_laser"
+        ].astype(np.float32)
 
     def _create_block_matrix(self):
         """Generates a block matrix to be used as the downsampling window
@@ -379,10 +387,13 @@ class FlimCalc:
         -1  -1  -1  -1  -1  -1  -1  -1  -1  -1
         ``
         """
+        ndim = len(self.mod_data_shape)
         number_of_blocks = self.original_data_shape[0] // self.downsample
-        blocks = np.arange(number_of_blocks**2, dtype=np.int32).reshape((number_of_blocks, number_of_blocks))
-        blocks = np.kron(blocks, np.ones((self.downsample, self.downsample), dtype=np.int8))
-        blocks = np.pad(blocks, ((1,), (1,)), constant_values=-1)
+        blocks = np.arange(number_of_blocks ** ndim, dtype=np.int32).reshape(
+            ndim * (number_of_blocks,)
+        )
+        blocks = np.kron(blocks, np.ones(ndim * (self.downsample,), dtype=np.int8))
+        blocks = np.pad(blocks, ndim * (1,), constant_values=-1)
         return blocks.ravel()
 
     def histogram_result(self, shape: DataShape):

@@ -86,6 +86,7 @@ class Movie:
         default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
     )
     libver = attr.ib(default="latest", validator=instance_of(str))
+    flim_downsampling = attr.ib(default=8, validator=instance_of(int))
     summed_mem = attr.ib(init=False, repr=False)
     stack = attr.ib(init=False, repr=False)
     x_pixels = attr.ib(init=False)
@@ -316,29 +317,30 @@ class Movie:
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
 
     def __append_flim_data(
-        self, data: np.ndarray, channel: int, idx: int, flim_hist: pd.DataFrame
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
     ):
-        modified_data_shape = (self.frames_per_chunk,) + tuple(
-            shape + 2 for shape in self.data_shape[1:]
-        )
-        flimcalc = FlimCalc(
-            flim_hist["since_laser"], flim_hist["bin"], modified_data_shape[1:]
-        )
-        flimcalc.partition_photons_into_bins()
-        if len(modified_data_shape) == 3:
-            modified_data_shape += (1,)
-        modified_data_shape = DataShape(*modified_data_shape)
-        flim_hist = flimcalc.histogram_result(modified_data_shape[1:])
+        # modified_data_shape = (self.frames_per_chunk,) + tuple(
+        #     shape + 2 for shape in self.data_shape[1:]
+        # )
+        # flimcalc = FlimCalc(
+        #     flim_hist["since_laser"], flim_hist["bin"], modified_data_shape[1:]
+        # )
+        # flimcalc.partition_photons_into_bins()
+        # if len(modified_data_shape) == 3:
+        #     modified_data_shape += (1,)
+        # modified_data_shape = DataShape(*modified_data_shape)
+        # flim_hist = flimcalc.histogram_result(modified_data_shape[1:])
         self.flim_df[channel].append(flim_hist)
 
     def __save_flim_at_once(self):
         for chan in self.channels:
             np.save(f"{self.outputs['filename'].store.path}_chan_{chan}.npy", self.flim_df[chan])
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
-            if len(self.flim_df[chan]) > 1:
-                z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
-            else:
-                z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
+            z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
+            # if len(self.flim_df[chan]) > 1:
+            #     z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
+            # else:
+            #     z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """
