@@ -63,7 +63,7 @@ class FrameChunk:
                 list_of_edges = self.__create_hist_edges(chan, self.flim_downsampling)
                 flim_hist = self._hist_with_flim(data_columns, list_of_edges, chan)
 
-            hists = (self._post_process_hist([hist.astype(np.uint8)]), flim_hist)
+            hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist, )
             self.hist_dict[chan] = hists
         return self.hist_dict
 
