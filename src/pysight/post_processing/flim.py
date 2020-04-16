@@ -19,6 +19,18 @@ def in_channel(instance, attribute, value):
         return ValueError
 
 
+def find_tau(seq: np.ndarray) -> np.float32:
+    """Finds the tau of the given array, assuming it contains data which is
+    distributed according to the exponential decay distribution."""
+    seq = seq.ravel()
+    sorted_indices = np.flip(np.argsort(seq))
+    xdata = np.linspace(0, seq.max(), len(seq))
+    popt, pcov = scipy.optimize.curve_fit(
+        LifetimeCalc.single_exp, xdata, seq[sorted_indices], (seq.max(), 35, np.median(seq))
+    )
+    return popt[1]
+
+
 @attr.s
 class LifetimeCalc:
     """

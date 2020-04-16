@@ -1,8 +1,28 @@
 import pytest
 import pandas as pd
 import numpy as np
+import scipy.stats
+
+from operator import mul
+from functools import reduce
 
 from pysight.post_processing.flim import *
+
+
+def gen_exp_decay_points(shape=(256, 256), lambda_=35):
+    """Generates 'shape' amount of randomly sampled points from an
+    exp. decaying function with lambda=lambda_."""
+    rv = scipy.stats.expon(scale=lambda_)
+    num_pixels = reduce(mul, shape, 1)
+    vals = rv.rvs(size=num_pixels).astype(np.uint8)
+    return vals.reshape(shape)
+
+
+
+def test_calculate_tau_per_image():
+    decay_data = gen_exp_decay_points()
+    tau = find_tau(decay_data)
+    assert tau == 35
 
 
 @pytest.fixture
