@@ -14,7 +14,7 @@ def gen_exp_decay_points(shape=(256, 256), lambda_=35):
     exp. decaying function with lambda=lambda_."""
     rv = scipy.stats.expon(scale=lambda_)
     num_pixels = reduce(mul, shape, 1)
-    vals = rv.rvs(size=num_pixels).astype(np.uint8)
+    vals = rv.rvs(size=num_pixels).astype(np.uint16)
     return vals.reshape(shape)
 
 
@@ -23,6 +23,16 @@ def test_calculate_tau_per_image():
     decay_data = gen_exp_decay_points()
     tau = find_tau(decay_data)
     assert tau == 35
+
+
+def test_per_frame_flim_calc():
+    data = np.zeros((10, 256, 256), dtype=np.uint16)
+    for frame_num in range(len(data)):
+        data[frame_num] = gen_exp_decay_points(shape=data.shape[1:])
+    lifetimes = calculate_lifetime_per_chunk(data, chunklen=1)
+    assert np.allclose(lifetimes, np.array([35] * 10))
+
+
 
 
 @pytest.fixture

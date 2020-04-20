@@ -22,13 +22,29 @@ def in_channel(instance, attribute, value):
 def find_tau(seq: np.ndarray) -> np.float32:
     """Finds the tau of the given array, assuming it contains data which is
     distributed according to the exponential decay distribution."""
-    seq = seq.ravel()
-    sorted_indices = np.flip(np.argsort(seq))
-    xdata = np.linspace(0, seq.max(), len(seq))
+    bincount = np.bincount(seq.ravel(), minlength=125)
+    xdata = np.linspace(0, len(bincount), len(bincount))
     popt, pcov = scipy.optimize.curve_fit(
-        LifetimeCalc.single_exp, xdata, seq[sorted_indices], (seq.max(), 35, np.median(seq))
+        LifetimeCalc.single_exp, xdata, bincount, (seq.max(), 35, np.median(seq))
     )
     return popt[1]
+
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return itertools.zip_longest(*args, fillvalue=fillvalue)
+
+
+def calculate_lifetime_per_chunk(data: np.ndarray, chunklen: int=1):
+    """Calculates the lifetime of the given data by iterating over the chunks"""
+    indices = np.arange(len(data))
+    groups = tuple(grouper(indices, chunklen))
+    lifetimes = np.zeros(len(groups), dtype=np.float32)
+    for groupnum, group in enumerate(groups):
+        lifetimes[groupnum] = find_tau(data[group])
+    return lifetimes
 
 
 @attr.s
