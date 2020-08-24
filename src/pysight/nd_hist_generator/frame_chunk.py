@@ -6,10 +6,7 @@ import attr
 import numpy as np
 import pandas as pd
 from attr.validators import instance_of
-from scipy.optimize import curve_fit
-from scipy.signal import find_peaks
-from scipy.stats import binned_statistic_dd
-
+from pysight.nd_hist_generator.binned_lifetime import binned_lifetime_dd
 from pysight.nd_hist_generator.outputs import DataShape
 
 
@@ -62,9 +59,11 @@ class FrameChunk:
             if self.flim:
                 list_of_edges = self.__create_hist_edges(chan, self.flim_downsampling)
                 flim_hist = self._hist_with_flim(data_columns, list_of_edges, chan)
+                flim_hist = flim_hist.reshape(-1, 256, 256)
 
             hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist, )
             self.hist_dict[chan] = hists
+
         return self.hist_dict
 
     def _post_process_hist(self, hists: List[np.ndarray]):
@@ -203,12 +202,13 @@ class FrameChunk:
         hist_with_flim : np.ndarray
             N-dimensional histogram, where N = len(data)
         """
-        resulting_tau, edges, binnumber = binned_statistic_dd(
+
+        resulting_tau, edges, binnumber = binned_lifetime_dd(
             sample=data,
             values=self.df_dict[chan]["time_rel_pulse"].to_numpy(),
-            statistic=calc_lifetime,
             bins=edges,
         )
+
         # hist = HistWithIndex(data, edges)
         # hist.run()
         # valid_photons = hist.discard_out_of_bounds_photons()
@@ -359,7 +359,7 @@ class FlimCalc:
         self.all_data["block_num"] = blocks[self.all_data["bin_per_frame"]]
         hist_arrivals = self.all_data.groupby(
             "block_num", as_index=False, sort=False
-        ).agg({"since_laser": calc_lifetime})
+        )#.agg({"since_laser": calc_lifetime})
         self.all_data = self.all_data.set_index("block_num")
         self.all_data.loc[hist_arrivals["block_num"], "lifetime"] = hist_arrivals[
             "since_laser"
@@ -420,42 +420,6 @@ class FlimCalc:
         # core = (slice(None),) + core  # when the time dimension is needed
         hist = hist[core]
         return hist
-
-
-def calc_lifetime(data: pd.Series, bins_bet_pulses=124) -> float:
-    """Calculate the lifetime of the given data by fitting it to a decaying exponent
-    with a lifetime around 3 ns.
-    # TODO: bins_bet_pulses
-    """
-    if len(data) < 5:
-        return np.nan
-    hist = np.histogram(data, bins_bet_pulses)[0]
-    if hist.max() < 5:
-        return np.nan
-    peaks, props = find_peaks(hist, height=(None, None), prominence=(0.8, None))
-    # If no peak is found we'll try using the first bin as a peak.
-    # scipy.signal.find_peaks is not good at detecting that the first
-    # data point is the highest. If it's not true then the curve fit
-    # will eventually fail, leaving us with a nan instead of tau.
-    if len(peaks) == 0:
-        peaks, props = np.array([0]), {"peak_heights": hist[0]}
-    decay_curve, max_val, min_val = find_decay_borders(hist, peaks, props)
-    if len(decay_curve) < 4:
-        return np.nan
-    try:
-        popt, _ = curve_fit(
-            _exp_decay,
-            np.arange(len(decay_curve)),
-            decay_curve,
-            p0=(max_val, 1 / 35, min_val),
-            maxfev=1_000,
-        )
-    except RuntimeError:
-        return np.nan
-    tau = np.array(1 / popt[1]).astype(np.float32, casting="safe")
-    if (tau > bins_bet_pulses) or (tau < 0):
-        return np.nan
-    return tau
 
 
 def _exp_decay(x, a, b, c):
