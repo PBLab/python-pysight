@@ -86,7 +86,7 @@ class Movie:
         default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
     )
     libver = attr.ib(default="latest", validator=instance_of(str))
-    flim_downsampling = attr.ib(default=8, validator=instance_of(int))
+    flim_downsampling = attr.ib(default=4, validator=instance_of(int))
     summed_mem = attr.ib(init=False, repr=False)
     stack = attr.ib(init=False, repr=False)
     x_pixels = attr.ib(init=False)
