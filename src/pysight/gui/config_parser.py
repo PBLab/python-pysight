@@ -54,6 +54,8 @@ class Config:
                 "bidir": gui.bidir.get(),
                 "keep_unidir": gui.keep_unidir.get(),
                 "flim": gui.flim.get(),
+                "downsampling_space": gui.downsampling_space.get(),
+                "downsampling_time": gui.downsampling_time.get(),
                 "censor": gui.censor.get(),
                 "line_freq": gui.line_freq.get(),
                 "sweeps_as_lines": gui.sweeps_as_lines.get(),

@@ -32,6 +32,7 @@ class OutputParser:
     output_dict = attr.ib(validator=instance_of(dict))
     filename = attr.ib(validator=instance_of(str), converter=trunc_end_of_file)
     num_of_frames = attr.ib(default=1, validator=instance_of(int))
+    flim_downsampling_time = attr.ib(default=1, validator=instance_of(int))
     x_pixels = attr.ib(default=512, validator=instance_of(int))
     y_pixels = attr.ib(default=512, validator=instance_of(int))
     z_pixels = attr.ib(default=1, validator=instance_of(int))

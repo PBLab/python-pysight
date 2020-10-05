@@ -118,6 +118,8 @@ class GuiAppLst:
         self.bidir = BooleanVar(value=False)
         self.keep_unidir = BooleanVar(value=False)
         self.flim: BooleanVar = BooleanVar(value=False)
+        self.downsampling_space: IntVar = IntVar(value=1)
+        self.downsampling_time: IntVar = IntVar(value=1)
         self.censor: BooleanVar = BooleanVar(value=False)
         self.line_freq = DoubleVar(value=7930.0)  # Hz
         self.sweeps_as_lines = BooleanVar(value=False)
@@ -274,14 +276,14 @@ class GuiAppLst:
     def __debug(self, main_frame):
         """ Read a smaller portion of data for debugging """
         debug_check = ttk.Checkbutton(main_frame, text="Debug?", variable=self.debug)
-        debug_check.grid(column=2, row=8, sticky="ns")
+        debug_check.grid(column=2, row=10, sticky="ns")
 
     def __interleaved(self, main_frame):
         """ Unmix two data channel in the same PMT1 analog channel """
         inter_check = ttk.Checkbutton(
             main_frame, text="Interleaved?", variable=self.interleaved
         )
-        inter_check.grid(column=2, row=7, sticky="ns")
+        inter_check.grid(column=2, row=9, sticky="ns")
 
     def __mirror_phase(self, main_frame):
         phase_text = ttk.Label(main_frame, text="Mirror phase [us]: ")
@@ -293,15 +295,15 @@ class GuiAppLst:
         """ Laser repetition rate"""
 
         laser1_label = ttk.Label(main_frame, text="Laser nominal rep. rate (FLIM) [Hz]")
-        laser1_label.grid(column=2, row=6, sticky="ns")
+        laser1_label.grid(column=2, row=8, sticky="ns")
         reprate_entry = ttk.Entry(main_frame, textvariable=self.reprate, width=11)
-        reprate_entry.grid(column=3, row=6, sticky="ns")
+        reprate_entry.grid(column=3, row=8, sticky="ns")
 
     def __gating(self, main_frame):
         self.gating_check = ttk.Checkbutton(
             main_frame, text="With Gating?", variable=self.gating
         )
-        self.gating_check.grid(column=2, row=5, sticky="ns")
+        self.gating_check.grid(column=2, row=7, sticky="ns")
         self.gating_check.config(state="disabled")
 
     def __binwidth(self, main_frame):
@@ -536,6 +538,23 @@ class GuiAppLst:
         flim_check.grid(row=2, column=2, sticky="ns")
         self.flim.trace("w", self.__check_if_flim)
 
+
+    def __downsampling_space(self, main_frame):
+        downsamping_space_text = ttk.Label(main_frame, text="Downsampling in space:")
+        downsamping_space_text.grid(column=2, row=3, sticky="ns")
+        self.downsamping_space_entry = ttk.Entry(main_frame, textvariable=self.downsampling_space, width=4)
+        self.downsamping_space_entry.grid(column=3, row=3, sticky="ns")
+        self.downsamping_space_entry.config(state="normal" if self.flim.get() else "disabled")
+
+
+    def __downsampling_time(self, main_frame):
+        downsamping_time_text = ttk.Label(main_frame, text="Downsampling in time (frames):")
+        downsamping_time_text.grid(column=2, row=4, sticky="ns")
+        self.downsamping_time_entry = ttk.Entry(main_frame, textvariable=self.downsampling_time, width=4)
+        self.downsamping_time_entry.grid(column=3, row=4, sticky="ns")
+        self.downsamping_time_entry.config(state="normal" if self.flim.get() else "disabled")
+
+
     def __censor(self, main_frame):
         """
         If FLIM is active, this checkbox enables the use of censor correction on the generated images.
@@ -544,16 +563,13 @@ class GuiAppLst:
         self.censor_check: ttk.Checkbutton = ttk.Checkbutton(
             main_frame, variable=self.censor, text="Censor Correction"
         )
-        self.censor_check.grid(row=3, column=2, sticky="ns")
+        self.censor_check.grid(row=5, column=2, sticky="ns")
         self.censor_check.config(state="disabled")
 
     def __check_if_flim(self, *args):
-        if self.flim:
-            self.censor_check.config(state="normal")
-            self.gating_check.config(state="normal")
-        else:
-            self.censor_check.config(state="disabled")
-            self.gating_check.config(state="disabled")
+        state = "normal" if self.flim.get() else "disabled"
+        for check in (self.censor_check, self.gating_check, self.downsamping_space_entry, self.downsamping_time_entry):
+            check.config(state=state)
         self.root.update_idletasks()
 
     def __line_freq(self, main_frame):
@@ -568,7 +584,7 @@ class GuiAppLst:
         sweeps_cb = ttk.Checkbutton(
             main_frame, variable=self.sweeps_as_lines, text="Sweeps as lines?"
         )
-        sweeps_cb.grid(row=4, column=2, sticky="ns")
+        sweeps_cb.grid(row=6, column=2, sticky="ns")
 
     def __advanced_win(self, main_frame):
         advanced_but = ttk.Button(
@@ -586,6 +602,8 @@ class GuiAppLst:
         self.__setup_advanced_frame(frame)
         self.__gating(frame)
         self.__flim(frame)
+        self.__downsampling_space(frame)
+        self.__downsampling_time(frame)
         self.__censor(frame)
         self.__sweeps_as_lines(frame)
         self.__debug(frame)
@@ -743,6 +761,8 @@ class GuiAppLst:
             "bidir": self.bidir,
             "keep_unidir": self.keep_unidir,
             "flim": self.flim,
+            "downsampling_space": self.downsampling_space,
+            "downsampling_time": self.downsampling_time,
             "censor": self.censor,
             "line_freq": self.line_freq,
             "sweeps_as_lines": self.sweeps_as_lines,

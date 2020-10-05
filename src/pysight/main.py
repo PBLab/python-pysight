@@ -145,6 +145,7 @@ def main_data_readout(config: MutableMapping[str, Any]) -> Optional[PySightOutpu
     # Determine type and shape of wanted outputs, and open the file pointers there
     outputs = OutputParser(
         num_of_frames=len(validated_data.dict_of_data["Frames"]),
+        flim_downsampling_time=config["advanced"]["downsampling_time"],
         output_dict=config["outputs"],
         filename=config["outputs"]["data_filename"],
         x_pixels=config["image"]["x_pixels"],
@@ -190,6 +191,8 @@ def main_data_readout(config: MutableMapping[str, Any]) -> Optional[PySightOutpu
         lines=analyzed_struct.dict_of_data["Lines"],
         channels=data_for_movie.index.levels[0],
         flim=config["advanced"]["flim"] or config["advanced"]["interleaved"],
+        flim_downsampling_space=config["advanced"]["downsampling_space"],
+        flim_downsampling_time=config["advanced"]["downsampling_time"],
         lst_metadata=lst_metadata,
         line_delta=int(line_delta),
         tag_as_phase=True,
