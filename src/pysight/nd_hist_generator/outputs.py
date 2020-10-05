@@ -111,6 +111,7 @@ class OutputParser:
         f: zarr file pointer
         """
         data_shape_summed = self.data_shape[1:]
+        data_shape_flim = (int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),) + self.data_shape[1:]
         chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
         chunk_shape = tuple(chunk_shape)
@@ -139,7 +140,7 @@ class OutputParser:
             try:
                 self.__create_group(
                     output_type="flim",
-                    shape=data_shape_summed,
+                    shape=data_shape_flim,
                     chunks=True,
                     dtype=np.float32,
                 )

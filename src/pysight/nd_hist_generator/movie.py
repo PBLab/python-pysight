@@ -144,9 +144,8 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_stack_at_once)
             if "summed" in self.outputs:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
-            # TODO: Figure out what to do here
-            # if "flim" in self.outputs:
-            #     funcs_to_execute_end.append(self.__save_flim_at_once)
+            if "flim" in self.outputs:
+                funcs_to_execute_end.append(self.__save_flim_at_once)
 
         else:
             if "stack" in self.outputs:
@@ -161,7 +160,7 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
             if "flim" in self.outputs:
-                funcs_to_execute_during.append(self.__append_flim_data)
+                funcs_to_execute_during.append(self.__save_flim_incr())
                 funcs_to_execute_end.append(self.__save_flim_at_once)
         return funcs_to_execute_during, funcs_to_execute_end
 
@@ -285,6 +284,7 @@ class Movie:
         self.stack[channel].append(data)
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
+        self.flim_df[channel] = flim_hist
 
     def __save_stack_incr(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
@@ -302,6 +302,25 @@ class Movie:
         else:
             data = np.squeeze(data)
         self.outputs["stack"][f"Channel {channel}"][
+            cur_slice_start:cur_slice_end, ...
+        ] = data
+
+    def __save_flim_incr(
+        self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
+    ) -> None:
+        """
+        Save incrementally new data to an open file on the disk
+        :param np.ndarray data: Data to save
+        :param int channel: Current spectral channel of data
+        :param int idx: Index of frame chunk
+        """
+        cur_slice_start = int(np.ceil(self.frames_per_chunk/self.flim_downsampling_time)) * idx
+        cur_slice_end = self.frames_per_chunk * (idx + 1)
+        if self.frames_per_chunk == 1:
+            data = np.squeeze(data)[np.newaxis, :]
+        else:
+            data = np.squeeze(data)
+        self.outputs["flim"][f"Channel {channel}"][
             cur_slice_start:cur_slice_end, ...
         ] = data
 
@@ -335,13 +354,8 @@ class Movie:
 
     def __save_flim_at_once(self):
         for chan in self.channels:
-            np.save(f"{self.outputs['filename'].store.path}_chan_{chan}.npy", self.flim_df[chan])
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
-            z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
-            # if len(self.flim_df[chan]) > 1:
-            #     z["Lifetime"][f"Channel {chan}"][...] = np.nanmean(np.squeeze(self.flim_df[chan]), 0)
-            # else:
-            #     z["Lifetime"][f"Channel {chan}"][...] = np.squeeze(self.flim_df[chan])
+            z["Lifetime"][f"Channel {chan}"][...] = self.flim_df[chan]
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """
