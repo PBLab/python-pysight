@@ -20,4 +20,6 @@ mypy
 flake8
 typed-ast
 appdirs >= 1.4
+ray
+modin
 -e .
