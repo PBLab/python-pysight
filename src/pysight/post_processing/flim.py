@@ -108,4 +108,4 @@ def calc_lifetime(data, bins_bet_pulses=125) -> float:
     if not (70.0 > tau > 0.0001):
         return np.nan
 
-    return tau/10  # divide by 10 to fix units
+    return tau

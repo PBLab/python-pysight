@@ -65,7 +65,7 @@ class FrameChunk:
                                                  list_of_edges_flim, list_of_edges, chan)
                 flim_hist = flim_hist.reshape((-1, self.x_pixels, self.y_pixels,))
                 flim_hist = flim_hist[slice(0, None, self.flim_downsampling_time), :, :]  # remove redundant frames
-
+                # division_factor = self.binwidth * 10e-9
             hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist, )
             self.hist_dict[chan] = hists
 

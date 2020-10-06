@@ -145,6 +145,7 @@ class Movie:
             if "summed" in self.outputs:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
             if "flim" in self.outputs:
+                funcs_to_execute_during.append(self.__append_flim_data)
                 funcs_to_execute_end.append(self.__save_flim_at_once)
 
         else:
@@ -160,8 +161,11 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
             if "flim" in self.outputs:
-                funcs_to_execute_during.append(self.__save_flim_incr())
-                funcs_to_execute_end.append(self.__save_flim_at_once)
+                funcs_to_execute_during.append(self.__append_flim_data)
+                if "stack" in self.outputs:
+                    funcs_to_execute_during.append(self.__save_flim_incr)
+                else:
+                    funcs_to_execute_end.append(self.__save_flim_at_once)
         return funcs_to_execute_during, funcs_to_execute_end
 
     def __process_data(

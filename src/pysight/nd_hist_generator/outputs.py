@@ -245,6 +245,7 @@ class PySightOutput:
         return DataShape(*shape)
 
 
+# TODO: Add FLIM here
 @attr.s(frozen=True)
 class MultiDimensionalData:
     """
