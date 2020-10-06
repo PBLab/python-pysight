@@ -6,6 +6,7 @@ import scipy.stats
 from operator import mul
 from functools import reduce
 
+from pysight.nd_hist_generator.binned_lifetime import calc_lifetime
 from pysight.post_processing.flim import *
 
 
@@ -21,7 +22,8 @@ def gen_exp_decay_points(shape=(256, 256), lambda_=35):
 
 def test_calculate_tau_per_image():
     decay_data = gen_exp_decay_points()
-    tau = find_tau(decay_data)
+    #tau = find_tau(decay_data)
+    tau = calc_lifetime(decay_data)
     assert tau == 35
 
 
@@ -31,6 +33,10 @@ def test_per_frame_flim_calc():
         data[frame_num] = gen_exp_decay_points(shape=data.shape[1:])
     lifetimes = calculate_lifetime_per_chunk(data, chunklen=1)
     assert np.allclose(lifetimes, np.array([35] * 10))
+
+
+
+
 
 
 
