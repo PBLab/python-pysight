@@ -118,8 +118,8 @@ class GuiAppLst:
         self.bidir = BooleanVar(value=False)
         self.keep_unidir = BooleanVar(value=False)
         self.flim: BooleanVar = BooleanVar(value=False)
-        self.downsampling_space: IntVar = IntVar(value=1)
-        self.downsampling_time: IntVar = IntVar(value=1)
+        self.flim_downsampling_space: IntVar = IntVar(value=1)
+        self.flim_downsampling_time: IntVar = IntVar(value=1)
         self.censor: BooleanVar = BooleanVar(value=False)
         self.line_freq = DoubleVar(value=7930.0)  # Hz
         self.sweeps_as_lines = BooleanVar(value=False)
@@ -539,18 +539,18 @@ class GuiAppLst:
         self.flim.trace("w", self.__check_if_flim)
 
 
-    def __downsampling_space(self, main_frame):
+    def __flim_downsampling_space(self, main_frame):
         downsamping_space_text = ttk.Label(main_frame, text="Downsampling in space:")
         downsamping_space_text.grid(column=2, row=3, sticky="ns")
-        self.downsamping_space_entry = ttk.Entry(main_frame, textvariable=self.downsampling_space, width=4)
+        self.downsamping_space_entry = ttk.Entry(main_frame, textvariable=self.flim_downsampling_space, width=4)
         self.downsamping_space_entry.grid(column=3, row=3, sticky="ns")
         self.downsamping_space_entry.config(state="normal" if self.flim.get() else "disabled")
 
 
-    def __downsampling_time(self, main_frame):
+    def __flim_downsampling_time(self, main_frame):
         downsamping_time_text = ttk.Label(main_frame, text="Downsampling in time (frames):")
         downsamping_time_text.grid(column=2, row=4, sticky="ns")
-        self.downsamping_time_entry = ttk.Entry(main_frame, textvariable=self.downsampling_time, width=4)
+        self.downsamping_time_entry = ttk.Entry(main_frame, textvariable=self.flim_downsampling_time, width=4)
         self.downsamping_time_entry.grid(column=3, row=4, sticky="ns")
         self.downsamping_time_entry.config(state="normal" if self.flim.get() else "disabled")
 
@@ -602,8 +602,8 @@ class GuiAppLst:
         self.__setup_advanced_frame(frame)
         self.__gating(frame)
         self.__flim(frame)
-        self.__downsampling_space(frame)
-        self.__downsampling_time(frame)
+        self.__flim_downsampling_space(frame)
+        self.__flim_downsampling_time(frame)
         self.__censor(frame)
         self.__sweeps_as_lines(frame)
         self.__debug(frame)
@@ -761,8 +761,8 @@ class GuiAppLst:
             "bidir": self.bidir,
             "keep_unidir": self.keep_unidir,
             "flim": self.flim,
-            "downsampling_space": self.downsampling_space,
-            "downsampling_time": self.downsampling_time,
+            "flim_downsampling_space": self.flim_downsampling_space,
+            "flim_downsampling_time": self.flim_downsampling_time,
             "censor": self.censor,
             "line_freq": self.line_freq,
             "sweeps_as_lines": self.sweeps_as_lines,

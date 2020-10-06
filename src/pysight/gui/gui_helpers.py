@@ -137,10 +137,10 @@ def verify_input(config: MutableMapping[str, Any]):
     ):
         raise UserWarning("Mirror phase must be a number.")
 
-    if not isinstance(config["advanced"]["downsampling_space"], int):
+    if not isinstance(config["advanced"]["flim_downsampling_space"], int):
         raise UserWarning("Downsampling in space must be a number.")
 
-    if not isinstance(config["advanced"]["downsampling_time"], int):
+    if not isinstance(config["advanced"]["flim_downsampling_time"], int):
         raise UserWarning("Downsampling in time must be a number.")
 
     if config["advanced"]["fill_frac"] < 0:
