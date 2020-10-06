@@ -61,7 +61,8 @@ class FrameChunk:
             flim_hist = None
             if self.flim:
                 list_of_edges_flim = self.__create_hist_edges(chan, self.flim_downsampling_space)
-                flim_hist = self._hist_with_flim(list_of_edges_flim, list_of_edges, chan)
+                flim_hist = self._hist_with_flim(self.df_dict[chan].copy(deep=True),
+                                                 list_of_edges_flim, list_of_edges, chan)
                 flim_hist = flim_hist.reshape((-1, self.x_pixels, self.y_pixels,))
                 flim_hist = flim_hist[slice(0, None, self.flim_downsampling_time), :, :]  # remove redundant frames
 
@@ -185,7 +186,7 @@ class FrameChunk:
 
 
     def _hist_with_flim(
-        self, flim_edges: List[np.ndarray], edges: List[np.ndarray], chan: int
+        self, data: pd.DataFrame, flim_edges: List[np.ndarray], edges: List[np.ndarray], chan: int
     ) -> Tuple[np.ndarray, Tuple[np.ndarray]]:
         """Run a slightly more complex processing pipeline when we need to calculate
         the lifetime of each pixel in the image.
@@ -204,8 +205,6 @@ class FrameChunk:
         hist_with_flim : np.ndarray
             the flim image, each pixel's value is a tau
         """
-        data = self.df_dict[chan].copy(deep=True)
-
         if self.bidir:
             data = flip_photons(data, edges[0], self.lines, self.x_pixels)
 
