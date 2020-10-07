@@ -18,4 +18,5 @@ twine
 black
 mypy
 modin < 0.9
+cloudpickle >= 1.5
 -e .
