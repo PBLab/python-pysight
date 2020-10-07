@@ -1,4 +1,5 @@
 numpy >= 1.18
+cloudpickle >= 1.5
 matplotlib >= 3.2
 pandas == 1.1.2
 attrs == 19.3
@@ -18,5 +19,4 @@ twine
 black
 mypy
 modin < 0.9
-cloudpickle >= 1.5
 -e .
