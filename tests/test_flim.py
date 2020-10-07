@@ -62,7 +62,7 @@ def gen_exp_decay_points(shape=(256, 256), lambda_=35.0):
 
 def test_calculate_tau_per_image():
     decay_data = gen_exp_decay_points()
-    tau = calc_lifetime(decay_data)
+    tau = calc_lifetime(decay_data.ravel())
     assert tau == 35.0
 
 
