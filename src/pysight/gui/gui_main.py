@@ -538,22 +538,29 @@ class GuiAppLst:
         flim_check.grid(row=2, column=2, sticky="ns")
         self.flim.trace("w", self.__check_if_flim)
 
-
     def __flim_downsampling_space(self, main_frame):
         downsamping_space_text = ttk.Label(main_frame, text="Downsampling in space:")
         downsamping_space_text.grid(column=2, row=3, sticky="ns")
-        self.downsamping_space_entry = ttk.Entry(main_frame, textvariable=self.flim_downsampling_space, width=4)
+        self.downsamping_space_entry = ttk.Entry(
+            main_frame, textvariable=self.flim_downsampling_space, width=4
+        )
         self.downsamping_space_entry.grid(column=3, row=3, sticky="ns")
-        self.downsamping_space_entry.config(state="normal" if self.flim.get() else "disabled")
-
+        self.downsamping_space_entry.config(
+            state="normal" if self.flim.get() else "disabled"
+        )
 
     def __flim_downsampling_time(self, main_frame):
-        downsamping_time_text = ttk.Label(main_frame, text="Downsampling in time (frames):")
+        downsamping_time_text = ttk.Label(
+            main_frame, text="Downsampling in time (frames):"
+        )
         downsamping_time_text.grid(column=2, row=4, sticky="ns")
-        self.downsamping_time_entry = ttk.Entry(main_frame, textvariable=self.flim_downsampling_time, width=4)
+        self.downsamping_time_entry = ttk.Entry(
+            main_frame, textvariable=self.flim_downsampling_time, width=4
+        )
         self.downsamping_time_entry.grid(column=3, row=4, sticky="ns")
-        self.downsamping_time_entry.config(state="normal" if self.flim.get() else "disabled")
-
+        self.downsamping_time_entry.config(
+            state="normal" if self.flim.get() else "disabled"
+        )
 
     def __censor(self, main_frame):
         """
@@ -568,7 +575,12 @@ class GuiAppLst:
 
     def __check_if_flim(self, *args):
         state = "normal" if self.flim.get() else "disabled"
-        for check in (self.censor_check, self.gating_check, self.downsamping_space_entry, self.downsamping_time_entry):
+        for check in (
+            self.censor_check,
+            self.gating_check,
+            self.downsamping_space_entry,
+            self.downsamping_time_entry,
+        ):
             check.config(state=state)
         self.root.update_idletasks()
 
@@ -681,7 +693,7 @@ class GuiAppLst:
                 filedialog.askopenfilename(
                     filetypes=[("Config files", "*.toml")],
                     title=f"Choose a configuration file",
-                    initialdir=user_config_dir('pysight'),
+                    initialdir=user_config_dir("pysight"),
                 )
             )
         else:
@@ -712,7 +724,7 @@ class GuiAppLst:
         self.root.update_idletasks()
 
     def __load_last_used_cfg(self, main_frame):
-        direc = Path(user_config_dir('pysight'))
+        direc = Path(user_config_dir("pysight"))
         all_cfg_files: Iterable = direc.glob("*.toml")
         latest_filename: str = ""
         latest_file_date: int = 0

@@ -9,8 +9,12 @@ import modin.pandas as modin_pd
 from attr.validators import instance_of
 
 from pysight.nd_hist_generator.outputs import DataShape
-from pysight.post_processing.flim import calc_lifetime, flip_photons, \
-    add_downsample_frame_idx_to_df, add_bins_to_df
+from pysight.post_processing.flim import (
+    calc_lifetime,
+    flip_photons,
+    add_downsample_frame_idx_to_df,
+    add_bins_to_df,
+)
 
 
 @attr.s(slots=True)
@@ -60,13 +64,21 @@ class FrameChunk:
             hist, _ = np.histogramdd(sample=data_columns, bins=list_of_edges)
             flim_hist = None
             if self.flim:
-                list_of_edges_flim = self.__create_hist_edges(chan, self.flim_downsampling_space)
-                flim_hist = self._hist_with_flim(self.df_dict[chan].copy(deep=True),
-                                                 list_of_edges_flim, list_of_edges, chan)
+                list_of_edges_flim = self.__create_hist_edges(
+                    chan, self.flim_downsampling_space
+                )
+                flim_hist = self._hist_with_flim(
+                    self.df_dict[chan].copy(deep=True),
+                    list_of_edges_flim,
+                    list_of_edges,
+                    chan,
+                )
                 flim_hist = flim_hist.reshape((-1, self.x_pixels, self.y_pixels,))
-                flim_hist = flim_hist[slice(0, None, self.flim_downsampling_time), :, :]  # remove redundant frames
+                flim_hist = flim_hist[
+                    slice(0, None, self.flim_downsampling_time), :, :
+                ]  # remove redundant frames
                 # division_factor = self.binwidth * 10e-9
-            hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist, )
+            hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist,)
             self.hist_dict[chan] = hists
 
         return self.hist_dict
@@ -184,9 +196,12 @@ class FrameChunk:
 
         return np.array(pts)
 
-
     def _hist_with_flim(
-        self, data: pd.DataFrame, flim_edges: List[np.ndarray], edges: List[np.ndarray], chan: int
+        self,
+        data: pd.DataFrame,
+        flim_edges: List[np.ndarray],
+        edges: List[np.ndarray],
+        chan: int,
     ) -> Tuple[np.ndarray, Tuple[np.ndarray]]:
         """Run a slightly more complex processing pipeline when we need to calculate
         the lifetime of each pixel in the image.
@@ -208,27 +223,48 @@ class FrameChunk:
         if self.bidir:
             data = flip_photons(data, edges[0], self.lines, self.x_pixels)
 
-        #add each photon bin in the time
-        data = add_bins_to_df(data, flim_edges, ['abs_time', 'time_rel_line'])
+        # add each photon bin in the time
+        data = add_bins_to_df(data, flim_edges, ["abs_time", "time_rel_line"])
 
-        data['downsampled_bin_of_dim0'] = (data.bin_of_dim0 % (self.x_pixels // self.flim_downsampling_space))
+        data["downsampled_bin_of_dim0"] = data.bin_of_dim0 % (
+            self.x_pixels // self.flim_downsampling_space
+        )
 
         # downsample in time
-        data = add_downsample_frame_idx_to_df(data, chan, self.frames, self.flim_downsampling_time)
+        data = add_downsample_frame_idx_to_df(
+            data, chan, self.frames, self.flim_downsampling_time
+        )
         # estimate tau of group of photons
         data = modin_pd.DataFrame(data)
-        data['tau'] = data.loc[:, ['time_rel_pulse', 'frame_idx', 'downsampled_bin_of_dim0', 'bin_of_dim1']]\
-            .groupby(by=['frame_idx', 'downsampled_bin_of_dim0', 'bin_of_dim1']).transform(calc_lifetime)
+        data["tau"] = (
+            data.loc[
+                :,
+                [
+                    "time_rel_pulse",
+                    "frame_idx",
+                    "downsampled_bin_of_dim0",
+                    "bin_of_dim1",
+                ],
+            ]
+            .groupby(by=["frame_idx", "downsampled_bin_of_dim0", "bin_of_dim1"])
+            .transform(calc_lifetime)
+        )
 
         # create image from tau values
-        data['lin_index'] = np.ravel_multi_index([data['bin_of_dim0'], data['bin_of_dim1']],
-                                                       [len(flim_edges[0]) - 1, len(flim_edges[1]) - 1]).astype(int)
-        flim_image = np.full(((len(flim_edges[0]) - 1) * (len(flim_edges[1]) - 1),), np.nan)
-        flim_image[data.loc[:, 'lin_index']] = data.loc[:, 'tau']
+        data["lin_index"] = np.ravel_multi_index(
+            [data["bin_of_dim0"], data["bin_of_dim1"]],
+            [len(flim_edges[0]) - 1, len(flim_edges[1]) - 1],
+        ).astype(int)
+        flim_image = np.full(
+            ((len(flim_edges[0]) - 1) * (len(flim_edges[1]) - 1),), np.nan
+        )
+        flim_image[data.loc[:, "lin_index"]] = data.loc[:, "tau"]
         flim_image = flim_image.reshape((-1, len(flim_edges[1]) - 1))
 
         # upsample image to original size
-        bloater = np.ones((self.flim_downsampling_space, self.flim_downsampling_space), dtype=np.uint8)
+        bloater = np.ones(
+            (self.flim_downsampling_space, self.flim_downsampling_space), dtype=np.uint8
+        )
         return np.kron(flim_image, bloater)
 
 
@@ -365,7 +401,7 @@ class FlimCalc:
         self.all_data["block_num"] = blocks[self.all_data["bin_per_frame"]]
         hist_arrivals = self.all_data.groupby(
             "block_num", as_index=False, sort=False
-        )#.agg({"since_laser": calc_lifetime})
+        )  # .agg({"since_laser": calc_lifetime})
         self.all_data = self.all_data.set_index("block_num")
         self.all_data.loc[hist_arrivals["block_num"], "lifetime"] = hist_arrivals[
             "since_laser"

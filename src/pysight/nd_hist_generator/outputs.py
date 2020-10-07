@@ -101,7 +101,7 @@ class OutputParser:
         """Create the summed stack / full stack groups in the zarr array."""
         for key, val in self.output_dict.items():
             if val is True:  # val can be a string
-                if key != 'memory':
+                if key != "memory":
                     self.outputs["filename"].require_group(self._group_names[key])
                 self.outputs[key] = True
 
@@ -111,7 +111,9 @@ class OutputParser:
         f: zarr file pointer
         """
         data_shape_summed = self.data_shape[1:]
-        data_shape_flim = (int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),) + self.data_shape[1:]
+        data_shape_flim = (
+            int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),
+        ) + self.data_shape[1:]
         chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
         chunk_shape = tuple(chunk_shape)

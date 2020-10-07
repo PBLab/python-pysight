@@ -54,7 +54,11 @@ def verify_input(config: MutableMapping[str, Any]):
         raise ValueError("Number of frames has to be a positive number.")
 
     filename = config["outputs"]["data_filename"]
-    if not filename.endswith(".lst") and not filename.endswith(".npz") and not filename.endswith('*'):
+    if (
+        not filename.endswith(".lst")
+        and not filename.endswith(".npz")
+        and not filename.endswith("*")
+    ):
         raise BrokenPipeError(
             "Please choose a list (*.lst) or numpy archive (*.npz) file for analysis."
         )

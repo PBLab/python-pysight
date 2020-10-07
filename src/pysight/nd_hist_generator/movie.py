@@ -318,7 +318,9 @@ class Movie:
         :param int channel: Current spectral channel of data
         :param int idx: Index of frame chunk
         """
-        cur_slice_start = int(np.ceil(self.frames_per_chunk/self.flim_downsampling_time)) * idx
+        cur_slice_start = (
+            int(np.ceil(self.frames_per_chunk / self.flim_downsampling_time)) * idx
+        )
         cur_slice_end = self.frames_per_chunk * (idx + 1)
         if self.frames_per_chunk == 1:
             data = np.squeeze(data)[np.newaxis, :]

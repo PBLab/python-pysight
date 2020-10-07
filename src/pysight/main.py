@@ -280,9 +280,9 @@ def interpret_runtype(fname: str):
     ----------
     :param str fname: The user's chosen file to parse
     """
-    if fname is None or fname == '':
+    if fname is None or fname == "":
         return RunType.GUI
-    elif '*' in fname:
+    elif "*" in fname:
         return RunType.BATCH
     else:
         return RunType.SINGLE

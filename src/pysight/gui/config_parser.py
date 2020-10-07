@@ -91,7 +91,9 @@ class Config:
 
     def to_disk(self):
         """ Write the config_data object to disk """
-        full_cfg_fname = pathlib.Path(user_config_dir('pysight')) / (self.config_data["cfg_title"] + ".toml")
+        full_cfg_fname = pathlib.Path(user_config_dir("pysight")) / (
+            self.config_data["cfg_title"] + ".toml"
+        )
         full_cfg_fname.parent.mkdir(parents=True, exist_ok=True)
         with full_cfg_fname.open("w") as f:
             toml.dump(self.config_data, f)
