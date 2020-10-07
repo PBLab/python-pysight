@@ -145,8 +145,9 @@ class Movie:
             if "summed" in self.outputs:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
             if "flim" in self.outputs:
+                self.flim = {i: list() for i in self.channels}
                 funcs_to_execute_during.append(self.__append_flim_data)
-                funcs_to_execute_end.append(self.__save_flim_at_once)
+                funcs_to_execute_end.extend([self.__save_flim_at_once, self.__convert_flim_to_arr])
 
         else:
             if "stack" in self.outputs:
@@ -161,7 +162,6 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
             if "flim" in self.outputs:
-                funcs_to_execute_during.append(self.__append_flim_data)
                 if "stack" in self.outputs:
                     funcs_to_execute_during.append(self.__save_flim_incr)
                 else:
@@ -273,6 +273,21 @@ class Movie:
             else:
                 self.stack[channel] = squeezed
 
+    def __convert_flim_to_arr(self) -> None:
+        """ Convert a list with a bunch of frames into a single numpy array with an extra
+        dimension (0) containing the data. There will always be at least one
+        frame of time data, this dimension is never squeezed out.
+        """
+        for channel in self.channels:
+            new_stack = np.vstack(self.flim[channel])
+            squeezed = np.squeeze(new_stack)
+            if (
+                new_stack.shape[0] != squeezed.shape[0]
+            ):  # a single frame that was squeezed out
+                self.flim[channel] = np.expand_dims(squeezed, axis=0)
+            else:
+                self.flim[channel] = squeezed
+
     def __create_memory_output(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
     ) -> None:
@@ -288,7 +303,6 @@ class Movie:
         self.stack[channel].append(data)
         assert len(data.shape) > 2
         self.summed_mem[channel] += np.uint16(data.sum(axis=0))
-        self.flim_df[channel] = flim_hist
 
     def __save_stack_incr(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
@@ -345,23 +359,12 @@ class Movie:
     def __append_flim_data(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
     ):
-        # modified_data_shape = (self.frames_per_chunk,) + tuple(
-        #     shape + 2 for shape in self.data_shape[1:]
-        # )
-        # flimcalc = FlimCalc(
-        #     flim_hist["since_laser"], flim_hist["bin"], modified_data_shape[1:]
-        # )
-        # flimcalc.partition_photons_into_bins()
-        # if len(modified_data_shape) == 3:
-        #     modified_data_shape += (1,)
-        # modified_data_shape = DataShape(*modified_data_shape)
-        # flim_hist = flimcalc.histogram_result(modified_data_shape[1:])
-        self.flim_df[channel].append(flim_hist)
+        self.flim[channel].append(flim_hist)
 
     def __save_flim_at_once(self):
         for chan in self.channels:
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
-            z["Lifetime"][f"Channel {chan}"][...] = self.flim_df[chan]
+            z["Lifetime"][f"Channel {chan}"][...] = self.flim[chan]
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """

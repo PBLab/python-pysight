@@ -77,7 +77,8 @@ class FrameChunk:
                 flim_hist = flim_hist[
                     slice(0, None, self.flim_downsampling_time), :, :
                 ]  # remove redundant frames
-                # division_factor = self.binwidth * 10e-9
+                division_factor = 1e-9 / self.binwidth  # results in nanoseconds
+                flim_hist /= division_factor
             hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist,)
             self.hist_dict[chan] = hists
 
