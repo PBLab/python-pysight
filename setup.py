@@ -90,7 +90,7 @@ setup(
     install_requires=[
         "numpy >= 1.18",
         "matplotlib >= 3.2",
-        "pandas >= 1.1",
+        "pandas == 1.1.2",
         "attrs == 19.3",
         "cython >= 0.29",
         "scipy >= 1.4",
