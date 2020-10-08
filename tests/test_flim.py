@@ -51,46 +51,32 @@ def test_add_bins_to_df(mock_photons_df):
     pd.testing.assert_frame_equal(ret, mock_photons_df)
 
 
-def gen_exp_decay_points(shape=(256, 256), lambda_=35.0):
+def gen_exp_decay_points(tau=35.0, bins=125, amp=100):
     """Generates 'shape' amount of randomly sampled points from an
-    exp. decaying function with lambda=lambda_."""
-    rv = scipy.stats.expon(scale=lambda_)
-    num_pixels = reduce(mul, shape, 1)
-    vals = rv.rvs(size=num_pixels).astype(np.uint16)
+    exp. decaying function with tau=tau."""
+    vals = scipy.signal.exponential(bins, 0, tau, False) * amp
     return vals
 
 
 def test_calculate_tau_per_image():
-    decay_data = gen_exp_decay_points()
-    tau = calc_lifetime(decay_data.ravel())
-    assert tau == 35.0
+    real_tau = 35.0
+    decay_data = gen_exp_decay_points(tau=real_tau)
+    returned_tau = calc_lifetime(decay_data.ravel())
+    assert np.isclose(real_tau, returned_tau)
 
 
-@pytest.mark.skip
-def test_per_frame_flim_calc():
-    data = np.zeros((10, 256, 256), dtype=np.uint16)
-    for frame_num in range(len(data)):
-        data[frame_num] = gen_exp_decay_points(shape=data.shape[1:])
-    lifetimes = calculate_lifetime_per_chunk(data, chunklen=1)
-    assert np.allclose(lifetimes, np.array([35] * 10))
-
-
-@pytest.fixture
-def generate_flim():
-    def _generate_flim(shape, flim, di=None, photons=None):
-        if di is None:
-            di = {1: np.array([1, 2, 3])}
-        if photons is None:
-            photons = pd.DataFrame(
-                {"time_rel_pulse": np.arange(125), "Frames": 1, "Channel": 1}
-            ).set_index(["Channel", "Frames"])
-        summed_mem = di
-        stack = di
-        channels = pd.CategoricalIndex([1])
-        out = PySightOutput(photons, summed_mem, stack, channels, shape, flim, dict())
-        return LifetimeCalc(out, 1)
-
-    return _generate_flim
+def test_add_frame_idx(mock_photons_df):
+    frames = mock_photons_df.index.get_level_values("Frames").unique()
+    # divide into frames with remainder
+    data = add_downsample_frame_idx_to_df(mock_photons_df, 1, frames, 7)
+    assert np.array_equal(np.unique(data.loc[:, 'frame_idx']), np.arange(0, 15))
+    assert data[data['frame_idx'] == 0].count()['frame_idx'] == 7000
+    assert data[data['frame_idx'] == 14].count()['frame_idx'] == 3000
+    # divide into frames without remainder
+    data = add_downsample_frame_idx_to_df(mock_photons_df, 1, frames, 10)
+    assert np.array_equal(np.unique(data.loc[:, 'frame_idx']), np.arange(0, 10))
+    assert data[data['frame_idx'] == 0].count()['frame_idx'] == 10000
+    assert data[data['frame_idx'] == 9].count()['frame_idx'] == 10000
 
 
 @pytest.mark.skip
