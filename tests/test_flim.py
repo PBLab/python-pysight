@@ -52,17 +52,20 @@ def test_add_bins_to_df(mock_photons_df):
 
 
 def gen_exp_decay_points(tau=35.0, bins=125, amp=100):
-    """Generates 'shape' amount of randomly sampled points from an
-    exp. decaying function with tau=tau."""
+    """Generates exponential decay data with the given tau at the given 'bins'
+    shape, with the given amplitude.
+    """
     vals = scipy.signal.exponential(bins, 0, tau, False) * amp
-    return vals
+    vals_to_hist = np.repeat(np.arange(bins), vals.astype(np.int64))
+    return vals_to_hist
 
 
 def test_calculate_tau_per_image():
     real_tau = 35.0
     decay_data = gen_exp_decay_points(tau=real_tau)
-    returned_tau = calc_lifetime(decay_data.ravel())
-    assert np.isclose(real_tau, returned_tau)
+    returned_tau = calc_lifetime(decay_data)
+    print(real_tau, returned_tau)
+    assert np.isclose(real_tau, returned_tau, atol=1)
 
 
 def test_add_frame_idx(mock_photons_df):

@@ -8,9 +8,9 @@ Latest version
 0.12.0 (2020-XX-XX)
 -------------------
 
-* Added a command line interface to PySight. When you ``pip install pysight`` the ``pysight`` command becomes available and is now the preferred way to run PySight. See the user manual for more details.
+* Added FLIM capabilites (thanks to @berkodev). Check the correct boxes in the GUI and as long as your data was synched to the laser clock it should Just Work.
 
-* 
+* A few bug fixes and package updates.
 
 Previous Versions
 =================

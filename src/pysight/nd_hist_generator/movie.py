@@ -147,7 +147,7 @@ class Movie:
             if "flim" in self.outputs:
                 self.flim = {i: list() for i in self.channels}
                 funcs_to_execute_during.append(self.__append_flim_data)
-                funcs_to_execute_end.extend([self.__save_flim_at_once, self.__convert_flim_to_arr])
+                funcs_to_execute_end.extend([self.__convert_flim_to_arr, self.__save_flim_at_once])
 
         else:
             if "stack" in self.outputs:
@@ -162,10 +162,13 @@ class Movie:
                 funcs_to_execute_end.append(self.__save_summed_at_once)
 
             if "flim" in self.outputs:
+                self.outputs["flim"] = self.outputs["filename"].require_group(
+                    "Lifetime"
+                )
                 if "stack" in self.outputs:
                     funcs_to_execute_during.append(self.__save_flim_incr)
                 else:
-                    funcs_to_execute_end.append(self.__save_flim_at_once)
+                    funcs_to_execute_end.extend([self.__convert_flim_to_arr, self.__save_flim_at_once])
         return funcs_to_execute_during, funcs_to_execute_end
 
     def __process_data(
@@ -332,17 +335,18 @@ class Movie:
         :param int channel: Current spectral channel of data
         :param int idx: Index of frame chunk
         """
+        flim_frames = self.frames_per_chunk // self.flim_downsampling_time
         cur_slice_start = (
-            int(np.ceil(self.frames_per_chunk / self.flim_downsampling_time)) * idx
+            int(np.ceil(flim_frames)) * idx
         )
-        cur_slice_end = self.frames_per_chunk * (idx + 1)
+        cur_slice_end = flim_frames * (idx + 1)
         if self.frames_per_chunk == 1:
-            data = np.squeeze(data)[np.newaxis, :]
+            flim_hist = np.squeeze(flim_hist)[np.newaxis, :]
         else:
-            data = np.squeeze(data)
+            flim_hist = np.squeeze(flim_hist)
         self.outputs["flim"][f"Channel {channel}"][
             cur_slice_start:cur_slice_end, ...
-        ] = data
+        ] = flim_hist
 
     def __append_summed_data(
         self, data: np.ndarray, channel: int, idx: int, flim_hist: np.ndarray
@@ -391,6 +395,3 @@ class Movie:
                 f'Summed stack file created with name "{self.outputs["filename"].store.path}", containing a data group named'
                 ' "Summed Stack", with one dataset per channel.'
             )
-
-    def __nano_flim(self, data: np.ndarray) -> None:
-        pass

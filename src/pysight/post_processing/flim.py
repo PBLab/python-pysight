@@ -91,7 +91,7 @@ def calc_lifetime(data, bins_bet_pulses=125) -> float:
     :return: estimate lifetime (int)
     """
     hist, edges = np.histogram(data, bins_bet_pulses)
-    if len(data) < 20 or hist.max() < 5:
+    if (len(data) < 20) or (hist.max() < 5):
         # photon count is too small
         return np.nan
 
