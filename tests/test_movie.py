@@ -98,16 +98,18 @@ class TestMovies(TestCase):
 
     def test_single_slice_df(self):
         sl = slice(0, 0)
+        lines = self.lines.iloc[:self.data_shape[1]]
+        lines.index = np.zeros(self.data_shape[1], dtype=np.int64)
         movie = Movie(
             self.data,
-            self.lines,
+            lines,
             data_shape=self.data_shape,
             outputs={"memory": True},
-            line_delta=int(self.lines.diff().mean()),
+            line_delta=int(lines.diff().mean()),
             fill_frac=100.0,
             bidir=True,
             frames=self.frames,
-            frame_slices=(slice(1) for n in range(2)),
+            frame_slices=(slice(1) for _ in range(2)),
         )
         di = movie._Movie__slice_df(sl)
         self.assertTrue(1 in di[0].keys())

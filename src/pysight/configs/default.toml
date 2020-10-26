@@ -6,12 +6,12 @@ stop2 = "PMT1"
 stop3 = "Empty"
 stop4 = "Empty"
 stop5 = "Empty"
-start = "TAG Lens"
+start = "PMT2"
 
 [image]
 num_of_frames = 1
-x_pixels = 512
-y_pixels = 512
+x_pixels = 256
+y_pixels = 256
 z_pixels = 1
 imaging_software = "ScanImage"
 
@@ -24,7 +24,7 @@ flim = false
 
 [advanced]
 debug = false
-phase = -0.4
+phase = -2.78
 reprate = 80000000.0
 gating = false
 binwidth = 1e-10
@@ -35,6 +35,8 @@ fill_frac = 72.0
 bidir = true
 keep_unidir = false
 flim = false
+flim_downsampling_space = 32
+flim_downsampling_time = 2
 censor = false
 line_freq = 7930.0
 sweeps_as_lines = false

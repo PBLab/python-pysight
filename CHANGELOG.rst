@@ -5,7 +5,7 @@ Changelog
 Latest version
 ==============
 
-0.12.0 (2020-XX-XX)
+0.12.0 (2020-10-26)
 -------------------
 
 * Added FLIM capabilites (thanks to @berkodev). Check the correct boxes in the GUI and as long as your data was synched to the laser clock it should Just Work.

@@ -99,9 +99,8 @@ class ReadData:
 
     def _determine_num_of_lines(self, debug, bytess):
         """ In debug runs we don't read all lines """
-        # TODO: Change it back to 200k
         if debug:
-            num_of_lines = int(0.6e6 * bytess)  # 200k events is usually enough
+            num_of_lines = int(0.2e6 * bytess)  # 200k events is usually enough
             printstr = f'[DEBUG] Reading file "{self.filename}"...'
         else:
             num_of_lines = -1

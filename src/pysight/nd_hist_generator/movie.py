@@ -10,7 +10,7 @@ import pandas as pd
 import zarr
 from tqdm import tqdm
 
-from .frame_chunk import FrameChunk, FlimCalc, HistWithIndex
+from .frame_chunk import FrameChunk
 from pysight.nd_hist_generator.outputs import DataShape, trunc_end_of_file
 
 
