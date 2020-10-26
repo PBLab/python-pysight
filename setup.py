@@ -100,7 +100,7 @@ setup(
         "tqdm >= 4.29",
         "numba >= 0.49",
         "ansimarkup >= 1.4",
-        "psutil >= 5.4",
+        "psutil >= 5.6.6",
         "toml >= 0.9",
         "appdirs >= 1.4",
         "modin[all] >= 0.8",
