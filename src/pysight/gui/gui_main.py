@@ -453,7 +453,7 @@ class GuiAppLst:
         fill_frac_entry.grid(column=0, row=4, sticky="e")
 
     def __browsefunc(self):
-        filetypes = [("List files", "*.lst"), ("Pickle files", "*.p")]
+        filetypes = [("List files", "*.lst"), ("All files", "*.*")]
         if self.filename.get() != "":
             self.filename.set(
                 filedialog.askopenfilename(
