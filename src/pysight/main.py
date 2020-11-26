@@ -90,6 +90,7 @@ def main_data_readout(config: MutableMapping[str, Any]) -> Optional[PySightOutpu
         bidir=config["advanced"]["bidir"],
         bidir_phase=config["advanced"]["phase"],
         image_soft=config["image"]["imaging_software"],
+        laser_freq=config["advanced"]["reprate"],
         lst_metadata=lst_metadata,
     )
 

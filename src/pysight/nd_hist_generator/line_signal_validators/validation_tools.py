@@ -2,13 +2,13 @@ from typing import Dict, Tuple
 import logging
 import pandas as pd
 import numpy as np
-import warnings
 import attr
 from attr.validators import instance_of
 from enum import Enum
 from pysight.nd_hist_generator.movie import ImagingSoftware
 from ..line_signal_validators.scanimage import ScanImageLineValidator
 from ..line_signal_validators.mscan import MScanLineValidator
+from pysight.gui.gui_main import DATA_SOURCES
 
 
 class LinesType(Enum):
@@ -60,6 +60,7 @@ class SignalValidator:
         default=ImagingSoftware.SCANIMAGE.value, validator=instance_of(str)
     )
     change_thresh = attr.ib(default=0.3, validator=instance_of(float))
+    laser_freq = attr.ib(default=80_000_000.0, validator=instance_of(float))
     lst_metadata = attr.ib(factory=dict, validator=instance_of(dict))
     handle_line_cases = attr.ib(init=False)
     last_event_time = attr.ib(init=False)
@@ -93,8 +94,19 @@ class SignalValidator:
     def max_sweep(self):
         return int(self.lst_metadata["swpreset"])
 
+    def _pop_extra_keys(self):
+        """Pop out keys from the dict of data that don't belong.
+
+        This method's usecase is to filter out keys in a user-supplied
+        data dictionary, which can sometimes contain unneeded keys
+        which can either cause bugs or simply require more memory.
+        """
+        extra_keys = set(self.dict_of_data.keys()) - set(DATA_SOURCES)
+        [self.dict_of_data.pop(key) for key in list(extra_keys)]
+
     def run(self):
         """ Main pipeline """
+        self._pop_extra_keys()
         if "Frames" in self.dict_of_data:
             self.num_of_frames = (
                 self.dict_of_data["Frames"].shape[0] + 1

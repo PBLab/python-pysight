@@ -95,7 +95,10 @@ class Allocate(object):
 
         # Main loop - Sort lines and frames for all photons and calculate relative time
         for key in reversed(sorted(relevant_keys)):
-            self.dict_of_data[key].sort_values("abs_time", inplace=True)
+            try:
+                self.dict_of_data[key].sort_values("abs_time", inplace=True)
+            except KeyError:
+                continue
             sorted_indices = (
                 np.digitize(
                     self.df_photons.loc[:, "abs_time"].values,
