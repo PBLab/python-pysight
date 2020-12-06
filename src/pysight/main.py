@@ -34,7 +34,6 @@ from pysight.gui.gui_helpers import verify_input
 from pysight.gui.config_parser import Config
 from pysight.nd_hist_generator.volume_gen import VolumeGenerator
 from pysight.binary_list_file_parser.binary_parser import (
-    BinaryDataParser,
     binary_parsing,
 )
 from pysight.read_lst import ReadData

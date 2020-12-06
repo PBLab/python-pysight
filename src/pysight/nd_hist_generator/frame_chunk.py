@@ -1,14 +1,10 @@
-import functools
-import operator
 from typing import Dict, List, Tuple
 
 import attr
 import numpy as np
 import pandas as pd
-import modin.pandas as modin_pd
 from attr.validators import instance_of
 
-from pysight.nd_hist_generator.outputs import DataShape
 from pysight.post_processing.flim import (
     calc_lifetime,
     flip_photons,
@@ -228,7 +224,10 @@ class FrameChunk:
             data = flip_photons(data, edges[0], self.lines, self.x_pixels)
 
         # add each photon bin in the time
-        data = add_bins_to_df(data, flim_edges, ["abs_time", "time_rel_line"])
+        columns_to_add = ["abs_time", "time_rel_line"]
+        if "Phase" in data.columns:
+            columns_to_add += ["Phase"]
+        data = add_bins_to_df(data, flim_edges, columns_to_add)
 
         data["downsampled_bin_of_dim0"] = data.bin_of_dim0 % (
             self.x_pixels // self.flim_downsampling_space
@@ -238,32 +237,40 @@ class FrameChunk:
         data = add_downsample_frame_idx_to_df(
             data, chan, self.frames, self.flim_downsampling_time
         )
+        groupby_columns = ["frame_idx", "downsampled_bin_of_dim0", "bin_of_dim1"]
+        columns_to_keep = [
+            "time_rel_pulse",
+            "frame_idx",
+            "downsampled_bin_of_dim0",
+            "bin_of_dim1",
+        ]
+        ravel_with = ["bin_of_dim0", "bin_of_dim1"]
+        if "bin_of_dim2" in data.columns:
+            groupby_columns += ["bin_of_dim2"]
+            columns_to_keep += ["bin_of_dim2"]
+            ravel_with += ["bin_of_dim2"]
         # estimate tau of group of photons
-        data = modin_pd.DataFrame(data)
         data["tau"] = (
             data.loc[
                 :,
-                [
-                    "time_rel_pulse",
-                    "frame_idx",
-                    "downsampled_bin_of_dim0",
-                    "bin_of_dim1",
-                ],
+                columns_to_keep,
             ]
-            .groupby(by=["frame_idx", "downsampled_bin_of_dim0", "bin_of_dim1"])
+            .groupby(by=groupby_columns)
             .transform(calc_lifetime)
         )
 
+        edges_minus_1 = [len(edge) - 1 for edge in flim_edges]
+
         # create image from tau values
         data["lin_index"] = np.ravel_multi_index(
-            [data["bin_of_dim0"], data["bin_of_dim1"]],
-            [len(flim_edges[0]) - 1, len(flim_edges[1]) - 1],
+            [data[ravel] for ravel in ravel_with],
+            edges_minus_1,
         ).astype(int)
         flim_image = np.full(
-            ((len(flim_edges[0]) - 1) * (len(flim_edges[1]) - 1),), np.nan
+            np.product(edges_minus_1), np.nan,
         )
         flim_image[data.loc[:, "lin_index"]] = data.loc[:, "tau"]
-        flim_image = flim_image.reshape((-1, len(flim_edges[1]) - 1))
+        flim_image = flim_image.reshape((-1, *edges_minus_1[1:]))
 
         # upsample image to original size
         bloater = np.ones(

@@ -11,7 +11,6 @@ import zarr
 from tqdm import tqdm
 
 from .frame_chunk import FrameChunk
-from pysight.nd_hist_generator.outputs import DataShape, trunc_end_of_file
 
 
 class ImagingSoftware(Enum):
@@ -103,11 +102,10 @@ class Movie:
         if self.flim:
             self.flim_df = {i: list() for i in self.channels}
             self.lifetime = {i: 0 for i in self.channels}
-        else:
-            try:
-                self.z_pixels = self.data_shape[3]
-            except IndexError:
-                pass
+        try:
+            self.z_pixels = self.data_shape[3]
+        except IndexError:
+            pass
         self.line_delta = np.uint64(self.line_delta)
 
     def run(self) -> None:
@@ -241,7 +239,9 @@ class Movie:
         important indices "Channel" and "Frames", and in the correct order.
         """
         if self.data.index.names[1] == "Lines":
-            self.data = self.data.swaplevel()
+            self.data = self.data.swaplevel('Lines', 'Frames', axis=0)
+        if self.data.index.names[-1] == 'Lines':
+            self.data = self.data.swaplevel('Lines', 'Laser', axis=0)
 
         assert self.data.index.names[0] == "Channel"
         assert self.data.index.names[1] == "Frames"
