@@ -103,7 +103,6 @@ setup(
         "psutil >= 5.6.6",
         "toml >= 0.9",
         "appdirs >= 1.4",
-        "modin[all] >= 0.8",
     ],
     extras_require={
         "dev": [

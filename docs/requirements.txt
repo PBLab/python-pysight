@@ -18,5 +18,4 @@ bumpversion
 twine
 black
 mypy
-modin < 0.9
 -e .

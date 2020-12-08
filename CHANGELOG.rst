@@ -5,15 +5,27 @@ Changelog
 Latest version
 ==============
 
+0.12.2 (2020-12-6)
+------------------
+
+* Enables the "Laser" key in the input dictionary.
+
+* Removed Modin from the required packages list.
+
+Previous Versions
+=================
+
+0.12.1 (2020-11-20)
+-------------------
+
+* Fixed a bug with the API usage.
+
 0.12.0 (2020-10-26)
 -------------------
 
 * Added FLIM capabilites (thanks to @berkodev). Check the correct boxes in the GUI and as long as your data was synched to the laser clock it should Just Work.
 
 * A few bug fixes and package updates.
-
-Previous Versions
-=================
 
 0.11.4 (2020-01-19)
 -------------------
