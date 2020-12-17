@@ -111,9 +111,14 @@ class OutputParser:
         f: zarr file pointer
         """
         data_shape_summed = self.data_shape[1:]
-        data_shape_flim = (
-            int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),
-        ) + self.data_shape[1:]
+        # Even though we usually downsample in time the FLIM data, its data shape
+        # will remain equal to the original one here. This is because when we process
+        # the data on a chunk by chunk basic, we downsample it in time. If the number
+        # of frames per chunk is odd, and the downsampling factor is 2, then we'll
+        # end up with a bit more frames than we thought we would, and these excess
+        # frames won't map well to the Zarr array. Thus we'll make the FLIM array
+        # larger than needed, and resize it at the end.
+        data_shape_flim = self.data_shape
         chunk_shape = list(self.data_shape)
         chunk_shape[0] = 1
         chunk_shape = tuple(chunk_shape)
@@ -172,7 +177,7 @@ class OutputParser:
     def determine_data_shape_full(self):
         """
         Return the tuple that describes the shape of the final dataset.
-        Dimension order: [FRAME, X, Y, Z, LIFETIME]
+        Dimension order: [FRAME, X, Y, Z]
         """
         non_squeezed = (
             self.x_pixels,
@@ -254,16 +259,18 @@ class MultiDimensionalData:
     Internal representation of a stack of data.
 
     :param np.ndarray full: The entirety of the data.
-    :param np.ndarray time_summed: All data summed across the \
+    :param np.ndarray time_summed: All data summed across the
         time dimension.
     :param DataShape _data_shape: List of valid dimensions.
-    :param np.ndarray z_summed: All data summed across the \
+    :param np.ndarray z_summed: All data summed across the
         z dimension.
+    :param np.ndarray, optional: If FLIM data was recorded then it will appear
+        under here.
     """
-
     full = attr.ib(validator=instance_of(np.ndarray), repr=False)
     time_summed = attr.ib(validator=instance_of(np.ndarray), repr=False)
     _data_shape = attr.ib(validator=instance_of(DataShape))
+    flim = attr.ib(default=None, repr=False)
     z_summed = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self):

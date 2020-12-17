@@ -69,12 +69,7 @@ class FrameChunk:
                     list_of_edges,
                     chan,
                 )
-                flim_hist = flim_hist.reshape((-1, self.x_pixels, self.y_pixels,))
-                num_of_frames = len(flim_hist)
-                end_frame = num_of_frames if num_of_frames % 2 == 0 else num_of_frames - 1
-                flim_hist = flim_hist[
-                    slice(0, end_frame, self.flim_downsampling_time), :, :
-                ]  # remove redundant frames
+                flim_hist = flim_hist.reshape((-1,) + self.data_shape[1:])
                 division_factor = 1e-9 / self.binwidth  # results in nanoseconds
                 flim_hist /= division_factor
             hists = self._post_process_hist([hist.astype(np.uint8)]) + (flim_hist,)

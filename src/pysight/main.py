@@ -203,13 +203,17 @@ def main_data_readout(config: MutableMapping[str, Any]) -> Optional[PySightOutpu
 
     final_movie.run()
     if "memory" in outputs.outputs:
+        if "flim" in outputs.outputs:
+            flim = final_movie.flim
+        else:
+            flim = None
         pysight_output = PySightOutput(
             photons=data_for_movie,
             summed_mem=final_movie.summed_mem,
             stack=final_movie.stack,
             channels=data_for_movie.index.levels[0],
             data_shape=outputs.data_shape,
-            flim=config["advanced"]["flim"],
+            flim=flim,
             config=config,
         )
         return pysight_output

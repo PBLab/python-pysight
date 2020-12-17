@@ -164,7 +164,7 @@ class Movie:
                     "Lifetime"
                 )
                 if "stack" in self.outputs:
-                    funcs_to_execute_during.append(self.__save_flim_incr)
+                    funcs_to_execute_during.append(self.__save_flim_incr, self.__downsample_flim)
                 else:
                     funcs_to_execute_end.extend([self.__convert_flim_to_arr, self.__save_flim_at_once])
         return funcs_to_execute_during, funcs_to_execute_end
@@ -240,8 +240,9 @@ class Movie:
         """
         if self.data.index.names[1] == "Lines":
             self.data = self.data.swaplevel('Lines', 'Frames', axis=0)
-        if self.data.index.names[-1] == 'Lines':
-            self.data = self.data.swaplevel('Lines', 'Laser', axis=0)
+        if "Laser" in self.data.index.names:
+            if self.data.index.names[-1] == 'Lines':
+                self.data = self.data.swaplevel('Lines', 'Laser', axis=0)
 
         assert self.data.index.names[0] == "Channel"
         assert self.data.index.names[1] == "Frames"
@@ -335,11 +336,10 @@ class Movie:
         :param int channel: Current spectral channel of data
         :param int idx: Index of frame chunk
         """
-        flim_frames = self.frames_per_chunk // self.flim_downsampling_time
         cur_slice_start = (
-            int(np.ceil(flim_frames)) * idx
+            self.frames_per_chunk * idx
         )
-        cur_slice_end = flim_frames * (idx + 1)
+        cur_slice_end = self.frames_per_chunk * (idx + 1)
         if self.frames_per_chunk == 1:
             flim_hist = np.squeeze(flim_hist)[np.newaxis, :]
         else:
@@ -366,9 +366,22 @@ class Movie:
         self.flim[channel].append(flim_hist)
 
     def __save_flim_at_once(self):
+        """Serialize FLIM data to the Zarr array following a downsampling procedure"""
+        downsampled_shape = (int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),) + self.data_shape[1:]
         for chan in self.channels:
             z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
-            z["Lifetime"][f"Channel {chan}"][...] = self.flim[chan]
+            z["Lifetime"][f"Channel {chan}"].resize(downsampled_shape)
+            z["Lifetime"][f"Channel {chan}"][...] = self.flim[chan][::self.flim_downsampling_time, ...]
+
+    def __downsample_flim(self):
+        """Downsample the data that has already been serialized by first deserializing it,
+        downsampling it and then reserializing it."""
+        downsampled_shape = (int(np.ceil(self.data_shape[0] / self.flim_downsampling_time)),) + self.data_shape[1:]
+        for chan in self.channels:
+            z = zarr.open(f'{self.outputs["filename"].store.path}', "r+",)
+            downsampled_data = np.asarray(z["Lifetime"][f"Channel {chan}"][::self.flim_downsampling_time, ...])
+            z["Lifetime"][f"Channel {chan}"].resize(downsampled_shape)
+            z["Lifetime"][f"Channel {chan}"][...] = downsampled_data
 
     def __print_outputs(self) -> None:
         """ Print to console the outputs that were generated. """
