@@ -5,10 +5,10 @@ Changelog
 Latest version
 ==============
 
-0.12.2 (2020-12-6)
+0.12.2 (2020-12-20)
 ------------------
 
-* Enables the "Laser" key in the input dictionary.
+* Enables FLIM with the "Laser" key in the input dictionary.
 
 * Removed Modin from the required packages list.
 
