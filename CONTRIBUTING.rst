@@ -69,8 +69,8 @@ For merging, you should:
 4. Add a note to ``CHANGELOG.rst`` about the changes.
 5. Add yourself to ``AUTHORS.rst``.
 
-.. [1] If you don't have all the necessary Python versions available locally you can rely on Travis - it will
-       `run the tests <https://travis-ci.org/PBLab/python-pysight/pull_requests>`_ for each change you add in the pull request.
+.. [1] If you don't have all the necessary Python versions available locally you can rely on Azure - it will
+       `run the tests <https://dev.azure.com/pblabgeneral/pysight/_build/latest?definitionId=1&branchName=master>`_ for each change you add in the pull request.
 
        It will be slower though ...
 
@@ -82,5 +82,5 @@ To create and publish a new version, once all code changes are made, follow thes
 1. Make sure that the ``dev`` installation of PySight is installed.
 2. ``black .`` from the project's home directory.
 3. ``bumpversion --allow-dirty patch`` to bump the version. Other options include ``minor`` and ``major``.
-4. ``python setup.py clean --all sdist bdist_wheel``
+4. Follow `this <https://uwekorn.com/2019/09/15/how-we-build-apache-arrows-manylinux-wheels.html>`_ guide for sdist and wheel generation.
 5. ``twine upload --skip-existing dist/*``
