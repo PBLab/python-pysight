@@ -204,19 +204,17 @@ class PySightOutput:
     :param dict _stack: Full data arrays, one per channel.
     :param pd.CategoricalIndex _channels: Actual data channels analyzed.
     :param tuple _data_shape: Data dimensions
-    :param bool _flim: Whether data has Tau channel.
+    :param Dict[np.ndarray], optional flim: FLIM data or None
     :param Dict[str,Any] config: Configuration file used in this run.
     """
-
-    # TODO: Add new FLIM handler
 
     photons = attr.ib(validator=instance_of(pd.DataFrame), repr=False)
     _summed_mem = attr.ib(validator=instance_of(dict), repr=False)
     _stack = attr.ib(validator=instance_of(dict), repr=False)
     _channels = attr.ib(validator=instance_of(pd.CategoricalIndex), repr=False)
     _data_shape = attr.ib(validator=instance_of(tuple), repr=False)
-    _flim = attr.ib(validator=instance_of(bool), repr=False)
     config = attr.ib(validator=instance_of(dict), repr=False)
+    flim = attr.ib(default=None, repr=False)
     available_channels = attr.ib(init=False)
     data_shape = attr.ib(init=False)
     ch1 = attr.ib(init=False, repr=False)
@@ -264,13 +262,10 @@ class MultiDimensionalData:
     :param DataShape _data_shape: List of valid dimensions.
     :param np.ndarray z_summed: All data summed across the
         z dimension.
-    :param np.ndarray, optional: If FLIM data was recorded then it will appear
-        under here.
     """
     full = attr.ib(validator=instance_of(np.ndarray), repr=False)
     time_summed = attr.ib(validator=instance_of(np.ndarray), repr=False)
     _data_shape = attr.ib(validator=instance_of(DataShape))
-    flim = attr.ib(default=None, repr=False)
     z_summed = attr.ib(init=False, repr=False)
 
     def __attrs_post_init__(self):
