@@ -123,3 +123,8 @@ class ReadData:
                 f, dtype="{}S".format(data_length), count=num_of_lines
             ).astype("{}U".format(data_length))
         return arr
+
+
+if __name__ == '__main__':
+    filename = ''
+    r = ReadData(filename, )

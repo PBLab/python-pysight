@@ -145,6 +145,10 @@ class ScanImageLineValidator:
         end_of_frames = change > 5
         end_of_frames_idx = np.where(end_of_frames)[0]  # scanimage specific
         rel_idx_non_end_frame = np.where(change <= self.change_thresh)[0]
+        if end_of_frames_idx[0] < self.num_of_lines:
+            val = end_of_frames_idx[0]
+            end_of_frames_idx = end_of_frames_idx[1:] - val
+            lines = lines.iloc[val:]
         lines_mat, last_idx_of_row = iter_end_of_frames(
             lines.to_numpy(), end_of_frames_idx, self.num_of_lines
         )
@@ -177,7 +181,7 @@ class ScanImageLineValidator:
         return zip(a, b)
 
 
-@numba.jit(nopython=True)
+# @numba.jit(nopython=True)
 def iter_end_of_frames(lines, end_of_frames_idx, num_of_lines):
     """Iterates over two signals - the start and end of each frame - and returns a
     matrix containing the lines between those two signals.
